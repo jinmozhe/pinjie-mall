@@ -1,12 +1,25 @@
-# Pinjie Fullstack Base
+# pinjie-mall
 
-> 通用全栈 Monorepo 母版 | FastAPI + Next.js + React + pnpm + Turborepo | 可派生为 CMS、管理平台、电商等业务仓库
+> 高可用标准电商与多级分销全栈商城平台 | FastAPI + Next.js + React + pnpm + Turborepo
 
-通用全栈 Monorepo 项目母版，适用于 CMS、博客、企业站、管理平台、电商等项目的初始化和二次开发。
+本项目派生自 `pinjie-fullstack-base` 企业级全栈母版，核心服务于现代零售电商与多级分销裂变业务。
+
+## 核心业务能力
+
+- **标准电商交易闭环**：SPU / SKU 商品体系、运费模板、购物车、订单状态机流转、库存乐观锁防超卖、微信支付与支付宝支付对接。
+- **多级分销与分润网络**：
+  - 邀请码与关系链绑定（防窜链、防自环拓扑结构）。
+  - 合规两级分销佣金引擎，支持按商品与用户等级自定义让利比例。
+  - 双轨资金账本（冻结佣金与可用钱包隔离，退款逆向冲正，到期自动解冻）。
+  - 提现申请、风控审核与打款流水审计。
+- **高可用与生产就绪**：
+  - 读多写少链路多级缓存，Redis 原子预扣减，数据库行级排他锁兜底。
+  - 容器无状态化部署，集成健康探针（Liveness / Readiness）与优雅停机。
+  - 前后端严格单一契约驱动，由后端自动导出 OpenAPI 契约并一键生成前端 TypeScript 强类型 SDK。
 
 ## 技术栈
 
-- **后端**：FastAPI + SQLAlchemy 2.0 async + PostgreSQL + Redis
+- **后端**：FastAPI + SQLAlchemy 2.0 async + PostgreSQL + Redis + uv
 - **管理端**：Ant Design Pro v6（Umi Max + React 19 + TypeScript + Ant Design 6 + ProComponents 3 + TanStack Query）
 - **用户端**：Next.js App Router + React 19 + Tailwind CSS + TanStack Query + Zustand + Lucide
 - **共享包**：OpenAPI 自动生成 TypeScript 类型安全请求客户端（`api-client`）、共享 ESLint 配置（`eslint-config`）、共享 TypeScript 配置（`typescript-config`）

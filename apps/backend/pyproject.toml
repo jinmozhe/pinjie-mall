@@ -1,7 +1,7 @@
 [project]
-name = "pinjie-fullstack-backend"
+name = "pinjie-mall-backend"
 version = "0.1.0"
-description = "Pinjie Fullstack Base - FastAPI 标准后端"
+description = "pinjie-mall 电商与多级分销后端服务"
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "alembic>=1.16.0",
