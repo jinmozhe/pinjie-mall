@@ -85,7 +85,7 @@
 
 ### Fixed
 
-- 为冻结的 Web Dockerfile 补充非 root `USER node`，修复 Semgrep 的 `missing-user` 告警原因；保留构建与启动主动失败，线上 Security 尚未复验。
+- 为冻结的 Web Dockerfile 补充非 root `USER node`，修复 Semgrep 的 `missing-user` 告警；保留构建与启动主动失败。仓库启用 Dependency graph 后，线上 Security 复验通过。
 
 - 修复 GitHub Dependabot 的 10 条 Moderate 前端依赖告警：锁定 decode-uri-component 0.5.0、qs 6.16.0、hono 4.13.5、colord 2.9.4 及 Admin/Web Vitest 和 coverage-v8 4.1.11；query-string 6.14.1 通过受控 CommonJS 补丁继续使用安全解码器。依赖检查覆盖锁文件、补丁和畸形编码解析行为；Vitest、生产构建和浏览器验证按策略未执行，远端告警待源码交付后由 Dependabot 重扫确认。
 
