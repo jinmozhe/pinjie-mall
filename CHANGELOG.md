@@ -85,6 +85,8 @@
 
 ### Fixed
 
+- 为冻结的 Web Dockerfile 补充非 root `USER node`，修复 Semgrep 的 `missing-user` 告警原因；保留构建与启动主动失败，线上 Security 尚未复验。
+
 - 修复 GitHub Dependabot 的 10 条 Moderate 前端依赖告警：锁定 decode-uri-component 0.5.0、qs 6.16.0、hono 4.13.5、colord 2.9.4 及 Admin/Web Vitest 和 coverage-v8 4.1.11；query-string 6.14.1 通过受控 CommonJS 补丁继续使用安全解码器。依赖检查覆盖锁文件、补丁和畸形编码解析行为；Vitest、生产构建和浏览器验证按策略未执行，远端告警待源码交付后由 Dependabot 重扫确认。
 
 - 修复根 Markdown 工具链的 `smol-toml` 高危依赖阻断：通过限定 `markdownlint-cli2@0.23.2` 的传递依赖并重新生成锁文件，将实际安装版本固定为 1.7.1；Markdown、文本、文档、依赖、工作区和边界轻量门禁通过，PR #53 的 13 项必需检查通过，重型验证、发布与部署未执行。
