@@ -6,12 +6,11 @@ import { startAdminPreview } from "./admin-preview.mjs";
 
 const root = resolve(import.meta.dirname, "..", "..");
 const backendURL = process.env.E2E_BACKEND_URL ?? "http://127.0.0.1:8000";
-const webServer = resolve(root, "apps", "web", ".next", "standalone", "apps", "web", "server.js");
 const adminCLI = resolve(root, "scripts", "e2e", "admin-preview.mjs");
 const playwrightCLI = resolve(root, "node_modules", "@playwright", "test", "cli.js");
 const ownedServices = [];
 
-for (const requiredPath of [webServer, adminCLI, playwrightCLI]) {
+for (const requiredPath of [adminCLI, playwrightCLI]) {
   if (!existsSync(requiredPath)) {
     throw new Error(`Required E2E runtime file is missing: ${requiredPath}. Build and install the workspace first.`);
   }
@@ -118,18 +117,6 @@ process.once("SIGINT", interrupt);
 process.once("SIGTERM", interrupt);
 
 try {
-  await ensureService(
-    "Web standalone server",
-    "http://127.0.0.1:3000",
-    [webServer],
-    root,
-    {
-      BACKEND_INTERNAL_URL: backendURL,
-      HOSTNAME: "127.0.0.1",
-      PORT: "3000",
-      WEB_PUBLIC_ORIGIN: "http://127.0.0.1:3000",
-    },
-  );
   await ensureService(
     "Admin production Nginx",
     "http://127.0.0.1:3001/umi.js",

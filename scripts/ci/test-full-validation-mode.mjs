@@ -27,7 +27,7 @@ assert.deepEqual(workflow.on.workflow_dispatch.inputs.validation_mode, {
 assert(workflow["run-name"].includes("inputs.validation_mode"));
 assert(workflow.concurrency.group.includes("inputs.validation_mode"));
 assert.equal(source.outputs.validation_mode, "${{ steps.input.outputs.validation_mode }}");
-assert.deepEqual(frontend.strategy.matrix.app, ["admin", "web"]);
+assert.deepEqual(frontend.strategy.matrix.app, ["admin"]);
 assert.deepEqual(validation.needs, ["source", "backend", "frontend"]);
 assert.equal(frontend.needs, "source");
 assert.equal(backend.needs, "source");
@@ -86,7 +86,7 @@ function scriptSource(file) {
 }
 const configSource = scriptSource("playwright.config.ts")
   .replace("export default defineConfig", "globalThis.config = defineConfig");
-const expectedProjects = ["web-desktop", "web-mobile", "admin-desktop", "admin-mobile"];
+const expectedProjects = ["admin-desktop", "admin-mobile"];
 for (const profile of [undefined, "full", "smoke", "fast", "", "FULL"]) {
   const context = {
     process: { env: profile === undefined ? {} : { E2E_PROFILE: profile } },
@@ -174,7 +174,7 @@ try {
     assert.equal(result.status, 0, result.stderr);
     const manifest = path.join(temporary, `${mode}-validation-evidence`, `${mode}-validation.env`);
     const content = readFileSync(manifest, "utf8");
-    assert(content.includes(`schema=pinjie-${mode}-validation-v${mode === "full" ? 2 : 1}\n`));
+    assert(content.includes(`schema=pinjie-mall-${mode}-validation-v1\n`));
     if (mode === "smoke") {
       for (const field of ["frontend_unit_tests=skipped", "browser=playwright-chromium-smoke",
         "e2e_scope=all-quality-pages,desktop-stage-c", "backend=pytest"]) assert(content.includes(`${field}\n`));

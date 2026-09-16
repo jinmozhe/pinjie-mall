@@ -20,7 +20,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    project_name: str = Field(default="Pinjie Fullstack Base Backend", validation_alias="PROJECT_NAME")
+    project_name: str = Field(default="Pinjie Mall Backend", validation_alias="PROJECT_NAME")
     environment: Environment = Field(default="local", validation_alias="ENVIRONMENT")
     debug: bool = Field(default=False, validation_alias="DEBUG")
     api_v1_str: str = Field(default="/api/v1", validation_alias="API_V1_STR")
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     redis_url: str | None = Field(default=None, validation_alias="REDIS_URL")
     test_redis_url: str | None = Field(default=None, validation_alias="TEST_REDIS_URL")
     web_origins: list[str] = Field(
-        default_factory=lambda: ["http://localhost:3000"],
+        default_factory=lambda: ["https://miniapp.invalid"],
         validation_alias="WEB_ORIGINS",
     )
     admin_origins: list[str] = Field(
@@ -57,9 +57,7 @@ class Settings(BaseSettings):
     db_max_overflow: int = Field(default=5, validation_alias="DB_MAX_OVERFLOW", ge=0, le=50)
     db_pool_timeout: float = Field(default=5.0, validation_alias="DB_POOL_TIMEOUT", gt=0, le=60)
     dependency_timeout: float = Field(default=2.0, validation_alias="DEPENDENCY_TIMEOUT", gt=0, le=30)
-    jwt_issuer: str = Field(
-        default="pinjie-fullstack-base", validation_alias="JWT_ISSUER", min_length=3, max_length=128
-    )
+    jwt_issuer: str = Field(default="pinjie-mall", validation_alias="JWT_ISSUER", min_length=3, max_length=128)
     web_jwt_secret: str | None = Field(default=None, validation_alias="WEB_JWT_SECRET")
     admin_jwt_secret: str | None = Field(default=None, validation_alias="ADMIN_JWT_SECRET")
     web_token_hmac_key: str | None = Field(default=None, validation_alias="WEB_TOKEN_HMAC_KEY")

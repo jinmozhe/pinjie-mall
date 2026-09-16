@@ -138,7 +138,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(
         title=app_settings.project_name,
-        description="通用全栈母版的后端 API，提供用户认证、账户管理、后台管理和系统状态能力。",
+        description="独立商城的后端 API，当前提供用户认证、账户管理、后台管理和系统状态能力。",
         version=app_settings.release_version or "0.1.0",
         docs_url=app_settings.docs_url,
         redoc_url=app_settings.redoc_url,

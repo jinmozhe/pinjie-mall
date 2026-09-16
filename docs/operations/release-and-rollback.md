@@ -2,7 +2,7 @@
 
 ## 1. 适用范围
 
-本手册适用于母版及派生项目的镜像发布、生产部署和应用回滚。任何真实发布、部署和回滚都需要用户分别授权。操作人员的完整界面和命令顺序见[GitHub 到 1Panel 端到端人工发布手册](github-cnb-tcr-1panel-release-runbook.md)，每个 GitHub Actions 工作流的机制和失败定位见[GitHub Actions 工作流说明](github-actions-workflows.md)。
+本手册适用于 Pinjie Mall 的 Backend 与 Admin 镜像发布、生产部署和应用回滚。任何真实发布、部署和回滚都需要用户分别授权。操作人员的完整界面和命令顺序见[GitHub 到 1Panel 端到端人工发布手册](github-cnb-tcr-1panel-release-runbook.md)，每个 GitHub Actions 工作流的机制和失败定位见[GitHub Actions 工作流说明](github-actions-workflows.md)。`apps/web` 已冻结，不参与发布、部署或回滚。
 
 ## 2. 职责分离
 
@@ -47,7 +47,7 @@ GitHub 源码交接成功只说明 CNB 已接收批准提交，不能表述为�
 
 当前单维护者生产流程不要求 `Validate Candidate Images`、部署组合 JSON 或自动变量预检，操作顺序与发布记录统一见[端到端人工发布手册](github-cnb-tcr-1panel-release-runbook.md)。新版严格源码门禁使用 `pinjie-full-validation-v2`；CNB 扫描保留完整包与漏洞 JSON，通过离线转换生成表格和 CycloneDX，再以结构化检查阻断已有修复的 High/Critical。未修复漏洞继续出现在完整报告中，不能表述为没有任何已知高危漏洞。
 
-首次运行、变更文件超过 CNB 的 300 文件统计上限、Git 对比不可用或影响范围存疑时，在 CNB `main` 分支详情页人工触发“三端全量镜像构建”。该操作属于独立镜像发布授权，不能由源码交接成功自动替代。
+首次运行、变更文件超过 CNB 的 300 文件统计上限、Git 对比不可用或影响范围存疑时，在 CNB `main` 分支详情页人工触发“Backend 与 Admin 全量镜像构建”。该操作属于独立镜像发布授权，不能由源码交接成功自动替代。
 
 候选镜像因基础镜像中的可修复 High 或 Critical 漏洞失败时，先核对固定基础镜像摘要和上游修复版本。需要更新摘要时必须形成新提交，重新取得轻量 Push 工作流，并按重新选择的 `strict` 或 `fast` 模式完成源码交接；禁止移动既有 Tag、覆盖既有不可变标签、跳过扫描或把失败候选 digest 用于部署。
 
@@ -58,8 +58,8 @@ GitHub 源码交接成功只说明 CNB 已接收批准提交，不能表述为�
 部署前：
 
 1. 取得每个受影响端的 `pinjie-cnb-tcr-image-v1` 清单，核对 Commit SHA、CNB Build ID 和完整 TCR `image.reference`。
-2. 记录三个运行端当前 digest 和上一组已验证 digest。
-3. 确认部署目录的 `apps/backend/.env` 已配置共享 PostgreSQL、Redis 连接及其他生产运行变量且未进入仓库，根 `.env` 只保存 Compose 镜像引用和 Web 公开 Origin。
+2. 记录 Backend 与 Admin 当前 digest 和上一组已验证 digest。
+3. 确认部署目录的 `apps/backend/.env` 已配置共享 PostgreSQL、Redis 连接及其他生产运行变量且未进入仓库，根 `.env` 只保存 Compose 镜像引用。
 4. 确认当前数据库 Revision、目标 Revision 和备份恢复点。
 5. 确认服务器 `compose.prod.yml` 与目标 Commit 中的文件一致。
 6. 验证 `compose.prod.yml` 展开结果只包含固定 digest。
@@ -70,14 +70,14 @@ GitHub 源码交接成功只说明 CNB 已接收批准提交，不能表述为�
 1. 保证同一环境同一时间只有一个发布或回滚操作。
 2. 只更新受影响端的根 `.env` 镜像变量，并同步到 1Panel 编排环境变量页面。
 3. 首次部署或包含迁移时，先完成备份，再执行 Alembic 和权限同步。
-4. 保存或更新 1Panel 编排，等待 Backend 健康后再确认 Web 和 Admin。
+4. 保存或更新 1Panel 编排，等待 Backend 健康后再确认 Admin。
 5. 逐个确认运行容器记录的镜像引用与批准 digest 完全一致。
 6. 达到停止条件时立即中止后续步骤，不自动选择其他版本。
 
 部署后：
 
 1. 查询实际运行容器 digest，并与输入逐一比较。
-2. 分别记录三个端的 Commit SHA、CNB Build ID、镜像 digest、数据库 Revision、执行者、时间和验证结果。
+2. 分别记录 Backend 与 Admin 的 Commit SHA、CNB Build ID、镜像 digest、数据库 Revision、执行者、时间和验证结果。
 3. 在观察窗口检查错误率、关键延迟和日志异常。
 4. 未完成真实核验时不能标记部署成功。
 

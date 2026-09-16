@@ -177,7 +177,7 @@ jobs:
             if [[ ! -f "$evidence" ]]; then
               continue
             fi
-            if ! grep -Fxq 'schema=pinjie-full-validation-v2' "$evidence"; then
+            if ! grep -Fxq 'schema=pinjie-mall-full-validation-v1' "$evidence"; then
               continue
             fi
 
@@ -228,9 +228,8 @@ jobs:
         env:
           ADMIN_STATE: ${{ steps.state.outputs.admin }}
           BACKEND_STATE: ${{ steps.state.outputs.backend }}
-          WEB_STATE: ${{ steps.state.outputs.web }}
         run: |
-          for state in "$BACKEND_STATE" "$WEB_STATE" "$ADMIN_STATE"; do
+          for state in "$BACKEND_STATE" "$ADMIN_STATE"; do
             test "$state" = "ready"
           done
 
@@ -261,7 +260,7 @@ jobs:
           CNB_REPOSITORY_URL: ${{ vars.CNB_REPOSITORY_URL }}
         run: |
           set -euo pipefail
-          test "$CNB_REPOSITORY_URL" = "https://cnb.cool/pjwl/pinjie-fullstack-base"
+          test "$CNB_REPOSITORY_URL" = "https://cnb.cool/pjwl/pinjie-mall"
           test "$CNB_RELEASE_BRANCH" = "main"
           test "$CNB_PUSH_USERNAME" = "cnb"
           test -n "$CNB_PUSH_TOKEN"

@@ -1,13 +1,12 @@
 import { readFile } from "node:fs/promises";
 
 const expectedImages = {
-  backend: "pinjie-fullstack-backend",
-  web: "pinjie-fullstack-web",
-  admin: "pinjie-fullstack-admin",
+  backend: "pinjie-mall-backend",
+  admin: "pinjie-mall-admin",
 };
 const expectedRegistry = "ccr.ccs.tencentyun.com";
-const expectedNamespace = "pinjie-fullstack-base";
-const expectedSourceRepository = "https://github.com/jinmozhe/pinjie-fullstack-base";
+const expectedNamespace = "pinjie-mall";
+const expectedSourceRepository = "https://github.com/jinmozhe/pinjie-mall";
 
 function parseArguments(argv) {
   const allowed = new Set([
@@ -97,7 +96,7 @@ exactKeys(
   ["repository", "branch", "pipeline", "build_id", "build_url", "started_at", "finished_at"],
   "CNB evidence",
 );
-requireEqual(manifest.cnb.repository, "pjwl/pinjie-fullstack-base", "CNB repository");
+requireEqual(manifest.cnb.repository, "pjwl/pinjie-mall", "CNB repository");
 requireEqual(manifest.cnb.branch, "main", "CNB branch");
 requireEqual(manifest.cnb.pipeline, `${expectedImage}-image`, "CNB pipeline");
 requireEqual(manifest.cnb.build_id, expectedBuildId, "CNB build ID");
@@ -109,7 +108,7 @@ if (Date.parse(manifest.cnb.finished_at) < Date.parse(manifest.cnb.started_at)) 
 
 const buildUrl = new URL(manifest.cnb.build_url);
 requireEqual(buildUrl.origin, "https://cnb.cool", "CNB build URL origin");
-if (!buildUrl.pathname.startsWith("/pjwl/pinjie-fullstack-base/-/build/")) {
+if (!buildUrl.pathname.startsWith("/pjwl/pinjie-mall/-/build/")) {
   throw new Error("CNB build URL path does not match the repository.");
 }
 if (!buildUrl.pathname.endsWith(`/${expectedBuildId}`)) {

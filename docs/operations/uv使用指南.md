@@ -3,7 +3,7 @@
 > 文档归属：`docs/operations/uv使用指南.md`
 > 本地开发主手册：[Windows 本地开发环境手册](local-dev-environment.md)
 >
-> 本文档说明本项目（pinjie-fullstack-base）为何选择「纯 uv 模式」，
+> 本文档说明本项目（pinjie-mall）为何选择「纯 uv 模式」，
 > 并通过与 conda 的对比、机制解析、使用场景示例帮助开发者快速理解和上手。
 
 ## 背景：为什么不用 conda
@@ -108,7 +108,7 @@ uv 采用「全局缓存 + 项目虚拟环境」两层设计。
 │       ├── sqlalchemy-2.0.36.whl
 │       └── ...
 │
-├── pinjie-fullstack-base/apps/backend/
+├── pinjie-mall/apps/backend/
 │   └── .venv/                           ← 项目私有虚拟环境
 │       └── lib/python3.14/site-packages/
 │           ├── fastapi/    →  硬链接到全局缓存（不占额外空间）
@@ -218,7 +218,7 @@ uv sync
 ### 场景 5：本机有多个 Python 项目
 
 ```text
-项目 A：pinjie-fullstack-base  → 标准 CPython 3.14，依赖版本由 uv.lock 决定
+项目 A：pinjie-mall  → 标准 CPython 3.14，依赖版本由 uv.lock 决定
 项目 B：旧项目                 → Python 3.10，fastapi 0.110.0
 ```
 

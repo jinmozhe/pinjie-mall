@@ -89,16 +89,15 @@ function Confirm-DockerfileBaseImages {
     }
 }
 
-foreach ($dockerfilePath in @("apps/backend/Dockerfile", "apps/admin/Dockerfile", "apps/web/Dockerfile")) {
+foreach ($dockerfilePath in @("apps/backend/Dockerfile", "apps/admin/Dockerfile")) {
     Confirm-DockerfileBaseImages -RelativePath $dockerfilePath
 }
 
 Confirm-RequiredImageVariable -Name "backend" -VariableName "BACKEND_IMAGE"
 Confirm-RequiredImageVariable -Name "request-log-consumer" -VariableName "BACKEND_IMAGE"
-Confirm-RequiredImageVariable -Name "web" -VariableName "WEB_IMAGE"
 Confirm-RequiredImageVariable -Name "admin" -VariableName "ADMIN_IMAGE"
 
-foreach ($forbiddenService in @("postgres", "redis")) {
+foreach ($forbiddenService in @("postgres", "redis", "web")) {
     if ($compose -match ("(?m)^  " + [regex]::Escape($forbiddenService) + ":\s*$")) {
         $violations.Add("Shared production infrastructure must not declare a local '$forbiddenService' service.")
     }
@@ -127,7 +126,7 @@ foreach ($serviceName in @("backend", "request-log-consumer")) {
     }
 }
 
-foreach ($frontendService in @("web", "admin")) {
+foreach ($frontendService in @("admin")) {
     $serviceBlock = Get-ServiceBlock -Name $frontendService
     if ($serviceBlock -match '(?m)^\s+- infrastructure\s*$') {
         $violations.Add("Service '$frontendService' must not connect directly to the shared infrastructure network.")

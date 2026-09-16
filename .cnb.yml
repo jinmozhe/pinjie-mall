@@ -12,7 +12,7 @@
   - docker
 
 .image-imports: &image-imports
-  - https://cnb.cool/pjwl/pinjie-fullstack-base-secrets/-/blob/main/tcr-publish.yml
+  - https://cnb.cool/pjwl/pinjie-mall-secrets/-/blob/main/tcr-publish.yml
 
 .image-docker: &image-docker
   image: cnbcool/default-build-env@sha256:9622b58f682d7302292010af04048f59f7d9737d90fb070400c80f898f7b0983
@@ -20,7 +20,7 @@
     - /root/.cache/trivy:copy-on-write
 
 .image-env: &image-env
-  EXPECTED_CNB_REPOSITORY: pjwl/pinjie-fullstack-base
+  EXPECTED_CNB_REPOSITORY: pjwl/pinjie-mall
   EXPECTED_CNB_BRANCH: main
 
 .image-stages: &image-stages
@@ -86,7 +86,7 @@
   runner: *image-runner
   lock:
     <<: *image-lock
-    key: pinjie-fullstack-base-tcr-backend-main
+    key: pinjie-mall-tcr-backend-main
   services: *image-services
   imports: *image-imports
   docker: *image-docker
@@ -100,31 +100,12 @@
   failStages: *image-fail-stages
   endStages: *image-end-stages
 
-.web-pipeline: &web-pipeline
-  name: web-image
-  runner: *image-runner
-  lock:
-    <<: *image-lock
-    key: pinjie-fullstack-base-tcr-web-main
-  services: *image-services
-  imports: *image-imports
-  docker: *image-docker
-  env:
-    <<: *image-env
-    IMAGE_KEY: web
-    RELEASE_PIPELINE: web-image
-    EVIDENCE_ROOT: .cnb/evidence/web
-    DOCKER_CONFIG: /tmp/pinjie-cnb-docker-config-web
-  stages: *image-stages
-  failStages: *image-fail-stages
-  endStages: *image-end-stages
-
 .admin-pipeline: &admin-pipeline
   name: admin-image
   runner: *image-runner
   lock:
     <<: *image-lock
-    key: pinjie-fullstack-base-tcr-admin-main
+    key: pinjie-mall-tcr-admin-main
   services: *image-services
   imports: *image-imports
   docker: *image-docker
@@ -149,22 +130,6 @@ main:
         - scripts/ci/cnb-*.sh
         - scripts/ci/*cnb*evidence*.mjs
 
-    web-image:
-      <<: *web-pipeline
-      ifModify:
-        - apps/web/**
-        - apps/admin/package.json
-        - package.json
-        - pnpm-lock.yaml
-        - pnpm-workspace.yaml
-        - .pnpmfile.cjs
-        - packages/**
-        - patches/**
-        - .dockerignore
-        - .cnb.yml
-        - scripts/ci/cnb-*.sh
-        - scripts/ci/*cnb*evidence*.mjs
-
     admin-image:
       <<: *admin-pipeline
       ifModify:
@@ -184,7 +149,5 @@ main:
   web_trigger_full_release:
     backend-image:
       <<: *backend-pipeline
-    web-image:
-      <<: *web-pipeline
     admin-image:
       <<: *admin-pipeline

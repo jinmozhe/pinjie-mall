@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       request_json:
-        description: Candidate request JSON generated from three CNB manifests and handoff Run IDs
+        description: Candidate request JSON generated from Backend and Admin CNB manifests and handoff Run IDs
         required: true
         type: string
 

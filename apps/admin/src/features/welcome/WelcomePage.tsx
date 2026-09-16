@@ -20,8 +20,8 @@ export function WelcomePage() {
 
   return (
     <PageFrame
-      title="欢迎使用 Pinjie Console"
-      description="基于 FastAPI + Next.js + Umi Max / Ant Design 6 的企业级通用全栈 Monorepo 脚手架母版。"
+      title="欢迎使用 Pinjie Mall 管理后台"
+      description="独立商城的运营管理控制台，当前阶段聚焦后端领域模型与后台管理能力。"
     >
       <Space direction="vertical" size={24} style={{ width: "100%" }}>
         {/* 顶部主横幅 Hero Card */}
@@ -39,7 +39,7 @@ export function WelcomePage() {
               <Space direction="vertical" size={8}>
                 <Space wrap>
                   <Tag style={{ background: "rgba(255,255,255,0.2)", color: "#ffffff", border: "none" }}>
-                    母版不可变基线冻结
+                    独立商城基线
                   </Tag>
                   <Tag style={{ background: "rgba(255,255,255,0.2)", color: "#ffffff", border: "none" }}>
                     Ant Design 6 Pro V6
@@ -49,7 +49,7 @@ export function WelcomePage() {
                   您好，{current?.display_name || current?.username || "管理员"}！
                 </Typography.Title>
                 <Typography.Paragraph style={{ color: "rgba(255, 255, 255, 0.88)", fontSize: 15, margin: 0, maxWidth: 640 }}>
-                  本系统是 Pinjie Fullstack Base 的统一管理控制台。采用模块化单体架构与严谨工程治理，为业务系统提供高可靠的基础设施、细粒度 RBAC 权限与全链路安全审计。
+                  本系统是 Pinjie Mall 的统一管理控制台。采用模块化单体架构，提供后台运营所需的权限管理、系统设置与安全审计能力；商品、订单和分销等商城业务将在后续计划中实施。
                 </Typography.Paragraph>
               </Space>
             </Col>
@@ -75,7 +75,7 @@ export function WelcomePage() {
 
         {/* 核心特性与架构介绍 */}
         <Typography.Title level={4} style={{ margin: "8px 0 0 0", color: "#101828" }}>
-          全栈母版架构特性
+          管理后台基础能力
         </Typography.Title>
 
         <Row gutter={[16, 16]}>

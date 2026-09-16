@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build && node scripts/prepare-standalone.mjs",
-    "start": "node .next/standalone/apps/web/server.js",
+    "dev": "node ../../scripts/disabled-web.mjs",
+    "build": "node ../../scripts/disabled-web.mjs",
+    "start": "node ../../scripts/disabled-web.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --coverage"
+    "test": "node ../../scripts/disabled-web.mjs"
   },
   "dependencies": {
     "next": "16.3.3",

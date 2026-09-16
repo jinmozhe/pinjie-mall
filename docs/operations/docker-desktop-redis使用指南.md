@@ -1,7 +1,7 @@
 # Docker Desktop Redis 使用指南
 
 > 文档归属：`docs/operations/docker-desktop-redis使用指南.md`
-> 适用仓库：`pinjie-fullstack-base` 及其派生项目
+> 适用仓库：`pinjie-mall`
 > 架构决策：[ADR 0003：本地开发环境架构决策](../adr/0003-本地开发环境架构决策.md)；[ADR 0010：浏览器认证会话RBAC与审计决策](../adr/0010-浏览器认证会话RBAC与审计决策.md)
 > 延伸阅读：[Windows 本地开发环境手册](local-dev-environment.md)；[环境变量分层与 Backend 本地运行手册](environment-variables-and-backend-local-run.md)
 
@@ -94,7 +94,7 @@ docker compose down -v
 
 除命令行外，也可以在 Docker Desktop 图形界面中完成全生命周期管理：
 
-- **查看容器**：在左侧 **Containers** 菜单中，可直接查看名为 `pinjie-fullstack-base-redis-1` 的容器状态、端口映射（`0.0.0.0:6379->6379/tcp`）、实时 CPU/内存占用。
+- **查看容器**：在左侧 **Containers** 菜单中，可直接查看名为 `pinjie-mall-redis-1` 的容器状态、端口映射（`0.0.0.0:6379->6379/tcp`）、实时 CPU/内存占用。
 - **一键启停**：点击容器列表右侧的 **Start / Stop / Restart** 按钮。
 - **查看日志与终端**：点击容器名称进入详情页，切换 **Logs** 查看 Redis 实时日志，切换 **Exec** 可直接在网页端输入 `redis-cli` 交互执行命令。
 - **管理数据卷**：在左侧 **Volumes** 菜单中，可查看 `redis_data` 卷的大小与挂载状态。
@@ -103,7 +103,7 @@ docker compose down -v
 
 ## 三、本项目中 Redis 的集成现状与关键职责
 
-在 `pinjie-fullstack-base` 中，Redis 不仅仅是普通缓存，更是**阶段 C 核心安全与会话控制的关键依赖**（Fail-Closed 模式）：
+在 `pinjie-mall` 中，Redis 不仅仅是普通缓存，更是**当前安全与会话控制的关键依赖**（Fail-Closed 模式）：
 
 ```text
 Backend 安全子系统对 Redis 的依赖矩阵
@@ -132,7 +132,7 @@ REDIS_URL=redis://localhost:6379/0
 
 ## 四、多项目共存与本地数据隔离规则
 
-当本地有多套系统（例如母版工程、派生电商项目、独立 CMS 项目、以及自动化测试）同时使用同一个 Docker Redis 实例时，必须严格遵守以下隔离规则，防止数据相互污染。
+当本地有多套系统（例如商城项目、独立 CMS 项目和自动化测试）同时使用同一个 Docker Redis 实例时，必须严格遵守以下隔离规则，防止数据相互污染。
 
 ### 1. 逻辑数据库编号隔离（推荐方案）
 
@@ -140,7 +140,7 @@ Redis 默认内置 16 个独立的数据库（编号为 `0` 到 `15`），各数
 
 | 数据库编号 | 建议用途 | 配置示例（`.env`） |
 | --- | --- | --- |
-| `0` | **当前母版基础项目（pinjie-fullstack-base）** | `REDIS_URL=redis://localhost:6379/0` |
+| `0` | **当前商城项目（pinjie-mall）** | `REDIS_URL=redis://localhost:6379/0` |
 | `1` | 派生业务项目 A（如 Commerce 电商系统） | `REDIS_URL=redis://localhost:6379/1` |
 | `2` | 派生业务项目 B（如 CMS 内容系统） | `REDIS_URL=redis://localhost:6379/2` |
 | `3 ~ 8` | 其他后续扩展业务系统 | `REDIS_URL=redis://localhost:6379/3` |

@@ -11,5 +11,5 @@ def test_openapi_export_is_independent_from_runtime_environment(monkeypatch, tmp
     export_openapi(output)
 
     schema = json.loads(output.read_text(encoding="utf-8"))
-    assert schema["info"]["title"] == "Pinjie Fullstack Base Backend"
+    assert schema["info"]["title"] == "Pinjie Mall Backend"
     assert schema["info"]["version"] == "0.1.0"

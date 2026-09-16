@@ -27,9 +27,9 @@ jobs:
           CNB_REPOSITORY_URL: ${{ vars.CNB_REPOSITORY_URL }}
         run: |
           set -euo pipefail
-          test "$GITHUB_REPOSITORY" = "jinmozhe/pinjie-fullstack-base"
+          test "$GITHUB_REPOSITORY" = "jinmozhe/pinjie-mall"
           test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"
-          test "$CNB_REPOSITORY_URL" = "https://cnb.cool/pjwl/pinjie-fullstack-base"
+          test "$CNB_REPOSITORY_URL" = "https://cnb.cool/pjwl/pinjie-mall"
           [[ "$COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]
 
       - name: Checkout trusted default branch

@@ -2,7 +2,7 @@
 
 ## 1. 目标
 
-本文件定义 Backend 领域、Web Feature、Admin Feature 和共享包之间的依赖方向。详细技术取舍见 [ADR 0006](../adr/0006-模块化单体与领域依赖边界决策.md)。
+本文件定义 Backend 领域、Admin Feature 和共享包之间的依赖方向。详细技术取舍见 [ADR 0006](../adr/0006-模块化单体与领域依赖边界决策.md)。
 
 ## 2. Backend 分层
 
@@ -52,9 +52,9 @@ Router
 
 只读模型必须标明来源、刷新方式、一致性预期和权限过滤。不得把只读聚合对象传回领域写流程充当权威状态。
 
-## 5. 前端 Feature 边界
+## 5. Admin Feature 边界
 
-Web 和 Admin 是独立应用，彼此不得引用源码。每个 Feature 只能通过自己的公开入口向外暴露稳定能力。
+Admin 与后续小程序是独立消费者，彼此不得引用源码。每个 Admin Feature 只能通过自己的公开入口向外暴露稳定能力。
 
 ```text
 Route / Page
@@ -68,7 +68,7 @@ Route / Page
 - 页面负责路由和页面级编排，不直接拼接底层请求。
 - Feature A 不得导入 Feature B 的内部组件、Hook、Store 或请求实现。
 - 跨 Feature 复用首先判断是否属于公共 UI、公共基础设施或后端契约。
-- 服务端数据由 Server Components 或 TanStack Query 管理，不复制到 Zustand。
+- 服务端数据由 TanStack Query 管理，不复制到 Zustand。
 - Zustand 只保存非敏感客户端状态，认证 Token 不进入客户端可读持久化存储。
 - `packages/` 只接受业务中立、边界明确且确有跨应用复用的能力。
 

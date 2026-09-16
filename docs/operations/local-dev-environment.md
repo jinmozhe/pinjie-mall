@@ -1,11 +1,11 @@
 # Windows 本地开发环境手册
 
 > 文档归属：`docs/operations/local-dev-environment.md`
-> 适用仓库：`pinjie-fullstack-base` 及其派生项目
+> 适用仓库：`pinjie-mall`
 > 架构决策：[ADR 0003：本地开发环境架构决策](../adr/0003-本地开发环境架构决策.md)
 > 延伸阅读：[uv 使用指南](uv使用指南.md)；[pnpm 使用指南](pnpm使用指南.md)
 
-根与三端 `.env` 的职责、VS Code 工作区方式和 Backend 的标准启动顺序见[环境变量分层与 Backend 本地运行手册](environment-variables-and-backend-local-run.md)。
+根与 Backend、Admin `.env` 的职责和 Backend 的标准启动顺序见[环境变量分层与 Backend 本地运行手册](environment-variables-and-backend-local-run.md)。
 
 ## 一、最终方案
 
@@ -62,7 +62,6 @@ Docker Desktop
 
 Windows 本机
 ├── Backend
-├── Web
 └── Admin
 ```
 
@@ -111,7 +110,7 @@ docker compose version
 
 ## 五、首次初始化
 
-以下命令默认从仓库根目录 `pinjie-fullstack-base` 开始执行。
+以下命令默认从仓库根目录 `pinjie-mall` 开始执行。
 
 ### 1. 安装前端依赖
 
@@ -149,12 +148,12 @@ psql -U postgres
 在 `psql` 中执行一次：
 
 ```sql
-CREATE USER pinjie_fullstack WITH PASSWORD 'your_local_password';
-CREATE DATABASE pinjie_fullstack_dev OWNER pinjie_fullstack;
-CREATE USER pinjie_fullstack_test WITH PASSWORD 'your_test_password' CREATEDB;
-CREATE DATABASE pinjie_fullstack_test OWNER pinjie_fullstack_test;
-GRANT ALL PRIVILEGES ON DATABASE pinjie_fullstack_dev TO pinjie_fullstack;
-GRANT ALL PRIVILEGES ON DATABASE pinjie_fullstack_test TO pinjie_fullstack_test;
+CREATE USER pinjie_mall WITH PASSWORD 'your_local_password';
+CREATE DATABASE pinjie_mall_dev OWNER pinjie_mall;
+CREATE USER pinjie_mall_test WITH PASSWORD 'your_test_password' CREATEDB;
+CREATE DATABASE pinjie_mall_test OWNER pinjie_mall_test;
+GRANT ALL PRIVILEGES ON DATABASE pinjie_mall_dev TO pinjie_mall;
+GRANT ALL PRIVILEGES ON DATABASE pinjie_mall_test TO pinjie_mall_test;
 ```
 
 `CREATEDB` 只授予本机测试角色，用于创建和删除名称以 `_test` 结尾的临时迁移与恢复数据库。开发角色和生产角色不需要该权限。
@@ -177,8 +176,8 @@ Copy-Item apps/admin/.env.example apps/admin/.env.local
 后端 `apps/backend/.env` 至少确认：
 
 ```dotenv
-DATABASE_URL=postgresql+asyncpg://pinjie_fullstack:your_local_password@localhost:5432/pinjie_fullstack_dev
-TEST_DATABASE_URL=postgresql+asyncpg://pinjie_fullstack_test:your_test_password@localhost:5432/pinjie_fullstack_test
+DATABASE_URL=postgresql+asyncpg://pinjie_mall:your_local_password@localhost:5432/pinjie_mall_dev
+TEST_DATABASE_URL=postgresql+asyncpg://pinjie_mall_test:your_test_password@localhost:5432/pinjie_mall_test
 REDIS_URL=redis://localhost:6379/0
 TEST_REDIS_URL=redis://localhost:6379/15
 ```

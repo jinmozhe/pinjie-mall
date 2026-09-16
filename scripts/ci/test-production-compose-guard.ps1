@@ -64,8 +64,6 @@ services:
     networks:
       - default
       - infrastructure
-  web:
-    image: ${WEB_IMAGE}
   admin:
     image: ${ADMIN_IMAGE}
 networks:
@@ -104,8 +102,8 @@ try {
     }
 
     Write-Compose -Content $validCompose.Replace(
-        "  web:",
-        "  web:`n    networks:`n      - default`n      - infrastructure"
+        "  admin:",
+        "  admin:`n    networks:`n      - default`n      - infrastructure"
     )
     if ((Invoke-Guard).ExitCode -eq 0) {
         throw "Expected a frontend infrastructure network membership to fail."
@@ -114,6 +112,11 @@ try {
     Write-Compose -Content $validCompose.Replace("services:", "services:`n  postgres:`n    image: postgres:18.4-alpine")
     if ((Invoke-Guard).ExitCode -eq 0) {
         throw "Expected a local PostgreSQL service to fail."
+    }
+
+    Write-Compose -Content $validCompose.Replace("services:", 'services:' + "`n" + '  web:' + "`n" + '    image: ${WEB_IMAGE}')
+    if ((Invoke-Guard).ExitCode -eq 0) {
+        throw "Expected a frozen Web service without host ports to fail."
     }
 
     Write-Compose -Content ($validCompose + "`nvolumes:`n  redis_data:`n")
@@ -126,7 +129,7 @@ try {
         throw "Expected missing production file-log overrides to fail."
     }
 
-    Write-Compose -Content $validCompose.Replace('${WEB_IMAGE}', '${ADMIN_IMAGE}')
+    Write-Compose -Content $validCompose.Replace('${ADMIN_IMAGE}', '${BACKEND_IMAGE}')
     if ((Invoke-Guard).ExitCode -eq 0) {
         throw "Expected an incorrect application image variable to fail."
     }
@@ -142,7 +145,7 @@ try {
         [Environment]::SetEnvironmentVariable("BACKEND_IMAGE", $previousBackendImage)
     }
 
-    [System.IO.File]::WriteAllText($webDockerfilePath, "FROM node:24-alpine AS runtime`n", $utf8)
+    [System.IO.File]::WriteAllText($adminDockerfilePath, "FROM node:24-alpine AS runtime`n", $utf8)
     Write-Compose -Content $validCompose
     if ((Invoke-Guard).ExitCode -eq 0) {
         throw "Expected a mutable Dockerfile base image to fail."

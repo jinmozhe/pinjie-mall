@@ -360,7 +360,7 @@ pnpm store path
 ```powershell
 gh auth status
 gh api user --jq .login
-gh run view 32646420055 --repo jinmozhe/pinjie-fullstack-base
+gh run view <run-id> --repo jinmozhe/pinjie-mall
 ```
 
 普通宿主 PowerShell 中三条命令可以读取有效登录态；沙箱内前两条命令仍返回旧凭据 `401`。后续按以下流程处理：
@@ -405,7 +405,7 @@ prefix_rule(
     decision = "allow",
     justification = "允许在宿主上下文只读列出 GitHub Actions 运行记录",
     match = [
-        "gh run list --repo jinmozhe/pinjie-fullstack-base",
+        "gh run list --repo jinmozhe/pinjie-mall",
     ],
 )
 
@@ -414,7 +414,7 @@ prefix_rule(
     decision = "allow",
     justification = "允许在宿主上下文只读查看 GitHub Actions 运行详情",
     match = [
-        "gh run view 32646420055 --repo jinmozhe/pinjie-fullstack-base",
+        "gh run view <run-id> --repo jinmozhe/pinjie-mall",
     ],
 )
 ```

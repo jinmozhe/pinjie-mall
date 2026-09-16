@@ -21,7 +21,6 @@ const frontendShared = [
 ];
 const expectedRoutes = {
   "backend-image": ["apps/backend/**", ...common],
-  "web-image": ["apps/web/**", "apps/admin/package.json", ...frontendShared, ...common],
   "admin-image": ["apps/admin/**", "apps/web/package.json", ...frontendShared, ...common],
 };
 
@@ -64,7 +63,7 @@ requireCondition(push && typeof push === "object", "main.push must contain named
 requireCondition(fullRelease && typeof fullRelease === "object", "The controlled full-release event is missing.");
 requireCondition(
   JSON.stringify(Object.keys(push).sort()) === JSON.stringify(Object.keys(expectedRoutes).sort()),
-  "main.push must contain exactly the three image pipelines.",
+  "main.push must contain exactly the two image pipelines.",
 );
 
 for (const [pipelineName, routes] of Object.entries(expectedRoutes)) {
@@ -91,16 +90,16 @@ for (const [pipelineName, routes] of Object.entries(expectedRoutes)) {
 
 const routingFixtures = {
   "apps/backend/app/main.py": ["backend-image"],
-  "apps/web/src/app/page.tsx": ["web-image"],
+  "apps/web/src/app/page.tsx": [],
   "apps/admin/src/app.tsx": ["admin-image"],
-  "apps/web/package.json": ["admin-image", "web-image"],
-  "apps/admin/package.json": ["admin-image", "web-image"],
-  "package.json": ["admin-image", "web-image"],
-  "packages/api-client/src/index.ts": ["admin-image", "web-image"],
-  ".dockerignore": ["admin-image", "backend-image", "web-image"],
-  ".cnb.yml": ["admin-image", "backend-image", "web-image"],
-  "scripts/ci/cnb-publish-images.sh": ["admin-image", "backend-image", "web-image"],
-  "scripts/ci/create-cnb-release-evidence.mjs": ["admin-image", "backend-image", "web-image"],
+  "apps/web/package.json": ["admin-image"],
+  "apps/admin/package.json": ["admin-image"],
+  "package.json": ["admin-image"],
+  "packages/api-client/src/index.ts": ["admin-image"],
+  ".dockerignore": ["admin-image", "backend-image"],
+  ".cnb.yml": ["admin-image", "backend-image"],
+  "scripts/ci/cnb-publish-images.sh": ["admin-image", "backend-image"],
+  "scripts/ci/create-cnb-release-evidence.mjs": ["admin-image", "backend-image"],
   "scripts/ci/nested/cnb-publish-images.sh": [],
   "compose.prod.yml": [],
   "docs/operations/container-build-and-run.md": [],

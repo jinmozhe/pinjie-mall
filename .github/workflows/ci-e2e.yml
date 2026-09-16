@@ -67,7 +67,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [admin, web]
+        app: [admin]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -97,11 +97,7 @@ jobs:
         env:
           APP: ${{ matrix.app }}
         run: |
-          if [[ "$APP" = "web" ]]; then
-            tar -czf "$RUNNER_TEMP/frontend-output.tar.gz" apps/web/.next/standalone
-          else
-            tar -czf "$RUNNER_TEMP/frontend-output.tar.gz" apps/admin/dist
-          fi
+          tar -czf "$RUNNER_TEMP/frontend-output.tar.gz" apps/admin/dist
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: production-${{ matrix.app }}-${{ github.run_id }}
@@ -153,7 +149,7 @@ jobs:
       REDIS_MODE: required
       REDIS_URL: redis://127.0.0.1:6379/0
       TEST_REDIS_URL: redis://127.0.0.1:6379/0
-      WEB_ORIGINS: '["http://127.0.0.1:3000","http://localhost:3000"]'
+      WEB_ORIGINS: '["https://miniapp.invalid"]'
       ADMIN_ORIGINS: '["http://127.0.0.1:3001","http://localhost:3001"]'
       WEB_JWT_SECRET: e2e-web-jwt-secret-0000000000000001
       ADMIN_JWT_SECRET: e2e-admin-jwt-secret-00000000000001
@@ -294,7 +290,7 @@ jobs:
 
       - name: Restore verified production outputs
         run: |
-          for app in admin web; do
+          for app in admin; do
             tar -xzf "$RUNNER_TEMP/production-output/production-$app-$GITHUB_RUN_ID/frontend-output.tar.gz"
           done
 
@@ -316,13 +312,12 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/full-validation-evidence"
           {
-            printf 'schema=pinjie-full-validation-v2\n'
+            printf 'schema=pinjie-mall-full-validation-v1\n'
             printf 'commit_sha=%s\n' "$COMMIT_SHA"
             printf 'workflow_run_id=%s\n' "$GITHUB_RUN_ID"
             printf 'workflow_run_attempt=%s\n' "$GITHUB_RUN_ATTEMPT"
             printf 'backend=pytest\n'
             printf 'admin=vitest,production-build,nginx-dist\n'
-            printf 'web=vitest,production-build,standalone\n'
             printf 'browser=playwright-chromium\n'
             printf 'database=postgresql-18.4-alpine\n'
             printf 'cache=redis-8.10.0-alpine\n'
@@ -347,13 +342,12 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/smoke-validation-evidence"
           {
-            printf 'schema=pinjie-smoke-validation-v1\n'
+            printf 'schema=pinjie-mall-smoke-validation-v1\n'
             printf 'commit_sha=%s\n' "$COMMIT_SHA"
             printf 'workflow_run_id=%s\n' "$GITHUB_RUN_ID"
             printf 'workflow_run_attempt=%s\n' "$GITHUB_RUN_ATTEMPT"
             printf 'backend=pytest\n'
             printf 'admin=production-build,nginx-dist\n'
-            printf 'web=production-build,standalone\n'
             printf 'frontend_unit_tests=skipped\n'
             printf 'browser=playwright-chromium-smoke\n'
             printf 'e2e_scope=all-quality-pages,desktop-stage-c\n'

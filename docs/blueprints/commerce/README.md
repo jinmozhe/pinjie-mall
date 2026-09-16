@@ -1,14 +1,6 @@
 # 电商业务蓝图
 
-本蓝图说明如何在 `pinjie-fullstack-base` 母版基础上扩展为完整的电商业务系统。
-
-## 派生仓库建议
-
-从母版 fork 或 clone 后，新建独立仓库，例如：
-
-```text
-pinjie-commerce-platform
-```
+本蓝图说明 `pinjie-mall` 后续如何实现完整的电商业务系统。
 
 ## 电商领域划分
 
@@ -29,8 +21,6 @@ pinjie-commerce-platform
 - `inventory-consistency.md`：高并发库存一致性方案
 - `payment-idempotency.md`：支付回调幂等处理
 
-## 参考来源
+## 使用方式
 
-原始规划文档见 `pinjie-standard` 仓库：
-
-`docs/2026-08-05_全栈Monorepo架构与1Panel部署规划方案.md`
+本蓝图不代表领域已经实现。每个领域开始前创建全栈计划，定义数据不变量、消费者、风险和验证。

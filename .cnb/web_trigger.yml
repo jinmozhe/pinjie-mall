@@ -1,8 +1,8 @@
 branch:
   - reg: ^main$
     buttons:
-      - name: 三端全量镜像构建
-        description: 为当前 main Commit 构建、扫描并发布 Backend、Web 和 Admin 镜像
+      - name: Backend 与 Admin 全量镜像构建
+        description: 为当前 main Commit 构建、扫描并发布 Backend 和 Admin 镜像
         event: web_trigger_full_release
         permissions:
           roles:

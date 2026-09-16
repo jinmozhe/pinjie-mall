@@ -5,7 +5,7 @@
   "scripts": {
     "generate-api": "cd packages/api-client && pnpm run generate",
     "dev": "turbo run dev --filter=@pinjie/admin",
-    "build": "turbo run build",
+    "build": "turbo run build --filter=@pinjie/admin",
     "check:boundaries": "powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/ci/check-module-boundaries.ps1 && node scripts/ci/check-typescript-boundaries.mjs",
     "check:governance": "pnpm check:text && pnpm lint:md && pnpm check:documents && pnpm check:workspace && pnpm check:dependencies && pnpm check:boundaries && pnpm check:production-config && pnpm check:openapi-exceptions && pnpm check:guards",
     "check:openapi-exceptions": "node scripts/ci/check-openapi-exceptions.mjs",

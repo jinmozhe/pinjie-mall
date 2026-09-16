@@ -10,15 +10,14 @@ set -eu
 : "${TCR_REGISTRY:?TCR_REGISTRY is required}"
 
 [ "$TCR_REGISTRY" = "ccr.ccs.tencentyun.com" ]
-[ "$TCR_NAMESPACE" = "pinjie-fullstack-base" ]
+[ "$TCR_NAMESPACE" = "pinjie-mall" ]
 [ "$EVIDENCE_ROOT" = ".cnb/evidence/$IMAGE_KEY" ]
 
 case "$IMAGE_KEY" in
-  backend) image_name="pinjie-fullstack-backend" ;;
-  web) image_name="pinjie-fullstack-web" ;;
-  admin) image_name="pinjie-fullstack-admin" ;;
+  backend) image_name="pinjie-mall-backend" ;;
+  admin) image_name="pinjie-mall-admin" ;;
   *)
-    echo "IMAGE_KEY must be one of backend, web, or admin."
+    echo "IMAGE_KEY must be one of backend or admin."
     exit 1
     ;;
 esac

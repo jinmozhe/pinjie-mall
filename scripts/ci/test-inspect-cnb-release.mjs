@@ -13,12 +13,12 @@ assert.deepEqual(JSON.parse(summaryLines.slice(2).map(line => line.slice(4)).joi
 
 const sha = "a".repeat(40);
 const token = "fixture-private-token";
-const repository = "pjwl/pinjie-fullstack-base";
+const repository = "pjwl/pinjie-mall";
 const build = { sha, slug: repository, sn: "cnb-fixture-1", event: "push" };
 const history = { data: [build], total: 1 };
 const status = {
   status: "error",
-  pipelinesStatus: Object.fromEntries(["backend", "web", "admin"].map((name, index) => [name, {
+  pipelinesStatus: Object.fromEntries(["backend", "admin"].map((name, index) => [name, {
     id: `pipeline-${index}`, name: `${name}-image`, status: index ? "skipped" : "error",
     stages: [{ id: "stage-1", name: "Build and push run-unique candidate", status: index ? "skipped" : "error" }],
   }])),
@@ -102,9 +102,9 @@ assert.deepEqual(Object.keys(workflow.on), ["workflow_dispatch"]);
 assert.deepEqual(workflow.permissions, { contents: "read" });
 assert.equal(workflow.jobs.inspect.environment, "cnb-source-handoff");
 const steps = workflow.jobs.inspect.steps;
-assert(steps[0].run.includes('test "$GITHUB_REPOSITORY" = "jinmozhe/pinjie-fullstack-base"'));
+assert(steps[0].run.includes('test "$GITHUB_REPOSITORY" = "jinmozhe/pinjie-mall"'));
 assert(steps[0].run.includes('test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"'));
-assert(steps[0].run.includes('https://cnb.cool/pjwl/pinjie-fullstack-base'));
+assert(steps[0].run.includes('https://cnb.cool/pjwl/pinjie-mall'));
 assert.equal(steps[1].with["persist-credentials"], false);
 assert.equal(steps.at(-1).run, "node scripts/ci/inspect-cnb-release.mjs");
 assert(!readFileSync(".github/workflows/inspect-cnb-release.yml", "utf8").includes("TCR_PUBLISH_PASSWORD"));

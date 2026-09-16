@@ -2,18 +2,18 @@
 
 ## 1. 适用范围
 
-本手册适用于使用 1Panel、OpenResty 和 `compose.prod.yml` 运行母版派生项目的单机生产环境。操作人员从 GitHub Actions 开始执行完整发布时，先阅读[GitHub 到 1Panel 端到端人工发布手册](github-cnb-tcr-1panel-release-runbook.md)。本文继续负责 1Panel 基础设施、生产配置、迁移、OpenResty、备份和恢复细节。
+本手册适用于使用 1Panel、OpenResty 和 `compose.prod.yml` 运行 Pinjie Mall 的单机生产环境。操作人员从 GitHub Actions 开始执行完整发布时，先阅读[GitHub 到 1Panel 端到端人工发布手册](github-cnb-tcr-1panel-release-runbook.md)。本文继续负责 1Panel 基础设施、生产配置、迁移、OpenResty、备份和恢复细节。
 
-生产部署、迁移、恢复、回滚、Tag 和 Release 分别需要明确授权。母版只提供可执行基线，派生项目必须补充域名、RPO、RTO、容量、告警和责任人。
+生产部署、迁移、恢复、回滚、Tag 和 Release 分别需要明确授权。本项目在首次生产部署前必须补充域名、RPO、RTO、容量、告警和责任人。
 
 ## 2. 部署前提
 
 - Linux x86_64 主机已安装并维护 Docker Engine、Compose v2 和 1Panel。
 - 1Panel OpenResty 独占公网 80/443，应用端口只绑定 `127.0.0.1`。
-- Backend、Web、Admin 镜像已经过对应 Commit SHA 的质量门禁、SBOM 和安全扫描。
-- 三张应用镜像使用完整 `@sha256:` digest，禁止使用 `latest`、分支标签或缺失版本回退。
+- Backend 与 Admin 镜像已经过对应 Commit SHA 的质量门禁、SBOM 和安全扫描。
+- 两张应用镜像使用完整 `@sha256:` digest，禁止使用 `latest`、分支标签或缺失版本回退。
 - 按当前单维护者流程，人工核对 CNB 单镜像发布清单与 TCR digest，并确认服务器根 `.env` 和 1Panel 编排环境变量一致；不要求候选镜像验收工作流或自动预检清单。服务器保持纯拉镜像，不安装验证工具链，完整顺序见[端到端人工发布手册](github-cnb-tcr-1panel-release-runbook.md)。
-- 生产服务器使用独立 `tcr-puller` CAM 子用户登录 TCR 个人版，只允许拉取指定三个仓库；账号创建、三仓只读 JSON、凭证初始化和权限验收见[腾讯云 CAM 子账号与 TCR 个人版最小权限操作手册](tencent-tcr-personal-cam-accounts.md)。
+- 生产服务器使用独立 `tcr-puller` CAM 子用户登录 TCR 个人版，只允许拉取本商城的 Backend 与 Admin 仓库；账号创建、只读 JSON、凭证初始化和权限验收见[腾讯云 CAM 子账号与 TCR 个人版最小权限操作手册](tencent-tcr-personal-cam-accounts.md)。
 - 1Panel 已管理 PostgreSQL 18.4 与 Redis 8.10.0 共享实例，并把二者接入外部网络 `1panel-network`；宿主机端口只允许绑定环回地址。
 - 共享 PostgreSQL 为每个项目配置独立数据库、登录角色和密码；共享 Redis 至少启用密码，并为各项目分配独立逻辑库编号。隔离要求更高时配置独立 ACL 用户或独立实例。
 - 部署目录、真实 `.env`、备份和数据库凭据仅允许受控运维账号访问。
@@ -50,20 +50,20 @@ pnpm check:governance
 docker compose --env-file .env -f compose.prod.yml config --quiet
 ```
 
-通过 1Panel Web 编辑器维护系统创建的编排时，把根 `.env` 中的 `BACKEND_IMAGE`、`WEB_IMAGE`、`ADMIN_IMAGE` 和 `WEB_PUBLIC_ORIGIN` 同步到编排的“环境变量”页。应用镜像字段使用基础插值 `${BACKEND_IMAGE}`、`${WEB_IMAGE}` 和 `${ADMIN_IMAGE}`，避免 1Panel 镜像预拉取把带 `:?` 提示的 Compose 必填表达式误判为镜像名称。镜像变量缺失或不是完整 `@sha256:` 引用时必须停止更新，不得改用 `latest`、分支标签或其他可变引用。命令行部署继续显式传入 `--env-file .env`。
+通过 1Panel Web 编辑器维护系统创建的编排时，把根 `.env` 中的 `BACKEND_IMAGE` 与 `ADMIN_IMAGE` 同步到编排的“环境变量”页。应用镜像字段使用基础插值 `${BACKEND_IMAGE}` 与 `${ADMIN_IMAGE}`，避免 1Panel 镜像预拉取把带 `:?` 提示的 Compose 必填表达式误判为镜像名称。镜像变量缺失或不是完整 `@sha256:` 引用时必须停止更新，不得改用 `latest`、分支标签或其他可变引用。命令行部署继续显式传入 `--env-file .env`。
 
-1Panel 显示更新失败但容器已经创建时，先以 `docker compose ps`、三个健康端点、脱敏后的容器环境目标和实际镜像 digest 判断运行状态。禁止只根据面板任务状态宣称部署成功，也不得在未核对存储卷前删除整个编排。
+1Panel 显示更新失败但容器已经创建时，先以 `docker compose ps`、各应用健康端点、脱敏后的容器环境目标和实际镜像 digest 判断运行状态。禁止只根据面板任务状态宣称部署成功，也不得在未核对存储卷前删除整个编排。
 
 检查项：
 
-- `BACKEND_IMAGE`、`WEB_IMAGE`、`ADMIN_IMAGE` 均为批准的完整 digest。
+- `BACKEND_IMAGE` 与 `ADMIN_IMAGE` 均为批准的完整 digest。
 - Backend `backend_uploads` 命名卷挂载到 `/app/storage`，统一资产根为 `/app/storage/uploads`，配置媒体根为 `/app/storage/settings-media`。
 - Backend 和 request-log-consumer 显式设置 `LOG_FILE_ENABLED=false`。
-- Backend 和 request-log-consumer 同时接入项目默认网络与外部 `1panel-network`；Web 和 Admin 不接入基础设施网络。
+- Backend 和 request-log-consumer 同时接入项目默认网络与外部 `1panel-network`；Admin 不接入基础设施网络。
 - `DATABASE_URL` 使用共享服务名 `postgresql`、项目数据库和项目角色。当前 `REDIS_URL` 使用共享服务名 `redis`、`default` 用户和独立逻辑库 `/1`；逻辑库编号不能当作权限隔离。
 - `ENVIRONMENT=production`，Cookie、Trusted Host、CORS、代理 CIDR 和四个认证密钥满足生产约束。
 
-CNB 每个应用会生成独立的 `pinjie-cnb-tcr-image-v1` 附件。部署单端更新时，只把根 `.env` 中该端镜像变量替换为附件中的完整 digest，保留另外两端的现有 digest。1Panel 点击“更新编排”可能重算全部服务配置；需要严格只重建目标端时，在同一 Compose 目录执行 `docker compose --env-file .env -f compose.prod.yml up -d --no-deps --wait <backend|web|admin>`。更新后记录三个运行端各自的 Commit、digest、CNB Build ID、证据附件和部署时间。
+CNB 每个应用会生成独立的 `pinjie-cnb-tcr-image-v1` 附件。部署单端更新时，只把根 `.env` 中该端镜像变量替换为附件中的完整 digest，保留另一端的现有 digest。1Panel 点击“更新编排”可能重算全部服务配置；需要严格只重建目标端时，在同一 Compose 目录执行 `docker compose --env-file .env -f compose.prod.yml up -d --no-deps --wait <backend|admin>`。更新后记录两个运行端各自的 Commit、digest、CNB Build ID、证据附件和部署时间。
 
 项目 Compose 不创建、停止或重建 PostgreSQL 和 Redis。共享实例的镜像版本、数据目录、持久化、容量、健康检查和备份由 1Panel 基础设施层管理；项目日常部署禁止使用 `--remove-orphans` 清理旧基础设施容器。
 
@@ -77,7 +77,7 @@ CNB 每个应用会生成独立的 `pinjie-cnb-tcr-image-v1` 附件。部署单�
 2. 分别验证共享实例备份和源项目数据库一致性备份，记录文件大小与 SHA-256。
 3. 创建项目 PostgreSQL 角色，将目标数据库所有权和恢复对象归属设置为该角色。
 4. 为目标项目登记独立 Redis 逻辑库编号并验证密码连接；采用 ACL 方案时还要持久化独立用户，并验证项目 Key 可访问且管理命令被拒绝。
-5. 停止 Backend、Web、Admin 和请求日志消费者，冻结写入后制作最终数据库备份。
+5. 停止 Backend、Admin 和请求日志消费者，冻结写入后制作最终数据库备份。
 6. 恢复到共享 PostgreSQL，核对 Alembic revision、表清单、权限目录、管理员和不泄露数据的业务摘要。
 7. 更新 `apps/backend/.env` 中的两个连接串，启动应用并执行完整健康与登录检查。
 8. 在观察期内保留旧 PostgreSQL、Redis 容器和数据。删除旧容器、卷、备份或数据库需要独立授权。
@@ -112,9 +112,9 @@ docker compose --env-file .env -f compose.prod.yml --profile request-logs up -d 
 
 - 1Panel 中的共享 PostgreSQL 和 Redis 状态正常，使用项目凭据执行的连接检查成功。
 - Backend `/health/live` 返回存活，`/health/ready` 返回就绪。
-- Web 首页可访问，Admin `/healthz` 返回 `ok`。
+- Admin `/healthz` 返回 `ok`。
 - 运行容器使用批准的完整镜像 digest，进程用户为非 Root。
-- Web 和 Admin 经同域 `/api/v1` 访问 Backend，认证 Cookie 包含 `HttpOnly`、`Secure` 和预期的 `SameSite`。
+- Admin 经同域 `/api/v1` 访问 Backend，认证 Cookie 包含 `HttpOnly`、`Secure` 和预期的 `SameSite`。
 - 权限目录无漂移；启用请求日志时消费者能处理 Redis Stream 并写入 PostgreSQL。
 
 ## 6. OpenResty 接线
@@ -123,7 +123,6 @@ docker compose --env-file .env -f compose.prod.yml --profile request-logs up -d 
 
 | 入口 | 上游 |
 | --- | --- |
-| Web | `http://127.0.0.1:3000` |
 | Admin | `http://127.0.0.1:3001` |
 | 独立 Backend 域名需要时 | `http://127.0.0.1:8000` |
 

@@ -32,7 +32,7 @@ export function filterScan(report) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const key = process.env.IMAGE_KEY;
   const root = process.env.EVIDENCE_ROOT;
-  if (!["backend", "web", "admin"].includes(key) || root !== `.cnb/evidence/${key}`) {
+  if (!["backend", "admin"].includes(key) || root !== `.cnb/evidence/${key}`) {
     throw new Error("Invalid scan evidence scope.");
   }
   try {
