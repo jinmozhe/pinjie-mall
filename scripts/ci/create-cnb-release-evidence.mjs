@@ -2,13 +2,12 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const imageDefinitions = {
-  backend: "pinjie-fullstack-backend",
-  web: "pinjie-fullstack-web",
-  admin: "pinjie-fullstack-admin",
+  backend: "pinjie-mall-backend",
+  admin: "pinjie-mall-admin",
 };
 const expectedRegistry = "ccr.ccs.tencentyun.com";
-const expectedNamespace = "pinjie-fullstack-base";
-const expectedSourceRepository = "https://github.com/jinmozhe/pinjie-fullstack-base";
+const expectedNamespace = "pinjie-mall";
+const expectedSourceRepository = "https://github.com/jinmozhe/pinjie-mall";
 
 function requiredEnv(name) {
   const value = process.env[name];
@@ -53,7 +52,7 @@ const releasePipeline = requiredEnv("RELEASE_PIPELINE");
 const repository = imageDefinitions[imageKey];
 
 if (!repository) {
-  throw new Error("IMAGE_KEY must be one of backend, web, or admin.");
+  throw new Error("IMAGE_KEY must be one of backend or admin.");
 }
 if (evidenceRoot !== `.cnb/evidence/${imageKey}`) {
   throw new Error("EVIDENCE_ROOT does not match IMAGE_KEY.");

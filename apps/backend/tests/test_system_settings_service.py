@@ -52,9 +52,9 @@ def _site_value(*, logo: SiteLogoValue | None = None) -> SiteSettingValue:
     return SiteSettingValue(
         name="Pinjie",
         logo=logo,
-        title="Pinjie Fullstack Base",
-        keywords=["fullstack", "base"],
-        description="Reusable fullstack foundation",
+        title="Pinjie Mall",
+        keywords=["mall", "commerce"],
+        description="Independent mall platform",
     )
 
 

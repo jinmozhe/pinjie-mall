@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export async function inspectRelease({ sha, token, fetchImpl = fetch }) {
-  const repository = 'pjwl/pinjie-fullstack-base';
+  const repository = 'pjwl/pinjie-mall';
   if (typeof token !== 'string' || !token.trim() || typeof sha !== 'string' || !/^[0-9a-f]{40}$/.test(sha)) {
     throw new Error('Missing CNB credential or invalid source SHA.');
   }
@@ -83,7 +83,7 @@ export async function inspectRelease({ sha, token, fetchImpl = fetch }) {
     }
     const pipelines = Object.values(detail.pipelinesStatus).map(pipeline => {
       if (!pipeline || !Array.isArray(pipeline.stages) || pipeline.stages.length === 0 || pipeline.stages.length > 100 ||
-          !['backend-image', 'web-image', 'admin-image'].includes(pipeline.name)) {
+          !['backend-image', 'admin-image'].includes(pipeline.name)) {
         throw new Error('Invalid CNB pipeline or stage status.');
       }
       return {

@@ -44,7 +44,7 @@ await Promise.all([
         Labels: {
           "org.opencontainers.image.revision": expectedCommit,
           "org.opencontainers.image.created": commitTime,
-          "org.opencontainers.image.source": "https://github.com/jinmozhe/pinjie-fullstack-base",
+          "org.opencontainers.image.source": "https://github.com/jinmozhe/pinjie-mall",
         },
       },
     })}\n`,
@@ -58,13 +58,13 @@ const createEnvironment = {
   IMAGE_KEY: "backend",
   CNB_COMMIT: expectedCommit,
   TCR_REGISTRY: "ccr.ccs.tencentyun.com",
-  TCR_NAMESPACE: "pinjie-fullstack-base",
+  TCR_NAMESPACE: "pinjie-mall",
   RELEASE_PIPELINE: "backend-image",
   CNB_BUILD_START_TIME: "2026-08-31T01:01:00.000Z",
-  CNB_REPO_SLUG: "pjwl/pinjie-fullstack-base",
+  CNB_REPO_SLUG: "pjwl/pinjie-mall",
   CNB_BRANCH: "main",
   CNB_BUILD_ID: expectedBuildId,
-  CNB_BUILD_WEB_URL: `https://cnb.cool/pjwl/pinjie-fullstack-base/-/build/logs/${expectedBuildId}`,
+  CNB_BUILD_WEB_URL: `https://cnb.cool/pjwl/pinjie-mall/-/build/logs/${expectedBuildId}`,
 };
 const createResult = spawnSync(process.execPath, [createScript], {
   cwd: fixtureRoot,
@@ -118,7 +118,7 @@ try {
     fixture.cnb.build_id = "123";
   });
   await expectRejected("wrong build URL", (fixture) => {
-    fixture.cnb.build_url = "https://cnb.cool/pjwl/pinjie-fullstack-base/-/build/logs/123";
+    fixture.cnb.build_url = "https://cnb.cool/pjwl/pinjie-mall/-/build/logs/123";
   });
   await expectRejected("wrong pipeline", (fixture) => {
     fixture.cnb.pipeline = "web-image";

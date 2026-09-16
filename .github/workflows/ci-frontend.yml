@@ -37,7 +37,7 @@ jobs:
         run: echo "One or more frontend applications are explicit empty skeletons. Their application quality checks have not passed."
 
   web-quality:
-    name: Web quality
+    name: Frozen Web static checks
     needs: frontend-state
     if: needs.frontend-state.outputs.web == 'ready'
     runs-on: ubuntu-latest

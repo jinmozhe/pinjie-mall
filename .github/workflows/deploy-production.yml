@@ -4,15 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       commit_sha:
-        description: Full 40-character source commit SHA for all three images
+        description: Full 40-character source commit SHA for both images
         required: true
         type: string
       backend_digest:
         description: Backend image digest, sha256 followed by 64 lowercase hex characters
-        required: true
-        type: string
-      web_digest:
-        description: Web image digest, sha256 followed by 64 lowercase hex characters
         required: true
         type: string
       admin_digest:
@@ -63,7 +59,6 @@ jobs:
           BACKEND_DIGEST: ${{ inputs.backend_digest }}
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
           PRODUCTION_DEPLOYMENT_ENABLED: ${{ vars.PRODUCTION_DEPLOYMENT_ENABLED }}
-          WEB_DIGEST: ${{ inputs.web_digest }}
         run: |
           if [[ "$PRODUCTION_DEPLOYMENT_ENABLED" != "true" ]]; then
             echo "Set the production environment variable PRODUCTION_DEPLOYMENT_ENABLED to true before deployment."
@@ -73,7 +68,7 @@ jobs:
             echo "DEPLOY_PATH must be a non-empty absolute path."
             exit 1
           fi
-          for digest in "$BACKEND_DIGEST" "$WEB_DIGEST" "$ADMIN_DIGEST"; do
+          for digest in "$BACKEND_DIGEST" "$ADMIN_DIGEST"; do
             if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
               echo "Every image input must be a full sha256 digest."
               exit 1
@@ -97,7 +92,6 @@ jobs:
           BACKEND_DIGEST: ${{ inputs.backend_digest }}
           COMMIT_SHA: ${{ inputs.commit_sha }}
           IMAGE_OWNER: ${{ github.repository_owner }}
-          WEB_DIGEST: ${{ inputs.web_digest }}
         run: |
           verify_digest() {
             local image="$1"
@@ -110,24 +104,22 @@ jobs:
               exit 1
             fi
           }
-          verify_digest pinjie-fullstack-backend "$BACKEND_DIGEST"
-          verify_digest pinjie-fullstack-web "$WEB_DIGEST"
-          verify_digest pinjie-fullstack-admin "$ADMIN_DIGEST"
+          verify_digest pinjie-mall-backend "$BACKEND_DIGEST"
+          verify_digest pinjie-mall-admin "$ADMIN_DIGEST"
 
       - name: Deploy approved digests
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
         env:
-          ADMIN_IMAGE: ghcr.io/${{ github.repository_owner }}/pinjie-fullstack-admin@${{ inputs.admin_digest }}
-          BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/pinjie-fullstack-backend@${{ inputs.backend_digest }}
+          ADMIN_IMAGE: ghcr.io/${{ github.repository_owner }}/pinjie-mall-admin@${{ inputs.admin_digest }}
+          BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/pinjie-mall-backend@${{ inputs.backend_digest }}
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
           EXPECTED_COMPOSE_SHA256: ${{ steps.source.outputs.compose_sha256 }}
           RELEASE_COMMIT_SHA: ${{ inputs.commit_sha }}
-          WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/pinjie-fullstack-web@${{ inputs.web_digest }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          envs: ADMIN_IMAGE,BACKEND_IMAGE,DEPLOY_PATH,EXPECTED_COMPOSE_SHA256,RELEASE_COMMIT_SHA,WEB_IMAGE
+          envs: ADMIN_IMAGE,BACKEND_IMAGE,DEPLOY_PATH,EXPECTED_COMPOSE_SHA256,RELEASE_COMMIT_SHA
           script: |
             set -eu
             cd -- "$DEPLOY_PATH"
@@ -138,8 +130,7 @@ jobs:
             umask 077
             image_env="$(mktemp .pinjie-deploy-images.XXXXXX)"
             trap 'rm -f "$image_env"' EXIT
-            grep -E '^WEB_PUBLIC_ORIGIN=' .env > "$image_env"
-            printf 'BACKEND_IMAGE=%s\nWEB_IMAGE=%s\nADMIN_IMAGE=%s\n' "$BACKEND_IMAGE" "$WEB_IMAGE" "$ADMIN_IMAGE" >> "$image_env"
+            printf 'BACKEND_IMAGE=%s\nADMIN_IMAGE=%s\n' "$BACKEND_IMAGE" "$ADMIN_IMAGE" >> "$image_env"
             docker compose --env-file "$image_env" -f compose.prod.yml config --quiet
             docker compose --env-file "$image_env" -f compose.prod.yml pull
             docker compose --env-file "$image_env" -f compose.prod.yml up -d --wait --wait-timeout 120
@@ -153,7 +144,6 @@ jobs:
               test "$actual" = "$expected"
             }
             verify_running_image backend "$BACKEND_IMAGE"
-            verify_running_image web "$WEB_IMAGE"
             verify_running_image admin "$ADMIN_IMAGE"
             mv -f "$image_env" .env
             trap - EXIT
@@ -167,12 +157,10 @@ jobs:
           COMMIT_SHA: ${{ inputs.commit_sha }}
           COMPOSE_SHA256: ${{ steps.source.outputs.compose_sha256 }}
           IMAGE_OWNER: ${{ github.repository_owner }}
-          WEB_DIGEST: ${{ inputs.web_digest }}
         run: |
           printf '%s\n' \
             "commit_sha=$COMMIT_SHA" \
             "compose_sha256=$COMPOSE_SHA256" \
-            "backend=ghcr.io/$IMAGE_OWNER/pinjie-fullstack-backend@$BACKEND_DIGEST" \
-            "web=ghcr.io/$IMAGE_OWNER/pinjie-fullstack-web@$WEB_DIGEST" \
-            "admin=ghcr.io/$IMAGE_OWNER/pinjie-fullstack-admin@$ADMIN_DIGEST" \
+            "backend=ghcr.io/$IMAGE_OWNER/pinjie-mall-backend@$BACKEND_DIGEST" \
+            "admin=ghcr.io/$IMAGE_OWNER/pinjie-mall-admin@$ADMIN_DIGEST" \
             >> "$GITHUB_STEP_SUMMARY"

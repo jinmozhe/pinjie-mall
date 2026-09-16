@@ -78,7 +78,7 @@ if (process.argv[2] === "cleanup") {
     const environment = {
       ENVIRONMENT: "test", DATABASE_URL: databaseURL, TEST_DATABASE_URL: databaseURL,
       REDIS_MODE: "required", REDIS_URL: "redis://redis:6379/0", TEST_REDIS_URL: "redis://redis:6379/0",
-      WEB_ORIGINS: '["http://127.0.0.1:3000"]', ADMIN_ORIGINS: '["http://127.0.0.1:3001"]',
+      WEB_ORIGINS: '["https://miniapp.invalid"]', ADMIN_ORIGINS: '["http://127.0.0.1:3001"]',
       TRUSTED_HOSTS: '["backend","localhost","127.0.0.1"]', API_DOCS_ENABLED: "false", LOG_FILE_ENABLED: "false",
       WEB_JWT_SECRET: secret(), ADMIN_JWT_SECRET: secret(), WEB_TOKEN_HMAC_KEY: secret(), ADMIN_TOKEN_HMAC_KEY: secret(),
       INITIAL_ADMIN_PASSWORD: adminPassword, UPLOAD_LOCAL_ROOT: "/app/storage/uploads", SETTINGS_MEDIA_ROOT: "/app/storage/settings-media",
@@ -90,9 +90,6 @@ if (process.argv[2] === "cleanup") {
         redis: { image: "redis:8.10.0-alpine", healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: "2s", timeout: "2s", retries: 30 } },
         backend: { image: request.images.backend.release.image.reference, platform: "linux/amd64", environment,
           ports: ["127.0.0.1:8000:8000"], depends_on: { postgres: { condition: "service_healthy" }, redis: { condition: "service_healthy" } } },
-        web: { image: request.images.web.release.image.reference, platform: "linux/amd64", ports: ["127.0.0.1:3000:3000"],
-          environment: { BACKEND_INTERNAL_URL: "http://backend:8000", WEB_PUBLIC_ORIGIN: "http://127.0.0.1:3000" },
-          depends_on: { backend: { condition: "service_healthy" } } },
         admin: { image: request.images.admin.release.image.reference, platform: "linux/amd64", ports: ["127.0.0.1:3001:3001"],
           depends_on: { backend: { condition: "service_healthy" } } },
       },
@@ -106,19 +103,19 @@ if (process.argv[2] === "cleanup") {
       ["python", "-m", "scripts.sync_permissions", "--apply", "--confirm-database", "pinjie_candidate_test"],
       ["python", "-m", "scripts.create_initial_admin", "--username", "stage-admin", "--confirm-database", "pinjie_candidate_test"],
     ]) run("docker", [...composeArgs, "run", "--rm", "--no-deps", "backend", ...command], { timeout: 180_000 });
-    run("docker", [...composeArgs, "up", "-d", "--wait", "--wait-timeout", "180", "backend", "web", "admin"], { timeout: 300_000 });
+    run("docker", [...composeArgs, "up", "-d", "--wait", "--wait-timeout", "180", "backend", "admin"], { timeout: 300_000 });
     phase = "playwright";
     run(process.execPath, ["node_modules/@playwright/test/cli.js", "test"], { timeout: 20 * 60_000,
       env: { ...process.env, E2E_MANAGED_SERVERS: "1", E2E_ADMIN_USERNAME: "stage-admin", E2E_ADMIN_PASSWORD: adminPassword,
         E2E_SUMMARY_DIR: output }, stdio: ["ignore", "pipe", "pipe"] });
     const browser = JSON.parse(readFileSync(resolve(output, "e2e-summary.json"), "utf8"));
     requireCondition(browser.status === "passed" && Array.isArray(browser.tests) &&
-      ["web-desktop", "web-mobile", "admin-desktop", "admin-mobile"].every((project) =>
+      ["admin-desktop", "admin-mobile"].every((project) =>
         browser.tests.some((test) => test.project === project && test.status === "passed")),
-    "Browser evidence must include passing tests in all four desktop/mobile projects.");
+    "Browser evidence must include passing tests in both Admin desktop/mobile projects.");
     phase = "cleanup";
     cleanup();
-    const manifest = { schema: "pinjie-deployment-composition-v1", request, request_sha256: hash(request), handoffs,
+    const manifest = { schema: "pinjie-mall-deployment-composition-v1", request, request_sha256: hash(request), handoffs,
       validation: { status: "passed", run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT,
         workflow_commit: process.env.GITHUB_SHA, tested_at: new Date().toISOString(),
         scope: "linux-amd64-postgres-redis-production-images-playwright" } };

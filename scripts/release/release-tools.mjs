@@ -11,7 +11,7 @@ const save = (path, value) => writeFileSync(path, `${JSON.stringify(value, null,
 
 export function deploymentVariables(text) {
   const values = parseEnv(text);
-  exactKeys(values, ["BACKEND_IMAGE", "WEB_IMAGE", "ADMIN_IMAGE", "WEB_PUBLIC_ORIGIN"], "Deployment variables");
+  exactKeys(values, ["BACKEND_IMAGE", "ADMIN_IMAGE"], "Deployment variables");
   const seen = new Set();
   for (const line of text.split(/\r?\n/u)) {
     if (!line.trim() || line.trimStart().startsWith("#")) continue;
@@ -41,7 +41,7 @@ export function retentionPlan(inventory, protectedManifests, now = Date.now()) {
   const review = [];
   for (const item of inventory.tags) {
     exactKeys(item, ["app", "tag", "digest", "created_at"], "Registry tag");
-    const reference = imageReference(item.app, `ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-${item.app}@${item.digest}`);
+    const reference = imageReference(item.app, `ccr.ccs.tencentyun.com/pinjie-mall/pinjie-mall-${item.app}@${item.digest}`);
     requireCondition(typeof item.tag === "string" && /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$/u.test(item.tag), "Invalid registry tag.");
     requireCondition(!seen.has(`${item.app}:${item.tag}`), "Duplicate registry inventory entry.");
     seen.add(`${item.app}:${item.tag}`);
@@ -94,10 +94,10 @@ async function main() {
   const temporary = mkdtempSync(resolve(tmpdir(), "pinjie-release-tools-"));
   try {
     if (command === "request") {
-      exactKeys(Object.fromEntries(args), ["--backend", "--web", "--admin", "--backend-handoff", "--web-handoff", "--admin-handoff",
-        "--test-commit", "--web-origin", "--output"], "Request arguments");
-      const request = validateRequest({ schema: "pinjie-candidate-request-v1", test_commit: args.get("--test-commit"),
-        web_public_origin: args.get("--web-origin"), images: Object.fromEntries(apps.map((app) => [app, {
+      exactKeys(Object.fromEntries(args), ["--backend", "--admin", "--backend-handoff", "--admin-handoff",
+        "--test-commit", "--output"], "Request arguments");
+      const request = validateRequest({ schema: "pinjie-mall-candidate-request-v1", test_commit: args.get("--test-commit"),
+        images: Object.fromEntries(apps.map((app) => [app, {
           release: json(args.get(`--${app}`)), handoff_run_id: args.get(`--${app}-handoff`),
         }])) });
       validateReleaseFiles(request, temporary);

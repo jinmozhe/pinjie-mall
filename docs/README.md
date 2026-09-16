@@ -10,7 +10,7 @@
 
 | 文件                                               | 说明                                                             |
 | -------------------------------------------------- | ---------------------------------------------------------------- |
-| [PROJECT_REQUIREMENTS.md](PROJECT_REQUIREMENTS.md) | 母版目标用户、适用场景、目标能力、非目标、派生规则和完成验收标准 |
+| [PROJECT_REQUIREMENTS.md](PROJECT_REQUIREMENTS.md) | 商城目标用户、适用场景、目标能力、非目标和当前阶段验收边界 |
 
 ---
 
@@ -34,7 +34,8 @@
 | [0012-统一文件资产采用可补偿本地存储决策.md](adr/0012-统一文件资产采用可补偿本地存储决策.md) | 统一文件资产采用存储端口、同文件系统原子提交、同主体去重和可恢复删除补偿 |
 | [0013-全局系统设置与配置媒体决策.md](adr/0013-全局系统设置与配置媒体决策.md) | 全局设置采用单表分组 JSONB、固定强类型接口和独立可补偿配置媒体槽位 |
 | [0014-共享PostgreSQL与Redis生产基础设施决策.md](adr/0014-共享PostgreSQL与Redis生产基础设施决策.md) | 生产共享 1Panel PostgreSQL 与 Redis，并按项目隔离数据库、角色、ACL、Key 和恢复范围 |
-| [0015-派生项目计划基线重建决策.md](adr/0015-派生项目计划基线重建决策.md) | 母版永久保留计划，独立派生仓库可在初始化阶段由用户人工清理继承计划并重建计划基线 |
+| [0015-派生项目计划基线重建决策.md](adr/0015-派生项目计划基线重建决策.md) | 历史计划治理决策，仅保留 Git 追溯价值 |
+| [0016-独立商城基线与Web停用决策.md](adr/0016-独立商城基线与Web停用决策.md) | 独立商城身份、小程序唯一 C 端、Web 冻结及 Backend 与 Admin 交付边界 |
 
 ---
 
@@ -60,7 +61,7 @@
 
 ## blueprints/ - 业务扩展蓝图
 
-> 母版只含通用能力（auth/users/admin/system）。业务领域扩展的设计思路、数据模型、实施步骤记录在这里，供派生仓库参考。
+> 商城业务领域的设计思路、数据模型和实施步骤记录在这里，供本项目后续计划参考。
 
 | 文件                                                           | 说明                                                                         |
 | -------------------------------------------------------------- | ---------------------------------------------------------------------------- |
@@ -81,7 +82,7 @@
 | 文件 | 说明 |
 | --- | --- |
 | [local-dev-environment.md](operations/local-dev-environment.md) | Windows 本地开发手册：纯 uv、pnpm、本机 PostgreSQL、Docker Desktop Redis、Codex 默认联网沙箱基线与生产环境边界 |
-| [environment-variables-and-backend-local-run.md](operations/environment-variables-and-backend-local-run.md) | 三端环境变量、认证 Secret、Backend 初始化、权限同步、管理员创建、日志 Worker 和本地检查步骤 |
+| [environment-variables-and-backend-local-run.md](operations/environment-variables-and-backend-local-run.md) | Backend 与 Admin 环境变量、Backend 初始化、权限同步和本地检查步骤 |
 | [admin-local-development-and-validation-troubleshooting.md](operations/admin-local-development-and-validation-troubleshooting.md) | Admin Umi 本地启动、测试、浏览器验证、跨栈前置条件和迁移故障排查 |
 | [ai-assisted-development-workflow.md](operations/ai-assisted-development-workflow.md) | AI 助手规则读取与跨端实施指南：第 17 节为修改前必读流程，第 18.1 节定义 git-sync 全仓本地交付授权、保留整合与自动恢复 |
 | [codex-windows-config-acl-governance.md](operations/codex-windows-config-acl-governance.md) | Codex Windows `config.toml`、默认联网、Schannel、GitHub CLI Keyring、`elevated + Custom`、ACL 诊断、验证、最小修复和回滚标准 |

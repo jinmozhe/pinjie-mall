@@ -46,7 +46,7 @@ function runScan(imageKey, blocked = false) {
     `EVIDENCE_ROOT=".cnb/evidence/${imageKey}"`,
     `IMAGE_KEY=${imageKey}`,
     "TCR_REGISTRY=ccr.ccs.tencentyun.com",
-    "TCR_NAMESPACE=pinjie-fullstack-base",
+    "TCR_NAMESPACE=pinjie-mall",
     "TCR_PUBLISH_USERNAME=test-user",
     "TCR_PUBLISH_PASSWORD=test-password",
     `MOCK_BLOCK=${blocked ? "1" : "0"}`,
@@ -116,7 +116,7 @@ esac
   );
   chmodSync(mockTrivy, 0o755);
 
-  for (const imageKey of ["backend", "web", "admin"]) {
+  for (const imageKey of ["backend", "admin"]) {
     const { evidenceRoot, result } = runScan(imageKey);
     requireCondition(result.status === 0, `Expected ${imageKey} scan to pass.`, result);
     requireCondition(existsSync(path.join(evidenceRoot, `${imageKey}-trivy-full.json`)), `Expected ${imageKey} complete JSON evidence.`, result);

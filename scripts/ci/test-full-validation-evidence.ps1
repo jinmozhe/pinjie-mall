@@ -12,13 +12,12 @@ $powerShellExecutable = (Get-Process -Id $PID).Path
 $expectedSha = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 $expectedRunId = "987654321"
 $validEvidence = @"
-schema=pinjie-full-validation-v2
+schema=pinjie-mall-full-validation-v1
 commit_sha=$expectedSha
 workflow_run_id=$expectedRunId
 workflow_run_attempt=1
 backend=pytest
 admin=vitest,production-build,nginx-dist
-web=vitest,production-build,standalone
 browser=playwright-chromium
 database=postgresql-18.4-alpine
 cache=redis-8.10.0-alpine
@@ -65,8 +64,8 @@ try {
     }
 
     Assert-GuardRejects -Scenario "wrong commit SHA" -Content $validEvidence.Replace($expectedSha, "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
-    Assert-GuardRejects -Scenario "legacy development-server evidence" -Content $validEvidence.Replace("pinjie-full-validation-v2", "pinjie-full-validation-v1")
-    Assert-GuardRejects -Scenario "smoke evidence renamed to the full filename" -Content $validEvidence.Replace("pinjie-full-validation-v2", "pinjie-smoke-validation-v1")
+    Assert-GuardRejects -Scenario "legacy development-server evidence" -Content $validEvidence.Replace("pinjie-mall-full-validation-v1", "pinjie-full-validation-v1")
+    Assert-GuardRejects -Scenario "smoke evidence renamed to the full filename" -Content $validEvidence.Replace("pinjie-mall-full-validation-v1", "pinjie-mall-smoke-validation-v1")
     Assert-GuardRejects -Scenario "smoke browser scope with a forged full schema" -Content $validEvidence.Replace("browser=playwright-chromium", "browser=playwright-chromium-smoke")
     Assert-GuardRejects -Scenario "missing frontend tests with a forged full schema" -Content $validEvidence.Replace("admin=vitest,production-build,nginx-dist", "admin=production-build,nginx-dist")
     Assert-GuardRejects -Scenario "wrong workflow run" -Content $validEvidence.Replace($expectedRunId, "123456789")

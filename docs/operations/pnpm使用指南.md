@@ -3,7 +3,7 @@
 > 文档归属：`docs/operations/pnpm使用指南.md`
 > 本地开发主手册：[Windows 本地开发环境手册](local-dev-environment.md)
 >
-> 本文档说明本项目（pinjie-fullstack-base）选择 pnpm 的原因，
+> 本文档说明本项目（pinjie-mall）选择 pnpm 的原因，
 > 通过与 npm 的机制对比帮助开发者理解 pnpm 的核心优势。
 
 ## 背景
@@ -344,7 +344,7 @@ yarn（尤其是 yarn berry/PnP 模式）也解决了部分 npm 问题，
 ```powershell
 # 1. clone 仓库
 git clone <repo-url>
-cd pinjie-fullstack-base
+cd pinjie-mall
 
 # 2. 安装 pnpm（如果没有）
 npm install -g pnpm

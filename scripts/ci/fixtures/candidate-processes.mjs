@@ -23,7 +23,7 @@ childProcess.spawnSync = (command, args, options = {}) => {
     if (mode.startsWith("preflight-")) {
       if (args[0] === "api") return ok({ event: "workflow_dispatch", conclusion: mode === "preflight-failed-run" ? "failure" : "success",
         path: ".github/workflows/validate-candidate-images.yml", head_branch: "main", run_attempt: 1, head_sha: request.test_commit,
-        head_repository: { full_name: "jinmozhe/pinjie-fullstack-base" } });
+        head_repository: { full_name: "jinmozhe/pinjie-mall" } });
       const directory = args[args.indexOf("--dir") + 1];
       mkdirSync(directory, { recursive: true });
       writeFileSync(resolve(directory, "deployment-composition.json"), readFileSync(resolve(process.env.RUNNER_TEMP, "trusted.json")));
@@ -31,7 +31,7 @@ childProcess.spawnSync = (command, args, options = {}) => {
     }
     if (args[0] === "api") return ok({ event: "workflow_dispatch", conclusion: mode === "source-error" ? "failure" : "success",
       path: ".github/workflows/publish-images.yml", head_branch: "main", run_attempt: 1,
-      head_repository: { full_name: "jinmozhe/pinjie-fullstack-base" } });
+      head_repository: { full_name: "jinmozhe/pinjie-mall" } });
     if (args[0] === "run" && args[1] === "download") {
       const directory = args[args.indexOf("--dir") + 1];
       mkdirSync(directory, { recursive: true });
@@ -43,20 +43,20 @@ childProcess.spawnSync = (command, args, options = {}) => {
   if (command === "docker") {
     if (args[0] === "buildx") {
       if (args.includes("--raw")) return ok({ manifests: [{ annotations: { "vnd.docker.reference.type": "attestation-manifest" } }] });
-      const app = ["backend", "web", "admin"].find((name) => args[3].includes(`pinjie-fullstack-${name}:`));
+      const app = ["backend", "admin"].find((name) => args[3].includes(`pinjie-mall-${name}:`));
       return ok({ digest: mode === "wrong-digest" ? `sha256:${"f".repeat(64)}` : request.images[app].release.image.digest });
     }
     if (args[0] === "pull") return ok();
     if (args[0] === "image") return ok([{ Architecture: "amd64", Os: "linux", Config: { Labels: {
       "org.opencontainers.image.revision": request.test_commit,
-      "org.opencontainers.image.source": "https://github.com/jinmozhe/pinjie-fullstack-base",
+      "org.opencontainers.image.source": "https://github.com/jinmozhe/pinjie-mall",
     } } }]);
     if (args[0] === "compose") {
       const config = JSON.parse(readFileSync(args[args.indexOf("--file") + 1], "utf8"));
       assert.equal(config.services.backend.environment.ENVIRONMENT, "test");
       assert.match(config.services.backend.environment.DATABASE_URL, /@postgres:5432\/pinjie_candidate_test$/u);
       assert.equal(config.networks, undefined);
-      for (const app of ["backend", "web", "admin"]) assert.equal(config.services[app].image, request.images[app].release.image.reference);
+      for (const app of ["backend", "admin"]) assert.equal(config.services[app].image, request.images[app].release.image.reference);
       if (args.includes("down") && mode === "cleanup-error") return fail();
       return ok();
     }
@@ -64,7 +64,7 @@ childProcess.spawnSync = (command, args, options = {}) => {
   if (command === process.execPath && args[0] === "node_modules/@playwright/test/cli.js") {
     assert.equal(options.env.E2E_MANAGED_SERVERS, "1");
     const status = mode === "browser-error" ? "failed" : "passed";
-    const projects = mode === "partial-browser" ? ["web-desktop"] : ["web-desktop", "web-mobile", "admin-desktop", "admin-mobile"];
+    const projects = mode === "partial-browser" ? ["admin-desktop"] : ["admin-desktop", "admin-mobile"];
     writeFileSync(resolve(options.env.E2E_SUMMARY_DIR, "e2e-summary.json"), JSON.stringify({ status,
       tests: projects.map((project) => ({ project, status })) }));
     return status === "passed" ? ok() : fail();

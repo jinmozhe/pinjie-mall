@@ -81,7 +81,7 @@
 
 ## 7. 权限模型边界
 
-母版提供规范化 RBAC 基础，不预设复杂 ABAC、组织树和多租户数据权限。`PermissionCode` 与 `PERMISSION_CATALOG` 是权限目录源码，数据库通过显式 `scripts.sync_permissions --check/--apply` 同步；应用启动不自动修改权限表。
+本商城提供规范化 RBAC 基础，尚未预设复杂 ABAC、组织树和多租户数据权限。`PermissionCode` 与 `PERMISSION_CATALOG` 是权限目录源码，数据库通过显式 `scripts.sync_permissions --check/--apply` 同步；应用启动不自动修改权限表。
 
 管理员、角色、权限及关联关系使用规范化表和外键。Admin 导航由前端代码维护，并按服务端返回的权限过滤，不建立动态菜单表。Dependency 校验端点权限，Service 在事务内读取权威资源状态并执行最终授权。超级管理员仍经过 Session、CSRF、最后超级管理员保护和审计链；会减少有效超级管理员数量的写操作在同一 PostgreSQL 事务内取得固定 advisory lock，串行执行计数和修改。
 

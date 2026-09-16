@@ -46,13 +46,13 @@ function runPublish({
     "CNB_BRANCH=main",
     "CNB_BUILD_ID=12345",
     "CNB_BUILD_START_TIME=2026-08-31T01:01:00Z",
-    "CNB_BUILD_WEB_URL=https://cnb.cool/pjwl/pinjie-fullstack-base/-/build/12345",
+    "CNB_BUILD_WEB_URL=https://cnb.cool/pjwl/pinjie-mall/-/build/12345",
     `CNB_COMMIT=${commit}`,
-    "CNB_REPO_SLUG=pjwl/pinjie-fullstack-base",
+    "CNB_REPO_SLUG=pjwl/pinjie-mall",
     `DOCKER_CONFIG=/tmp/pinjie-cnb-docker-config-${imageKey}`,
     `EVIDENCE_ROOT=${evidenceRoot}`,
     "EXPECTED_CNB_BRANCH=main",
-    "EXPECTED_CNB_REPOSITORY=pjwl/pinjie-fullstack-base",
+    "EXPECTED_CNB_REPOSITORY=pjwl/pinjie-mall",
     `IMAGE_KEY=${imageKey}`,
     `RELEASE_PIPELINE=${imageKey}-image`,
     `MOCK_COMMIT_EPOCH=${epoch}`,
@@ -60,7 +60,7 @@ function runPublish({
     `MOCK_TARGET_DIGEST=${targetDigest}`,
     `MOCK_STATE_FILE="${shellPath(path.join(fixtureRoot, "created-tag"))}"`,
     `MOCK_EXPECTED_DIGEST=${digest}`,
-    "TCR_NAMESPACE=pinjie-fullstack-base",
+    "TCR_NAMESPACE=pinjie-mall",
     "TCR_PUBLISH_PASSWORD=test-password",
     "TCR_PUBLISH_USERNAME=test-user",
     "TCR_REGISTRY=ccr.ccs.tencentyun.com",
@@ -151,7 +151,7 @@ esac
     chmodSync(path.join(mockBin, command), 0o755);
   }
 
-  for (const imageKey of ["backend", "web", "admin"]) {
+  for (const imageKey of ["backend", "admin"]) {
     const result = runPublish({ imageKey });
     requireCondition(result.status === 0, `Expected ${imageKey} release context to pass.`, result);
     const evidenceRoot = path.join(fixtureRoot, ".cnb", "evidence", imageKey);
@@ -206,14 +206,14 @@ esac
   requireCondition(createResult.status === 0, "Expected a missing SHA tag to be created.", createResult);
   requireCondition(existsSync(path.join(fixtureRoot, "created-tag")), "Expected the mock SHA tag creation.", createResult);
 
-  for (const imageKey of ["backend", "web", "admin"]) {
+  for (const imageKey of ["backend", "admin"]) {
     const cleanupResult = runPublish({ imageKey, action: "cleanup" });
     requireCondition(cleanupResult.status === 0, `Expected ${imageKey} Docker configuration cleanup to pass.`, cleanupResult);
   }
 
   console.log("CNB single-image publish context and finalize fixtures passed.");
 } finally {
-  for (const imageKey of ["backend", "web", "admin"]) {
+  for (const imageKey of ["backend", "admin"]) {
     runPublish({ imageKey, action: "cleanup" });
   }
   rmSync(fixtureRoot, { recursive: true, force: true });

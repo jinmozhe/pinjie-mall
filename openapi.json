@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Pinjie Fullstack Base Backend",
-    "description": "通用全栈母版的后端 API，提供用户认证、账户管理、后台管理和系统状态能力。",
+    "title": "Pinjie Mall Backend",
+    "description": "独立商城的后端 API，当前提供用户认证、账户管理、后台管理和系统状态能力。",
     "version": "0.1.0"
   },
   "paths": {

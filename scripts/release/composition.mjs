@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 
-export const apps = ["backend", "web", "admin"];
-export const repository = "jinmozhe/pinjie-fullstack-base";
-export const registry = "ccr.ccs.tencentyun.com/pinjie-fullstack-base";
+export const apps = ["backend", "admin"];
+export const repository = "jinmozhe/pinjie-mall";
+export const registry = "ccr.ccs.tencentyun.com/pinjie-mall";
 export const shaPattern = /^[0-9a-f]{40}$/u;
 export const idPattern = /^[1-9][0-9]*$/u;
 
@@ -16,7 +16,7 @@ export function exactKeys(value, keys, label) {
 }
 
 export function imageReference(app, value) {
-  const prefix = `${registry}/pinjie-fullstack-${app}@sha256:`;
+  const prefix = `${registry}/pinjie-mall-${app}@sha256:`;
   requireCondition(apps.includes(app) && typeof value === "string" &&
     value.startsWith(prefix) && /^[0-9a-f]{64}$/u.test(value.slice(prefix.length)) &&
     !value.endsWith("0".repeat(64)), `${app}: invalid immutable TCR reference.`);
@@ -24,11 +24,8 @@ export function imageReference(app, value) {
 }
 
 export function validateRequest(request) {
-  exactKeys(request, ["schema", "test_commit", "web_public_origin", "images"], "Candidate request");
-  requireCondition(request.schema === "pinjie-candidate-request-v1" && shaPattern.test(request.test_commit), "Invalid candidate schema or test commit.");
-  const origin = new URL(request.web_public_origin);
-  requireCondition(origin.protocol === "https:" && origin.origin === request.web_public_origin &&
-    !origin.username && !origin.password && !["localhost", "127.0.0.1"].includes(origin.hostname), "A production HTTPS origin is required.");
+  exactKeys(request, ["schema", "test_commit", "images"], "Candidate request");
+  requireCondition(request.schema === "pinjie-mall-candidate-request-v1" && shaPattern.test(request.test_commit), "Invalid candidate schema or test commit.");
   exactKeys(request.images, apps, "Candidate images");
   for (const app of apps) {
     const image = request.images[app];
@@ -65,7 +62,7 @@ export function validateHandoff(evidence, commit, run, attempt) {
 
 export function validateComposition(manifest) {
   exactKeys(manifest, ["schema", "request", "request_sha256", "validation", "handoffs"], "Deployment composition");
-  requireCondition(manifest.schema === "pinjie-deployment-composition-v1", "Invalid deployment schema.");
+  requireCondition(manifest.schema === "pinjie-mall-deployment-composition-v1", "Invalid deployment schema.");
   validateRequest(manifest.request);
   requireCondition(manifest.request_sha256 === hash(manifest.request), "Composition checksum mismatch.");
   exactKeys(manifest.validation, ["status", "run_id", "run_attempt", "workflow_commit", "tested_at", "scope"], "Image validation");
@@ -83,6 +80,5 @@ export function validateComposition(manifest) {
 
 export function imageVariables(request) {
   validateRequest(request);
-  return Object.fromEntries([...apps.map((app) => [`${app.toUpperCase()}_IMAGE`, request.images[app].release.image.reference]),
-    ["WEB_PUBLIC_ORIGIN", request.web_public_origin]]);
+  return Object.fromEntries(apps.map((app) => [`${app.toUpperCase()}_IMAGE`, request.images[app].release.image.reference]));
 }

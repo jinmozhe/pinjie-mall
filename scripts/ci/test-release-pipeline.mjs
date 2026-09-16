@@ -28,20 +28,20 @@ try {
 
 const sha = "a".repeat(40);
 const source = { commit_sha: sha, commit_epoch: 1788652800, commit_time: "2026-09-06T00:00:00Z" };
-const request = { schema: "pinjie-candidate-request-v1", test_commit: sha, web_public_origin: "https://www.example.com",
+const request = { schema: "pinjie-mall-candidate-request-v1", test_commit: sha,
   images: Object.fromEntries(apps.map((app, index) => [app, { handoff_run_id: "123", release: {
     schema: "pinjie-cnb-tcr-image-v1", image_key: app, source,
-    registry: "ccr.ccs.tencentyun.com", namespace: "pinjie-fullstack-base",
-    cnb: { repository: "pjwl/pinjie-fullstack-base", branch: "main", pipeline: `${app}-image`, build_id: "88",
-      build_url: "https://cnb.cool/pjwl/pinjie-fullstack-base/-/build/88", started_at: source.commit_time, finished_at: source.commit_time },
-    image: { reference: `ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-${app}@sha256:${String(index + 1).repeat(64)}`,
-      repository: `pinjie-fullstack-${app}`, trivy: "passed", sbom: "cyclonedx-json", provenance: "buildkit-max",
-      oci: { revision: sha, created: source.commit_time, source: "https://github.com/jinmozhe/pinjie-fullstack-base" },
+    registry: "ccr.ccs.tencentyun.com", namespace: "pinjie-mall",
+    cnb: { repository: "pjwl/pinjie-mall", branch: "main", pipeline: `${app}-image`, build_id: "88",
+      build_url: "https://cnb.cool/pjwl/pinjie-mall/-/build/88", started_at: source.commit_time, finished_at: source.commit_time },
+    image: { reference: `ccr.ccs.tencentyun.com/pinjie-mall/pinjie-mall-${app}@sha256:${String(index + 1).repeat(64)}`,
+      repository: `pinjie-mall-${app}`, trivy: "passed", sbom: "cyclonedx-json", provenance: "buildkit-max",
+      oci: { revision: sha, created: source.commit_time, source: "https://github.com/jinmozhe/pinjie-mall" },
       digest: `sha256:${String(index + 1).repeat(64)}`, immutable_tag: `sha-${sha}` },
   } }])) };
 const handoff = { schema: "pinjie-source-handoff-v1", commit_sha: sha, mode: "strict", reason: "", full_validation_run_id: "100",
   run_id: "123", run_attempt: "1" };
-const composition = { schema: "pinjie-deployment-composition-v1", request, request_sha256: hash(request),
+const composition = { schema: "pinjie-mall-deployment-composition-v1", request, request_sha256: hash(request),
   validation: { status: "passed", run_id: "456", run_attempt: "1", workflow_commit: sha,
     tested_at: "2026-09-06T00:00:00Z", scope: "linux-amd64-postgres-redis-production-images-playwright" },
   handoffs: Object.fromEntries(apps.map((app) => [app, handoff])) };
@@ -51,7 +51,7 @@ assert.equal(validateComposition(composition), composition);
 for (const change of [
   (r) => { r.images.admin.release.image.reference = "nginx:latest"; },
   (r) => { r.images.admin.release.image.reference += `@${r.images.admin.release.image.digest}`; },
-  (r) => { r.images.web.release.image.digest = `sha256:${"0".repeat(64)}`; },
+  (r) => { r.images.backend.release.image.digest = `sha256:${"0".repeat(64)}`; },
   (r) => { r.images.backend.handoff_run_id = "$(command)"; },
   (r) => { r.web_public_origin = "https://user:secret@example.com"; },
   (r) => { delete r.images.admin; },
@@ -75,7 +75,7 @@ const now = Date.parse(inventory.captured_at);
 const retained = retentionPlan(inventory, [composition, composition], now);
 assert.equal(retained.review.length, 1);
 assert.equal(retained.review[0].tag, "candidate-old");
-assert.equal(retained.keep.length, 4);
+assert.equal(retained.keep.length, 3);
 assert.throws(() => retentionPlan(inventory, [], now));
 assert.throws(() => retentionPlan(inventory, [composition, composition], now + 86400_000));
 assert.throws(() => retentionPlan(mutate(inventory, (i) => i.tags.shift()), [composition, composition], now));
@@ -94,7 +94,7 @@ for (const invalid of [{}, { ...report, Results: [] }, mutate(report, (r) => { r
 
 const full = YAML.parse(readFileSync(".github/workflows/ci-e2e.yml", "utf8"));
 assert.deepEqual(Object.keys(full.on), ["workflow_dispatch"]);
-assert.deepEqual(full.jobs.frontend.strategy.matrix.app, ["admin", "web"]);
+assert.deepEqual(full.jobs.frontend.strategy.matrix.app, ["admin"]);
 assert.deepEqual(full.jobs["full-validation"].needs, ["source", "backend", "frontend"]);
 assert.equal(full.jobs.backend.needs, "source");
 assert.equal(full.jobs.frontend.needs, "source");
@@ -113,7 +113,7 @@ for (const mode of ["success", "source-error", "wrong-digest", "stale-app", "bro
   try {
     const result = spawnSync(process.execPath, ["--import", "./scripts/ci/fixtures/candidate-processes.mjs", "scripts/release/candidate-images.mjs", "validate"], {
       encoding: "utf8", timeout: 30_000,
-      env: { ...process.env, GITHUB_ACTIONS: "true", GITHUB_REPOSITORY: "jinmozhe/pinjie-fullstack-base", GITHUB_REF: "refs/heads/main",
+      env: { ...process.env, GITHUB_ACTIONS: "true", GITHUB_REPOSITORY: "jinmozhe/pinjie-mall", GITHUB_REF: "refs/heads/main",
         GITHUB_RUN_ID: "456", GITHUB_RUN_ATTEMPT: "1", GITHUB_SHA: sha, DEFAULT_BRANCH: "main", RUNNER_TEMP: temporary,
         DOCKER_HOST: "", DOCKER_CONTEXT: "", CANDIDATE_REQUEST_JSON: JSON.stringify(request), PINJIE_CANDIDATE_FIXTURE: mode },
     });
@@ -138,7 +138,7 @@ for (const mode of ["preflight-success", "preflight-tampered", "preflight-failed
     writeFileSync(resolve(temporary, "trusted.json"), JSON.stringify(trusted));
     writeFileSync(resolve(temporary, "local.json"), JSON.stringify(composition));
     writeFileSync(resolve(temporary, "images.env"), envText);
-    writeFileSync(resolve(temporary, "panel.env"), mode === "preflight-panel-drift" ? envText.replace("www.example.com", "drift.example.com") : envText);
+    writeFileSync(resolve(temporary, "panel.env"), mode === "preflight-panel-drift" ? envText.replace("sha256:111", "sha256:fff") : envText);
     const result = spawnSync(process.execPath, ["--import", "./scripts/ci/fixtures/candidate-processes.mjs", "scripts/release/release-tools.mjs", "preflight",
       "--manifest", resolve(temporary, "local.json"), "--env-file", resolve(temporary, "images.env"), "--panel-env", resolve(temporary, "panel.env")], {
       encoding: "utf8", timeout: 30_000,

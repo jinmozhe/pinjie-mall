@@ -8,11 +8,10 @@
 
 - 腾讯云主账号已经完成企业认证。
 - 使用免费的腾讯云 TCR 个人版。
-- TCR 个人版命名空间为 `pinjie-fullstack-base`。
-- 已经创建三个私有镜像仓库：
-  - `pinjie-fullstack-backend`
-  - `pinjie-fullstack-web`
-  - `pinjie-fullstack-admin`
+- TCR 个人版命名空间为 `pinjie-mall`。
+- 需要创建两个私有镜像仓库：
+  - `pinjie-mall-backend`
+  - `pinjie-mall-admin`
 - CNB 使用 `tcr-publisher` 发布镜像。
 - 腾讯云生产服务器通过 1Panel 和 Docker Compose 拉取镜像。
 
@@ -25,7 +24,7 @@
 
 ## 2. 先给结论
 
-生产服务器应创建独立 CAM 子用户 `tcr-puller`，只允许拉取指定的三个仓库。生产服务器不得复用 `tcr-publisher`。
+生产服务器应创建独立 CAM 子用户 `tcr-puller`，只允许拉取指定的两个商城仓库。生产服务器不得复用 `tcr-publisher`。
 
 企业认证描述主账号的认证主体，不限制主账号使用 TCR 个人版。当前主账号已经成功创建个人版命名空间和私有仓库，可以继续为 CAM 子用户配置个人版权限。
 
@@ -37,7 +36,7 @@
 | --- | --- | --- | --- |
 | 腾讯云主账号 | 账号治理和紧急恢复 | 主账号固有权限 | 日常 Docker 登录、CNB 发布、生产拉取 |
 | `tcr-publisher` | CNB 密钥仓库 | 当前命名空间内候选镜像推送和正式标签发布所需权限 | 生产服务器拉取、日常人工登录 |
-| `tcr-puller` | 生产服务器部署用户 | 指定三个仓库的查看和拉取权限 | 推送、删除、创建仓库、修改仓库属性 |
+| `tcr-puller` | 生产服务器部署用户 | 指定两个商城仓库的查看和拉取权限 | 推送、删除、创建仓库、修改仓库属性 |
 | 后续测试环境拉取账号 | 测试服务器 | 仅测试环境实际需要的仓库 | 生产环境拉取和发布 |
 
 ## 3. 为什么要区分两个账号
@@ -105,7 +104,7 @@ TCR Registry 登录界面所说的用户级账号与腾讯云账号身份关联�
 - 某个命名空间包含更高敏感级别的镜像。
 - 凭证需要不同有效期或轮换窗口。
 
-账号数量按安全边界确定。当前三个仓库属于同一应用、同一生产部署，可以共用一个 `tcr-puller`。
+账号数量按安全边界确定。当前两个商城仓库属于同一应用、同一生产部署，可以共用一个 `tcr-puller`。
 
 ## 6. 凭证类型必须分清
 
@@ -124,11 +123,11 @@ CAM 控制台登录密码不能用作 Docker 密码。TCR 固定密码也不能�
 
 ## 7. 权限策略设计
 
-### 7.0 派生项目与命名空间共享范围
+### 7.0 本商城与命名空间共享范围
 
-先决定账号服务范围，再选择策略模板：单项目按实际仓库授权；同一维护者管理的可信项目可以按受控命名空间共享发布账号和拉取账号，两种身份继续分离。共享 namespace 范围要覆盖现有及未来仓库，并使用 TCR 官方支持的资源匹配语法；不要把固定列举三个母版仓库误认为会自动覆盖新项目。
+先决定账号服务范围，再选择策略模板：本商城按实际仓库授权；同一维护者管理的可信项目可以按受控命名空间共享发布账号和拉取账号，两种身份继续分离。共享 namespace 范围要覆盖现有及未来仓库，并使用 TCR 官方支持的资源匹配语法；固定列举两个商城仓库不会自动覆盖其他项目。
 
-仓库级操作的资源不默认扩大为全账户 `*`；不支持资源级授权的查询或凭据初始化操作，继续保留原模板所需的 `resource: ["*"]`，不能因为收窄仓库权限就机械删除。`cam:GetRole` 仅在已证实依赖时保留对应角色资源。下面三仓策略是单项目模板，共享账号修改时保留其他项目的有效授权，不直接覆盖整份策略。
+仓库级操作的资源不默认扩大为全账户 `*`；不支持资源级授权的查询或凭据初始化操作，继续保留原模板所需的 `resource: ["*"]`，不能因为收窄仓库权限就机械删除。`cam:GetRole` 仅在已证实依赖时保留对应角色资源。下面两仓策略是单项目模板，共享账号修改时保留其他项目的有效授权，不直接覆盖整份策略。
 
 派生时逐项核对资源所属主账号、Registry、namespace、真实镜像名和子用户身份。CAM 策略匹配的是实际推送或拉取目标，不是 GitHub 仓库名。配置后验证目标仓库操作，登录成功或控制台存在仓库不能代替资源授权验收。权限语法与支持范围以本手册末尾官方资料为准。
 
@@ -145,8 +144,8 @@ CAM 控制台登录密码不能用作 Docker 密码。TCR 固定密码也不能�
         "tcr:*"
       ],
       "resource": [
-        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-fullstack-base",
-        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-fullstack-base/*"
+        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-mall",
+        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-mall/*"
       ],
       "effect": "allow"
     }
@@ -158,7 +157,7 @@ CAM 控制台登录密码不能用作 Docker 密码。TCR 固定密码也不能�
 
 严禁把这份 `tcr:*` 策略关联给 `tcr-puller`。
 
-### 7.2 `tcr-puller` 三仓只读策略
+### 7.2 `tcr-puller` 两仓只读策略
 
 建议策略名称：
 
@@ -205,13 +204,11 @@ TCRPersonalPullerPinjieFullstackBase
       ],
       "effect": "allow",
       "resource": [
-        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-fullstack-base",
-        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-fullstack-base/pinjie-fullstack-backend",
-        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-fullstack-base/pinjie-fullstack-backend/*",
-        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-fullstack-base/pinjie-fullstack-web",
-        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-fullstack-base/pinjie-fullstack-web/*",
-        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-fullstack-base/pinjie-fullstack-admin",
-        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-fullstack-base/pinjie-fullstack-admin/*"
+        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-mall",
+        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-mall/pinjie-mall-backend",
+        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-mall/pinjie-mall-backend/*",
+        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-mall/pinjie-mall-admin",
+        "qcs::tcr::uin/<主账号UIN>:repo/pinjie-mall/pinjie-mall-admin/*"
       ]
     }
   ]
@@ -232,7 +229,7 @@ TCRPersonalPullerPinjieFullstackBase
 - `tcr:*`
 - `qcs::tcr::uin/<主账号UIN>:repo/*`
 
-第一段使用 `resource: ["*"]` 是必要配置。`tcr:ValidateUserPersonal`、`tcr:CreateUserPersonal`、`tcr:ModifyUserPasswordPersonal` 和多项控制台查询接口属于操作级接口，无法限定到三个仓库。缺少第一段时，子用户会在进入个人版或初始化密码前收到 `not authorized to perform operation (tcr:ValidateUserPersonal)`。
+第一段使用 `resource: ["*"]` 是必要配置。`tcr:ValidateUserPersonal`、`tcr:CreateUserPersonal`、`tcr:ModifyUserPasswordPersonal` 和多项控制台查询接口属于操作级接口，无法限定到具体镜像仓库。缺少第一段时，子用户会在进入个人版或初始化密码前收到 `not authorized to perform operation (tcr:ValidateUserPersonal)`。
 
 第一段会读取主账号个人版 TCR 的全局元数据，但不包含仓库 Push、Delete、创建仓库或修改仓库属性权限。对于需要登录控制台、初始化和轮换固定密码的 `tcr-puller`，这是当前已验证的实用最小权限边界。
 
@@ -252,16 +249,16 @@ Docker 拉取本身由第二段控制，但首次建立可用凭证还需要完�
 
 ## 8. 创建 `tcr-puller` 的完整步骤
 
-### 8.1 先创建三仓只读策略
+### 8.1 先创建两仓只读策略
 
 1. 使用主账号或具有 CAM 管理权限的管理员登录[访问管理 CAM 控制台](https://console.cloud.tencent.com/cam)。
 2. 进入“策略”。
 3. 单击“新建自定义策略”。
 4. 选择“按策略语法创建”。控制台若显示可视化策略生成器，切换到“JSON”。
 5. 选择空白模板。
-6. 粘贴“7.2 `tcr-puller` 三仓只读策略”中的 JSON。
+6. 粘贴“7.2 `tcr-puller` 两仓只读策略”中的 JSON。
 7. 策略名称填写 `TCRPersonalPullerPinjieFullstackBase`。
-8. 描述填写“生产服务器只读拉取 pinjie-fullstack-base 三个应用仓库”。
+8. 描述填写“生产服务器只读拉取 pinjie-mall 两个应用仓库”。
 9. 不添加条件，不关联其他服务。
 10. 检查 JSON 中没有真实密码、账号 ID 或服务器信息。
 11. 完成创建。
@@ -281,7 +278,7 @@ Docker 拉取本身由第二段控制，但首次建立可用凭证还需要完�
 | 字段 | 建议值 | 说明 |
 | --- | --- | --- |
 | 用户名 | `tcr-puller` | 只描述用途，不使用个人姓名 |
-| 备注 | `pinjie-fullstack-base 生产服务器 TCR 只读拉取` | 便于后续审计和轮换 |
+| 备注 | `pinjie-mall 生产服务器 TCR 只读拉取` | 便于后续审计和轮换 |
 | 手机号 | 留空 | 机器用途不需要接收个人短信 |
 | 邮箱 | 留空或受控运维邮箱 | 只在组织要求通知时填写 |
 | 所属部门 | 按企业现有规范 | 没有组织目录时不强行设置 |
@@ -302,7 +299,7 @@ Docker 拉取本身由第二段控制，但首次建立可用凭证还需要完�
 
 Docker Registry 登录不需要 `SecretId` 和 `SecretKey`。不要因为创建结果显示两项为空而重新开启编程访问。
 
-完成 TCR 初始化后，可以评估关闭 CAM 控制台登录能力，但不能禁用或删除整个子用户。任何调整后必须重新执行服务器 `docker login` 和三仓拉取验证；无法确认影响时保留控制台登录并使用 MFA 保护。
+完成 TCR 初始化后，可以评估关闭 CAM 控制台登录能力，但不能禁用或删除整个子用户。任何调整后必须重新执行服务器 `docker login` 和两仓拉取验证；无法确认影响时保留控制台登录并使用 MFA 保护。
 
 ### 8.5 设置用户权限
 
@@ -407,19 +404,18 @@ chmod 600 "$HOME/.docker/config.json"
 
 Docker 默认配置文件通常只对凭据做 Base64 编码，不等同于加密。生产部署用户的主目录必须限制访问。条件允许时配置 Docker Credential Helper；未配置时至少保证文件权限和主机访问边界。
 
-### 10.3 按固定 digest 拉取三张镜像
+### 10.3 按固定 digest 拉取两张镜像
 
-新发布从 Backend、Web 和 Admin 各自成功 CNB Build 生成的
-`pinjie-cnb-tcr-image-v1` 单镜像证据中取得完整 digest。三个应用来自同一
+新发布从 Backend 与 Admin 各自成功 CNB Build 生成的
+`pinjie-cnb-tcr-image-v1` 单镜像证据中取得完整 digest。两个应用来自同一
 Commit 时，必须等待预期触发的 Pipeline 全部成功，并核对三份证据中的
 `source.commit_sha` 一致。历史发布的 `pinjie-cnb-tcr-release-v1` 三镜像清单
 只用于读取已有附件和回滚基线。两种证据都必须使用完整 digest，不使用
 `latest`、`candidate-*`、`buildcache-main` 或只写 SHA 标签。
 
 ```bash
-docker pull ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-backend@sha256:<backend-digest>
-docker pull ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-web@sha256:<web-digest>
-docker pull ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-admin@sha256:<admin-digest>
+docker pull ccr.ccs.tencentyun.com/pinjie-mall/pinjie-mall-backend@sha256:<backend-digest>
+docker pull ccr.ccs.tencentyun.com/pinjie-mall/pinjie-mall-admin@sha256:<admin-digest>
 ```
 
 每条命令必须显示拉取成功，最终 digest 必须与对应发布证据一致。
@@ -429,7 +425,7 @@ docker pull ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-admin@
 本机 Docker 登录仅服务于本机私有镜像查询，不是 GitHub → CNB → TCR 的发布前置条件。已有 CNB 发布证据，并能在已认证 TCR 控制台或服务器核对完整镜像引用和 digest 时，可以跳过本机登录。浏览器、CNB、本机 CLI 和服务器的凭据互不自动同步。
 
 1. 已有 Docker CLI 时，先用每个应用各自的正式 SHA 标签执行 `docker buildx imagetools inspect <仓库>:sha-<完整源码SHA>`。查询成功就复用现有登录态；记录最上层完整 `Digest:`，不要误用平台子清单或 attestation digest。
-2. 鉴权失败时核对当前 Windows 用户、Registry、实际 TCR 用户名及该身份的固定密码。使用母版或派生项目目标仓库的只读账号，不把 CAM 网页密码、CNB Token 或 API SecretKey 用作 Registry 密码。
+2. 鉴权失败时核对当前 Windows 用户、Registry、实际 TCR 用户名及该身份的固定密码。使用本商城目标仓库的只读账号，不把 CAM 网页密码、CNB Token 或 API SecretKey 用作 Registry 密码。
 3. 需要登录时执行下面的交互命令；只在密码提示中输入固定密码，禁止输出 Docker 配置文件或 Credential Helper 内容。
 
    ```powershell
@@ -439,7 +435,7 @@ docker pull ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-admin@
 
 4. 只有确认旧身份或旧凭据需要清除，且已取得正确凭据时，才执行 `docker logout ccr.ccs.tencentyun.com` 后重新登录。此操作不会重置 TCR 密码，也不会更新 CNB 或服务器凭据，不作为每次发布的固定步骤。
 5. 登录成功后再次查询目标仓库。Registry 接受身份不证明具备资源权限；`denied` 检查目标仓库授权，`not found` 在身份权限确认后检查仓库名及正式标签是否生成，网络错误不直接归为密码错误。
-6. 三端独立发布时分别记录各自源码 SHA 和 digest。确认无跨端变化后保留未变化端的已验证版本；不要为了让三个标签相同而重建。无需执行本机容器启动来证明镜像清单存在。
+6. 两端独立发布时分别记录各自源码 SHA 和 digest。确认无跨端变化后保留未变化端的已验证版本；不要为了让两个标签相同而重建。无需执行本机容器启动来证明镜像清单存在。
 
 选择其他核验入口时记录该入口和每端结果，本机查询失败不等于云端发布失败。CLI 凭据范围参见 [Docker login 官方文档](https://docs.docker.com/reference/cli/docker/login/)。
 
@@ -449,7 +445,6 @@ docker pull ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-admin@
 
 - `docker login` 成功。
 - Backend 固定 digest 拉取成功。
-- Web 固定 digest 拉取成功。
 - Admin 固定 digest 拉取成功。
 - `docker image inspect` 可以查询三张本地镜像。
 - 重新登录子账号后仍能进入个人版并管理自身 TCR 固定密码。
@@ -474,7 +469,7 @@ docker pull ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-admin@
 - 拉取未列入策略的其他仓库。
 - 访问其他腾讯云产品资源。
 
-不要在三个生产仓库中实际执行写入或删除命令来测试拒绝。CAM 策略复核已经可以证明没有对应允许动作。
+不要在两个生产仓库中实际执行写入或删除命令来测试拒绝。CAM 策略复核已经可以证明没有对应允许动作。
 
 确需实测 Push 拒绝时，先专项授权创建独立的临时验证仓库和无业务标签。测试必须保证即使权限错误地放宽，也不会覆盖生产内容；验证后删除仓库属于另一个破坏性操作，需要单独授权。
 
@@ -497,11 +492,11 @@ docker pull ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-admin@
 5. 第二段资源路径是否准确包含主账号 UIN、命名空间和仓库名称。
 6. 保存策略后是否重新登录子账号并等待 CAM 权限生效。
 
-统一 TCR 控制台可能查询与拉取无关的全局接口。无关页面提示不构成扩大权限的理由，以三个固定 digest 能否拉取作为生产验收事实。
+统一 TCR 控制台可能查询与拉取无关的全局接口。无关页面提示不构成扩大权限的理由，以两个固定 digest 能否拉取作为生产验收事实。
 
 ### 12.3 `cam:GetRole` 没有权限
 
-该错误表示当前控制台页面正在读取一个 CAM 角色，不代表三仓镜像拉取权限不足。TCR 个人版通过 CAM 子用户和个人版固定密码完成 Docker 登录，`tcr-puller` 不需要扮演 CAM 角色。
+该错误表示当前控制台页面正在读取一个 CAM 角色，不代表两仓镜像拉取权限不足。TCR 个人版通过 CAM 子用户和个人版固定密码完成 Docker 登录，`tcr-puller` 不需要扮演 CAM 角色。
 
 处理顺序：
 
@@ -509,9 +504,9 @@ docker pull ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-admin@
 2. 返回 TCR 个人版的凭证或仓库页面，继续使用 CAM 子用户入口。
 3. 不要直接添加 `cam:GetRole` 的 `resource: ["*"]`，也不要附加 CAM 只读或管理员预设策略。
 4. 如果个人版初始化或密码管理的必经页面仍因该调用完全阻塞，记录报错中的准确角色资源、页面路径和 Request ID，由主账号核对角色用途及腾讯云当前官方要求。
-5. 只有确认该角色读取是当前必需依赖后，才建立独立策略，仅允许 `cam:GetRole` 读取报错中的准确角色资源，并重新执行三仓 Pull 和无 Push 权限验收。
+5. 只有确认该角色读取是当前必需依赖后，才建立独立策略，仅允许 `cam:GetRole` 读取报错中的准确角色资源，并重新执行两仓 Pull 和无 Push 权限验收。
 
-`cam:GetRole` 不能写入 TCR 三仓只读策略的仓库级权限段。无法证明必需时不授权，避免生产拉取身份获得无关 CAM 资源可见性。
+`cam:GetRole` 不能写入 TCR 两仓只读策略的仓库级权限段。无法证明必需时不授权，避免生产拉取身份获得无关 CAM 资源可见性。
 
 ### 12.4 `unauthorized: authentication required`
 
@@ -531,7 +526,7 @@ docker pull ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-admin@
 
 - 是否缺少 `tcr:PullRepositoryPersonal`。
 - 仓库名称是否完全一致。
-- 命名空间是否为 `pinjie-fullstack-base`。
+- 命名空间是否为 `pinjie-mall`。
 - 策略是否关联到当前子用户。
 - 当前执行 Docker 的 Linux 用户是否正确。
 
@@ -567,7 +562,7 @@ docker pull ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-admin@
 ### 13.1 正常轮换
 
 1. 盘点 `tcr-puller` 在哪些服务器和地域使用。
-2. 确认当前三个运行镜像 digest 和回滚镜像均已记录。
+2. 确认当前两个运行镜像 digest 和回滚镜像均已记录。
 3. 使用子用户登录 TCR 控制台重置个人版固定密码。
 4. 在每台服务器使用正确 Linux 部署用户重新执行 `docker login`。
 5. 逐台拉取一个已存在的固定 digest。
@@ -588,7 +583,7 @@ docker pull ccr.ccs.tencentyun.com/pinjie-fullstack-base/pinjie-fullstack-admin@
 3. 检查账号是否被增加其他策略或加入用户组。
 4. 重置 TCR 固定密码。
 5. 移除泄露来源中的旧凭证。
-6. 重新启用前恢复三仓只读策略并完成正向、负向验收。
+6. 重新启用前恢复两仓只读策略并完成正向、负向验收。
 7. 核对 TCR 和 CAM 可用日志。个人版审计能力有限时，应明确记录证据缺口。
 
 禁用 `tcr-puller` 不影响已经运行的容器，但会阻止后续拉取、重建和回滚。处置前必须保存当前运行版本和本地镜像状态。

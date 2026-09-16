@@ -93,7 +93,7 @@ Jest、Cypress、Storybook 和 Vitest Browser Mode 不属于阶段 B 默认测�
 - 关键跨栈测试连接真实 Backend 和独立 `_test` PostgreSQL，不使用 MSW 替代本项目 API。不可控第三方服务在边界处使用可审计替身。
 - 每个测试拥有独立浏览器上下文和可准确归属的测试数据，禁止依赖其他测试的执行顺序、Cookie、存储或数据库残留。
 - Locator 优先使用 `getByRole()`、`getByLabel()` 和其他用户可见契约；断言使用 Playwright 自动等待能力，禁止固定时长 `sleep` 和无限重试。
-- Playwright 不由日常开发、`$git-sync`、Push、Pull Request 或定时任务自动运行。需要本地标准 Chromium E2E 时由用户明确授权；需要干净 Ubuntu 环境时由用户人工触发 GitHub 完整验证。Firefox 与 WebKit 也只在用户明确要求或派生项目验收计划明确授权时执行。单独的本地浏览器结果不能满足严格源码交接门禁；GitHub 完整验证只有在 pytest、Vitest、production build 和 Chromium Playwright 全部成功并生成同 SHA Artifact 后，才形成发布可核验的重型验证证据。快速源码交接模式明确表示未取得该证据，不能表述为完整验证通过。
+- Playwright 不由日常开发、`$git-sync`、Push、Pull Request 或定时任务自动运行。需要本地标准 Chromium E2E 时由用户明确授权；需要干净 Ubuntu 环境时由用户人工触发 GitHub 完整验证。Firefox 与 WebKit 也只在用户明确要求或商城验收计划明确授权时执行。单独的本地浏览器结果不能满足严格源码交接门禁；GitHub 完整验证只有在 pytest、Vitest、production build 和 Chromium Playwright 全部成功并生成同 SHA Artifact 后，才形成发布可核验的重型验证证据。快速源码交接模式明确表示未取得该证据，不能表述为完整验证通过。
 - CI 失败只上传白名单阶段耗时、退出状态和浏览器文件位置、项目、状态、重试结果，不上传 Cookie、HAR、Trace、Video、HTML 或截图。CI 禁用 Trace/Video，`failOnFlakyTests` 阻断重试后才成功的套件；本地已授权专项复现可保留现有诊断能力，但敏感报告不得进入 Git 或发布附件。
 - 手动 `CI - Full Validation` 支持默认 `full` 和显式 `smoke`。full 并行执行 Backend pytest 和 Admin/Web Vitest、生产构建，最后消费同一 Run 的产物执行 Web standalone、Admin 生产 Nginx dist E2E，并输出 v2 成功证据。smoke 跳过 Admin/Web Vitest 和 coverage，继续执行 Backend pytest、两端生产构建、四个 Chromium 项目的入口页面质量检查及桌面 Stage C；移动端 Stage C 不在 smoke 范围内。`E2E_PROFILE` 未设置时默认 full，非法值直接失败。两种模式均为人工授权的重型验证，不进入日常自动门禁。
 - smoke 入口页面基线覆盖 Web 首页、Admin 登录页的可用性、横向溢出、键盘焦点、axe、Token 持久化及 Console error 检查；不代表移动端登录后的账户、管理、上传或权限流程已验收。认证授权、移动端业务交互等高风险修改使用 full。smoke 仅生成独立 `pinjie-smoke-validation-v1`，记录前端测试跳过及 `all-quality-pages,desktop-stage-c` 范围，不能满足 strict 交接；完整模式继续使用 `pinjie-full-validation-v2`。

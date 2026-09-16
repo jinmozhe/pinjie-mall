@@ -1,3 +1,4 @@
+import "../../scripts/disabled-web.mjs";
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";

@@ -6,6 +6,8 @@
 
 ### Added
 
+- 完成独立商城基线校正：项目身份、PRD、Backend 默认名称与 OpenAPI 契约统一为 `pinjie-mall`；CNB、TCR、GitHub Actions、Compose、发布与运维文档收敛为 Backend 和 Admin 两端。微信小程序确立为唯一 C 端的后续实现方向，`apps/web` 历史源码冻结保留，启动、构建、测试、镜像、发布、部署和 E2E 入口均已阻断或移除。远端商城资源、重型测试与生产部署未执行。
+
 - 手动 `CI - Full Validation` 增加默认 full、可选 smoke：smoke 跳过 Admin/Web Vitest 和 coverage，保留 Backend pytest、生产构建、四项目入口页面基线和桌面 Stage C；full v2 与 smoke v1 证据隔离，模式及 strict 拒绝 smoke 的 Guard 接入本地与 CI。Handoff 保持 strict/fast，fast 不主动核验 smoke；Admin 并发和候选镜像工作流保持原配置，真实 full/smoke 与发布部署未执行。
 - 回馈派生项目的发布可靠性修复：停用当前 CNB/TCR 个人版远程构建缓存读写，补齐候选证据校验错误提示；新增固定母版仓库的手动只读 CNB 诊断及离线回归门禁。Backend runtime 增加系统包升级，保留固定基础镜像与正式发布扫描要求；真实母版镜像扫描与生产部署未执行。
 - 统一 GitHub、CNB、TCR、1Panel 凭据归属、可选本机镜像核验、派生项目权限范围、独立发布与逐阶段排障规范，纠正仍要求写入远程缓存的旧说明。

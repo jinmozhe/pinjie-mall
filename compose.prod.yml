@@ -44,27 +44,6 @@ services:
     restart: unless-stopped
     profiles: ["request-logs"]
 
-  web:
-    image: ${WEB_IMAGE}
-    environment:
-      BACKEND_INTERNAL_URL: http://backend:8000
-      WEB_PUBLIC_ORIGIN: ${WEB_PUBLIC_ORIGIN:?WEB_PUBLIC_ORIGIN must be set}
-    depends_on:
-      backend:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://127.0.0.1:3000/').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))",
-        ]
-      interval: 10s
-      timeout: 3s
-      retries: 6
-
   admin:
     image: ${ADMIN_IMAGE}
     ports:

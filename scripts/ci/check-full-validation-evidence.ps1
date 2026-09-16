@@ -21,12 +21,11 @@ if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) {
 }
 
 $expected = [System.Collections.Generic.Dictionary[string, string]]::new([System.StringComparer]::Ordinal)
-$expected.Add("schema", "pinjie-full-validation-v2")
+$expected.Add("schema", "pinjie-mall-full-validation-v1")
 $expected.Add("commit_sha", $ExpectedCommitSha)
 $expected.Add("workflow_run_id", $ExpectedRunId)
 $expected.Add("backend", "pytest")
 $expected.Add("admin", "vitest,production-build,nginx-dist")
-$expected.Add("web", "vitest,production-build,standalone")
 $expected.Add("browser", "playwright-chromium")
 $expected.Add("database", "postgresql-18.4-alpine")
 $expected.Add("cache", "redis-8.10.0-alpine")
