@@ -17,12 +17,14 @@
 - 只读检查、解释和验证无需新增计划，但仍需通过 `PROJECT_INDEX.md` 确认项目身份、当前阶段、活动计划和权威入口，再以实际文件确认详细实现状态。
 - 文档、规则、目录职责和权威来源发生变化时，按职责同步对应索引；项目身份、当前阶段和活动计划进入 `PROJECT_INDEX.md`，全部计划的状态与结果进入 `plans/INDEX.md`。
 
-## 项目定位
+## 项目定位与客户端形态
 
-- 本仓库是通用全栈 Monorepo 母版，技术栈为 FastAPI、Next.js、React、pnpm 和 Turborepo，可派生为 CMS、管理平台、电商等业务仓库。
-- 母版只保留跨业务可复用能力。具体业务领域进入 `docs/blueprints/` 或派生仓库，禁止把单一项目的业务假设写成母版硬约束。
-- `apps/backend`、`apps/admin`、`apps/web` 是独立应用，禁止相互直接引用。共享代码和配置只能通过 `packages/` 中的明确公共包提供。
-- Backend 采用模块化单体，领域与前端 Feature 只能通过公开入口协作。完整边界以 `docs/architecture/module-boundaries.md` 为准，可机械判断的违规必须由仓库门禁拒绝。
+- 本仓库定位为高可用标准电商与多级分销全栈商城平台，技术栈为 FastAPI、React、pnpm 和 Turborepo。
+- 客户端形态与定位：本项目是小程序商城项目，应用层完全不需要 Web 端，C 端交互唯一形态为微信小程序端。
+- 阶段推进约束：前阶段全面聚焦后端（Backend）业务模型与管理后台（Admin）开发。小程序端前阶段先不开发，由后续专项阶段实施。
+- Web 端停用与服务约束：`apps/web` 进入永久停用与冻结状态，不分配开发维护资源。禁止启动 Web 服务，完全禁止监听或暴露 WEB 端口（包括 3000 端口）。
+- 应用间边界：`apps/backend` 与 `apps/admin` 保持独立，禁止相互直接引用。共享代码和配置只能通过 `packages/` 公共包提供。
+- Backend 采用模块化单体，领域与前端 Feature 只能通过公开入口协作。完整边界以 `docs/architecture/module-boundaries.md` 为准，违规由仓库门禁拒绝。
 
 ## 产品需求基线
 
@@ -41,13 +43,9 @@
 
 ## 讨论结论与知识沉淀
 
-- 会影响后续开发并且已经由用户确认或有可核验证据支持的结论，不得只保留在对话中；应在当前任务结束前更新到对应权威文档。
-- 用户只要求讨论、诊断或评审时，先说明结论应写入的位置，取得明确修改授权后再更新文件，不得以知识沉淀为由扩大操作范围。
-- 产品目标、用户、能力和验收边界进入 `docs/PROJECT_REQUIREMENTS.md`；重大技术取舍及备选方案进入 `docs/adr/`；当前架构和系统机制进入 `docs/architecture/`；可执行开发、部署和运维步骤进入 `docs/operations/`；派生业务设计进入 `docs/blueprints/`。
-- 单次任务的范围、确认、实施和验证进入原 `plans/*.md`；全部计划的永久登记进入 `plans/INDEX.md`；长期强制约束进入对应 `AGENTS.md`；项目身份、当前阶段和活动计划进入 `PROJECT_INDEX.md`；已交付事实进入 `CHANGELOG.md`。
-- 同一主题已有权威文档时优先就地更新，其他文件只保留必要入口或链接，禁止复制完整事实形成多份来源。
-- 未决事项只保留在相关活动计划中并标明状态。临时推测、普通问答、完整聊天记录和没有长期参考价值的已否决方案不进入项目文档。
-- 只有独立调研周期较长、证据需要被多个计划复用且尚未达到正式决策条件时，才评估创建 `docs/research/`；不得提前创建空目录或占位文档。
+- 影响后续开发并经确认的结论不得只留于对话，任务结束前就地沉淀到对应权威文档，禁止多头复制。
+- 目标与验收边界进 `docs/PROJECT_REQUIREMENTS.md`；架构决策进 `docs/adr/`；架构机制进 `docs/architecture/`；运维部署进 `docs/operations/`；单次实施计划进 `plans/*.md` 并登记 `plans/INDEX.md`；长期硬约束进对应 `AGENTS.md`；交付事实进 `CHANGELOG.md`。
+- 未决事项只在活动计划中标记；临时推测、聊天记录与已否决方案不进项目文档；不提前建空目录。
 
 ## 自主执行、澄清与授权
 
@@ -66,10 +64,8 @@
 
 ## 项目文档来源
 
-- `docs/` 是本仓库 PRD、ADR、架构、蓝图和运维等专题项目文档的唯一存储和发布来源，完整清单由 `docs/README.md` 维护。根 `AGENTS.md`、`PROJECT_INDEX.md`、`plans/`、`README.md`、`SECURITY.md` 和 `CHANGELOG.md` 按各自治理职责保留在稳定路径，不属于 `docs/` 的文档副本。
-- GitHub Wiki 必须保持关闭。AI 不得初始化、重新启用、维护或同步本仓库 Wiki，也不得创建 Wiki 文档副本或自动同步工作流。
-- 即使历史 Wiki Git 远程仍可访问，`git-sync` 及其他交付流程也必须跳过 Wiki 检查和同步。
-- 只有用户未来明确改变本项决策时，才能重新评估 Wiki；普通提交、推送或文档同步授权不包含启用 Wiki。
+- `docs/` 是本仓库 PRD、ADR、架构、蓝图和运维等专题文档的唯一存储和发布来源，完整清单见 `docs/README.md`。根 `AGENTS.md`、`PROJECT_INDEX.md`、`plans/`、`README.md`、`SECURITY.md` 与 `CHANGELOG.md` 保留在稳定路径。
+- GitHub Wiki 保持关闭，禁止启用、维护 Wiki 或创建同步工作流；交付流程跳过 Wiki 检查。
 
 ## Markdown 格式
 
@@ -149,8 +145,8 @@
 ## 验证与交付
 
 - 按实际影响范围运行最小充分验证。跨应用契约变化必须同时验证后端契约、生成客户端和受影响前端。
-- 日常开发、普通提交、`$git-sync`、Push 和 Pull Request 只自动执行轻量门禁：Admin 与 Web 各自运行 typecheck 和 lint，Backend 运行 Ruff、格式、Mypy、导入边界、编译、应用导入和契约检查。公开 API 变化继续导出 OpenAPI、生成 API Client 并检查漂移。
-- 未经用户在当前任务中明确点名，禁止在本地或 GitHub Actions 自动执行 Admin/Web production build、任何 Vitest、任何 pytest、Playwright、浏览器自动化、测试数据库迁移或其他全量测试。普通“提交”“推送”和 `$git-sync` 均不包含这些重型验证的隐式授权，也不得通过定时任务或其他 Workflow 间接触发。
+- 日常开发、普通提交、`$git-sync`、Push 和 Pull Request 只自动执行轻量门禁：Admin 运行 typecheck 和 lint，Backend 运行 Ruff、格式、Mypy、导入边界、编译、应用导入和契约检查；Web 端已停用且不属于日常开发范围。公开 API 变化继续导出 OpenAPI、生成 API Client 并检查漂移。
+- 未经用户在当前任务中明确点名，禁止在本地或 GitHub Actions 自动执行 Admin production build、任何 Vitest、任何 pytest、Playwright、浏览器自动化、测试数据库迁移或其他全量测试。普通“提交”“推送”和 `$git-sync` 均不包含这些重型验证的隐式授权，也不得通过定时任务或其他 Workflow 间接触发。
 - 用户明确授权重型验证时，只执行被点名的应用、命令和范围；授权不延续到后续任务。用户自行进行本地人工验收不受此限制，未提供可核验证据时只记录为“用户自行验收，自动验证未执行”。
 - 按策略未执行的重型验证记录为“未执行”，不再记录为“待 `$git-sync` 执行”，也不得表述为测试通过、完整跨栈验收完成或生产可用。
 - 正式质量门禁只使用仓库已配置的命令；允许范围内只读诊断、搜索和一次性辅助核验，不能将其冒充正式门禁。尚未配置的检查项明确记录为缺口。

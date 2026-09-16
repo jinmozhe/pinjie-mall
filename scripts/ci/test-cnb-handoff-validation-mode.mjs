@@ -34,7 +34,7 @@ function shellPath(value) {
 function runBash(script, environment) {
   return spawnSync(resolveBashExecutable(), ["-c", script], {
     encoding: "utf8",
-    env: { ...process.env, ...environment },
+    env: { LC_ALL: "C.UTF-8", LANG: "C.UTF-8", ...process.env, ...environment },
   });
 }
 
