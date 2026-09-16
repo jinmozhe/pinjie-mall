@@ -170,7 +170,7 @@ AI 按五类信号扩展读取范围。
 
 - `apps/backend/**` 触发 Backend 规则。
 - `apps/admin/**` 触发 Admin 规则。
-- `apps/web/**` 触发 Web 规则。
+- `apps/web/**` 触发 Web 规则（当前已全面停用冻结，完全禁止开发与启动）。
 - `packages/api-client/**` 或 `openapi.json` 触发 API 契约链检查。
 - `apps/backend/alembic/**` 或 Model 变化触发数据库和迁移规则。
 - `.github/workflows/**`、Compose、Dockerfile 触发发布、供应链和生产边界。
@@ -472,20 +472,7 @@ Admin 保留 Ant Design 与 ProComponents。不能因为 Web 使用另一套 UI 
 
 ### 13.2 Web
 
-```text
-根 AGENTS.md
--> PROJECT_INDEX.md
--> apps/web/AGENTS.md
--> plans/README.md 和活动计划（实现时）
--> 本指南第 17 节（实现、修复或优化前）
--> PRD（能力变化时）
--> module-boundaries.md（Feature 或共享边界）
--> authentication-authorization.md（浏览器凭据）
--> testing-strategy.md（实现、评审和验收）
--> 目标路由、Feature、组件、API Client 和配置
-```
-
-涉及 UI 时还需根据任务加载前端设计或浏览器验证流程，并严格区分项目已有设计体系与工具默认建议。
+本项目定位为微信小程序商城，应用层完全不需要 Web 端，`apps/web` 已停用并冻结，完全禁止启动 Web 服务与端口。前阶段集中实现后端与管理后台，小程序端前阶段先不开发，因此不执行 Web 实现流程。
 
 ## 14. 跨栈 API 契约链
 

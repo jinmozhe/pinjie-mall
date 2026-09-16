@@ -14,9 +14,10 @@
 ```text
 Windows 本机
 ├── Backend：uv + 标准 CPython 3.14 + 项目 .venv，端口 8000
-├── Web：pnpm + Next.js，端口 3000
 ├── Admin：pnpm + Umi Max，端口 3001
+├── 小程序端：微信小程序（前阶段暂不开发，由后续专项阶段实施）
 └── PostgreSQL：本机服务，端口 5432
+（注：本项目不需要 Web 端，apps/web 已全面停用，完全禁止启动 Web 服务与端口）
 
 Docker Desktop
 └── Redis 8.10.0：根目录 compose.yml，端口 6379
@@ -32,11 +33,10 @@ Anaconda 或 Miniconda 不属于本项目的前置依赖。日常后端命令统
 1Panel
 ├── OpenResty
 │   ├── api.yourdomain.com   → 127.0.0.1:8000
-│   ├── admin.yourdomain.com → 127.0.0.1:3001
-│   └── www.yourdomain.com   → 127.0.0.1:3000
+│   └── admin.yourdomain.com → 127.0.0.1:3001
 ├── 共享 PostgreSQL 18.4：每项目独立数据库、角色和密码
 ├── 共享 Redis 8.10.0：每项目独立逻辑库编号；高隔离场景使用独立 ACL 用户
-└── 项目 Compose：backend、web、admin 和可选日志消费者
+└── 项目 Compose：backend、admin 和可选日志消费者（不需要 Web 端）
 ```
 
 | 维度 | 本地开发 | 生产环境 |
@@ -171,7 +171,6 @@ GRANT ALL PRIVILEGES ON DATABASE pinjie_fullstack_test TO pinjie_fullstack_test;
 
 ```powershell
 Copy-Item apps/backend/.env.example apps/backend/.env
-Copy-Item apps/web/.env.example apps/web/.env.local
 Copy-Item apps/admin/.env.example apps/admin/.env.local
 ```
 
@@ -202,7 +201,7 @@ PONG
 
 ## 六、日常启动
 
-建议使用三个独立 PowerShell 终端。Redis 由 Docker Desktop 后台运行。
+建议使用两个独立 PowerShell 终端。Redis 由 Docker Desktop 后台运行。本项目不需要 Web 端，完全禁止启动 Web 端服务与监听 3000 端口。
 
 ### 终端一：Backend
 
@@ -214,15 +213,7 @@ uv run uvicorn app.main:app --reload --port 8000
 
 访问地址：`http://localhost:8000`
 
-### 终端二：Web
-
-```powershell
-pnpm --filter @pinjie/web dev
-```
-
-访问地址：`http://localhost:3000`
-
-### 终端三：Admin
+### 终端二：Admin
 
 ```powershell
 pnpm --filter @pinjie/admin dev
@@ -230,7 +221,7 @@ pnpm --filter @pinjie/admin dev
 
 访问地址：`http://localhost:3001`
 
-也可以在根目录运行 `pnpm dev`，由 Turborepo 同时启动 Web 和 Admin。后端仍在独立终端中运行。
+也可以在根目录运行 `pnpm dev`，仅启动 Admin 管理端开发服务。后端仍在独立终端中运行。
 
 ## 七、常用维护命令
 
