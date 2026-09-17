@@ -30,7 +30,7 @@ uv run uvicorn app.main:app --reload --port 8000
 
 当前已实现配置、请求上下文、统一错误响应、数据库会话与事务、Redis 生命周期、Alembic、健康探针和 `system` 状态接口，以及 Browser Cookie 认证、用户、管理员、RBAC、Session/Refresh、CSRF、限流、安全事件、审计和可选请求元数据管道。
 
-商城 M1 已增加商品分类、SPU/稳定 SKU、图片资产关联、独立库存账户与幂等人工调整、本人收货地址、运费模板和报价。管理写操作复用权限、CSRF 和审计。新增迁移文件尚未执行到数据库，新增权限尚未同步到目标环境；地址暂用现有用户 Cookie 认证，小程序登录尚未实现。详细边界见[商城后端设计](../../docs/architecture/commerce-backend.md)，后续交易、支付和分销进度见[四阶段计划](../../plans/2026-09-17_商城后端四阶段建设计划.md)。
+商城 M1 已增加商品分类、SPU/稳定 SKU、图片资产关联、独立库存账户与幂等人工调整、本人收货地址、运费模板和报价。M2 已增加购物车、服务端结算预览、幂等待付款订单、订单快照、库存占用及取消或超时释放；创建订单时锁定运费模板和库存，支付确认只提供后续支付领域使用的内部入口，达到订单到期点的确认会被拒绝。新增迁移文件尚未执行到数据库，新增权限尚未同步到目标环境；地址暂用现有用户 Cookie 认证，小程序登录尚未实现。详细边界见[商城后端设计](../../docs/architecture/commerce-backend.md)，后续支付和分销进度见[四阶段计划](../../plans/2026-09-17_商城后端四阶段建设计划.md)。
 
 ## 质量检查
 
@@ -43,4 +43,4 @@ uv run python -m compileall -q app alembic scripts
 uv run python -c "from app.main import app; app.openapi()"
 ```
 
-公开接口变化后运行 `uv run python -m scripts.export_openapi`，再在仓库根运行 `pnpm generate-api`。任何 pytest 与真实数据库迁移仅在当前任务明确点名授权后执行；数据库集成测试必须显式配置独立的 `TEST_DATABASE_URL` 和 `TEST_REDIS_URL`，数据库名以 `_test` 结尾。
+公开接口变化后运行 `uv run python -m scripts.export_openapi`，再在仓库根运行 `pnpm generate-api`。待付款超时处理使用 `uv run python -m scripts.expire_pending_orders --confirm-database <数据库名>` 预览，只有显式追加 `--apply` 才修改订单与库存。任何 pytest 与真实数据库迁移仅在当前任务明确点名授权后执行；数据库集成测试必须显式配置独立的 `TEST_DATABASE_URL` 和 `TEST_REDIS_URL`，数据库名以 `_test` 结尾。

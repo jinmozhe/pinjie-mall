@@ -967,6 +967,62 @@ export type BodyUploadAssetApiV1AssetsUploadPost = {
 };
 
 /**
+ * CartItemInput
+ */
+export type CartItemInput = {
+    /**
+     * Sku Id
+     */
+    sku_id: string;
+    /**
+     * Quantity
+     */
+    quantity: number;
+};
+
+/**
+ * CartItemRead
+ */
+export type CartItemRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Sku Id
+     */
+    sku_id: string;
+    /**
+     * Quantity
+     */
+    quantity: number;
+    /**
+     * Selected
+     */
+    selected: boolean;
+    /**
+     * Revision
+     */
+    revision: number;
+};
+
+/**
+ * CartItemUpdate
+ */
+export type CartItemUpdate = {
+    /**
+     * Quantity
+     */
+    quantity?: number | null;
+    /**
+     * Selected
+     */
+    selected?: boolean | null;
+};
+
+/**
  * CategoryInput
  */
 export type CategoryInput = {
@@ -1072,6 +1128,98 @@ export type CategoryUpdate = {
      * 读取分类时获得的版本
      */
     revision: number;
+};
+
+/**
+ * CheckoutLine
+ */
+export type CheckoutLine = {
+    /**
+     * Sku Id
+     */
+    sku_id: string;
+    /**
+     * Quantity
+     */
+    quantity: number;
+};
+
+/**
+ * CheckoutQuote
+ */
+export type CheckoutQuote = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<QuoteLine>;
+    /**
+     * Shipping
+     */
+    shipping: Array<ShippingQuoteGroup>;
+    /**
+     * Product Type
+     */
+    product_type: string;
+    /**
+     * Items Amount
+     */
+    items_amount: string;
+    /**
+     * Freight Amount
+     */
+    freight_amount: string;
+    /**
+     * Total Amount
+     */
+    total_amount: string;
+    /**
+     * Address Id
+     */
+    address_id: string | null;
+    /**
+     * Address Snapshot
+     */
+    address_snapshot: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Fingerprint
+     */
+    fingerprint: string;
+    /**
+     * Expires At
+     *
+     * 凭据过期时间
+     */
+    expires_at: string;
+};
+
+/**
+ * CheckoutRequest
+ */
+export type CheckoutRequest = {
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<CheckoutLine>;
+    /**
+     * Address Id
+     */
+    address_id?: string | null;
+    /**
+     * Quote Fingerprint
+     */
+    quote_fingerprint?: string | null;
 };
 
 /**
@@ -1405,6 +1553,110 @@ export type LoginEventRead = {
      * 事件发生时间
      */
     occurred_at: string;
+};
+
+/**
+ * OrderItemRead
+ */
+export type OrderItemRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Sku Id
+     */
+    sku_id: string;
+    /**
+     * Product Name
+     */
+    product_name: string;
+    /**
+     * Sku Code
+     */
+    sku_code: string;
+    /**
+     * Specifications
+     */
+    specifications: {
+        [key: string]: string;
+    };
+    /**
+     * Quantity
+     */
+    quantity: number;
+    /**
+     * Unit Price
+     */
+    unit_price: string;
+    /**
+     * Line Amount
+     */
+    line_amount: string;
+};
+
+/**
+ * OrderRead
+ */
+export type OrderRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: string;
+    /**
+     * Product Type
+     */
+    product_type: string;
+    /**
+     * Items Amount
+     */
+    items_amount: string;
+    /**
+     * Freight Amount
+     */
+    freight_amount: string;
+    /**
+     * Total Amount
+     */
+    total_amount: string;
+    /**
+     * Address Snapshot
+     */
+    address_snapshot: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Expires At
+     *
+     * 凭据过期时间
+     */
+    expires_at: string;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<OrderItemRead>;
 };
 
 /**
@@ -2146,6 +2398,62 @@ export type PublicProductRead = {
 };
 
 /**
+ * QuoteLine
+ */
+export type QuoteLine = {
+    /**
+     * Sku Id
+     */
+    sku_id: string;
+    /**
+     * Product Id
+     */
+    product_id: string;
+    /**
+     * Product Name
+     */
+    product_name: string;
+    /**
+     * Sku Code
+     */
+    sku_code: string;
+    /**
+     * Specifications
+     */
+    specifications: {
+        [key: string]: string;
+    };
+    /**
+     * Quantity
+     */
+    quantity: number;
+    /**
+     * Unit Price
+     */
+    unit_price: string;
+    /**
+     * Line Amount
+     */
+    line_amount: string;
+    /**
+     * Weight Grams
+     */
+    weight_grams: number;
+    /**
+     * Product Revision
+     */
+    product_revision: number;
+    /**
+     * Product Type
+     */
+    product_type: string;
+    /**
+     * Shipping Template Id
+     */
+    shipping_template_id: string | null;
+};
+
+/**
  * ReadinessStatus
  */
 export type ReadinessStatus = {
@@ -2618,6 +2926,34 @@ export type ResponseModelBatchActionResult = {
 };
 
 /**
+ * ResponseModel[CartItemRead]
+ */
+export type ResponseModelCartItemRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: CartItemRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[CategoryRead]
  */
 export type ResponseModelCategoryRead = {
@@ -2637,6 +2973,34 @@ export type ResponseModelCategoryRead = {
      * 响应业务数据
      */
     data: CategoryRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[CheckoutQuote]
+ */
+export type ResponseModelCheckoutQuote = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: CheckoutQuote;
     /**
      * Request Id
      *
@@ -2751,6 +3115,34 @@ export type ResponseModelNoneType = {
      * 响应业务数据
      */
     data: null;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[OrderRead]
+ */
+export type ResponseModelOrderRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: OrderRead;
     /**
      * Request Id
      *
@@ -3494,6 +3886,36 @@ export type ResponseModelListAdminRead = {
 };
 
 /**
+ * ResponseModel[list[CartItemRead]]
+ */
+export type ResponseModelListCartItemRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * Data
+     *
+     * 响应业务数据
+     */
+    data: Array<CartItemRead>;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[list[CategoryRead]]
  */
 export type ResponseModelListCategoryRead = {
@@ -3815,6 +4237,40 @@ export type SessionRead = {
      * 会话撤销时间
      */
     revoked_at: string | null;
+};
+
+/**
+ * ShippingQuoteGroup
+ */
+export type ShippingQuoteGroup = {
+    /**
+     * Template Id
+     */
+    template_id: string | null;
+    /**
+     * Revision
+     */
+    revision: number | null;
+    /**
+     * Product Type
+     */
+    product_type: string;
+    /**
+     * Pieces
+     */
+    pieces: number;
+    /**
+     * Weight Grams
+     */
+    weight_grams: number;
+    /**
+     * Items Amount
+     */
+    items_amount: string;
+    /**
+     * Freight
+     */
+    freight: string;
 };
 
 /**
@@ -5450,6 +5906,226 @@ export type AddressUpdateApiV1AddressesAddressIdPutResponses = {
 };
 
 export type AddressUpdateApiV1AddressesAddressIdPutResponse = AddressUpdateApiV1AddressesAddressIdPutResponses[keyof AddressUpdateApiV1AddressesAddressIdPutResponses];
+
+export type CartListApiV1CartItemsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/cart-items';
+};
+
+export type CartListApiV1CartItemsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CartListApiV1CartItemsGetError = CartListApiV1CartItemsGetErrors[keyof CartListApiV1CartItemsGetErrors];
+
+export type CartListApiV1CartItemsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListCartItemRead;
+};
+
+export type CartListApiV1CartItemsGetResponse = CartListApiV1CartItemsGetResponses[keyof CartListApiV1CartItemsGetResponses];
+
+export type CartAddApiV1CartItemsPostData = {
+    body: CartItemInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/cart-items';
+};
+
+export type CartAddApiV1CartItemsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CartAddApiV1CartItemsPostError = CartAddApiV1CartItemsPostErrors[keyof CartAddApiV1CartItemsPostErrors];
+
+export type CartAddApiV1CartItemsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelCartItemRead;
+};
+
+export type CartAddApiV1CartItemsPostResponse = CartAddApiV1CartItemsPostResponses[keyof CartAddApiV1CartItemsPostResponses];
+
+export type CartDeleteApiV1CartItemsItemIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Item Id
+         */
+        item_id: string;
+    };
+    query?: never;
+    url: '/api/v1/cart-items/{item_id}';
+};
+
+export type CartDeleteApiV1CartItemsItemIdDeleteErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CartDeleteApiV1CartItemsItemIdDeleteError = CartDeleteApiV1CartItemsItemIdDeleteErrors[keyof CartDeleteApiV1CartItemsItemIdDeleteErrors];
+
+export type CartDeleteApiV1CartItemsItemIdDeleteResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelNoneType;
+};
+
+export type CartDeleteApiV1CartItemsItemIdDeleteResponse = CartDeleteApiV1CartItemsItemIdDeleteResponses[keyof CartDeleteApiV1CartItemsItemIdDeleteResponses];
+
+export type CartUpdateApiV1CartItemsItemIdPatchData = {
+    body: CartItemUpdate;
+    path: {
+        /**
+         * Item Id
+         */
+        item_id: string;
+    };
+    query?: never;
+    url: '/api/v1/cart-items/{item_id}';
+};
+
+export type CartUpdateApiV1CartItemsItemIdPatchErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CartUpdateApiV1CartItemsItemIdPatchError = CartUpdateApiV1CartItemsItemIdPatchErrors[keyof CartUpdateApiV1CartItemsItemIdPatchErrors];
+
+export type CartUpdateApiV1CartItemsItemIdPatchResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCartItemRead;
+};
+
+export type CartUpdateApiV1CartItemsItemIdPatchResponse = CartUpdateApiV1CartItemsItemIdPatchResponses[keyof CartUpdateApiV1CartItemsItemIdPatchResponses];
+
+export type CheckoutPreviewApiV1CheckoutPreviewPostData = {
+    body: CheckoutRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/checkout/preview';
+};
+
+export type CheckoutPreviewApiV1CheckoutPreviewPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CheckoutPreviewApiV1CheckoutPreviewPostError = CheckoutPreviewApiV1CheckoutPreviewPostErrors[keyof CheckoutPreviewApiV1CheckoutPreviewPostErrors];
+
+export type CheckoutPreviewApiV1CheckoutPreviewPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCheckoutQuote;
+};
+
+export type CheckoutPreviewApiV1CheckoutPreviewPostResponse = CheckoutPreviewApiV1CheckoutPreviewPostResponses[keyof CheckoutPreviewApiV1CheckoutPreviewPostResponses];
+
+export type OrderCreateApiV1OrdersPostData = {
+    body: CheckoutRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/orders';
+};
+
+export type OrderCreateApiV1OrdersPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type OrderCreateApiV1OrdersPostError = OrderCreateApiV1OrdersPostErrors[keyof OrderCreateApiV1OrdersPostErrors];
+
+export type OrderCreateApiV1OrdersPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelOrderRead;
+};
+
+export type OrderCreateApiV1OrdersPostResponse = OrderCreateApiV1OrdersPostResponses[keyof OrderCreateApiV1OrdersPostResponses];
+
+export type OrderReadApiV1OrdersOrderIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/{order_id}';
+};
+
+export type OrderReadApiV1OrdersOrderIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type OrderReadApiV1OrdersOrderIdGetError = OrderReadApiV1OrdersOrderIdGetErrors[keyof OrderReadApiV1OrdersOrderIdGetErrors];
+
+export type OrderReadApiV1OrdersOrderIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelOrderRead;
+};
+
+export type OrderReadApiV1OrdersOrderIdGetResponse = OrderReadApiV1OrdersOrderIdGetResponses[keyof OrderReadApiV1OrdersOrderIdGetResponses];
+
+export type OrderCancelApiV1OrdersOrderIdCancelPostData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/{order_id}/cancel';
+};
+
+export type OrderCancelApiV1OrdersOrderIdCancelPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type OrderCancelApiV1OrdersOrderIdCancelPostError = OrderCancelApiV1OrdersOrderIdCancelPostErrors[keyof OrderCancelApiV1OrdersOrderIdCancelPostErrors];
+
+export type OrderCancelApiV1OrdersOrderIdCancelPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelOrderRead;
+};
+
+export type OrderCancelApiV1OrdersOrderIdCancelPostResponse = OrderCancelApiV1OrdersOrderIdCancelPostResponses[keyof OrderCancelApiV1OrdersOrderIdCancelPostResponses];
 
 export type RegisterApiV1AuthRegisterPostData = {
     body: UserRegisterIn;
