@@ -125,6 +125,7 @@ def _asset_delete_service(*, storage: AsyncMock, assets: list[SimpleNamespace]) 
         storage=storage,
         metadata=_metadata(),
     )
+    service._session.scalar.return_value = None
     service._assets = SimpleNamespace(  # type: ignore[assignment]
         get_many=AsyncMock(return_value=assets),
         delete=AsyncMock(),
@@ -177,6 +178,26 @@ async def test_asset_delete_rejects_assets_referenced_by_avatar(monkeypatch) -> 
 
     assert exc_info.value.status_code == 409
     assert exc_info.value.code == ErrorCode.STATE_CONFLICT
+    storage.stage_delete.assert_not_awaited()
+    service._assets.delete.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_asset_delete_rejects_product_image_before_staging(monkeypatch) -> None:
+    asset_id = uuid.uuid7()
+    storage = AsyncMock()
+    service = _asset_delete_service(
+        storage=storage,
+        assets=[SimpleNamespace(id=asset_id, file_key="product/used.png", url="/static/uploads/product/used.png")],
+    )
+    service._session.scalar.return_value = uuid.uuid7()
+    monkeypatch.setattr(AuditCoordinator, "execute", _execute_audit_operation)
+
+    with pytest.raises(AppException) as conflict:
+        await service.delete(asset_id=asset_id, actor_id=uuid.uuid7())
+
+    assert conflict.value.status_code == 409
+    assert conflict.value.code == ErrorCode.STATE_CONFLICT
     storage.stage_delete.assert_not_awaited()
     service._assets.delete.assert_not_awaited()
 

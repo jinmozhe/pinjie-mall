@@ -20,6 +20,7 @@ from app.core.identifiers import new_uuid7
 from app.core.request_metadata import RequestMetadata
 from app.db.models import Asset
 from app.db.repositories import AssetRepository
+from app.db.repositories.commerce_access import CommerceAccessRepository
 from app.db.transaction import transaction_scope
 from app.domains.assets.schemas import (
     AssetBulkDeleteResult,
@@ -256,6 +257,10 @@ class AssetService:
             if len(assets) != len(asset_ids):
                 raise AppException(status_code=404, code=ErrorCode.ASSET_NOT_FOUND, message=missing_message)
             for asset in assets:
+                if await CommerceAccessRepository(self._session).asset_is_product_image(asset.id):
+                    raise AppException(
+                        status_code=409, code=ErrorCode.STATE_CONFLICT, message="商品图片正在被使用，无法删除"
+                    )
                 if await self._assets.is_referenced_by_avatar(asset.url):
                     raise AppException(
                         status_code=409, code=ErrorCode.STATE_CONFLICT, message="头像资产正在被使用，无法删除"

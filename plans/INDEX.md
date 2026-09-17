@@ -17,6 +17,7 @@
 
 | 路径 | 状态 | 结果 | 影响范围 | 用途 |
 | --- | --- | --- | --- | --- |
+| `plans/2026-09-17_商城后端四阶段建设计划.md` | 实施中 | 不适用 | Backend、API Client、Database、Documentation | M0 文档与 M1 商品基础本地实现已完成；交易、支付售后及会员分销尚未实施 |
 | `plans/2026-09-16_Web冻结镜像安全检查修复计划.md` | 已结束 | 已完成；本地轻量门禁及线上 Security 复验通过 | Web、Documentation | 修复冻结 Dockerfile 的非 root 用户声明，保留构建与启动阻断 |
 | `plans/2026-09-16_独立商城基线校正计划.md` | 已结束 | 已完成；独立商城身份、两端交付链路和 Web 冻结入口已校正，适用轻量门禁通过 | Backend、Admin、Web、Deployment、Documentation | 统一独立商城身份并阻断母版绑定与 Web 执行入口 |
 | `plans/2026-09-16_小程序端转型与Web端口禁用计划.md` | 已结束 | 已完成；定位与本地开发入口已收敛，生产与发布入口由独立商城基线校正计划补齐 | Backend、Admin、Web、Deployment、Documentation | 确立小程序端定位，不需要 Web 端，前阶段聚焦后端与管理端 |

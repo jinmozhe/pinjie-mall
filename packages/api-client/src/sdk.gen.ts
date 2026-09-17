@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AssignAdminRolesApiV1AdminAdminsAdminIdRolesPutData, AssignAdminRolesApiV1AdminAdminsAdminIdRolesPutErrors, AssignAdminRolesApiV1AdminAdminsAdminIdRolesPutResponses, AssignRolePermissionsApiV1AdminRolesRoleIdPermissionsPutData, AssignRolePermissionsApiV1AdminRolesRoleIdPermissionsPutErrors, AssignRolePermissionsApiV1AdminRolesRoleIdPermissionsPutResponses, ChangePasswordApiV1AdminAuthPasswordPostData, ChangePasswordApiV1AdminAuthPasswordPostErrors, ChangePasswordApiV1AdminAuthPasswordPostResponses, ChangePasswordApiV1UsersMePasswordPostData, ChangePasswordApiV1UsersMePasswordPostErrors, ChangePasswordApiV1UsersMePasswordPostResponses, ConfirmApiV1AdminAuthConfirmPostData, ConfirmApiV1AdminAuthConfirmPostErrors, ConfirmApiV1AdminAuthConfirmPostResponses, CreateAdminApiV1AdminAdminsPostData, CreateAdminApiV1AdminAdminsPostErrors, CreateAdminApiV1AdminAdminsPostResponses, CreateRoleApiV1AdminRolesPostData, CreateRoleApiV1AdminRolesPostErrors, CreateRoleApiV1AdminRolesPostResponses, CreateUserApiV1AdminUsersPostData, CreateUserApiV1AdminUsersPostErrors, CreateUserApiV1AdminUsersPostResponses, DeleteAccountApiV1UsersMeDeleteData, DeleteAccountApiV1UsersMeDeleteErrors, DeleteAccountApiV1UsersMeDeleteResponses, DeleteAssetApiV1AssetsAssetIdDeleteData, DeleteAssetApiV1AssetsAssetIdDeleteErrors, DeleteAssetApiV1AssetsAssetIdDeleteResponses, DeleteAssetsBulkApiV1AssetsBatchDeleteData, DeleteAssetsBulkApiV1AssetsBatchDeleteErrors, DeleteAssetsBulkApiV1AssetsBatchDeleteResponses, DeleteRoleApiV1AdminRolesRoleIdDeleteData, DeleteRoleApiV1AdminRolesRoleIdDeleteErrors, DeleteRoleApiV1AdminRolesRoleIdDeleteResponses, DeleteRolesBulkApiV1AdminRolesBatchDeleteData, DeleteRolesBulkApiV1AdminRolesBatchDeleteErrors, DeleteRolesBulkApiV1AdminRolesBatchDeleteResponses, DeleteSiteLogoApiV1AdminSettingsSiteLogoDeleteData, DeleteSiteLogoApiV1AdminSettingsSiteLogoDeleteErrors, DeleteSiteLogoApiV1AdminSettingsSiteLogoDeleteResponses, DeleteUsersBulkApiV1AdminUsersBatchDeleteData, DeleteUsersBulkApiV1AdminUsersBatchDeleteErrors, DeleteUsersBulkApiV1AdminUsersBatchDeleteResponses, GetAdminApiV1AdminAdminsAdminIdGetData, GetAdminApiV1AdminAdminsAdminIdGetErrors, GetAdminApiV1AdminAdminsAdminIdGetResponses, GetMeApiV1AdminAuthMeGetData, GetMeApiV1AdminAuthMeGetErrors, GetMeApiV1AdminAuthMeGetResponses, GetMeApiV1UsersMeGetData, GetMeApiV1UsersMeGetErrors, GetMeApiV1UsersMeGetResponses, GetRegistrationSettingApiV1AdminSettingsRegistrationGetData, GetRegistrationSettingApiV1AdminSettingsRegistrationGetErrors, GetRegistrationSettingApiV1AdminSettingsRegistrationGetResponses, GetRoleApiV1AdminRolesRoleIdGetData, GetRoleApiV1AdminRolesRoleIdGetErrors, GetRoleApiV1AdminRolesRoleIdGetResponses, GetSiteProfileApiV1SystemSiteProfileGetData, GetSiteProfileApiV1SystemSiteProfileGetResponses, GetSiteSettingApiV1AdminSettingsSiteGetData, GetSiteSettingApiV1AdminSettingsSiteGetErrors, GetSiteSettingApiV1AdminSettingsSiteGetResponses, GetSystemCapabilitiesApiV1SystemCapabilitiesGetData, GetSystemCapabilitiesApiV1SystemCapabilitiesGetResponses, GetSystemOverviewApiV1AdminSystemOverviewGetData, GetSystemOverviewApiV1AdminSystemOverviewGetErrors, GetSystemOverviewApiV1AdminSystemOverviewGetResponses, GetSystemStatusApiV1SystemStatusGetData, GetSystemStatusApiV1SystemStatusGetResponses, GetUserApiV1AdminUsersUserIdGetData, GetUserApiV1AdminUsersUserIdGetErrors, GetUserApiV1AdminUsersUserIdGetResponses, HealthLiveHealthLiveGetData, HealthLiveHealthLiveGetResponses, HealthReadyHealthReadyGetData, HealthReadyHealthReadyGetResponses, ListAdminsApiV1AdminAdminsGetData, ListAdminsApiV1AdminAdminsGetErrors, ListAdminsApiV1AdminAdminsGetResponses, ListAdminSessionsApiV1AdminAdminsAdminIdSessionsGetData, ListAdminSessionsApiV1AdminAdminsAdminIdSessionsGetErrors, ListAdminSessionsApiV1AdminAdminsAdminIdSessionsGetResponses, ListAssetsApiV1AssetsGetData, ListAssetsApiV1AssetsGetErrors, ListAssetsApiV1AssetsGetResponses, ListAuditEventsApiV1AdminSecurityAuditEventsGetData, ListAuditEventsApiV1AdminSecurityAuditEventsGetErrors, ListAuditEventsApiV1AdminSecurityAuditEventsGetResponses, ListLoginEventsApiV1AdminSecurityLoginEventsGetData, ListLoginEventsApiV1AdminSecurityLoginEventsGetErrors, ListLoginEventsApiV1AdminSecurityLoginEventsGetResponses, ListPermissionsApiV1AdminPermissionsGetData, ListPermissionsApiV1AdminPermissionsGetErrors, ListPermissionsApiV1AdminPermissionsGetResponses, ListRequestLogsApiV1AdminSystemRequestLogsGetData, ListRequestLogsApiV1AdminSystemRequestLogsGetErrors, ListRequestLogsApiV1AdminSystemRequestLogsGetResponses, ListRolesApiV1AdminRolesGetData, ListRolesApiV1AdminRolesGetErrors, ListRolesApiV1AdminRolesGetResponses, ListSessionsApiV1UsersMeSessionsGetData, ListSessionsApiV1UsersMeSessionsGetErrors, ListSessionsApiV1UsersMeSessionsGetResponses, ListUsersApiV1AdminUsersGetData, ListUsersApiV1AdminUsersGetErrors, ListUsersApiV1AdminUsersGetResponses, ListUserSessionsApiV1AdminUsersUserIdSessionsGetData, ListUserSessionsApiV1AdminUsersUserIdSessionsGetErrors, ListUserSessionsApiV1AdminUsersUserIdSessionsGetResponses, LoginApiV1AdminAuthLoginPostData, LoginApiV1AdminAuthLoginPostErrors, LoginApiV1AdminAuthLoginPostResponses, LoginApiV1AuthLoginPostData, LoginApiV1AuthLoginPostErrors, LoginApiV1AuthLoginPostResponses, LogoutApiV1AdminAuthLogoutPostData, LogoutApiV1AdminAuthLogoutPostErrors, LogoutApiV1AdminAuthLogoutPostResponses, LogoutApiV1AuthLogoutPostData, LogoutApiV1AuthLogoutPostErrors, LogoutApiV1AuthLogoutPostResponses, RefreshApiV1AdminAuthRefreshPostData, RefreshApiV1AdminAuthRefreshPostErrors, RefreshApiV1AdminAuthRefreshPostResponses, RefreshApiV1AuthRefreshPostData, RefreshApiV1AuthRefreshPostErrors, RefreshApiV1AuthRefreshPostResponses, RegisterApiV1AuthRegisterPostData, RegisterApiV1AuthRegisterPostErrors, RegisterApiV1AuthRegisterPostResponses, ResetAdminPasswordApiV1AdminAdminsAdminIdCredentialsPasswordPutData, ResetAdminPasswordApiV1AdminAdminsAdminIdCredentialsPasswordPutErrors, ResetAdminPasswordApiV1AdminAdminsAdminIdCredentialsPasswordPutResponses, ResetUserPasswordApiV1AdminUsersUserIdCredentialsPasswordPutData, ResetUserPasswordApiV1AdminUsersUserIdCredentialsPasswordPutErrors, ResetUserPasswordApiV1AdminUsersUserIdCredentialsPasswordPutResponses, RestoreUserApiV1AdminUsersUserIdRestorePostData, RestoreUserApiV1AdminUsersUserIdRestorePostErrors, RestoreUserApiV1AdminUsersUserIdRestorePostResponses, RestoreUsersBulkApiV1AdminUsersRestoreBatchPostData, RestoreUsersBulkApiV1AdminUsersRestoreBatchPostErrors, RestoreUsersBulkApiV1AdminUsersRestoreBatchPostResponses, RevokeAllAdminSessionsApiV1AdminAdminsAdminIdSessionsRevokeAllPostData, RevokeAllAdminSessionsApiV1AdminAdminsAdminIdSessionsRevokeAllPostErrors, RevokeAllAdminSessionsApiV1AdminAdminsAdminIdSessionsRevokeAllPostResponses, RevokeAllUserSessionsApiV1AdminUsersUserIdSessionsRevokeAllPostData, RevokeAllUserSessionsApiV1AdminUsersUserIdSessionsRevokeAllPostErrors, RevokeAllUserSessionsApiV1AdminUsersUserIdSessionsRevokeAllPostResponses, RevokeOtherSessionsApiV1UsersMeSessionsRevokeOthersPostData, RevokeOtherSessionsApiV1UsersMeSessionsRevokeOthersPostErrors, RevokeOtherSessionsApiV1UsersMeSessionsRevokeOthersPostResponses, RevokeSessionApiV1UsersMeSessionsSessionIdDeleteData, RevokeSessionApiV1UsersMeSessionsSessionIdDeleteErrors, RevokeSessionApiV1UsersMeSessionsSessionIdDeleteResponses, RevokeUserSessionApiV1AdminUsersUserIdSessionsSessionIdDeleteData, RevokeUserSessionApiV1AdminUsersUserIdSessionsSessionIdDeleteErrors, RevokeUserSessionApiV1AdminUsersUserIdSessionsSessionIdDeleteResponses, SetAdminStatusApiV1AdminAdminsAdminIdStatusPatchData, SetAdminStatusApiV1AdminAdminsAdminIdStatusPatchErrors, SetAdminStatusApiV1AdminAdminsAdminIdStatusPatchResponses, SetAdminStatusBulkApiV1AdminAdminsStatusBatchPatchData, SetAdminStatusBulkApiV1AdminAdminsStatusBatchPatchErrors, SetAdminStatusBulkApiV1AdminAdminsStatusBatchPatchResponses, SetAdminSuperuserApiV1AdminAdminsAdminIdSuperuserPatchData, SetAdminSuperuserApiV1AdminAdminsAdminIdSuperuserPatchErrors, SetAdminSuperuserApiV1AdminAdminsAdminIdSuperuserPatchResponses, SetRoleStatusBulkApiV1AdminRolesStatusBatchPatchData, SetRoleStatusBulkApiV1AdminRolesStatusBatchPatchErrors, SetRoleStatusBulkApiV1AdminRolesStatusBatchPatchResponses, SetUserStatusApiV1AdminUsersUserIdStatusPatchData, SetUserStatusApiV1AdminUsersUserIdStatusPatchErrors, SetUserStatusApiV1AdminUsersUserIdStatusPatchResponses, SetUserStatusBulkApiV1AdminUsersStatusBatchPatchData, SetUserStatusBulkApiV1AdminUsersStatusBatchPatchErrors, SetUserStatusBulkApiV1AdminUsersStatusBatchPatchResponses, UpdateAdminApiV1AdminAdminsAdminIdPatchData, UpdateAdminApiV1AdminAdminsAdminIdPatchErrors, UpdateAdminApiV1AdminAdminsAdminIdPatchResponses, UpdateAvatarApiV1UsersMeAvatarPutData, UpdateAvatarApiV1UsersMeAvatarPutErrors, UpdateAvatarApiV1UsersMeAvatarPutResponses, UpdateMeApiV1UsersMePatchData, UpdateMeApiV1UsersMePatchErrors, UpdateMeApiV1UsersMePatchResponses, UpdateProfileApiV1AdminAuthProfilePatchData, UpdateProfileApiV1AdminAuthProfilePatchErrors, UpdateProfileApiV1AdminAuthProfilePatchResponses, UpdateRegistrationSettingApiV1AdminSettingsRegistrationPatchData, UpdateRegistrationSettingApiV1AdminSettingsRegistrationPatchErrors, UpdateRegistrationSettingApiV1AdminSettingsRegistrationPatchResponses, UpdateRoleApiV1AdminRolesRoleIdPatchData, UpdateRoleApiV1AdminRolesRoleIdPatchErrors, UpdateRoleApiV1AdminRolesRoleIdPatchResponses, UpdateSiteLogoApiV1AdminSettingsSiteLogoPutData, UpdateSiteLogoApiV1AdminSettingsSiteLogoPutErrors, UpdateSiteLogoApiV1AdminSettingsSiteLogoPutResponses, UpdateSiteSettingApiV1AdminSettingsSitePatchData, UpdateSiteSettingApiV1AdminSettingsSitePatchErrors, UpdateSiteSettingApiV1AdminSettingsSitePatchResponses, UpdateUserApiV1AdminUsersUserIdPatchData, UpdateUserApiV1AdminUsersUserIdPatchErrors, UpdateUserApiV1AdminUsersUserIdPatchResponses, UploadAssetApiV1AssetsUploadPostData, UploadAssetApiV1AssetsUploadPostErrors, UploadAssetApiV1AssetsUploadPostResponses } from './types.gen';
+import type { AddressCreateApiV1AddressesPostData, AddressCreateApiV1AddressesPostErrors, AddressCreateApiV1AddressesPostResponses, AddressDeleteApiV1AddressesAddressIdDeleteData, AddressDeleteApiV1AddressesAddressIdDeleteErrors, AddressDeleteApiV1AddressesAddressIdDeleteResponses, AddressesListApiV1AddressesGetData, AddressesListApiV1AddressesGetErrors, AddressesListApiV1AddressesGetResponses, AddressUpdateApiV1AddressesAddressIdPutData, AddressUpdateApiV1AddressesAddressIdPutErrors, AddressUpdateApiV1AddressesAddressIdPutResponses, AdminCategoriesApiV1AdminProductCategoriesGetData, AdminCategoriesApiV1AdminProductCategoriesGetErrors, AdminCategoriesApiV1AdminProductCategoriesGetResponses, AdminProductApiV1AdminProductsProductIdGetData, AdminProductApiV1AdminProductsProductIdGetErrors, AdminProductApiV1AdminProductsProductIdGetResponses, AdminProductsApiV1AdminProductsGetData, AdminProductsApiV1AdminProductsGetErrors, AdminProductsApiV1AdminProductsGetResponses, AssignAdminRolesApiV1AdminAdminsAdminIdRolesPutData, AssignAdminRolesApiV1AdminAdminsAdminIdRolesPutErrors, AssignAdminRolesApiV1AdminAdminsAdminIdRolesPutResponses, AssignRolePermissionsApiV1AdminRolesRoleIdPermissionsPutData, AssignRolePermissionsApiV1AdminRolesRoleIdPermissionsPutErrors, AssignRolePermissionsApiV1AdminRolesRoleIdPermissionsPutResponses, ChangePasswordApiV1AdminAuthPasswordPostData, ChangePasswordApiV1AdminAuthPasswordPostErrors, ChangePasswordApiV1AdminAuthPasswordPostResponses, ChangePasswordApiV1UsersMePasswordPostData, ChangePasswordApiV1UsersMePasswordPostErrors, ChangePasswordApiV1UsersMePasswordPostResponses, ConfirmApiV1AdminAuthConfirmPostData, ConfirmApiV1AdminAuthConfirmPostErrors, ConfirmApiV1AdminAuthConfirmPostResponses, CreateAdminApiV1AdminAdminsPostData, CreateAdminApiV1AdminAdminsPostErrors, CreateAdminApiV1AdminAdminsPostResponses, CreateCategoryApiV1AdminProductCategoriesPostData, CreateCategoryApiV1AdminProductCategoriesPostErrors, CreateCategoryApiV1AdminProductCategoriesPostResponses, CreateProductApiV1AdminProductsPostData, CreateProductApiV1AdminProductsPostErrors, CreateProductApiV1AdminProductsPostResponses, CreateRoleApiV1AdminRolesPostData, CreateRoleApiV1AdminRolesPostErrors, CreateRoleApiV1AdminRolesPostResponses, CreateSkuApiV1AdminProductsProductIdSkusPostData, CreateSkuApiV1AdminProductsProductIdSkusPostErrors, CreateSkuApiV1AdminProductsProductIdSkusPostResponses, CreateUserApiV1AdminUsersPostData, CreateUserApiV1AdminUsersPostErrors, CreateUserApiV1AdminUsersPostResponses, DeleteAccountApiV1UsersMeDeleteData, DeleteAccountApiV1UsersMeDeleteErrors, DeleteAccountApiV1UsersMeDeleteResponses, DeleteAssetApiV1AssetsAssetIdDeleteData, DeleteAssetApiV1AssetsAssetIdDeleteErrors, DeleteAssetApiV1AssetsAssetIdDeleteResponses, DeleteAssetsBulkApiV1AssetsBatchDeleteData, DeleteAssetsBulkApiV1AssetsBatchDeleteErrors, DeleteAssetsBulkApiV1AssetsBatchDeleteResponses, DeleteRoleApiV1AdminRolesRoleIdDeleteData, DeleteRoleApiV1AdminRolesRoleIdDeleteErrors, DeleteRoleApiV1AdminRolesRoleIdDeleteResponses, DeleteRolesBulkApiV1AdminRolesBatchDeleteData, DeleteRolesBulkApiV1AdminRolesBatchDeleteErrors, DeleteRolesBulkApiV1AdminRolesBatchDeleteResponses, DeleteSiteLogoApiV1AdminSettingsSiteLogoDeleteData, DeleteSiteLogoApiV1AdminSettingsSiteLogoDeleteErrors, DeleteSiteLogoApiV1AdminSettingsSiteLogoDeleteResponses, DeleteUsersBulkApiV1AdminUsersBatchDeleteData, DeleteUsersBulkApiV1AdminUsersBatchDeleteErrors, DeleteUsersBulkApiV1AdminUsersBatchDeleteResponses, GetAdminApiV1AdminAdminsAdminIdGetData, GetAdminApiV1AdminAdminsAdminIdGetErrors, GetAdminApiV1AdminAdminsAdminIdGetResponses, GetMeApiV1AdminAuthMeGetData, GetMeApiV1AdminAuthMeGetErrors, GetMeApiV1AdminAuthMeGetResponses, GetMeApiV1UsersMeGetData, GetMeApiV1UsersMeGetErrors, GetMeApiV1UsersMeGetResponses, GetRegistrationSettingApiV1AdminSettingsRegistrationGetData, GetRegistrationSettingApiV1AdminSettingsRegistrationGetErrors, GetRegistrationSettingApiV1AdminSettingsRegistrationGetResponses, GetRoleApiV1AdminRolesRoleIdGetData, GetRoleApiV1AdminRolesRoleIdGetErrors, GetRoleApiV1AdminRolesRoleIdGetResponses, GetSiteProfileApiV1SystemSiteProfileGetData, GetSiteProfileApiV1SystemSiteProfileGetResponses, GetSiteSettingApiV1AdminSettingsSiteGetData, GetSiteSettingApiV1AdminSettingsSiteGetErrors, GetSiteSettingApiV1AdminSettingsSiteGetResponses, GetSystemCapabilitiesApiV1SystemCapabilitiesGetData, GetSystemCapabilitiesApiV1SystemCapabilitiesGetResponses, GetSystemOverviewApiV1AdminSystemOverviewGetData, GetSystemOverviewApiV1AdminSystemOverviewGetErrors, GetSystemOverviewApiV1AdminSystemOverviewGetResponses, GetSystemStatusApiV1SystemStatusGetData, GetSystemStatusApiV1SystemStatusGetResponses, GetUserApiV1AdminUsersUserIdGetData, GetUserApiV1AdminUsersUserIdGetErrors, GetUserApiV1AdminUsersUserIdGetResponses, HealthLiveHealthLiveGetData, HealthLiveHealthLiveGetResponses, HealthReadyHealthReadyGetData, HealthReadyHealthReadyGetResponses, InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostData, InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostErrors, InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostResponses, InventoryHistoryApiV1AdminInventorySkuIdMovementsGetData, InventoryHistoryApiV1AdminInventorySkuIdMovementsGetErrors, InventoryHistoryApiV1AdminInventorySkuIdMovementsGetResponses, InventoryReadApiV1AdminInventorySkuIdGetData, InventoryReadApiV1AdminInventorySkuIdGetErrors, InventoryReadApiV1AdminInventorySkuIdGetResponses, ListAdminsApiV1AdminAdminsGetData, ListAdminsApiV1AdminAdminsGetErrors, ListAdminsApiV1AdminAdminsGetResponses, ListAdminSessionsApiV1AdminAdminsAdminIdSessionsGetData, ListAdminSessionsApiV1AdminAdminsAdminIdSessionsGetErrors, ListAdminSessionsApiV1AdminAdminsAdminIdSessionsGetResponses, ListAssetsApiV1AssetsGetData, ListAssetsApiV1AssetsGetErrors, ListAssetsApiV1AssetsGetResponses, ListAuditEventsApiV1AdminSecurityAuditEventsGetData, ListAuditEventsApiV1AdminSecurityAuditEventsGetErrors, ListAuditEventsApiV1AdminSecurityAuditEventsGetResponses, ListLoginEventsApiV1AdminSecurityLoginEventsGetData, ListLoginEventsApiV1AdminSecurityLoginEventsGetErrors, ListLoginEventsApiV1AdminSecurityLoginEventsGetResponses, ListPermissionsApiV1AdminPermissionsGetData, ListPermissionsApiV1AdminPermissionsGetErrors, ListPermissionsApiV1AdminPermissionsGetResponses, ListRequestLogsApiV1AdminSystemRequestLogsGetData, ListRequestLogsApiV1AdminSystemRequestLogsGetErrors, ListRequestLogsApiV1AdminSystemRequestLogsGetResponses, ListRolesApiV1AdminRolesGetData, ListRolesApiV1AdminRolesGetErrors, ListRolesApiV1AdminRolesGetResponses, ListSessionsApiV1UsersMeSessionsGetData, ListSessionsApiV1UsersMeSessionsGetErrors, ListSessionsApiV1UsersMeSessionsGetResponses, ListUsersApiV1AdminUsersGetData, ListUsersApiV1AdminUsersGetErrors, ListUsersApiV1AdminUsersGetResponses, ListUserSessionsApiV1AdminUsersUserIdSessionsGetData, ListUserSessionsApiV1AdminUsersUserIdSessionsGetErrors, ListUserSessionsApiV1AdminUsersUserIdSessionsGetResponses, LoginApiV1AdminAuthLoginPostData, LoginApiV1AdminAuthLoginPostErrors, LoginApiV1AdminAuthLoginPostResponses, LoginApiV1AuthLoginPostData, LoginApiV1AuthLoginPostErrors, LoginApiV1AuthLoginPostResponses, LogoutApiV1AdminAuthLogoutPostData, LogoutApiV1AdminAuthLogoutPostErrors, LogoutApiV1AdminAuthLogoutPostResponses, LogoutApiV1AuthLogoutPostData, LogoutApiV1AuthLogoutPostErrors, LogoutApiV1AuthLogoutPostResponses, PublicCategoriesApiV1ProductCategoriesGetData, PublicCategoriesApiV1ProductCategoriesGetResponses, PublicProductApiV1ProductsProductIdGetData, PublicProductApiV1ProductsProductIdGetErrors, PublicProductApiV1ProductsProductIdGetResponses, PublicProductsApiV1ProductsGetData, PublicProductsApiV1ProductsGetErrors, PublicProductsApiV1ProductsGetResponses, RefreshApiV1AdminAuthRefreshPostData, RefreshApiV1AdminAuthRefreshPostErrors, RefreshApiV1AdminAuthRefreshPostResponses, RefreshApiV1AuthRefreshPostData, RefreshApiV1AuthRefreshPostErrors, RefreshApiV1AuthRefreshPostResponses, RegisterApiV1AuthRegisterPostData, RegisterApiV1AuthRegisterPostErrors, RegisterApiV1AuthRegisterPostResponses, ResetAdminPasswordApiV1AdminAdminsAdminIdCredentialsPasswordPutData, ResetAdminPasswordApiV1AdminAdminsAdminIdCredentialsPasswordPutErrors, ResetAdminPasswordApiV1AdminAdminsAdminIdCredentialsPasswordPutResponses, ResetUserPasswordApiV1AdminUsersUserIdCredentialsPasswordPutData, ResetUserPasswordApiV1AdminUsersUserIdCredentialsPasswordPutErrors, ResetUserPasswordApiV1AdminUsersUserIdCredentialsPasswordPutResponses, RestoreUserApiV1AdminUsersUserIdRestorePostData, RestoreUserApiV1AdminUsersUserIdRestorePostErrors, RestoreUserApiV1AdminUsersUserIdRestorePostResponses, RestoreUsersBulkApiV1AdminUsersRestoreBatchPostData, RestoreUsersBulkApiV1AdminUsersRestoreBatchPostErrors, RestoreUsersBulkApiV1AdminUsersRestoreBatchPostResponses, RevokeAllAdminSessionsApiV1AdminAdminsAdminIdSessionsRevokeAllPostData, RevokeAllAdminSessionsApiV1AdminAdminsAdminIdSessionsRevokeAllPostErrors, RevokeAllAdminSessionsApiV1AdminAdminsAdminIdSessionsRevokeAllPostResponses, RevokeAllUserSessionsApiV1AdminUsersUserIdSessionsRevokeAllPostData, RevokeAllUserSessionsApiV1AdminUsersUserIdSessionsRevokeAllPostErrors, RevokeAllUserSessionsApiV1AdminUsersUserIdSessionsRevokeAllPostResponses, RevokeOtherSessionsApiV1UsersMeSessionsRevokeOthersPostData, RevokeOtherSessionsApiV1UsersMeSessionsRevokeOthersPostErrors, RevokeOtherSessionsApiV1UsersMeSessionsRevokeOthersPostResponses, RevokeSessionApiV1UsersMeSessionsSessionIdDeleteData, RevokeSessionApiV1UsersMeSessionsSessionIdDeleteErrors, RevokeSessionApiV1UsersMeSessionsSessionIdDeleteResponses, RevokeUserSessionApiV1AdminUsersUserIdSessionsSessionIdDeleteData, RevokeUserSessionApiV1AdminUsersUserIdSessionsSessionIdDeleteErrors, RevokeUserSessionApiV1AdminUsersUserIdSessionsSessionIdDeleteResponses, SetAdminStatusApiV1AdminAdminsAdminIdStatusPatchData, SetAdminStatusApiV1AdminAdminsAdminIdStatusPatchErrors, SetAdminStatusApiV1AdminAdminsAdminIdStatusPatchResponses, SetAdminStatusBulkApiV1AdminAdminsStatusBatchPatchData, SetAdminStatusBulkApiV1AdminAdminsStatusBatchPatchErrors, SetAdminStatusBulkApiV1AdminAdminsStatusBatchPatchResponses, SetAdminSuperuserApiV1AdminAdminsAdminIdSuperuserPatchData, SetAdminSuperuserApiV1AdminAdminsAdminIdSuperuserPatchErrors, SetAdminSuperuserApiV1AdminAdminsAdminIdSuperuserPatchResponses, SetProductStatusApiV1AdminProductsProductIdStatusPutData, SetProductStatusApiV1AdminProductsProductIdStatusPutErrors, SetProductStatusApiV1AdminProductsProductIdStatusPutResponses, SetRoleStatusBulkApiV1AdminRolesStatusBatchPatchData, SetRoleStatusBulkApiV1AdminRolesStatusBatchPatchErrors, SetRoleStatusBulkApiV1AdminRolesStatusBatchPatchResponses, SetUserStatusApiV1AdminUsersUserIdStatusPatchData, SetUserStatusApiV1AdminUsersUserIdStatusPatchErrors, SetUserStatusApiV1AdminUsersUserIdStatusPatchResponses, SetUserStatusBulkApiV1AdminUsersStatusBatchPatchData, SetUserStatusBulkApiV1AdminUsersStatusBatchPatchErrors, SetUserStatusBulkApiV1AdminUsersStatusBatchPatchResponses, ShippingCreateApiV1AdminShippingTemplatesPostData, ShippingCreateApiV1AdminShippingTemplatesPostErrors, ShippingCreateApiV1AdminShippingTemplatesPostResponses, ShippingPageApiV1AdminShippingTemplatesGetData, ShippingPageApiV1AdminShippingTemplatesGetErrors, ShippingPageApiV1AdminShippingTemplatesGetResponses, ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostData, ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostErrors, ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostResponses, ShippingReadApiV1AdminShippingTemplatesTemplateIdGetData, ShippingReadApiV1AdminShippingTemplatesTemplateIdGetErrors, ShippingReadApiV1AdminShippingTemplatesTemplateIdGetResponses, ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutData, ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutErrors, ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutResponses, UpdateAdminApiV1AdminAdminsAdminIdPatchData, UpdateAdminApiV1AdminAdminsAdminIdPatchErrors, UpdateAdminApiV1AdminAdminsAdminIdPatchResponses, UpdateAvatarApiV1UsersMeAvatarPutData, UpdateAvatarApiV1UsersMeAvatarPutErrors, UpdateAvatarApiV1UsersMeAvatarPutResponses, UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutData, UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutErrors, UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutResponses, UpdateMeApiV1UsersMePatchData, UpdateMeApiV1UsersMePatchErrors, UpdateMeApiV1UsersMePatchResponses, UpdateProductApiV1AdminProductsProductIdPutData, UpdateProductApiV1AdminProductsProductIdPutErrors, UpdateProductApiV1AdminProductsProductIdPutResponses, UpdateProfileApiV1AdminAuthProfilePatchData, UpdateProfileApiV1AdminAuthProfilePatchErrors, UpdateProfileApiV1AdminAuthProfilePatchResponses, UpdateRegistrationSettingApiV1AdminSettingsRegistrationPatchData, UpdateRegistrationSettingApiV1AdminSettingsRegistrationPatchErrors, UpdateRegistrationSettingApiV1AdminSettingsRegistrationPatchResponses, UpdateRoleApiV1AdminRolesRoleIdPatchData, UpdateRoleApiV1AdminRolesRoleIdPatchErrors, UpdateRoleApiV1AdminRolesRoleIdPatchResponses, UpdateSiteLogoApiV1AdminSettingsSiteLogoPutData, UpdateSiteLogoApiV1AdminSettingsSiteLogoPutErrors, UpdateSiteLogoApiV1AdminSettingsSiteLogoPutResponses, UpdateSiteSettingApiV1AdminSettingsSitePatchData, UpdateSiteSettingApiV1AdminSettingsSitePatchErrors, UpdateSiteSettingApiV1AdminSettingsSitePatchResponses, UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutData, UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutErrors, UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutResponses, UpdateUserApiV1AdminUsersUserIdPatchData, UpdateUserApiV1AdminUsersUserIdPatchErrors, UpdateUserApiV1AdminUsersUserIdPatchResponses, UploadAssetApiV1AssetsUploadPostData, UploadAssetApiV1AssetsUploadPostErrors, UploadAssetApiV1AssetsUploadPostResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,283 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * 查看全部商品分类
+ */
+export const adminCategoriesApiV1AdminProductCategoriesGet = <ThrowOnError extends boolean = false>(options?: Options<AdminCategoriesApiV1AdminProductCategoriesGetData, ThrowOnError>): RequestResult<AdminCategoriesApiV1AdminProductCategoriesGetResponses, AdminCategoriesApiV1AdminProductCategoriesGetErrors, ThrowOnError> => (options?.client ?? client).get<AdminCategoriesApiV1AdminProductCategoriesGetResponses, AdminCategoriesApiV1AdminProductCategoriesGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/product-categories',
+    ...options
+});
+
+/**
+ * 创建商品分类
+ */
+export const createCategoryApiV1AdminProductCategoriesPost = <ThrowOnError extends boolean = false>(options: Options<CreateCategoryApiV1AdminProductCategoriesPostData, ThrowOnError>): RequestResult<CreateCategoryApiV1AdminProductCategoriesPostResponses, CreateCategoryApiV1AdminProductCategoriesPostErrors, ThrowOnError> => (options.client ?? client).post<CreateCategoryApiV1AdminProductCategoriesPostResponses, CreateCategoryApiV1AdminProductCategoriesPostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/product-categories',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 修改商品分类
+ */
+export const updateCategoryApiV1AdminProductCategoriesCategoryIdPut = <ThrowOnError extends boolean = false>(options: Options<UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutData, ThrowOnError>): RequestResult<UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutResponses, UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutErrors, ThrowOnError> => (options.client ?? client).put<UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutResponses, UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/product-categories/{category_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 分页查看商品
+ */
+export const adminProductsApiV1AdminProductsGet = <ThrowOnError extends boolean = false>(options?: Options<AdminProductsApiV1AdminProductsGetData, ThrowOnError>): RequestResult<AdminProductsApiV1AdminProductsGetResponses, AdminProductsApiV1AdminProductsGetErrors, ThrowOnError> => (options?.client ?? client).get<AdminProductsApiV1AdminProductsGetResponses, AdminProductsApiV1AdminProductsGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/products',
+    ...options
+});
+
+/**
+ * 创建商品与零库存变体
+ */
+export const createProductApiV1AdminProductsPost = <ThrowOnError extends boolean = false>(options: Options<CreateProductApiV1AdminProductsPostData, ThrowOnError>): RequestResult<CreateProductApiV1AdminProductsPostResponses, CreateProductApiV1AdminProductsPostErrors, ThrowOnError> => (options.client ?? client).post<CreateProductApiV1AdminProductsPostResponses, CreateProductApiV1AdminProductsPostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/products',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 查看商品及全部变体
+ */
+export const adminProductApiV1AdminProductsProductIdGet = <ThrowOnError extends boolean = false>(options: Options<AdminProductApiV1AdminProductsProductIdGetData, ThrowOnError>): RequestResult<AdminProductApiV1AdminProductsProductIdGetResponses, AdminProductApiV1AdminProductsProductIdGetErrors, ThrowOnError> => (options.client ?? client).get<AdminProductApiV1AdminProductsProductIdGetResponses, AdminProductApiV1AdminProductsProductIdGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/products/{product_id}',
+    ...options
+});
+
+/**
+ * 更新商品资料
+ */
+export const updateProductApiV1AdminProductsProductIdPut = <ThrowOnError extends boolean = false>(options: Options<UpdateProductApiV1AdminProductsProductIdPutData, ThrowOnError>): RequestResult<UpdateProductApiV1AdminProductsProductIdPutResponses, UpdateProductApiV1AdminProductsProductIdPutErrors, ThrowOnError> => (options.client ?? client).put<UpdateProductApiV1AdminProductsProductIdPutResponses, UpdateProductApiV1AdminProductsProductIdPutErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/products/{product_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 上架或下架商品
+ */
+export const setProductStatusApiV1AdminProductsProductIdStatusPut = <ThrowOnError extends boolean = false>(options: Options<SetProductStatusApiV1AdminProductsProductIdStatusPutData, ThrowOnError>): RequestResult<SetProductStatusApiV1AdminProductsProductIdStatusPutResponses, SetProductStatusApiV1AdminProductsProductIdStatusPutErrors, ThrowOnError> => (options.client ?? client).put<SetProductStatusApiV1AdminProductsProductIdStatusPutResponses, SetProductStatusApiV1AdminProductsProductIdStatusPutErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/products/{product_id}/status',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 增加稳定 SKU
+ */
+export const createSkuApiV1AdminProductsProductIdSkusPost = <ThrowOnError extends boolean = false>(options: Options<CreateSkuApiV1AdminProductsProductIdSkusPostData, ThrowOnError>): RequestResult<CreateSkuApiV1AdminProductsProductIdSkusPostResponses, CreateSkuApiV1AdminProductsProductIdSkusPostErrors, ThrowOnError> => (options.client ?? client).post<CreateSkuApiV1AdminProductsProductIdSkusPostResponses, CreateSkuApiV1AdminProductsProductIdSkusPostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/products/{product_id}/skus',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 原位更新 SKU
+ */
+export const updateSkuApiV1AdminProductsProductIdSkusSkuIdPut = <ThrowOnError extends boolean = false>(options: Options<UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutData, ThrowOnError>): RequestResult<UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutResponses, UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutErrors, ThrowOnError> => (options.client ?? client).put<UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutResponses, UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/products/{product_id}/skus/{sku_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 查看 SKU 库存
+ */
+export const inventoryReadApiV1AdminInventorySkuIdGet = <ThrowOnError extends boolean = false>(options: Options<InventoryReadApiV1AdminInventorySkuIdGetData, ThrowOnError>): RequestResult<InventoryReadApiV1AdminInventorySkuIdGetResponses, InventoryReadApiV1AdminInventorySkuIdGetErrors, ThrowOnError> => (options.client ?? client).get<InventoryReadApiV1AdminInventorySkuIdGetResponses, InventoryReadApiV1AdminInventorySkuIdGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/inventory/{sku_id}',
+    ...options
+});
+
+/**
+ * 幂等调整库存
+ */
+export const inventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPost = <ThrowOnError extends boolean = false>(options: Options<InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostData, ThrowOnError>): RequestResult<InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostResponses, InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostErrors, ThrowOnError> => (options.client ?? client).post<InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostResponses, InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/inventory/{sku_id}/adjustments',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 查看库存流水
+ */
+export const inventoryHistoryApiV1AdminInventorySkuIdMovementsGet = <ThrowOnError extends boolean = false>(options: Options<InventoryHistoryApiV1AdminInventorySkuIdMovementsGetData, ThrowOnError>): RequestResult<InventoryHistoryApiV1AdminInventorySkuIdMovementsGetResponses, InventoryHistoryApiV1AdminInventorySkuIdMovementsGetErrors, ThrowOnError> => (options.client ?? client).get<InventoryHistoryApiV1AdminInventorySkuIdMovementsGetResponses, InventoryHistoryApiV1AdminInventorySkuIdMovementsGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/inventory/{sku_id}/movements',
+    ...options
+});
+
+/**
+ * 查看运费模板
+ */
+export const shippingPageApiV1AdminShippingTemplatesGet = <ThrowOnError extends boolean = false>(options?: Options<ShippingPageApiV1AdminShippingTemplatesGetData, ThrowOnError>): RequestResult<ShippingPageApiV1AdminShippingTemplatesGetResponses, ShippingPageApiV1AdminShippingTemplatesGetErrors, ThrowOnError> => (options?.client ?? client).get<ShippingPageApiV1AdminShippingTemplatesGetResponses, ShippingPageApiV1AdminShippingTemplatesGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/shipping-templates',
+    ...options
+});
+
+/**
+ * 创建运费模板
+ */
+export const shippingCreateApiV1AdminShippingTemplatesPost = <ThrowOnError extends boolean = false>(options: Options<ShippingCreateApiV1AdminShippingTemplatesPostData, ThrowOnError>): RequestResult<ShippingCreateApiV1AdminShippingTemplatesPostResponses, ShippingCreateApiV1AdminShippingTemplatesPostErrors, ThrowOnError> => (options.client ?? client).post<ShippingCreateApiV1AdminShippingTemplatesPostResponses, ShippingCreateApiV1AdminShippingTemplatesPostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/shipping-templates',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 查看运费模板详情
+ */
+export const shippingReadApiV1AdminShippingTemplatesTemplateIdGet = <ThrowOnError extends boolean = false>(options: Options<ShippingReadApiV1AdminShippingTemplatesTemplateIdGetData, ThrowOnError>): RequestResult<ShippingReadApiV1AdminShippingTemplatesTemplateIdGetResponses, ShippingReadApiV1AdminShippingTemplatesTemplateIdGetErrors, ThrowOnError> => (options.client ?? client).get<ShippingReadApiV1AdminShippingTemplatesTemplateIdGetResponses, ShippingReadApiV1AdminShippingTemplatesTemplateIdGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/shipping-templates/{template_id}',
+    ...options
+});
+
+/**
+ * 更新运费模板
+ */
+export const shippingUpdateApiV1AdminShippingTemplatesTemplateIdPut = <ThrowOnError extends boolean = false>(options: Options<ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutData, ThrowOnError>): RequestResult<ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutResponses, ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutErrors, ThrowOnError> => (options.client ?? client).put<ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutResponses, ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/shipping-templates/{template_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 试算运费
+ */
+export const shippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePost = <ThrowOnError extends boolean = false>(options: Options<ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostData, ThrowOnError>): RequestResult<ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostResponses, ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostErrors, ThrowOnError> => (options.client ?? client).post<ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostResponses, ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/admin/shipping-templates/{template_id}/quote',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 查看启用商品分类
+ */
+export const publicCategoriesApiV1ProductCategoriesGet = <ThrowOnError extends boolean = false>(options?: Options<PublicCategoriesApiV1ProductCategoriesGetData, ThrowOnError>): RequestResult<PublicCategoriesApiV1ProductCategoriesGetResponses, unknown, ThrowOnError> => (options?.client ?? client).get<PublicCategoriesApiV1ProductCategoriesGetResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/product-categories',
+    ...options
+});
+
+/**
+ * 查看上架商品
+ */
+export const publicProductsApiV1ProductsGet = <ThrowOnError extends boolean = false>(options?: Options<PublicProductsApiV1ProductsGetData, ThrowOnError>): RequestResult<PublicProductsApiV1ProductsGetResponses, PublicProductsApiV1ProductsGetErrors, ThrowOnError> => (options?.client ?? client).get<PublicProductsApiV1ProductsGetResponses, PublicProductsApiV1ProductsGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/products',
+    ...options
+});
+
+/**
+ * 查看上架商品详情
+ */
+export const publicProductApiV1ProductsProductIdGet = <ThrowOnError extends boolean = false>(options: Options<PublicProductApiV1ProductsProductIdGetData, ThrowOnError>): RequestResult<PublicProductApiV1ProductsProductIdGetResponses, PublicProductApiV1ProductsProductIdGetErrors, ThrowOnError> => (options.client ?? client).get<PublicProductApiV1ProductsProductIdGetResponses, PublicProductApiV1ProductsProductIdGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/products/{product_id}',
+    ...options
+});
+
+/**
+ * 查看本人收货地址
+ */
+export const addressesListApiV1AddressesGet = <ThrowOnError extends boolean = false>(options?: Options<AddressesListApiV1AddressesGetData, ThrowOnError>): RequestResult<AddressesListApiV1AddressesGetResponses, AddressesListApiV1AddressesGetErrors, ThrowOnError> => (options?.client ?? client).get<AddressesListApiV1AddressesGetResponses, AddressesListApiV1AddressesGetErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/addresses',
+    ...options
+});
+
+/**
+ * 新增本人收货地址
+ */
+export const addressCreateApiV1AddressesPost = <ThrowOnError extends boolean = false>(options: Options<AddressCreateApiV1AddressesPostData, ThrowOnError>): RequestResult<AddressCreateApiV1AddressesPostResponses, AddressCreateApiV1AddressesPostErrors, ThrowOnError> => (options.client ?? client).post<AddressCreateApiV1AddressesPostResponses, AddressCreateApiV1AddressesPostErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/addresses',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * 删除本人收货地址
+ */
+export const addressDeleteApiV1AddressesAddressIdDelete = <ThrowOnError extends boolean = false>(options: Options<AddressDeleteApiV1AddressesAddressIdDeleteData, ThrowOnError>): RequestResult<AddressDeleteApiV1AddressesAddressIdDeleteResponses, AddressDeleteApiV1AddressesAddressIdDeleteErrors, ThrowOnError> => (options.client ?? client).delete<AddressDeleteApiV1AddressesAddressIdDeleteResponses, AddressDeleteApiV1AddressesAddressIdDeleteErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/addresses/{address_id}',
+    ...options
+});
+
+/**
+ * 更新本人收货地址
+ */
+export const addressUpdateApiV1AddressesAddressIdPut = <ThrowOnError extends boolean = false>(options: Options<AddressUpdateApiV1AddressesAddressIdPutData, ThrowOnError>): RequestResult<AddressUpdateApiV1AddressesAddressIdPutResponses, AddressUpdateApiV1AddressesAddressIdPutErrors, ThrowOnError> => (options.client ?? client).put<AddressUpdateApiV1AddressesAddressIdPutResponses, AddressUpdateApiV1AddressesAddressIdPutErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/v1/addresses/{address_id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * 注册用户账户

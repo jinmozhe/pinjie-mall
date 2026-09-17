@@ -11,6 +11,17 @@ class PermissionDefinition:
 
 
 class PermissionCode(StrEnum):
+    PRODUCT_CATEGORIES_READ = "product-categories:read"
+    PRODUCT_CATEGORIES_CREATE = "product-categories:create"
+    PRODUCT_CATEGORIES_UPDATE = "product-categories:update"
+    PRODUCTS_READ = "products:read"
+    PRODUCTS_CREATE = "products:create"
+    PRODUCTS_UPDATE = "products:update"
+    INVENTORY_READ = "inventory:read"
+    INVENTORY_ADJUST = "inventory:adjust"
+    SHIPPING_READ = "shipping:read"
+    SHIPPING_CREATE = "shipping:create"
+    SHIPPING_UPDATE = "shipping:update"
     USERS_READ = "users:read"
     USERS_CREATE = "users:create"
     USERS_UPDATE = "users:update"
@@ -46,6 +57,17 @@ class PermissionCode(StrEnum):
 
 
 PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
+    PermissionDefinition("product-categories:read", "查看商品分类", "查看商品分类树"),
+    PermissionDefinition("product-categories:create", "创建商品分类", "创建三级商品分类"),
+    PermissionDefinition("product-categories:update", "修改商品分类", "修改分类资料、层级和启停"),
+    PermissionDefinition("products:read", "查看商品", "查看商品资料和全部 SKU"),
+    PermissionDefinition("products:create", "创建商品", "创建商品、稳定 SKU 与零库存账户"),
+    PermissionDefinition("products:update", "修改商品", "修改商品资料、SKU 和上下架"),
+    PermissionDefinition("inventory:read", "查看库存", "查看 SKU 库存与调整流水"),
+    PermissionDefinition("inventory:adjust", "调整库存", "按幂等请求调整库存并记录流水"),
+    PermissionDefinition("shipping:read", "查看运费模板", "查看运费模板和试算运费"),
+    PermissionDefinition("shipping:create", "创建运费模板", "创建地区运费模板"),
+    PermissionDefinition("shipping:update", "修改运费模板", "修改运费规则与启停"),
     PermissionDefinition("users:read", "查看用户", "查看用户列表和详情"),
     PermissionDefinition("users:create", "创建用户", "创建普通用户账户"),
     PermissionDefinition("users:update", "修改用户", "修改用户资料和状态"),
@@ -87,7 +109,7 @@ PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
 
 PERMISSION_CODES = frozenset(item.code for item in PERMISSION_CATALOG)
 ROLE_ASSIGNABLE_PERMISSION_CODES = frozenset(item.code for item in PERMISSION_CATALOG if item.assignable_to_roles)
-CATALOG_VERSION = "2026-08-28.2"
+CATALOG_VERSION = "2026-09-17.1"
 
 __all__ = [
     "CATALOG_VERSION",
