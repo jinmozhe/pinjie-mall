@@ -11,6 +11,7 @@
 | 文件                                               | 说明                                                             |
 | -------------------------------------------------- | ---------------------------------------------------------------- |
 | [PROJECT_REQUIREMENTS.md](PROJECT_REQUIREMENTS.md) | 商城目标用户、适用场景、目标能力、非目标和当前阶段验收边界 |
+| [MINIAPP_PRD.md](MINIAPP_PRD.md) | 微信小程序用户流程、需求编号、交付分组、跨端依赖和验收条件，细化全项目产品基线 |
 
 ---
 
@@ -49,6 +50,7 @@
 | [backend-engineering-standard.md](architecture/backend-engineering-standard.md) | Backend 配置、Router、事务、数据、外部调用、日志、探针、测试和质量门禁的具体实施标准       |
 | [admin-engineering-standard.md](architecture/admin-engineering-standard.md) | Admin Umi/Pro 边界、请求状态、统一页面间距、响应式工具栏、列宽、开关交互与依赖准入 |
 | [commerce-backend.md](architecture/commerce-backend.md) | 商城后端领域边界、M1 至 M4 的订单、支付售后、分销和双轨钱包实施机制 |
+| [miniapp-architecture.md](architecture/miniapp-architecture.md) | 待实施的小程序目录、Feature 分层、商品加购链路、状态与认证边界及工程验证要求 |
 | [module-boundaries.md](architecture/module-boundaries.md)                       | Backend 领域、Frontend Feature、共享包和机械依赖门禁的边界                                 |
 | [error-model.md](architecture/error-model.md)                                   | 错误分类、HTTP 契约、分层处理和禁止吞错、假成功、静默降级的规则                            |
 | [authentication-authorization.md](architecture/authentication-authorization.md) | Browser Cookie Profile、JWT、Session、CSRF、RBAC、管理操作保护和审计运行机制             |

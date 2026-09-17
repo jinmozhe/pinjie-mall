@@ -3,7 +3,7 @@
 - 状态：已确认，已完成
 - 日期：2026-08-20
 - 决策者：大仙
-- 关联计划：[Admin 全面迁移 Ant Design Pro v6 计划](../../plans/2026-08-19_Admin升级AntDesign6计划.md)
+- 当前标准：[Admin 工程标准](../architecture/admin-engineering-standard.md)
 
 ## 背景
 
