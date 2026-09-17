@@ -1223,6 +1223,72 @@ export type CheckoutRequest = {
 };
 
 /**
+ * CommissionRead
+ */
+export type CommissionRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Order Id
+     */
+    order_id: string;
+    /**
+     * Source User Id
+     */
+    source_user_id: string;
+    /**
+     * Beneficiary User Id
+     */
+    beneficiary_user_id: string;
+    /**
+     * Level
+     */
+    level: number;
+    /**
+     * Base Amount
+     */
+    base_amount: string;
+    /**
+     * Rate
+     */
+    rate: string;
+    /**
+     * Amount
+     */
+    amount: string;
+    /**
+     * Recovered Amount
+     */
+    recovered_amount: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: string;
+    /**
+     * Frozen At
+     */
+    frozen_at: string;
+    /**
+     * Settle After
+     */
+    settle_after: string | null;
+    /**
+     * Settled At
+     */
+    settled_at: string | null;
+    /**
+     * Recovered At
+     */
+    recovered_at: string | null;
+};
+
+/**
  * ConfirmationAction
  */
 export type ConfirmationAction = 'users:disable' | 'users:credentials:reset' | 'users:sessions:revoke' | 'admins:create' | 'admins:superuser:change' | 'admins:status:change' | 'admins:credentials:reset' | 'admins:roles:assign' | 'admins:sessions:revoke' | 'roles:delete' | 'roles:permissions:assign' | 'assets:delete';
@@ -1610,6 +1676,38 @@ export type LoginEventRead = {
 };
 
 /**
+ * MemberProfileRead
+ */
+export type MemberProfileRead = {
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Invitation Code
+     */
+    invitation_code: string;
+    /**
+     * Level Code
+     */
+    level_code: string;
+    /**
+     * Inviter Id
+     */
+    inviter_id: string | null;
+    /**
+     * Bound At
+     */
+    bound_at: string | null;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+};
+
+/**
  * OrderItemRead
  */
 export type OrderItemRead = {
@@ -1831,6 +1929,42 @@ export type PageResultAuditEventRead = {
      * 当前分页中的资源列表
      */
     items: Array<AuditEventRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[CommissionRead]
+ */
+export type PageResultCommissionRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<CommissionRead>;
     /**
      * Page
      *
@@ -2155,6 +2289,42 @@ export type PageResultShippingTemplateRead = {
      * 当前分页中的资源列表
      */
     items: Array<ShippingTemplateRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[WithdrawalRead]
+ */
+export type PageResultWithdrawalRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<WithdrawalRead>;
     /**
      * Page
      *
@@ -2789,6 +2959,18 @@ export type RedisHealthRead = {
      * Redis 运行模式
      */
     mode: 'required' | 'disabled';
+};
+
+/**
+ * ReferralBindIn
+ */
+export type ReferralBindIn = {
+    /**
+     * Invitation Code
+     *
+     * 推荐人邀请码
+     */
+    invitation_code: string;
 };
 
 /**
@@ -3518,6 +3700,34 @@ export type ResponseModelInventoryRead = {
 };
 
 /**
+ * ResponseModel[MemberProfileRead]
+ */
+export type ResponseModelMemberProfileRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MemberProfileRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[NoneType]
  */
 export type ResponseModelNoneType = {
@@ -3679,6 +3889,34 @@ export type ResponseModelPageResultAuditEventRead = {
      * 响应业务数据
      */
     data: PageResultAuditEventRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[CommissionRead]]
+ */
+export type ResponseModelPageResultCommissionRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultCommissionRead;
     /**
      * Request Id
      *
@@ -3931,6 +4169,34 @@ export type ResponseModelPageResultShippingTemplateRead = {
      * 响应业务数据
      */
     data: PageResultShippingTemplateRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[WithdrawalRead]]
+ */
+export type ResponseModelPageResultWithdrawalRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultWithdrawalRead;
     /**
      * Request Id
      *
@@ -4360,6 +4626,34 @@ export type ResponseModelUserPrincipalOut = {
 };
 
 /**
+ * ResponseModel[WithdrawalRead]
+ */
+export type ResponseModelWithdrawalRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: WithdrawalRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[bool]
  */
 export type ResponseModelBool = {
@@ -4561,6 +4855,36 @@ export type ResponseModelListRefundRequestRead = {
      * 响应业务数据
      */
     data: Array<RefundRequestRead>;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[list[WalletAccountRead]]
+ */
+export type ResponseModelListWalletAccountRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * Data
+     *
+     * 响应业务数据
+     */
+    data: Array<WalletAccountRead>;
     /**
      * Request Id
      *
@@ -5781,6 +6105,144 @@ export type VirtualDeliveryCreate = {
     revision: number;
 };
 
+/**
+ * WalletAccountRead
+ */
+export type WalletAccountRead = {
+    /**
+     * Wallet Type
+     */
+    wallet_type: string;
+    /**
+     * Available Amount
+     */
+    available_amount: string;
+    /**
+     * Frozen Amount
+     */
+    frozen_amount: string;
+    /**
+     * Debt Amount
+     */
+    debt_amount: string;
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * WithdrawalCreate
+ */
+export type WithdrawalCreate = {
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+    /**
+     * Amount
+     */
+    amount: number | string;
+    /**
+     * Destination Reference
+     *
+     * 脱敏收款目标引用
+     */
+    destination_reference: string;
+};
+
+/**
+ * WithdrawalRead
+ */
+export type WithdrawalRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Amount
+     */
+    amount: string;
+    /**
+     * Currency
+     */
+    currency: string;
+    /**
+     * Destination Reference
+     */
+    destination_reference: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: string;
+    /**
+     * Review Note
+     */
+    review_note: string | null;
+    /**
+     * Reviewed By Id
+     */
+    reviewed_by_id: string | null;
+    /**
+     * Reviewed At
+     */
+    reviewed_at: string | null;
+    /**
+     * Channel Reference
+     */
+    channel_reference: string | null;
+    /**
+     * Confirmed At
+     */
+    confirmed_at: string | null;
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * WithdrawalReview
+ */
+export type WithdrawalReview = {
+    /**
+     * Revision
+     */
+    revision: number;
+    /**
+     * Note
+     */
+    note: string;
+};
+
 export type AdminCategoriesApiV1AdminProductCategoriesGetData = {
     body?: never;
     path?: never;
@@ -6532,6 +6994,305 @@ export type AddressUpdateApiV1AddressesAddressIdPutResponses = {
 };
 
 export type AddressUpdateApiV1AddressesAddressIdPutResponse = AddressUpdateApiV1AddressesAddressIdPutResponses[keyof AddressUpdateApiV1AddressesAddressIdPutResponses];
+
+export type ProfileReadApiV1DistributionMeProfileGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/distribution/me/profile';
+};
+
+export type ProfileReadApiV1DistributionMeProfileGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ProfileReadApiV1DistributionMeProfileGetError = ProfileReadApiV1DistributionMeProfileGetErrors[keyof ProfileReadApiV1DistributionMeProfileGetErrors];
+
+export type ProfileReadApiV1DistributionMeProfileGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMemberProfileRead;
+};
+
+export type ProfileReadApiV1DistributionMeProfileGetResponse = ProfileReadApiV1DistributionMeProfileGetResponses[keyof ProfileReadApiV1DistributionMeProfileGetResponses];
+
+export type ActivateProfileApiV1DistributionMeProfilePostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/distribution/me/profile';
+};
+
+export type ActivateProfileApiV1DistributionMeProfilePostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ActivateProfileApiV1DistributionMeProfilePostError = ActivateProfileApiV1DistributionMeProfilePostErrors[keyof ActivateProfileApiV1DistributionMeProfilePostErrors];
+
+export type ActivateProfileApiV1DistributionMeProfilePostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelMemberProfileRead;
+};
+
+export type ActivateProfileApiV1DistributionMeProfilePostResponse = ActivateProfileApiV1DistributionMeProfilePostResponses[keyof ActivateProfileApiV1DistributionMeProfilePostResponses];
+
+export type BindReferrerApiV1DistributionMeReferrerPostData = {
+    body: ReferralBindIn;
+    path?: never;
+    query?: never;
+    url: '/api/v1/distribution/me/referrer';
+};
+
+export type BindReferrerApiV1DistributionMeReferrerPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type BindReferrerApiV1DistributionMeReferrerPostError = BindReferrerApiV1DistributionMeReferrerPostErrors[keyof BindReferrerApiV1DistributionMeReferrerPostErrors];
+
+export type BindReferrerApiV1DistributionMeReferrerPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMemberProfileRead;
+};
+
+export type BindReferrerApiV1DistributionMeReferrerPostResponse = BindReferrerApiV1DistributionMeReferrerPostResponses[keyof BindReferrerApiV1DistributionMeReferrerPostResponses];
+
+export type WalletsReadApiV1DistributionMeWalletsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/distribution/me/wallets';
+};
+
+export type WalletsReadApiV1DistributionMeWalletsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type WalletsReadApiV1DistributionMeWalletsGetError = WalletsReadApiV1DistributionMeWalletsGetErrors[keyof WalletsReadApiV1DistributionMeWalletsGetErrors];
+
+export type WalletsReadApiV1DistributionMeWalletsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListWalletAccountRead;
+};
+
+export type WalletsReadApiV1DistributionMeWalletsGetResponse = WalletsReadApiV1DistributionMeWalletsGetResponses[keyof WalletsReadApiV1DistributionMeWalletsGetResponses];
+
+export type CommissionsReadApiV1DistributionMeCommissionsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/distribution/me/commissions';
+};
+
+export type CommissionsReadApiV1DistributionMeCommissionsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CommissionsReadApiV1DistributionMeCommissionsGetError = CommissionsReadApiV1DistributionMeCommissionsGetErrors[keyof CommissionsReadApiV1DistributionMeCommissionsGetErrors];
+
+export type CommissionsReadApiV1DistributionMeCommissionsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultCommissionRead;
+};
+
+export type CommissionsReadApiV1DistributionMeCommissionsGetResponse = CommissionsReadApiV1DistributionMeCommissionsGetResponses[keyof CommissionsReadApiV1DistributionMeCommissionsGetResponses];
+
+export type WithdrawalsReadApiV1DistributionMeWithdrawalsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/distribution/me/withdrawals';
+};
+
+export type WithdrawalsReadApiV1DistributionMeWithdrawalsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type WithdrawalsReadApiV1DistributionMeWithdrawalsGetError = WithdrawalsReadApiV1DistributionMeWithdrawalsGetErrors[keyof WithdrawalsReadApiV1DistributionMeWithdrawalsGetErrors];
+
+export type WithdrawalsReadApiV1DistributionMeWithdrawalsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultWithdrawalRead;
+};
+
+export type WithdrawalsReadApiV1DistributionMeWithdrawalsGetResponse = WithdrawalsReadApiV1DistributionMeWithdrawalsGetResponses[keyof WithdrawalsReadApiV1DistributionMeWithdrawalsGetResponses];
+
+export type WithdrawalCreateApiV1DistributionMeWithdrawalsPostData = {
+    body: WithdrawalCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/distribution/me/withdrawals';
+};
+
+export type WithdrawalCreateApiV1DistributionMeWithdrawalsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type WithdrawalCreateApiV1DistributionMeWithdrawalsPostError = WithdrawalCreateApiV1DistributionMeWithdrawalsPostErrors[keyof WithdrawalCreateApiV1DistributionMeWithdrawalsPostErrors];
+
+export type WithdrawalCreateApiV1DistributionMeWithdrawalsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelWithdrawalRead;
+};
+
+export type WithdrawalCreateApiV1DistributionMeWithdrawalsPostResponse = WithdrawalCreateApiV1DistributionMeWithdrawalsPostResponses[keyof WithdrawalCreateApiV1DistributionMeWithdrawalsPostResponses];
+
+export type AdminWithdrawalsReadApiV1AdminWithdrawalsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/withdrawals';
+};
+
+export type AdminWithdrawalsReadApiV1AdminWithdrawalsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminWithdrawalsReadApiV1AdminWithdrawalsGetError = AdminWithdrawalsReadApiV1AdminWithdrawalsGetErrors[keyof AdminWithdrawalsReadApiV1AdminWithdrawalsGetErrors];
+
+export type AdminWithdrawalsReadApiV1AdminWithdrawalsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultWithdrawalRead;
+};
+
+export type AdminWithdrawalsReadApiV1AdminWithdrawalsGetResponse = AdminWithdrawalsReadApiV1AdminWithdrawalsGetResponses[keyof AdminWithdrawalsReadApiV1AdminWithdrawalsGetResponses];
+
+export type AdminApproveWithdrawalApiV1AdminWithdrawalsWithdrawalIdApprovePostData = {
+    body: WithdrawalReview;
+    path: {
+        /**
+         * Withdrawal Id
+         */
+        withdrawal_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/withdrawals/{withdrawal_id}/approve';
+};
+
+export type AdminApproveWithdrawalApiV1AdminWithdrawalsWithdrawalIdApprovePostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminApproveWithdrawalApiV1AdminWithdrawalsWithdrawalIdApprovePostError = AdminApproveWithdrawalApiV1AdminWithdrawalsWithdrawalIdApprovePostErrors[keyof AdminApproveWithdrawalApiV1AdminWithdrawalsWithdrawalIdApprovePostErrors];
+
+export type AdminApproveWithdrawalApiV1AdminWithdrawalsWithdrawalIdApprovePostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelWithdrawalRead;
+};
+
+export type AdminApproveWithdrawalApiV1AdminWithdrawalsWithdrawalIdApprovePostResponse = AdminApproveWithdrawalApiV1AdminWithdrawalsWithdrawalIdApprovePostResponses[keyof AdminApproveWithdrawalApiV1AdminWithdrawalsWithdrawalIdApprovePostResponses];
+
+export type AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostData = {
+    body: WithdrawalReview;
+    path: {
+        /**
+         * Withdrawal Id
+         */
+        withdrawal_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/withdrawals/{withdrawal_id}/reject';
+};
+
+export type AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostError = AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostErrors[keyof AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostErrors];
+
+export type AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelWithdrawalRead;
+};
+
+export type AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponse = AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponses[keyof AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponses];
 
 export type CartListApiV1CartItemsGetData = {
     body?: never;

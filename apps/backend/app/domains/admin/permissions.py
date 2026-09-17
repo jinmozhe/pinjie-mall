@@ -58,6 +58,8 @@ class PermissionCode(StrEnum):
     FULFILLMENTS_DELIVER_VIRTUAL = "fulfillments:deliver-virtual"
     REFUNDS_REVIEW = "refunds:review"
     RECONCILIATION_IMPORT = "reconciliation:import"
+    WITHDRAWALS_READ = "withdrawals:read"
+    WITHDRAWALS_REVIEW = "withdrawals:review"
 
 
 PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
@@ -113,11 +115,13 @@ PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
     PermissionDefinition("fulfillments:deliver-virtual", "完成虚拟交付", "对已付款虚拟订单登记交付引用"),
     PermissionDefinition("refunds:review", "审核退款", "审核通过或驳回用户退款申请"),
     PermissionDefinition("reconciliation:import", "导入支付对账", "导入渠道账单并记录匹配或差异"),
+    PermissionDefinition("withdrawals:read", "查看提现申请", "查看待审核的佣金钱包提现申请"),
+    PermissionDefinition("withdrawals:review", "审核提现申请", "审核通过或驳回佣金钱包提现申请"),
 )
 
 PERMISSION_CODES = frozenset(item.code for item in PERMISSION_CATALOG)
 ROLE_ASSIGNABLE_PERMISSION_CODES = frozenset(item.code for item in PERMISSION_CATALOG if item.assignable_to_roles)
-CATALOG_VERSION = "2026-09-17.2"
+CATALOG_VERSION = "2026-09-17.3"
 
 __all__ = [
     "CATALOG_VERSION",

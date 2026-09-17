@@ -113,6 +113,12 @@ class LifecycleRepository:
             statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.scalars(statement)).one_or_none()
 
+    async def refund_by_channel(self, channel_refund_id: str, *, lock: bool = False) -> RefundRequest | None:
+        statement = select(RefundRequest).where(RefundRequest.channel_refund_id == channel_refund_id)
+        if lock:
+            statement = statement.with_for_update().execution_options(populate_existing=True)
+        return (await self.session.scalars(statement)).one_or_none()
+
     async def user_refund(self, user_id: UUID, refund_id: UUID) -> RefundRequest | None:
         return (
             await self.session.scalars(

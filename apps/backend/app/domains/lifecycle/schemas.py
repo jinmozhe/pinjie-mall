@@ -43,6 +43,17 @@ class VerifiedPaymentConfirmation(BaseModel):
     payload_hash: str = Field(min_length=64, max_length=64)
 
 
+class VerifiedRefundConfirmation(BaseModel):
+    """Only a configured channel adapter may construct this after refund result verification."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    refund_request_id: UUID
+    channel_refund_id: str = Field(min_length=1, max_length=160)
+    confirmed_at: datetime
+    payload_hash: str = Field(min_length=64, max_length=64)
+
+
 class FulfillmentRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
