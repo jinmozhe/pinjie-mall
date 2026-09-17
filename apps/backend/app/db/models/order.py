@@ -57,7 +57,7 @@ class Order(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), comment="待付款截止时间")
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, comment="可信支付确认时间")
     payment_reference: Mapped[str | None] = mapped_column(
-        String(160), nullable=True, comment="支付领域提供的唯一确认标识"
+        String(167), nullable=True, comment="支付领域提供的唯一确认标识"
     )
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, comment="取消时间")
     cancel_reason: Mapped[str | None] = mapped_column(String(200), nullable=True, comment="取消原因")

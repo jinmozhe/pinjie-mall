@@ -17,6 +17,7 @@
 
 | 路径 | 状态 | 结果 | 影响范围 | 用途 |
 | --- | --- | --- | --- | --- |
+| `plans/2026-09-17_商城M1至M4边界审查修复计划.md` | 已结束 | 已完成；四阶段本地审查修复、契约同步和轻量验证完成，动态测试及实际迁移未执行 | Backend、API Client、Database、Documentation | 逐阶段审查并修复商城实现的冲突、兼容与边界问题 |
 | `plans/2026-09-17_商城后端四阶段建设计划.md` | 已结束 | 已完成；M0 至 M4 后端本地实现、契约同步和适用轻量验证已完成 | Backend、API Client、Database、Documentation | 建立商品交易、支付售后、会员分销、双轨钱包和提现的后端基础 |
 | `plans/2026-09-16_Web冻结镜像安全检查修复计划.md` | 已结束 | 已完成；本地轻量门禁及线上 Security 复验通过 | Web、Documentation | 修复冻结 Dockerfile 的非 root 用户声明，保留构建与启动阻断 |
 | `plans/2026-09-16_独立商城基线校正计划.md` | 已结束 | 已完成；独立商城身份、两端交付链路和 Web 冻结入口已校正，适用轻量门禁通过 | Backend、Admin、Web、Deployment、Documentation | 统一独立商城身份并阻断母版绑定与 Web 执行入口 |

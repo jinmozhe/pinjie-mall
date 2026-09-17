@@ -23,6 +23,16 @@ _SENSITIVE_ROUTES = frozenset(
         "/api/v1/admin/auth/password",
     }
 )
+_COMMERCE_PRIVATE_PREFIXES = (
+    "/api/v1/addresses",
+    "/api/v1/orders",
+    "/api/v1/order-items",
+    "/api/v1/distribution",
+    "/api/v1/admin/orders",
+    "/api/v1/admin/refunds",
+    "/api/v1/admin/withdrawals",
+    "/api/v1/admin/reconciliation-records",
+)
 
 
 def _normalize_path(path: str) -> str:
@@ -33,7 +43,10 @@ def _normalize_path(path: str) -> str:
 
 
 def is_sensitive_route(route_template: str) -> bool:
-    return _normalize_path(route_template) in _SENSITIVE_ROUTES
+    path = _normalize_path(route_template)
+    return path in _SENSITIVE_ROUTES or any(
+        path == prefix or path.startswith(f"{prefix}/") for prefix in _COMMERCE_PRIVATE_PREFIXES
+    )
 
 
 def _sanitize_value(value: Any) -> Any:

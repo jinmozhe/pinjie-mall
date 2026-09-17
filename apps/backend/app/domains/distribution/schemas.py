@@ -19,7 +19,7 @@ class MemberProfileRead(BaseModel):
 
 
 class ReferralBindIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     invitation_code: str = Field(min_length=8, max_length=16, description="推荐人邀请码")
 
@@ -60,7 +60,7 @@ class CommissionRead(BaseModel):
 
 
 class WithdrawalCreate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     request_id: UUID
     amount: Decimal = Field(gt=Decimal("0"), max_digits=15, decimal_places=2)
@@ -73,7 +73,7 @@ class WithdrawalCreate(BaseModel):
 
 
 class WithdrawalReview(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     revision: int = Field(ge=1)
     note: str = Field(min_length=1, max_length=300)

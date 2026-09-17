@@ -50,6 +50,21 @@ class SkuRead(SkuInput):
     id: UUID = Field(description="稳定 SKU ID")
 
 
+class CheckoutSku(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    id: UUID
+    product_id: UUID
+    code: str
+    specifications: dict[str, str]
+    price: Decimal
+    weight_grams: int
+    product_name: str
+    product_type: Literal["physical", "virtual"]
+    product_revision: int
+    shipping_template_id: UUID | None
+
+
 class SkuUpdate(SkuInput):
     revision: int = Field(gt=0, description="商品当前版本，变体编辑共用商品版本")
 

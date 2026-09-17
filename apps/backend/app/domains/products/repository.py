@@ -44,6 +44,16 @@ class ProductRepository:
             stmt = stmt.where(ProductSku.id != exclude_id)
         return await self.session.scalar(stmt.limit(1)) is not None
 
+    async def checkout_skus(self, sku_ids: list[UUID]) -> list[tuple[ProductSku, Product]]:
+        rows = await self.session.execute(
+            select(ProductSku, Product)
+            .join(Product, Product.id == ProductSku.product_id)
+            .where(ProductSku.id.in_(sku_ids))
+            .order_by(ProductSku.id)
+            .execution_options(populate_existing=True)
+        )
+        return [(sku, product) for sku, product in rows.tuples()]
+
     async def image_ids(self, product_id: UUID) -> list[UUID]:
         return list(
             await self.session.scalars(

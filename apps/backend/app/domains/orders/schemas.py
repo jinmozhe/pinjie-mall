@@ -83,3 +83,30 @@ class OrderRead(BaseModel):
     created_at: datetime
     revision: int
     items: list[OrderItemRead]
+
+
+class OrderFact(BaseModel):
+    model_config = ConfigDict(from_attributes=True, frozen=True)
+
+    id: UUID
+    user_id: UUID
+    status: str
+    product_type: str
+    currency: str
+    items_amount: Decimal
+    total_amount: Decimal
+    expires_at: datetime
+    created_at: datetime
+    paid_at: datetime | None
+    payment_reference: str | None
+
+
+class OrderItemFact(OrderItemRead):
+    model_config = ConfigDict(from_attributes=True, frozen=True)
+
+    order_id: UUID
+    product_id: UUID
+
+
+class AdminOrderSummary(OrderFact):
+    """管理端订单发现入口，不包含收货地址与订单明细。"""

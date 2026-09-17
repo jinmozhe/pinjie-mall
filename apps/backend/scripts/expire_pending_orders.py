@@ -4,8 +4,8 @@ from datetime import UTC, datetime
 
 from app.core.config import get_settings
 from app.core.resources import create_resources
-from app.domains.orders import OrderService
 from app.domains.orders.repository import OrderRepository
+from app.services.orders import OrderService
 from scripts._database_target import validate_database_target
 
 

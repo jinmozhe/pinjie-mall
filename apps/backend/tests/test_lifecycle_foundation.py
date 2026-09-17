@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import pytest
 
 from app.core.exceptions import AppException
-from app.domains.lifecycle.service import LifecycleService
+from app.services.payment_lifecycle import LifecycleService
 
 
 def test_request_hash_is_canonical_for_equivalent_payload() -> None:

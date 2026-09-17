@@ -4,8 +4,6 @@ from sqlalchemy import delete, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.cart import CartItem
-from app.db.models.inventory import InventoryAccount
-from app.db.models.product import Product, ProductSku
 
 
 class CartRepository:
@@ -17,16 +15,6 @@ class CartRepository:
             text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
             {"key": f"pinjie:carts:{user_id}"},
         )
-
-    async def available_quantity(self, sku_id: UUID) -> int | None:
-        return (
-            await self.session.scalars(
-                select(InventoryAccount.available)
-                .join(ProductSku, ProductSku.id == InventoryAccount.sku_id)
-                .join(Product, Product.id == ProductSku.product_id)
-                .where(ProductSku.id == sku_id, Product.status == "on_sale", ProductSku.is_active.is_(True))
-            )
-        ).one_or_none()
 
     async def list_for_user(self, user_id: UUID) -> list[CartItem]:
         return list(

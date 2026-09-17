@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.commerce_lifecycle import (
@@ -15,36 +15,16 @@ from app.db.models.commerce_lifecycle import (
     RefundItem,
     RefundRequest,
 )
-from app.db.models.order import Order, OrderItem
 
 
 class LifecycleRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def order(self, order_id: UUID, *, lock: bool = False) -> Order | None:
-        statement = select(Order).where(Order.id == order_id)
-        if lock:
-            statement = statement.with_for_update().execution_options(populate_existing=True)
-        return (await self.session.scalars(statement)).one_or_none()
-
-    async def user_order(self, user_id: UUID, order_id: UUID, *, lock: bool = False) -> Order | None:
-        statement = select(Order).where(Order.user_id == user_id, Order.id == order_id)
-        if lock:
-            statement = statement.with_for_update().execution_options(populate_existing=True)
-        return (await self.session.scalars(statement)).one_or_none()
-
-    async def order_items(self, order_id: UUID, *, lock: bool = False) -> list[OrderItem]:
-        statement = select(OrderItem).where(OrderItem.order_id == order_id).order_by(OrderItem.id)
-        if lock:
-            statement = statement.with_for_update().execution_options(populate_existing=True)
-        return list(await self.session.scalars(statement))
-
-    async def order_item(self, order_item_id: UUID, *, lock: bool = False) -> OrderItem | None:
-        statement = select(OrderItem).where(OrderItem.id == order_item_id)
-        if lock:
-            statement = statement.with_for_update().execution_options(populate_existing=True)
-        return (await self.session.scalars(statement)).one_or_none()
+    async def lock_key(self, kind: str, value: str) -> None:
+        await self.session.execute(
+            text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"), {"key": f"pinjie:lifecycle:{kind}:{value}"}
+        )
 
     async def payment_by_request(self, user_id: UUID, request_id: UUID, *, lock: bool = False) -> PaymentAttempt | None:
         statement = select(PaymentAttempt).where(
@@ -113,8 +93,12 @@ class LifecycleRepository:
             statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.scalars(statement)).one_or_none()
 
-    async def refund_by_channel(self, channel_refund_id: str, *, lock: bool = False) -> RefundRequest | None:
-        statement = select(RefundRequest).where(RefundRequest.channel_refund_id == channel_refund_id)
+    async def refund_by_channel(
+        self, channel: str, channel_refund_id: str, *, lock: bool = False
+    ) -> RefundRequest | None:
+        statement = select(RefundRequest).where(
+            RefundRequest.channel == channel, RefundRequest.channel_refund_id == channel_refund_id
+        )
         if lock:
             statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.scalars(statement)).one_or_none()
@@ -174,6 +158,16 @@ class LifecycleRepository:
         if lock:
             statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.scalars(statement)).one_or_none()
+
+    async def refund_page(self, page: int, page_size: int) -> tuple[list[RefundRequest], int]:
+        total = int(await self.session.scalar(select(func.count()).select_from(RefundRequest)) or 0)
+        rows = await self.session.scalars(
+            select(RefundRequest)
+            .order_by(RefundRequest.created_at.desc(), RefundRequest.id.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
+        )
+        return list(rows), total
 
     async def save(
         self,

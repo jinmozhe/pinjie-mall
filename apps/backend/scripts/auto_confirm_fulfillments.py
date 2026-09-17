@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from app.core.config import get_settings
 from app.core.resources import create_resources
 from app.domains.lifecycle.repository import LifecycleRepository
-from app.domains.lifecycle.service import LifecycleService
+from app.services.payment_lifecycle import LifecycleService
 from scripts._database_target import validate_database_target
 
 

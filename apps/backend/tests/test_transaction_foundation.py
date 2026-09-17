@@ -6,9 +6,9 @@ from uuid import uuid7
 import pytest
 
 from app.core.exceptions import AppException
-from app.db.models.product import Product, ProductSku
 from app.domains.orders.schemas import CheckoutLine, CheckoutRequest, QuoteLine, ShippingQuoteGroup
-from app.domains.orders.service import OrderService
+from app.domains.products.schemas import CheckoutSku
+from app.services.orders import OrderService
 
 
 def checkout(*lines: CheckoutLine) -> CheckoutRequest:
@@ -62,50 +62,33 @@ def test_quote_fingerprint_changes_with_authoritative_amount_or_address() -> Non
     assert fingerprint != OrderService._fingerprint([line], shipping, {"province_code": "120000"})
 
 
-class CatalogOnlyRepository:
-    def __init__(self, rows: list[tuple[ProductSku, Product, object | None]]) -> None:
+class CatalogProducts:
+    def __init__(self, rows):
         self.rows = rows
 
-    async def catalog(self, _sku_ids, *, lock: bool = False):
+    async def checkout_skus(self, sku_ids):
         return self.rows
 
 
 @pytest.mark.asyncio
 async def test_quote_rejects_mixed_physical_and_virtual_products() -> None:
-    physical_sku, virtual_sku = (
-        ProductSku(
+    rows = [
+        CheckoutSku(
             id=uuid7(),
             product_id=uuid7(),
-            code="PHYSICAL",
+            code=kind.upper(),
             specifications={},
             price=Decimal("1.00"),
-            weight_grams=1,
-            is_active=True,
-        ),
-        ProductSku(
-            id=uuid7(),
-            product_id=uuid7(),
-            code="VIRTUAL",
-            specifications={},
-            price=Decimal("1.00"),
-            weight_grams=0,
-            is_active=True,
-        ),
-    )
-    physical = Product(
-        id=physical_sku.product_id, name="实物", product_type="physical", category_id=uuid7(), status="on_sale"
-    )
-    virtual = Product(
-        id=virtual_sku.product_id, name="虚拟", product_type="virtual", category_id=uuid7(), status="on_sale"
-    )
-    service = OrderService(
-        session=object(),
-        repository=CatalogOnlyRepository([(physical_sku, physical, None), (virtual_sku, virtual, None)]),
-    )
-    with pytest.raises(AppException) as error:
-        await service.preview(
-            uuid7(),
-            checkout(CheckoutLine(sku_id=physical_sku.id, quantity=1), CheckoutLine(sku_id=virtual_sku.id, quantity=1)),
+            weight_grams=1 if kind == "physical" else 0,
+            product_name=kind,
+            product_type=kind,
+            product_revision=1,
+            shipping_template_id=None,
         )
+        for kind in ("physical", "virtual")
+    ]
+    service = OrderService(session=object(), products=CatalogProducts(rows))
+    with pytest.raises(AppException) as error:
+        await service.preview(uuid7(), checkout(*(CheckoutLine(sku_id=row.id, quantity=1) for row in rows)))
     assert error.value.code == "CHECKOUT_INVALID"
     assert error.value.message == "实物和虚拟商品必须分开下单"

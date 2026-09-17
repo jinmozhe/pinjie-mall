@@ -18,6 +18,7 @@ from app.db.models.distribution import (
     WithdrawalRequest,
 )
 from app.db.transaction import transaction_scope
+from app.domains.users import UserAccessService
 
 from .repository import DistributionRepository
 from .schemas import (
@@ -37,13 +38,34 @@ COMMISSION_RATES: tuple[Decimal, Decimal] = (Decimal("0.1000"), Decimal("0.0500"
 
 
 class DistributionService:
-    def __init__(self, session: AsyncSession, repository: DistributionRepository | None = None) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        repository: DistributionRepository | None = None,
+        *,
+        access: UserAccessService | None = None,
+    ) -> None:
         self.session = session
         self.repository = repository or DistributionRepository(session)
+        self.access = access or UserAccessService(session)
 
     @staticmethod
     def _money(value: Decimal) -> Decimal:
         return value.quantize(MONEY, rounding=ROUND_HALF_UP)
+
+    @staticmethod
+    def _check_wallet(wallet: WalletAccount) -> None:
+        maximum = Decimal("9999999999999.99")
+        if (
+            any(
+                value < 0 or value > maximum
+                for value in (wallet.available_amount, wallet.frozen_amount, wallet.debt_amount)
+            )
+            or wallet.available_amount + wallet.frozen_amount > maximum
+        ):
+            raise AppException(
+                status_code=409, code=ErrorCode.WITHDRAWAL_STATE_CONFLICT, message="钱包余额超过允许范围"
+            )
 
     @staticmethod
     def _request_hash(payload: object) -> str:
@@ -69,7 +91,7 @@ class DistributionService:
 
     @staticmethod
     def _new_invitation_code() -> str:
-        return new_uuid7().hex[:16].upper()
+        return new_uuid7().hex[-16:].upper()
 
     async def _ensure_profile(self, user_id: UUID) -> MemberProfile:
         profile = await self.repository.profile(user_id, lock=True)
@@ -110,7 +132,12 @@ class DistributionService:
 
     async def activate_profile(self, user_id: UUID) -> MemberProfileRead:
         async with transaction_scope(self.session):
+            await self.access.require_active_user(user_id)
             return self._profile_read(await self._ensure_profile(user_id))
+
+    async def lock_referral_changes(self) -> None:
+        """支付编排须在订单与库存锁之前取得关系图锁。"""
+        await self.repository.lock_referral_graph()
 
     async def profile_for_user(self, user_id: UUID) -> MemberProfileRead:
         profile = await self.repository.profile(user_id)
@@ -122,6 +149,8 @@ class DistributionService:
 
     async def bind_referrer(self, user_id: UUID, data: ReferralBindIn) -> MemberProfileRead:
         async with transaction_scope(self.session):
+            await self.repository.lock_referral_graph()
+            await self.access.require_active_user(user_id)
             profile = await self._ensure_profile(user_id)
             inviter = await self.repository.profile_by_code(data.invitation_code)
             if inviter is None:
@@ -190,9 +219,10 @@ class DistributionService:
             {"amount": str(data.amount), "destination_reference": data.destination_reference}
         )
         async with transaction_scope(self.session):
+            await self.access.require_active_user(user_id)
             existing = await self.repository.withdrawal_by_request(user_id, data.request_id, lock=True)
             if existing is not None:
-                if existing.request_hash != request_hash:
+                if existing.amount != data.amount or existing.destination_reference != data.destination_reference:
                     raise AppException(
                         status_code=409, code=ErrorCode.WITHDRAWAL_REQUEST_CONFLICT, message="提现请求号已用于其他内容"
                     )
@@ -218,6 +248,7 @@ class DistributionService:
                 status="requested",
                 revision=1,
             )
+            self._check_wallet(wallet)
             await self.repository.save(wallet)
             await self.repository.save(withdrawal)
             await self.repository.save(
@@ -245,6 +276,13 @@ class DistributionService:
             raise AppException(
                 status_code=409, code=ErrorCode.WITHDRAWAL_STATE_CONFLICT, message="提现状态已变化，请重新读取"
             )
+        wallet = await self._commission_wallet(withdrawal.user_id, lock=True)
+        if wallet.debt_amount > 0 or wallet.frozen_amount < withdrawal.amount:
+            raise AppException(
+                status_code=409,
+                code=ErrorCode.WITHDRAWAL_STATE_CONFLICT,
+                message="存在追佣欠款或冻结余额异常，不能批准提现",
+            )
         withdrawal.status = "approved"
         withdrawal.review_note = data.note
         withdrawal.reviewed_by_id = actor_id
@@ -267,13 +305,16 @@ class DistributionService:
         if wallet.frozen_amount < withdrawal.amount:
             raise AppException(status_code=409, code=ErrorCode.WITHDRAWAL_STATE_CONFLICT, message="提现冻结余额异常")
         wallet.frozen_amount -= withdrawal.amount
-        wallet.available_amount += withdrawal.amount
+        debt_offset = min(wallet.debt_amount, withdrawal.amount)
+        wallet.debt_amount -= debt_offset
+        wallet.available_amount += withdrawal.amount - debt_offset
         wallet.revision += 1
         withdrawal.status = "rejected"
         withdrawal.review_note = data.note
         withdrawal.reviewed_by_id = actor_id
         withdrawal.reviewed_at = datetime.now(UTC)
         withdrawal.revision += 1
+        self._check_wallet(wallet)
         await self.repository.save(wallet)
         await self.repository.save(withdrawal)
         await self.repository.save(
@@ -281,9 +322,9 @@ class DistributionService:
                 id=new_uuid7(),
                 wallet_id=wallet.id,
                 entry_type="withdrawal_release",
-                amount=withdrawal.amount,
+                amount=withdrawal.amount - debt_offset,
                 frozen_delta=-withdrawal.amount,
-                debt_delta=Decimal("0.00"),
+                debt_delta=-debt_offset,
                 idempotency_key=f"withdrawal-release:{withdrawal.id}",
                 reference_type="withdrawal",
                 reference_id=withdrawal.id,
@@ -302,19 +343,30 @@ class DistributionService:
     ) -> None:
         if base_amount <= 0:
             return
+        await self.repository.lock_referral_graph()
         existing = await self.repository.commissions_for_order(order_id, lock=True)
         if existing:
             return
         profile = await self.repository.profile(source_user_id)
-        if profile is None or profile.inviter_id is None:
+        if profile is None or profile.inviter_id is None or profile.bound_at is None or profile.bound_at > paid_at:
             return
         inviter_id: UUID | None = profile.inviter_id
+        visited = {source_user_id}
         for level, rate in enumerate(COMMISSION_RATES, start=1):
             if inviter_id is None:
                 break
+            if inviter_id in visited:
+                raise AppException(
+                    status_code=409, code=ErrorCode.DISTRIBUTION_REFERRAL_REJECTED, message="推荐关系异常，不能冻结佣金"
+                )
+            visited.add(inviter_id)
             inviter = await self.repository.profile(inviter_id)
             if inviter is None:
-                break
+                raise AppException(
+                    status_code=409,
+                    code=ErrorCode.DISTRIBUTION_REFERRAL_REJECTED,
+                    message="推荐人档案缺失，不能冻结佣金",
+                )
             amount = self._money(base_amount * rate)
             if amount > 0:
                 await self.repository.save(
@@ -335,7 +387,7 @@ class DistributionService:
                         recovered_at=None,
                     )
                 )
-            inviter_id = inviter.inviter_id
+            inviter_id = inviter.inviter_id if inviter.bound_at is not None and inviter.bound_at <= paid_at else None
 
     async def schedule_settlement_for_delivery_in_open_transaction(
         self, order_id: UUID, delivered_at: datetime
@@ -354,7 +406,9 @@ class DistributionService:
     async def settle_due_in_open_transaction(self, limit: int = 100) -> int:
         now = datetime.now(UTC)
         settled = 0
-        for commission in await self.repository.due_commissions(now, limit):
+        commissions = await self.repository.due_commissions(now, limit)
+        await self.repository.lock_wallets(sorted({item.beneficiary_user_id for item in commissions}))
+        for commission in commissions:
             remaining = self._money(commission.amount - commission.recovered_amount)
             if remaining <= 0:
                 commission.status = "recovered"
@@ -369,6 +423,7 @@ class DistributionService:
             wallet.revision += 1
             commission.status = "settled"
             commission.settled_at = now
+            self._check_wallet(wallet)
             await self.repository.save(wallet)
             await self.repository.save(commission)
             await self.repository.save(
@@ -392,20 +447,25 @@ class DistributionService:
         *,
         refund_request_id: UUID,
         order_id: UUID,
-        refunded_amount: Decimal,
+        cumulative_refunded_amount: Decimal,
         refunded_at: datetime,
     ) -> None:
-        if refunded_amount <= 0:
+        if cumulative_refunded_amount <= 0:
             return
         commissions = await self.repository.commissions_for_order(order_id, lock=True)
+        await self.repository.lock_wallets(sorted({item.beneficiary_user_id for item in commissions}))
         for commission in commissions:
             if (
                 commission.status == "recovered"
                 or await self.repository.recovery(commission.id, refund_request_id) is not None
             ):
                 continue
-            target = self._money(commission.amount * refunded_amount / commission.base_amount)
-            amount = min(target, self._money(commission.amount - commission.recovered_amount))
+            if cumulative_refunded_amount > commission.base_amount:
+                raise AppException(
+                    status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="累计退款金额超过佣金基数"
+                )
+            target = self._money(commission.amount * cumulative_refunded_amount / commission.base_amount)
+            amount = max(Decimal("0.00"), target - commission.recovered_amount)
             if amount <= 0:
                 continue
             commission.recovered_amount += amount
@@ -421,6 +481,7 @@ class DistributionService:
                 wallet.available_amount -= available_debit
                 wallet.debt_amount += debt_increase
                 wallet.revision += 1
+                self._check_wallet(wallet)
                 await self.repository.save(wallet)
                 await self.repository.save(
                     WalletLedger(

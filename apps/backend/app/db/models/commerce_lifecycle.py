@@ -118,7 +118,8 @@ class RefundRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "refund_requests"
     __table_args__ = (
         UniqueConstraint("user_id", "request_id", name="uq_refund_request_user_request"),
-        UniqueConstraint("channel_refund_id", name="uq_refund_request_channel_refund"),
+        UniqueConstraint("channel", "channel_refund_id", name="uq_refund_request_channel_refund"),
+        CheckConstraint("channel IS NULL OR channel IN ('wechat', 'alipay')", name="ck_refund_request_channel"),
         CheckConstraint(
             "status IN ('requested', 'approved', 'rejected', 'processing', 'succeeded', 'unknown')",
             name="ck_refund_request_status",
@@ -141,6 +142,7 @@ class RefundRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     reviewed_by_id: Mapped[UUID | None] = mapped_column(nullable=True, comment="审核管理员")
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, comment="审核时间")
     channel_refund_id: Mapped[str | None] = mapped_column(String(160), nullable=True, comment="渠道退款流水")
+    channel: Mapped[str | None] = mapped_column(String(16), nullable=True, comment="已核对原支付的退款渠道")
     confirmed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, comment="渠道退款确认时间"
     )
@@ -168,6 +170,7 @@ class RefundEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     actor_type: Mapped[str] = mapped_column(String(16), comment="操作者类型")
     actor_id: Mapped[UUID | None] = mapped_column(nullable=True, comment="操作者标识")
     reason: Mapped[str] = mapped_column(String(300), comment="状态原因")
+    payload_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, comment="已核对退款载荷摘要")
 
 
 class RefundItem(UUIDPrimaryKeyMixin, TimestampMixin, Base):

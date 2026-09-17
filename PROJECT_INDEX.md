@@ -31,4 +31,4 @@
 
 ## 活动计划
 
-当前没有活动实施计划。四阶段后端建设计划已结束，永久登记见 [plans/INDEX.md](plans/INDEX.md)。
+当前无活动计划。四阶段后端建设与 M1 至 M4 边界审查修复计划均已结束，结果和验证边界见 [plans/INDEX.md](plans/INDEX.md)。
