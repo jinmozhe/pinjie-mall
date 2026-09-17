@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import Depends
 
 from app.api.dependencies import CurrentUser, DatabaseSession, get_current_user
-from app.domains.cart import CartService
-from app.domains.orders import OrderService
+from app.services.cart import CartService
+from app.services.orders import OrderService
 
 
 def get_cart_service(session: DatabaseSession) -> CartService:

@@ -12,6 +12,7 @@ from .schemas import (
     CategoryInput,
     CategoryRead,
     CategoryUpdate,
+    CheckoutSku,
     ProductCreate,
     ProductRead,
     ProductStatusUpdate,
@@ -30,6 +31,31 @@ class ProductService:
 
     async def lock_changes(self) -> None:
         await self.repository.lock_catalog()
+
+    async def checkout_skus(self, sku_ids: list[UUID]) -> list[CheckoutSku]:
+        rows = await self.repository.checkout_skus(sku_ids)
+        if len(rows) != len(set(sku_ids)):
+            raise AppException(status_code=409, code=ErrorCode.CHECKOUT_INVALID, message="SKU 不存在")
+        visible_categories = {row.id for row in await self.categories(public=True)}
+        result: list[CheckoutSku] = []
+        for sku, product in rows:
+            if product.status != "on_sale" or not sku.is_active or product.category_id not in visible_categories:
+                raise AppException(status_code=409, code=ErrorCode.CHECKOUT_INVALID, message="商品、分类或 SKU 不可售")
+            result.append(
+                CheckoutSku(
+                    id=sku.id,
+                    product_id=product.id,
+                    code=sku.code,
+                    specifications=sku.specifications,
+                    price=sku.price,
+                    weight_grams=sku.weight_grams,
+                    product_name=product.name,
+                    product_type=cast(Literal["physical", "virtual"], product.product_type),
+                    product_revision=product.revision,
+                    shipping_template_id=product.shipping_template_id,
+                )
+            )
+        return result
 
     async def categories(self, *, public: bool = False) -> list[CategoryRead]:
         rows = await self.repository.categories()

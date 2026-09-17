@@ -32,7 +32,7 @@ class PaymentAttemptRead(BaseModel):
 class VerifiedPaymentConfirmation(BaseModel):
     """Only a configured channel adapter may construct this after signature validation."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     payment_attempt_id: UUID
     channel: PaymentChannel
@@ -40,18 +40,22 @@ class VerifiedPaymentConfirmation(BaseModel):
     amount: Decimal = Field(gt=0, max_digits=15, decimal_places=2)
     currency: Literal["CNY"]
     confirmed_at: datetime
-    payload_hash: str = Field(min_length=64, max_length=64)
+    payload_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
 class VerifiedRefundConfirmation(BaseModel):
     """Only a configured channel adapter may construct this after refund result verification."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     refund_request_id: UUID
+    channel: PaymentChannel
+    payment_transaction_id: str = Field(min_length=1, max_length=160)
+    amount: Decimal = Field(gt=0, max_digits=15, decimal_places=2)
+    currency: Literal["CNY"]
     channel_refund_id: str = Field(min_length=1, max_length=160)
     confirmed_at: datetime
-    payload_hash: str = Field(min_length=64, max_length=64)
+    payload_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
 class FulfillmentRead(BaseModel):
@@ -119,6 +123,7 @@ class RefundRequestRead(BaseModel):
     created_at: datetime
     reviewed_at: datetime | None
     confirmed_at: datetime | None
+    revision: int
 
 
 class RefundReview(BaseModel):

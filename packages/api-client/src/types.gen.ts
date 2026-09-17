@@ -395,6 +395,66 @@ export type AdminLoginIn = {
 };
 
 /**
+ * AdminOrderSummary
+ *
+ * 管理端订单发现入口，不包含收货地址与订单明细。
+ */
+export type AdminOrderSummary = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: string;
+    /**
+     * Product Type
+     */
+    product_type: string;
+    /**
+     * Currency
+     */
+    currency: string;
+    /**
+     * Items Amount
+     */
+    items_amount: string;
+    /**
+     * Total Amount
+     */
+    total_amount: string;
+    /**
+     * Expires At
+     *
+     * 凭据过期时间
+     */
+    expires_at: string;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Paid At
+     */
+    paid_at: string | null;
+    /**
+     * Payment Reference
+     */
+    payment_reference: string | null;
+};
+
+/**
  * AdminProfileUpdateIn
  */
 export type AdminProfileUpdateIn = {
@@ -1013,6 +1073,12 @@ export type CartItemRead = {
  */
 export type CartItemUpdate = {
     /**
+     * Revision
+     *
+     * 读取购物车条目时获得的版本
+     */
+    revision: number;
+    /**
      * Quantity
      */
     quantity?: number | null;
@@ -1366,7 +1432,7 @@ export type FreightQuoteInput = {
     /**
      * Weight Grams
      *
-     * 总重量克数
+     * 总重量克数，覆盖五十种 SKU 各九百九十九件
      */
     weight_grams: number;
     /**
@@ -1812,6 +1878,42 @@ export type OrderRead = {
 };
 
 /**
+ * PageResult[AdminOrderSummary]
+ */
+export type PageResultAdminOrderSummary = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<AdminOrderSummary>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
  * PageResult[AdminRead]
  */
 export type PageResultAdminRead = {
@@ -2145,6 +2247,42 @@ export type PageResultPublicProductRead = {
      * 当前分页中的资源列表
      */
     items: Array<PublicProductRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[RefundRequestRead]
+ */
+export type PageResultRefundRequestRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<RefundRequestRead>;
     /**
      * Page
      *
@@ -3089,6 +3227,10 @@ export type RefundRequestRead = {
      * Confirmed At
      */
     confirmed_at: string | null;
+    /**
+     * Revision
+     */
+    revision: number;
 };
 
 /**
@@ -3786,6 +3928,34 @@ export type ResponseModelOrderRead = {
 };
 
 /**
+ * ResponseModel[PageResult[AdminOrderSummary]]
+ */
+export type ResponseModelPageResultAdminOrderSummary = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultAdminOrderSummary;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[PageResult[AdminRead]]
  */
 export type ResponseModelPageResultAdminRead = {
@@ -4057,6 +4227,34 @@ export type ResponseModelPageResultPublicProductRead = {
      * 响应业务数据
      */
     data: PageResultPublicProductRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[RefundRequestRead]]
+ */
+export type ResponseModelPageResultRefundRequestRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultRefundRequestRead;
     /**
      * Request Id
      *
@@ -7294,6 +7492,70 @@ export type AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResp
 
 export type AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponse = AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponses[keyof AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponses];
 
+export type AdminOrderPageApiV1AdminOrdersGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/orders';
+};
+
+export type AdminOrderPageApiV1AdminOrdersGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminOrderPageApiV1AdminOrdersGetError = AdminOrderPageApiV1AdminOrdersGetErrors[keyof AdminOrderPageApiV1AdminOrdersGetErrors];
+
+export type AdminOrderPageApiV1AdminOrdersGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultAdminOrderSummary;
+};
+
+export type AdminOrderPageApiV1AdminOrdersGetResponse = AdminOrderPageApiV1AdminOrdersGetResponses[keyof AdminOrderPageApiV1AdminOrdersGetResponses];
+
+export type AdminOrderReadApiV1AdminOrdersOrderIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/orders/{order_id}';
+};
+
+export type AdminOrderReadApiV1AdminOrdersOrderIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminOrderReadApiV1AdminOrdersOrderIdGetError = AdminOrderReadApiV1AdminOrdersOrderIdGetErrors[keyof AdminOrderReadApiV1AdminOrdersOrderIdGetErrors];
+
+export type AdminOrderReadApiV1AdminOrdersOrderIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelOrderRead;
+};
+
+export type AdminOrderReadApiV1AdminOrdersOrderIdGetResponse = AdminOrderReadApiV1AdminOrdersOrderIdGetResponses[keyof AdminOrderReadApiV1AdminOrdersOrderIdGetResponses];
+
 export type CartListApiV1CartItemsGetData = {
     body?: never;
     path?: never;
@@ -7513,6 +7775,74 @@ export type OrderCancelApiV1OrdersOrderIdCancelPostResponses = {
 };
 
 export type OrderCancelApiV1OrdersOrderIdCancelPostResponse = OrderCancelApiV1OrdersOrderIdCancelPostResponses[keyof OrderCancelApiV1OrdersOrderIdCancelPostResponses];
+
+export type AdminRefundPageApiV1AdminRefundsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/refunds';
+};
+
+export type AdminRefundPageApiV1AdminRefundsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminRefundPageApiV1AdminRefundsGetError = AdminRefundPageApiV1AdminRefundsGetErrors[keyof AdminRefundPageApiV1AdminRefundsGetErrors];
+
+export type AdminRefundPageApiV1AdminRefundsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultRefundRequestRead;
+};
+
+export type AdminRefundPageApiV1AdminRefundsGetResponse = AdminRefundPageApiV1AdminRefundsGetResponses[keyof AdminRefundPageApiV1AdminRefundsGetResponses];
+
+export type AdminFulfillmentReadApiV1AdminOrdersOrderIdFulfillmentGetData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/orders/{order_id}/fulfillment';
+};
+
+export type AdminFulfillmentReadApiV1AdminOrdersOrderIdFulfillmentGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminFulfillmentReadApiV1AdminOrdersOrderIdFulfillmentGetError = AdminFulfillmentReadApiV1AdminOrdersOrderIdFulfillmentGetErrors[keyof AdminFulfillmentReadApiV1AdminOrdersOrderIdFulfillmentGetErrors];
+
+export type AdminFulfillmentReadApiV1AdminOrdersOrderIdFulfillmentGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelFulfillmentRead;
+};
+
+export type AdminFulfillmentReadApiV1AdminOrdersOrderIdFulfillmentGetResponse = AdminFulfillmentReadApiV1AdminOrdersOrderIdFulfillmentGetResponses[keyof AdminFulfillmentReadApiV1AdminOrdersOrderIdFulfillmentGetResponses];
 
 export type InitiatePaymentApiV1OrdersOrderIdPaymentAttemptsPostData = {
     body: PaymentAttemptCreate;

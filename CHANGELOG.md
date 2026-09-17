@@ -93,6 +93,8 @@
 
 ### Fixed
 
+- 修复商城 M1 至 M4 的库存总容量与版本、分类可售、购物车陈旧覆盖、订单幂等和金额边界、跨阶段锁顺序、退款原支付与累计额度核对、推荐并发与付款时点快照、累计追佣舍入、提现解冻抵债及敏感错误日志问题。跨领域编排收敛至应用层，补齐后台订单、履约、退款查询及精确权限。新增 `20260917_05` 迁移、回归测试源码并同步契约；购物车修改要求 revision，与尚未推送的 M1 至 M4 实现同批交付，相对远端 main 无破坏性诊断。实际迁移、权限同步、pytest 及真实并发测试未执行。
+
 - 为冻结的 Web Dockerfile 补充非 root `USER node`，修复 Semgrep 的 `missing-user` 告警；保留构建与启动主动失败。仓库启用 Dependency graph 后，线上 Security 复验通过。
 
 - 修复 GitHub Dependabot 的 10 条 Moderate 前端依赖告警：锁定 decode-uri-component 0.5.0、qs 6.16.0、hono 4.13.5、colord 2.9.4 及 Admin/Web Vitest 和 coverage-v8 4.1.11；query-string 6.14.1 通过受控 CommonJS 补丁继续使用安全解码器。依赖检查覆盖锁文件、补丁和畸形编码解析行为；Vitest、生产构建和浏览器验证按策略未执行，远端告警待源码交付后由 Dependabot 重扫确认。

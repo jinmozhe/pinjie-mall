@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.inventory import InventoryAccount, InventoryMovement
+from app.db.models.reservation import InventoryReservation, InventoryReservationEvent
 
 
 class InventoryRepository:
@@ -35,6 +36,30 @@ class InventoryRepository:
         )
         return list(rows), total
 
-    async def save(self, value: InventoryAccount | InventoryMovement) -> None:
+    async def accounts(self, sku_ids: list[UUID]) -> list[InventoryAccount]:
+        return list(
+            await self.session.scalars(
+                select(InventoryAccount)
+                .where(InventoryAccount.sku_id.in_(sku_ids))
+                .order_by(InventoryAccount.sku_id)
+                .with_for_update()
+                .execution_options(populate_existing=True)
+            )
+        )
+
+    async def reservations(self, order_id: UUID) -> list[InventoryReservation]:
+        return list(
+            await self.session.scalars(
+                select(InventoryReservation)
+                .where(InventoryReservation.order_id == order_id)
+                .order_by(InventoryReservation.sku_id)
+                .with_for_update()
+                .execution_options(populate_existing=True)
+            )
+        )
+
+    async def save(
+        self, value: InventoryAccount | InventoryMovement | InventoryReservation | InventoryReservationEvent
+    ) -> None:
         self.session.add(value)
         await self.session.flush()

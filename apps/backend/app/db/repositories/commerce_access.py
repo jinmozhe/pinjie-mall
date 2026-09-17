@@ -19,7 +19,11 @@ class CommerceAccessRepository:
     async def get_user_for_update(self, user_id: UUID) -> User | None:
         return (
             await self.session.scalars(
-                select(User).where(User.id == user_id).with_for_update().execution_options(populate_existing=True)
+                select(User)
+                .where(User.id == user_id)
+                # NO KEY UPDATE 串行用户状态写入，同时允许佣金等表的外键 KEY SHARE 检查。
+                .with_for_update(key_share=True)
+                .execution_options(populate_existing=True)
             )
         ).one_or_none()
 

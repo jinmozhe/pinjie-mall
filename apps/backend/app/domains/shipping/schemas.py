@@ -58,7 +58,7 @@ class FreightQuoteInput(BaseModel):
 
     province_code: ProvinceCode = Field(description="收货省份行政编码")
     pieces: int = Field(gt=0, le=1000000, description="总件数")
-    weight_grams: int = Field(ge=0, le=1000000000, description="总重量克数")
+    weight_grams: int = Field(ge=0, le=49950000000000, description="总重量克数，覆盖五十种 SKU 各九百九十九件")
     items_amount: Money = Field(description="商品金额，不含运费")
 
 

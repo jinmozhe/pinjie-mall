@@ -17,7 +17,9 @@ class AddressService:
         rows.sort(key=lambda row: not row.is_default)
         return [AddressRead.model_validate(row) for row in rows]
 
-    async def snapshot(self, user_id: UUID, address_id: UUID) -> AddressRead:
+    async def snapshot(self, user_id: UUID, address_id: UUID, *, lock: bool = False) -> AddressRead:
+        if lock:
+            await self.repository.lock_owner(user_id)
         return AddressRead.model_validate(await self._get(user_id, address_id))
 
     async def _get(self, user_id: UUID, address_id: UUID) -> UserAddress:

@@ -34,6 +34,7 @@ def create_resources(settings: Settings) -> AppResources:
         pool_recycle=1800,
         echo=settings.debug,
         native_inet_types=False,
+        connect_args={"server_settings": {"lock_timeout": f"{max(1, int(settings.db_lock_timeout * 1000))}ms"}},
     )
     session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     return AppResources(

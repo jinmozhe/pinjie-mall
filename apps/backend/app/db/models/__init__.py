@@ -41,7 +41,7 @@ from .identity import (
 from .inventory import InventoryAccount, InventoryMovement
 from .order import Order, OrderEvent, OrderItem
 from .product import Category, Product, ProductImage, ProductSku
-from .reservation import InventoryReservation
+from .reservation import InventoryReservation, InventoryReservationEvent
 from .shipping import ShippingTemplate
 from .system_setting import SystemSetting
 
@@ -66,6 +66,7 @@ __all__ = [
     "InventoryAccount",
     "InventoryMovement",
     "InventoryReservation",
+    "InventoryReservationEvent",
     "Order",
     "OrderEvent",
     "OrderItem",

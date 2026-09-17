@@ -15,7 +15,7 @@ from app.domains.lifecycle import (
     ShipmentCreate,
     VirtualDeliveryCreate,
 )
-from app.domains.lifecycle.service import LifecycleService
+from app.services.payment_lifecycle import LifecycleService
 from app.services.security_events import AuditCoordinator
 
 T = TypeVar("T")

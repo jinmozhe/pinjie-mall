@@ -31,6 +31,28 @@ Page = Annotated[int, Query(ge=1, description="页码，从一开始")]
 PageSize = Annotated[int, Query(ge=1, le=100, description="每页数量")]
 
 
+@router.get(
+    "/admin/refunds",
+    response_model=ResponseModel[PageResult[RefundRequestRead]],
+    summary="查看管理退款申请列表",
+    dependencies=[Depends(require_permission(PermissionCode.REFUNDS_READ))],
+)
+async def admin_refund_page(
+    service: Lifecycle, page: Page = 1, page_size: PageSize = 20
+) -> ResponseModel[PageResult[RefundRequestRead]]:
+    return success_response(data=await service.admin_refunds(page, page_size), request_id=current_request_id())
+
+
+@router.get(
+    "/admin/orders/{order_id}/fulfillment",
+    response_model=ResponseModel[FulfillmentRead],
+    summary="查看管理订单履约状态",
+    dependencies=[Depends(require_permission(PermissionCode.ORDERS_READ))],
+)
+async def admin_fulfillment_read(order_id: UUID, service: Lifecycle) -> ResponseModel[FulfillmentRead]:
+    return success_response(data=await service.admin_fulfillment(order_id), request_id=current_request_id())
+
+
 @router.post(
     "/orders/{order_id}/payment-attempts",
     response_model=ResponseModel[PaymentAttemptRead],

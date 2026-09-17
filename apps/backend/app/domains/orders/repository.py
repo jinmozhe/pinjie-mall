@@ -1,15 +1,10 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models.address import UserAddress
-from app.db.models.inventory import InventoryAccount
 from app.db.models.order import Order, OrderEvent, OrderItem
-from app.db.models.product import Product, ProductSku
-from app.db.models.reservation import InventoryReservation
-from app.db.models.shipping import ShippingTemplate
 
 
 class OrderRepository:
@@ -21,45 +16,6 @@ class OrderRepository:
             text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
             {"key": f"pinjie:orders:{user_id}"},
         )
-
-    async def lock_catalog(self) -> None:
-        await self.session.execute(text("SELECT pg_advisory_xact_lock(722341901)"))
-
-    async def catalog(
-        self, sku_ids: list[UUID], *, lock: bool = False
-    ) -> list[tuple[ProductSku, Product, ShippingTemplate | None]]:
-        if not sku_ids:
-            return []
-        stmt = (
-            select(ProductSku, Product, ShippingTemplate)
-            .join(Product, Product.id == ProductSku.product_id)
-            .outerjoin(ShippingTemplate, ShippingTemplate.id == Product.shipping_template_id)
-            .where(ProductSku.id.in_(sku_ids))
-            .order_by(ProductSku.id)
-        )
-        if lock:
-            stmt = stmt.with_for_update(of=ProductSku).execution_options(populate_existing=True)
-        rows = await self.session.execute(stmt)
-        return [(sku, product, template) for sku, product, template in rows.tuples()]
-
-    async def lock_templates(self, template_ids: list[UUID]) -> list[ShippingTemplate]:
-        if not template_ids:
-            return []
-        return list(
-            await self.session.scalars(
-                select(ShippingTemplate)
-                .where(ShippingTemplate.id.in_(template_ids))
-                .order_by(ShippingTemplate.id)
-                .with_for_update()
-                .execution_options(populate_existing=True)
-            )
-        )
-
-    async def address(self, user_id: UUID, address_id: UUID, *, lock: bool = False) -> UserAddress | None:
-        stmt = select(UserAddress).where(UserAddress.user_id == user_id, UserAddress.id == address_id)
-        if lock:
-            stmt = stmt.with_for_update().execution_options(populate_existing=True)
-        return (await self.session.scalars(stmt)).one_or_none()
 
     async def order_by_request(self, user_id: UUID, request_id: UUID, *, lock: bool = False) -> Order | None:
         stmt = select(Order).where(Order.user_id == user_id, Order.request_id == request_id)
@@ -110,29 +66,19 @@ class OrderRepository:
             )
         )
 
-    async def reservations(self, order_id: UUID, *, lock: bool = False) -> list[InventoryReservation]:
-        stmt = (
-            select(InventoryReservation)
-            .where(InventoryReservation.order_id == order_id)
-            .order_by(InventoryReservation.sku_id)
-        )
-        if lock:
-            stmt = stmt.with_for_update().execution_options(populate_existing=True)
-        return list(await self.session.scalars(stmt))
+    async def item(self, order_item_id: UUID) -> OrderItem | None:
+        return await self.session.get(OrderItem, order_item_id)
 
-    async def inventory_accounts(self, sku_ids: list[UUID]) -> list[InventoryAccount]:
-        if not sku_ids:
-            return []
-        return list(
-            await self.session.scalars(
-                select(InventoryAccount)
-                .where(InventoryAccount.sku_id.in_(sku_ids))
-                .order_by(InventoryAccount.sku_id)
-                .with_for_update()
-                .execution_options(populate_existing=True)
-            )
+    async def page(self, page: int, page_size: int) -> tuple[list[Order], int]:
+        count = int(await self.session.scalar(select(func.count()).select_from(Order)) or 0)
+        rows = await self.session.scalars(
+            select(Order)
+            .order_by(Order.created_at.desc(), Order.id.desc())
+            .offset((page - 1) * page_size)
+            .limit(page_size)
         )
+        return list(rows), count
 
-    async def save(self, value: Order | OrderItem | OrderEvent | InventoryReservation) -> None:
+    async def save(self, value: Order | OrderItem | OrderEvent) -> None:
         self.session.add(value)
         await self.session.flush()

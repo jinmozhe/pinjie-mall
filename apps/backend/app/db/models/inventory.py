@@ -10,6 +10,7 @@ class InventoryAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "inventory_accounts"
     __table_args__ = (
         CheckConstraint("available >= 0 AND reserved >= 0", name="ck_inventory_quantities"),
+        CheckConstraint("CAST(available AS BIGINT) + reserved <= 2147483647", name="ck_inventory_total_capacity"),
         CheckConstraint("revision > 0", name="ck_inventory_revision"),
         {"comment": "SKU 库存账户，独立于商品资料"},
     )

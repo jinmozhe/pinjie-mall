@@ -55,6 +55,8 @@ class PermissionCode(StrEnum):
     SETTINGS_REGISTRATION_READ = "settings:registration:read"
     SETTINGS_REGISTRATION_UPDATE = "settings:registration:update"
     FULFILLMENTS_SHIP = "fulfillments:ship"
+    ORDERS_READ = "orders:read"
+    REFUNDS_READ = "refunds:read"
     FULFILLMENTS_DELIVER_VIRTUAL = "fulfillments:deliver-virtual"
     REFUNDS_REVIEW = "refunds:review"
     RECONCILIATION_IMPORT = "reconciliation:import"
@@ -63,6 +65,8 @@ class PermissionCode(StrEnum):
 
 
 PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
+    PermissionDefinition("orders:read", "查看订单", "查看订单列表、成交快照和履约状态"),
+    PermissionDefinition("refunds:read", "查看退款", "查看退款申请及审核版本"),
     PermissionDefinition("product-categories:read", "查看商品分类", "查看商品分类树"),
     PermissionDefinition("product-categories:create", "创建商品分类", "创建三级商品分类"),
     PermissionDefinition("product-categories:update", "修改商品分类", "修改分类资料、层级和启停"),

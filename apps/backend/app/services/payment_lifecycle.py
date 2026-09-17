@@ -23,10 +23,8 @@ from app.db.models.commerce_lifecycle import (
 )
 from app.db.transaction import transaction_scope
 from app.domains.distribution import DistributionService
-from app.domains.orders import OrderService
-
-from .repository import LifecycleRepository
-from .schemas import (
+from app.domains.lifecycle.repository import LifecycleRepository
+from app.domains.lifecycle.schemas import (
     FulfillmentRead,
     PaymentAttemptCreate,
     PaymentAttemptRead,
@@ -42,12 +40,26 @@ from .schemas import (
     VerifiedRefundConfirmation,
     VirtualDeliveryCreate,
 )
+from app.domains.orders import OrderQueryService
+from app.domains.users import UserAccessService
+from app.services.orders import OrderService
 
 
 class LifecycleService:
-    def __init__(self, session: AsyncSession, repository: LifecycleRepository | None = None) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        repository: LifecycleRepository | None = None,
+        *,
+        orders: OrderQueryService | None = None,
+        distribution: DistributionService | None = None,
+        access: UserAccessService | None = None,
+    ) -> None:
         self.session = session
         self.repository = repository or LifecycleRepository(session)
+        self.orders = orders or OrderQueryService(session)
+        self.distribution = distribution or DistributionService(session)
+        self.access = access or UserAccessService(session)
 
     @staticmethod
     def _request_hash(payload: object) -> str:
@@ -76,7 +88,8 @@ class LifecycleService:
     async def initiate_payment(self, user_id: UUID, order_id: UUID, data: PaymentAttemptCreate) -> PaymentAttemptRead:
         request_hash = self._request_hash({"channel": data.channel})
         async with transaction_scope(self.session):
-            order = await self.repository.user_order(user_id, order_id, lock=True)
+            await self.access.require_active_user(user_id)
+            order = await self.orders.user_order(user_id, order_id, lock=True)
             if order is None:
                 raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
             existing = await self.repository.payment_by_request(user_id, data.request_id, lock=True)
@@ -88,6 +101,10 @@ class LifecycleService:
                 return self._payment_read(existing)
             if order.status != "pending_payment":
                 raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前订单不能发起支付")
+            if order.total_amount <= 0:
+                raise AppException(
+                    status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="零金额订单不支持外部资金支付"
+                )
             now = datetime.now(UTC)
             if order.expires_at <= now:
                 raise AppException(status_code=409, code=ErrorCode.ORDER_EXPIRED, message="订单已超过支付时限")
@@ -126,6 +143,14 @@ class LifecycleService:
         self, data: VerifiedPaymentConfirmation
     ) -> PaymentAttemptRead:
         confirmed_at = self._require_aware(data.confirmed_at, "支付确认时间")
+        await self.distribution.lock_referral_changes()
+        await self.repository.lock_key("payment", f"{data.channel}:{data.channel_transaction_id}")
+        attempt = await self.repository.payment(data.payment_attempt_id)
+        if attempt is None:
+            raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="支付意图不存在")
+        order = await self.orders.order(attempt.order_id, lock=True)
+        if order is None:
+            raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
         attempt = await self.repository.payment(data.payment_attempt_id, lock=True)
         if attempt is None:
             raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="支付意图不存在")
@@ -136,10 +161,11 @@ class LifecycleService:
                 attempt.channel_transaction_id != data.channel_transaction_id
                 or attempt.amount != data.amount
                 or attempt.currency != data.currency
+                or attempt.confirmed_at != confirmed_at
             ):
                 raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="支付确认内容冲突")
             return self._payment_read(attempt)
-        if attempt.status not in {"created", "pending"}:
+        if attempt.status not in {"created", "pending", "unknown"}:
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前支付意图不能确认")
         if attempt.amount != data.amount or attempt.currency != data.currency:
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="支付金额或币种不匹配")
@@ -148,9 +174,6 @@ class LifecycleService:
             raise AppException(
                 status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="渠道交易流水已被其他支付意图使用"
             )
-        order = await self.repository.order(attempt.order_id, lock=True)
-        if order is None:
-            raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
         if order.total_amount != attempt.amount or order.currency != attempt.currency:
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="订单金额或币种不匹配")
         await OrderService(self.session).confirm_payment_in_open_transaction(
@@ -197,7 +220,7 @@ class LifecycleService:
                 payload_hash=data.payload_hash,
             )
         )
-        await DistributionService(self.session).freeze_commissions_for_payment_in_open_transaction(
+        await self.distribution.freeze_commissions_for_payment_in_open_transaction(
             order_id=order.id,
             source_user_id=order.user_id,
             base_amount=order.items_amount,
@@ -206,7 +229,7 @@ class LifecycleService:
         return self._payment_read(attempt)
 
     async def fulfillment_for_user(self, user_id: UUID, order_id: UUID) -> FulfillmentRead:
-        order = await self.repository.user_order(user_id, order_id)
+        order = await self.orders.user_order(user_id, order_id)
         if order is None:
             raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
         fulfillment = await self.repository.fulfillment(order.id)
@@ -214,12 +237,24 @@ class LifecycleService:
             raise AppException(status_code=404, code=ErrorCode.ORDER_STATE_CONFLICT, message="订单尚未创建履约单")
         return self._fulfillment_read(fulfillment)
 
+    async def admin_fulfillment(self, order_id: UUID) -> FulfillmentRead:
+        fulfillment = await self.repository.fulfillment(order_id)
+        if fulfillment is None:
+            raise AppException(status_code=404, code=ErrorCode.ORDER_STATE_CONFLICT, message="订单尚未创建履约单")
+        return self._fulfillment_read(fulfillment)
+
+    async def admin_refunds(self, page: int, page_size: int) -> PageResult[RefundRequestRead]:
+        rows, total = await self.repository.refund_page(page, page_size)
+        return PageResult[RefundRequestRead].create(
+            items=[self._refund_read(row) for row in rows], total=total, page=page, page_size=page_size
+        )
+
     async def ship_in_open_transaction(self, order_id: UUID, data: ShipmentCreate, actor_id: UUID) -> FulfillmentRead:
-        order = await self.repository.order(order_id, lock=True)
+        order = await self.orders.order(order_id, lock=True)
         if order is None:
             raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
         fulfillment = await self.repository.fulfillment(order.id, lock=True)
-        if fulfillment is None or order.product_type != "physical":
+        if fulfillment is None or order.status != "paid" or order.product_type != "physical":
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前订单不能发货")
         if fulfillment.status != "awaiting_shipment" or fulfillment.revision != data.revision:
             raise AppException(
@@ -250,11 +285,11 @@ class LifecycleService:
     async def deliver_virtual_in_open_transaction(
         self, order_id: UUID, data: VirtualDeliveryCreate, actor_id: UUID
     ) -> FulfillmentRead:
-        order = await self.repository.order(order_id, lock=True)
+        order = await self.orders.order(order_id, lock=True)
         if order is None:
             raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
         fulfillment = await self.repository.fulfillment(order.id, lock=True)
-        if fulfillment is None or order.product_type != "virtual":
+        if fulfillment is None or order.status != "paid" or order.product_type != "virtual":
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前订单不能进行虚拟交付")
         if fulfillment.status != "awaiting_delivery" or fulfillment.revision != data.revision:
             raise AppException(
@@ -278,12 +313,13 @@ class LifecycleService:
                 reason="管理员完成虚拟交付",
             )
         )
-        await DistributionService(self.session).schedule_settlement_for_delivery_in_open_transaction(order.id, now)
+        await self.distribution.schedule_settlement_for_delivery_in_open_transaction(order.id, now)
         return self._fulfillment_read(fulfillment)
 
     async def confirm_receipt(self, user_id: UUID, order_id: UUID, revision: int) -> FulfillmentRead:
         async with transaction_scope(self.session):
-            order = await self.repository.user_order(user_id, order_id, lock=True)
+            await self.access.require_active_user(user_id)
+            order = await self.orders.user_order(user_id, order_id, lock=True)
             if order is None:
                 raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
             fulfillment = await self.repository.fulfillment(order.id, lock=True)
@@ -325,9 +361,7 @@ class LifecycleService:
                 reason=reason,
             )
         )
-        await DistributionService(self.session).schedule_settlement_for_delivery_in_open_transaction(
-            fulfillment.order_id, now
-        )
+        await self.distribution.schedule_settlement_for_delivery_in_open_transaction(fulfillment.order_id, now)
 
     async def create_refund(self, user_id: UUID, order_id: UUID, data: RefundRequestCreate) -> RefundRequestRead:
         normalized: dict[UUID, int] = {}
@@ -339,7 +373,8 @@ class LifecycleService:
         ]
         request_hash = self._request_hash({"items": request_lines, "reason": data.reason})
         async with transaction_scope(self.session):
-            order = await self.repository.user_order(user_id, order_id, lock=True)
+            await self.access.require_active_user(user_id)
+            order = await self.orders.user_order(user_id, order_id, lock=True)
             if order is None:
                 raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
             existing = await self.repository.refund_by_request(user_id, data.request_id, lock=True)
@@ -354,14 +389,14 @@ class LifecycleService:
                 raise AppException(
                     status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="仅已交付订单可以申请退款"
                 )
-            order_items = await self.repository.order_items(order.id, lock=True)
+            order_items = await self.orders.order_items(order.id)
             item_by_id = {item.id: item for item in order_items}
             if set(normalized) - set(item_by_id):
                 raise AppException(
                     status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款明细不属于当前订单"
                 )
             refunds = await self.repository.refunds_for_order(order.id, lock=True)
-            active_statuses = {"requested", "approved", "processing", "succeeded"}
+            active_statuses = {"requested", "approved", "processing", "unknown", "succeeded"}
             active_refunds = [refund for refund in refunds if refund.status in active_statuses]
             refund_items = await self.repository.refund_items([refund.id for refund in active_refunds], lock=True)
             reserved_quantity: dict[UUID, int] = {}
@@ -370,13 +405,20 @@ class LifecycleService:
             amount = Decimal("0.00")
             for order_item_id, quantity in normalized.items():
                 order_item = item_by_id[order_item_id]
+                if order_item.unit_price <= 0:
+                    raise AppException(
+                        status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="零金额明细不能申请资金退款"
+                    )
                 if quantity > order_item.quantity - reserved_quantity.get(order_item_id, 0):
                     raise AppException(
                         status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款数量超过可退款数量"
                     )
                 amount += order_item.unit_price * quantity
             amount = amount.quantize(Decimal("0.01"))
-            if amount <= 0 or amount > order.items_amount:
+            if (
+                amount <= 0
+                or amount + sum((item.amount for item in active_refunds), Decimal("0.00")) > order.items_amount
+            ):
                 raise AppException(
                     status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款金额超过商品实付金额"
                 )
@@ -423,26 +465,48 @@ class LifecycleService:
 
     async def confirm_verified_refund_in_open_transaction(self, data: VerifiedRefundConfirmation) -> RefundRequestRead:
         confirmed_at = self._require_aware(data.confirmed_at, "退款确认时间")
-        refund = await self.repository.refund(data.refund_request_id, lock=True)
+        await self.repository.lock_key("refund", f"{data.channel}:{data.channel_refund_id}")
+        refund = await self.repository.refund(data.refund_request_id)
         if refund is None:
             raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="退款申请不存在")
+        order = await self.orders.order(refund.order_id, lock=True)
+        refund = await self.repository.refund(data.refund_request_id, lock=True)
+        if refund is None or order is None or order.status != "paid":
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款订单状态异常")
+        if refund.amount != data.amount or refund.currency != data.currency or order.currency != data.currency:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款金额或币种不匹配")
+        payment = await self.repository.payment_by_transaction(data.channel, data.payment_transaction_id)
+        if payment is None or payment.status != "succeeded" or payment.order_id != order.id:
+            raise AppException(
+                status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款渠道或原支付流水不匹配"
+            )
+        if confirmed_at < refund.created_at:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款确认时间早于退款申请")
         if refund.status == "succeeded":
-            if refund.channel_refund_id != data.channel_refund_id:
+            if (
+                refund.channel != data.channel
+                or refund.channel_refund_id != data.channel_refund_id
+                or refund.confirmed_at != confirmed_at
+            ):
                 raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款确认内容冲突")
             return self._refund_read(refund)
-        if refund.status not in {"approved", "processing"}:
+        if refund.status not in {"approved", "processing", "unknown"}:
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前退款申请不能确认成功")
-        duplicate = await self.repository.refund_by_channel(data.channel_refund_id, lock=True)
+        duplicate = await self.repository.refund_by_channel(data.channel, data.channel_refund_id)
         if duplicate is not None and duplicate.id != refund.id:
             raise AppException(
                 status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="渠道退款流水已被其他退款申请使用"
             )
-        order = await self.repository.order(refund.order_id, lock=True)
-        if order is None or order.currency != refund.currency:
-            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款订单状态异常")
+        prior_refunds = await self.repository.refunds_for_order(order.id)
+        cumulative_amount = refund.amount + sum(
+            (item.amount for item in prior_refunds if item.status == "succeeded"), Decimal("0.00")
+        )
+        if cumulative_amount > order.items_amount:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="累计退款超过商品实付金额")
         previous_status = refund.status
         refund.status = "succeeded"
         refund.channel_refund_id = data.channel_refund_id
+        refund.channel = data.channel
         refund.confirmed_at = confirmed_at
         refund.revision += 1
         await self.repository.save(refund)
@@ -455,18 +519,19 @@ class LifecycleService:
                 actor_type="payment",
                 actor_id=None,
                 reason="可信渠道退款确认",
+                payload_hash=data.payload_hash,
             )
         )
-        await DistributionService(self.session).recover_for_refund_in_open_transaction(
+        await self.distribution.recover_for_refund_in_open_transaction(
             refund_request_id=refund.id,
             order_id=order.id,
-            refunded_amount=refund.amount,
+            cumulative_refunded_amount=cumulative_amount,
             refunded_at=confirmed_at,
         )
         return self._refund_read(refund)
 
     async def refunds_for_user(self, user_id: UUID, order_id: UUID) -> list[RefundRequestRead]:
-        order = await self.repository.user_order(user_id, order_id)
+        order = await self.orders.user_order(user_id, order_id)
         if order is None:
             raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
         return [self._refund_read(refund) for refund in await self.repository.refunds_for_order(order.id)]
@@ -533,10 +598,11 @@ class LifecycleService:
 
     async def create_review(self, user_id: UUID, order_item_id: UUID, data: ProductReviewCreate) -> ProductReviewRead:
         async with transaction_scope(self.session):
-            item = await self.repository.order_item(order_item_id, lock=True)
+            await self.access.require_active_user(user_id)
+            item = await self.orders.order_item(order_item_id)
             if item is None:
                 raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单明细不存在")
-            order = await self.repository.user_order(user_id, item.order_id, lock=True)
+            order = await self.orders.user_order(user_id, item.order_id, lock=True)
             if order is None:
                 raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单明细不属于当前用户")
             fulfillment = await self.repository.fulfillment(order.id, lock=True)
@@ -574,12 +640,15 @@ class LifecycleService:
 
     async def reconcile_in_open_transaction(self, data: ReconciliationRecordCreate) -> ReconciliationRecordRead:
         occurred_at = self._require_aware(data.occurred_at, "对账发生时间")
+        await self.repository.lock_key("payment", f"{data.channel}:{data.channel_transaction_id}")
         existing = await self.repository.reconciliation(data.channel, data.channel_transaction_id, lock=True)
         if existing is not None:
             if (
                 existing.source_hash != data.source_hash
                 or existing.amount != data.amount
                 or existing.currency != data.currency
+                or existing.occurred_at != occurred_at
+                or existing.source_reference != data.source_reference
             ):
                 raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="渠道账单流水内容冲突")
             return ReconciliationRecordRead.model_validate(existing)

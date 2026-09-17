@@ -11,6 +11,7 @@ class CartItemInput(BaseModel):
 
 class CartItemUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
+    revision: int = Field(gt=0, description="读取购物车条目时获得的版本")
     quantity: int | None = Field(default=None, ge=1, le=999)
     selected: bool | None = None
 

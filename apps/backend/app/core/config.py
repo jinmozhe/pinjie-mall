@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     db_pool_size: int = Field(default=5, validation_alias="DB_POOL_SIZE", ge=1, le=50)
     db_max_overflow: int = Field(default=5, validation_alias="DB_MAX_OVERFLOW", ge=0, le=50)
     db_pool_timeout: float = Field(default=5.0, validation_alias="DB_POOL_TIMEOUT", gt=0, le=60)
+    db_lock_timeout: float = Field(default=5.0, validation_alias="DB_LOCK_TIMEOUT", gt=0, le=60)
     dependency_timeout: float = Field(default=2.0, validation_alias="DEPENDENCY_TIMEOUT", gt=0, le=30)
     jwt_issuer: str = Field(default="pinjie-mall", validation_alias="JWT_ISSUER", min_length=3, max_length=128)
     web_jwt_secret: str | None = Field(default=None, validation_alias="WEB_JWT_SECRET")

@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.distribution import (
@@ -17,6 +17,19 @@ from app.db.models.distribution import (
 class DistributionRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
+
+    async def lock_referral_graph(self) -> None:
+        await self.session.execute(text("SELECT pg_advisory_xact_lock(722341902)"))
+
+    async def lock_wallets(self, user_ids: list[UUID]) -> None:
+        if user_ids:
+            await self.session.scalars(
+                select(WalletAccount)
+                .where(WalletAccount.user_id.in_(user_ids), WalletAccount.wallet_type == "commission")
+                .order_by(WalletAccount.user_id)
+                .with_for_update()
+                .execution_options(populate_existing=True)
+            )
 
     async def profile(self, user_id: UUID, *, lock: bool = False) -> MemberProfile | None:
         statement = select(MemberProfile).where(MemberProfile.user_id == user_id)
@@ -65,9 +78,7 @@ class DistributionRepository:
         return (await self.session.scalars(statement)).one_or_none()
 
     async def commissions_for_order(self, order_id: UUID, *, lock: bool = False) -> list[CommissionRecord]:
-        statement = (
-            select(CommissionRecord).where(CommissionRecord.order_id == order_id).order_by(CommissionRecord.level)
-        )
+        statement = select(CommissionRecord).where(CommissionRecord.order_id == order_id).order_by(CommissionRecord.id)
         if lock:
             statement = statement.with_for_update().execution_options(populate_existing=True)
         return list(await self.session.scalars(statement))
