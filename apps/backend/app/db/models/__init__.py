@@ -1,5 +1,6 @@
 """SQLAlchemy model base types."""
 
+from .address import UserAddress
 from .asset import Asset
 from .base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
 from .identity import (
@@ -17,9 +18,20 @@ from .identity import (
     admin_roles,
     role_permissions,
 )
+from .inventory import InventoryAccount, InventoryMovement
+from .product import Category, Product, ProductImage, ProductSku
+from .shipping import ShippingTemplate
 from .system_setting import SystemSetting
 
 __all__ = [
+    "Category",
+    "InventoryAccount",
+    "InventoryMovement",
+    "Product",
+    "ProductImage",
+    "ProductSku",
+    "ShippingTemplate",
+    "UserAddress",
     "Admin",
     "Asset",
     "AdminRefreshToken",

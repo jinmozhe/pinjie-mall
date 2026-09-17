@@ -6,6 +6,1565 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v1/admin/product-categories": {
+      "get": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "查看全部商品分类",
+        "operationId": "admin_categories_api_v1_admin_product_categories_get",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_list_CategoryRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "创建商品分类",
+        "operationId": "create_category_api_v1_admin_product_categories_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CategoryRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/product-categories/{category_id}": {
+      "put": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "修改商品分类",
+        "operationId": "update_category_api_v1_admin_product_categories__category_id__put",
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CategoryRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/products": {
+      "get": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "分页查看商品",
+        "operationId": "admin_products_api_v1_admin_products_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码，从一开始",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码，从一开始"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_ProductRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "创建商品与零库存变体",
+        "operationId": "create_product_api_v1_admin_products_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ProductRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/products/{product_id}": {
+      "get": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "查看商品及全部变体",
+        "operationId": "admin_product_api_v1_admin_products__product_id__get",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ProductRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "更新商品资料",
+        "operationId": "update_product_api_v1_admin_products__product_id__put",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ProductRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/products/{product_id}/status": {
+      "put": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "上架或下架商品",
+        "operationId": "set_product_status_api_v1_admin_products__product_id__status_put",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductStatusUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ProductRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/products/{product_id}/skus": {
+      "post": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "增加稳定 SKU",
+        "operationId": "create_sku_api_v1_admin_products__product_id__skus_post",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkuUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ProductRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/products/{product_id}/skus/{sku_id}": {
+      "put": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "原位更新 SKU",
+        "operationId": "update_sku_api_v1_admin_products__product_id__skus__sku_id__put",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "sku_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sku Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkuUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ProductRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/inventory/{sku_id}": {
+      "get": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "查看 SKU 库存",
+        "operationId": "inventory_read_api_v1_admin_inventory__sku_id__get",
+        "parameters": [
+          {
+            "name": "sku_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sku Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_InventoryRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/inventory/{sku_id}/adjustments": {
+      "post": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "幂等调整库存",
+        "operationId": "inventory_adjust_api_v1_admin_inventory__sku_id__adjustments_post",
+        "parameters": [
+          {
+            "name": "sku_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sku Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryAdjustment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_InventoryMovementRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/inventory/{sku_id}/movements": {
+      "get": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "查看库存流水",
+        "operationId": "inventory_history_api_v1_admin_inventory__sku_id__movements_get",
+        "parameters": [
+          {
+            "name": "sku_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sku Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码，从一开始",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码，从一开始"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_InventoryMovementRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/shipping-templates": {
+      "get": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "查看运费模板",
+        "operationId": "shipping_page_api_v1_admin_shipping_templates_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码，从一开始",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码，从一开始"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_ShippingTemplateRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "创建运费模板",
+        "operationId": "shipping_create_api_v1_admin_shipping_templates_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShippingTemplateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ShippingTemplateRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/shipping-templates/{template_id}": {
+      "get": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "查看运费模板详情",
+        "operationId": "shipping_read_api_v1_admin_shipping_templates__template_id__get",
+        "parameters": [
+          {
+            "name": "template_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Template Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ShippingTemplateRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "更新运费模板",
+        "operationId": "shipping_update_api_v1_admin_shipping_templates__template_id__put",
+        "parameters": [
+          {
+            "name": "template_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Template Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShippingTemplateUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ShippingTemplateRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/shipping-templates/{template_id}/quote": {
+      "post": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "试算运费",
+        "operationId": "shipping_quote_api_v1_admin_shipping_templates__template_id__quote_post",
+        "parameters": [
+          {
+            "name": "template_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Template Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FreightQuoteInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_FreightQuote_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/product-categories": {
+      "get": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "查看启用商品分类",
+        "operationId": "public_categories_api_v1_product_categories_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_list_CategoryRead__"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "查看上架商品",
+        "operationId": "public_products_api_v1_products_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码，从一开始",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码，从一开始"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_PublicProductRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products/{product_id}": {
+      "get": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "查看上架商品详情",
+        "operationId": "public_product_api_v1_products__product_id__get",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PublicProductRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/addresses": {
+      "get": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "查看本人收货地址",
+        "operationId": "addresses_list_api_v1_addresses_get",
+        "parameters": [
+          {
+            "name": "pinjie_web_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Web Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_list_AddressRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "新增本人收货地址",
+        "operationId": "address_create_api_v1_addresses_post",
+        "parameters": [
+          {
+            "name": "pinjie_web_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Web Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_AddressRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/addresses/{address_id}": {
+      "put": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "更新本人收货地址",
+        "operationId": "address_update_api_v1_addresses__address_id__put",
+        "parameters": [
+          {
+            "name": "address_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Address Id"
+            }
+          },
+          {
+            "name": "pinjie_web_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Web Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_AddressRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "删除本人收货地址",
+        "operationId": "address_delete_api_v1_addresses__address_id__delete",
+        "parameters": [
+          {
+            "name": "address_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Address Id"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "title": "Revision"
+            }
+          },
+          {
+            "name": "pinjie_web_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Web Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_NoneType_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/register": {
       "post": {
         "tags": [
@@ -4223,6 +5782,276 @@
         "type": "object",
         "title": "ActionResult"
       },
+      "AddressInput": {
+        "properties": {
+          "receiver_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Receiver Name",
+            "description": "收件人姓名"
+          },
+          "mobile": {
+            "type": "string",
+            "pattern": "^\\+?[0-9]{6,20}$",
+            "title": "Mobile",
+            "description": "收件联系电话，可含国际区号"
+          },
+          "province_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "title": "Province Code",
+            "description": "省份行政编码"
+          },
+          "city_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "title": "City Code",
+            "description": "城市行政编码"
+          },
+          "district_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "title": "District Code",
+            "description": "区县行政编码"
+          },
+          "province": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Province",
+            "description": "省份名称"
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "City",
+            "description": "城市名称"
+          },
+          "district": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "District",
+            "description": "区县名称"
+          },
+          "street_address": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Street Address",
+            "description": "详细收货地址"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "是否设为默认地址",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "receiver_name",
+          "mobile",
+          "province_code",
+          "city_code",
+          "district_code",
+          "province",
+          "city",
+          "district",
+          "street_address"
+        ],
+        "title": "AddressInput"
+      },
+      "AddressRead": {
+        "properties": {
+          "receiver_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Receiver Name",
+            "description": "收件人姓名"
+          },
+          "mobile": {
+            "type": "string",
+            "pattern": "^\\+?[0-9]{6,20}$",
+            "title": "Mobile",
+            "description": "收件联系电话，可含国际区号"
+          },
+          "province_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "title": "Province Code",
+            "description": "省份行政编码"
+          },
+          "city_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "title": "City Code",
+            "description": "城市行政编码"
+          },
+          "district_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "title": "District Code",
+            "description": "区县行政编码"
+          },
+          "province": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Province",
+            "description": "省份名称"
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "City",
+            "description": "城市名称"
+          },
+          "district": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "District",
+            "description": "区县名称"
+          },
+          "street_address": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Street Address",
+            "description": "详细收货地址"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "是否设为默认地址",
+            "default": false
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "收货地址 ID"
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "当前编辑版本"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "receiver_name",
+          "mobile",
+          "province_code",
+          "city_code",
+          "district_code",
+          "province",
+          "city",
+          "district",
+          "street_address",
+          "id",
+          "revision"
+        ],
+        "title": "AddressRead"
+      },
+      "AddressUpdate": {
+        "properties": {
+          "receiver_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Receiver Name",
+            "description": "收件人姓名"
+          },
+          "mobile": {
+            "type": "string",
+            "pattern": "^\\+?[0-9]{6,20}$",
+            "title": "Mobile",
+            "description": "收件联系电话，可含国际区号"
+          },
+          "province_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "title": "Province Code",
+            "description": "省份行政编码"
+          },
+          "city_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "title": "City Code",
+            "description": "城市行政编码"
+          },
+          "district_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "title": "District Code",
+            "description": "区县行政编码"
+          },
+          "province": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Province",
+            "description": "省份名称"
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "City",
+            "description": "城市名称"
+          },
+          "district": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "District",
+            "description": "区县名称"
+          },
+          "street_address": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Street Address",
+            "description": "详细收货地址"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "是否设为默认地址",
+            "default": false
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "读取地址时获得的编辑版本"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "receiver_name",
+          "mobile",
+          "province_code",
+          "city_code",
+          "district_code",
+          "province",
+          "city",
+          "district",
+          "street_address",
+          "revision"
+        ],
+        "title": "AddressUpdate"
+      },
       "AdminAuthSessionOut": {
         "properties": {
           "principal": {
@@ -5258,6 +7087,158 @@
         ],
         "title": "Body_upload_asset_api_v1_assets_upload_post"
       },
+      "CategoryInput": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "分类名称"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "父分类 ID，根分类为空"
+          },
+          "sort_order": {
+            "type": "integer",
+            "maximum": 1000000.0,
+            "minimum": -1000000.0,
+            "title": "Sort Order",
+            "description": "排序值",
+            "default": 0
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "分类是否启用",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CategoryInput"
+      },
+      "CategoryRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "分类名称"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "父分类 ID，根分类为空"
+          },
+          "sort_order": {
+            "type": "integer",
+            "maximum": 1000000.0,
+            "minimum": -1000000.0,
+            "title": "Sort Order",
+            "description": "排序值",
+            "default": 0
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "分类是否启用",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "分类 ID"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "分类版本"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "id",
+          "revision"
+        ],
+        "title": "CategoryRead"
+      },
+      "CategoryUpdate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "分类名称"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id",
+            "description": "父分类 ID，根分类为空"
+          },
+          "sort_order": {
+            "type": "integer",
+            "maximum": 1000000.0,
+            "minimum": -1000000.0,
+            "title": "Sort Order",
+            "description": "排序值",
+            "default": 0
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "分类是否启用",
+            "default": true
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "读取分类时获得的版本"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "revision"
+        ],
+        "title": "CategoryUpdate"
+      },
       "ConfirmationAction": {
         "type": "string",
         "enum": [
@@ -5309,6 +7290,87 @@
         ],
         "title": "DatabaseHealthRead"
       },
+      "FreightQuote": {
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Template Id",
+            "description": "运费模板 ID"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "计费规则版本"
+          },
+          "freight": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)",
+            "title": "Freight",
+            "description": "运费人民币元"
+          },
+          "free_shipping": {
+            "type": "boolean",
+            "title": "Free Shipping",
+            "description": "是否满足包邮条件"
+          }
+        },
+        "type": "object",
+        "required": [
+          "template_id",
+          "revision",
+          "freight",
+          "free_shipping"
+        ],
+        "title": "FreightQuote"
+      },
+      "FreightQuoteInput": {
+        "properties": {
+          "province_code": {
+            "type": "string",
+            "pattern": "^[0-9]{6}$",
+            "title": "Province Code",
+            "description": "收货省份行政编码"
+          },
+          "pieces": {
+            "type": "integer",
+            "maximum": 1000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Pieces",
+            "description": "总件数"
+          },
+          "weight_grams": {
+            "type": "integer",
+            "maximum": 1000000000.0,
+            "minimum": 0.0,
+            "title": "Weight Grams",
+            "description": "总重量克数"
+          },
+          "items_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)"
+              }
+            ],
+            "title": "Items Amount",
+            "description": "商品金额，不含运费"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "province_code",
+          "pieces",
+          "weight_grams",
+          "items_amount"
+        ],
+        "title": "FreightQuoteInput"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -5351,6 +7413,160 @@
           "security"
         ],
         "title": "InfrastructureOverviewRead"
+      },
+      "InventoryAdjustment": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id",
+            "description": "同 SKU 内唯一的业务幂等号"
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "读取库存时获得的版本"
+          },
+          "quantity_delta": {
+            "type": "integer",
+            "maximum": 1000000000.0,
+            "minimum": -1000000000.0,
+            "title": "Quantity Delta",
+            "description": "增加为正，减少为负，禁止零"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Reason",
+            "description": "库存调整原因"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "revision",
+          "quantity_delta",
+          "reason"
+        ],
+        "title": "InventoryAdjustment"
+      },
+      "InventoryMovementRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "流水 ID"
+          },
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id",
+            "description": "SKU ID"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id",
+            "description": "幂等请求 ID"
+          },
+          "actor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Actor Id",
+            "description": "操作管理员 ID"
+          },
+          "quantity_delta": {
+            "type": "integer",
+            "title": "Quantity Delta",
+            "description": "调整数量"
+          },
+          "before_available": {
+            "type": "integer",
+            "title": "Before Available",
+            "description": "调整前可售库存"
+          },
+          "after_available": {
+            "type": "integer",
+            "title": "After Available",
+            "description": "调整后可售库存"
+          },
+          "expected_revision": {
+            "type": "integer",
+            "title": "Expected Revision",
+            "description": "请求期望版本"
+          },
+          "resulting_revision": {
+            "type": "integer",
+            "title": "Resulting Revision",
+            "description": "完成后版本"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "调整原因"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "流水创建时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sku_id",
+          "request_id",
+          "actor_id",
+          "quantity_delta",
+          "before_available",
+          "after_available",
+          "expected_revision",
+          "resulting_revision",
+          "reason",
+          "created_at"
+        ],
+        "title": "InventoryMovementRead"
+      },
+      "InventoryRead": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id",
+            "description": "SKU ID"
+          },
+          "available": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Available",
+            "description": "当前可售库存"
+          },
+          "reserved": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Reserved",
+            "description": "订单占用库存"
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "库存版本"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "available",
+          "reserved",
+          "revision"
+        ],
+        "title": "InventoryRead"
       },
       "LiveStatus": {
         "properties": {
@@ -5649,6 +7865,53 @@
         ],
         "title": "PageResult[AuditEventRead]"
       },
+      "PageResult_InventoryMovementRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryMovementRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[InventoryMovementRead]"
+      },
       "PageResult_LoginEventRead_": {
         "properties": {
           "items": {
@@ -5695,6 +7958,100 @@
           "total_pages"
         ],
         "title": "PageResult[LoginEventRead]"
+      },
+      "PageResult_ProductRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProductRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[ProductRead]"
+      },
+      "PageResult_PublicProductRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicProductRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[PublicProductRead]"
       },
       "PageResult_RequestLogRead_": {
         "properties": {
@@ -5837,6 +8194,53 @@
         ],
         "title": "PageResult[SessionRead]"
       },
+      "PageResult_ShippingTemplateRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ShippingTemplateRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[ShippingTemplateRead]"
+      },
       "PasswordChangeIn": {
         "properties": {
           "current_password": {
@@ -5937,6 +8341,337 @@
           "assignable_to_roles"
         ],
         "title": "PermissionRead"
+      },
+      "ProductCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "description": "商品名称"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 20000,
+            "title": "Description",
+            "description": "纯文本商品说明",
+            "default": ""
+          },
+          "product_type": {
+            "type": "string",
+            "enum": [
+              "physical",
+              "virtual"
+            ],
+            "title": "Product Type",
+            "description": "实物或虚拟商品"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id",
+            "description": "所属分类 ID"
+          },
+          "shipping_template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Template Id",
+            "description": "实物运费模板，虚拟商品为空"
+          },
+          "image_asset_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Image Asset Ids",
+            "description": "有序图片资产 ID，首张为主图"
+          },
+          "skus": {
+            "items": {
+              "$ref": "#/components/schemas/SkuInput"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Skus",
+            "description": "初始 SKU，无规格也需默认 SKU"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "product_type",
+          "category_id",
+          "skus"
+        ],
+        "title": "ProductCreate"
+      },
+      "ProductRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "description": "商品名称"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 20000,
+            "title": "Description",
+            "description": "纯文本商品说明",
+            "default": ""
+          },
+          "product_type": {
+            "type": "string",
+            "enum": [
+              "physical",
+              "virtual"
+            ],
+            "title": "Product Type",
+            "description": "实物或虚拟商品"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id",
+            "description": "所属分类 ID"
+          },
+          "shipping_template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Template Id",
+            "description": "实物运费模板，虚拟商品为空"
+          },
+          "image_asset_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Image Asset Ids",
+            "description": "有序图片资产 ID，首张为主图"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "商品 ID"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "on_sale",
+              "off_sale"
+            ],
+            "title": "Status",
+            "description": "商品状态"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "商品版本"
+          },
+          "skus": {
+            "items": {
+              "$ref": "#/components/schemas/SkuRead"
+            },
+            "type": "array",
+            "title": "Skus",
+            "description": "商品全部 SKU"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "product_type",
+          "category_id",
+          "id",
+          "status",
+          "revision",
+          "skus"
+        ],
+        "title": "ProductRead"
+      },
+      "ProductStatusUpdate": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "读取商品时获得的版本"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "on_sale",
+              "off_sale"
+            ],
+            "title": "Status",
+            "description": "上架或下架"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "status"
+        ],
+        "title": "ProductStatusUpdate"
+      },
+      "ProductUpdate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "description": "商品名称"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 20000,
+            "title": "Description",
+            "description": "纯文本商品说明",
+            "default": ""
+          },
+          "product_type": {
+            "type": "string",
+            "enum": [
+              "physical",
+              "virtual"
+            ],
+            "title": "Product Type",
+            "description": "实物或虚拟商品"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id",
+            "description": "所属分类 ID"
+          },
+          "shipping_template_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Template Id",
+            "description": "实物运费模板，虚拟商品为空"
+          },
+          "image_asset_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Image Asset Ids",
+            "description": "有序图片资产 ID，首张为主图"
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "读取商品时获得的版本"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "product_type",
+          "category_id",
+          "revision"
+        ],
+        "title": "ProductUpdate"
+      },
+      "PublicProductRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "商品 ID"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "商品名称"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "商品纯文本说明"
+          },
+          "product_type": {
+            "type": "string",
+            "enum": [
+              "physical",
+              "virtual"
+            ],
+            "title": "Product Type",
+            "description": "商品类型"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id",
+            "description": "分类 ID"
+          },
+          "images": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Images",
+            "description": "图片公开地址"
+          },
+          "skus": {
+            "items": {
+              "$ref": "#/components/schemas/SkuRead"
+            },
+            "type": "array",
+            "title": "Skus",
+            "description": "启用中的商品变体"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "product_type",
+          "category_id",
+          "images",
+          "skus"
+        ],
+        "title": "PublicProductRead"
       },
       "ReadinessStatus": {
         "properties": {
@@ -6190,6 +8925,38 @@
           "request_id"
         ],
         "title": "ResponseModel[ActionResult]"
+      },
+      "ResponseModel_AddressRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AddressRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[AddressRead]"
       },
       "ResponseModel_AdminAuthSessionOut_": {
         "properties": {
@@ -6479,6 +9246,167 @@
         ],
         "title": "ResponseModel[BatchActionResult]"
       },
+      "ResponseModel_CategoryRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CategoryRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[CategoryRead]"
+      },
+      "ResponseModel_FreightQuote_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/FreightQuote",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[FreightQuote]"
+      },
+      "ResponseModel_InventoryMovementRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/InventoryMovementRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[InventoryMovementRead]"
+      },
+      "ResponseModel_InventoryRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/InventoryRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[InventoryRead]"
+      },
+      "ResponseModel_NoneType_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "type": "null",
+            "title": "Data",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[NoneType]"
+      },
       "ResponseModel_PageResult_AdminRead__": {
         "properties": {
           "code": {
@@ -6607,6 +9535,38 @@
         ],
         "title": "ResponseModel[PageResult[AuditEventRead]]"
       },
+      "ResponseModel_PageResult_InventoryMovementRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_InventoryMovementRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[InventoryMovementRead]]"
+      },
       "ResponseModel_PageResult_LoginEventRead__": {
         "properties": {
           "code": {
@@ -6638,6 +9598,70 @@
           "request_id"
         ],
         "title": "ResponseModel[PageResult[LoginEventRead]]"
+      },
+      "ResponseModel_PageResult_ProductRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_ProductRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[ProductRead]]"
+      },
+      "ResponseModel_PageResult_PublicProductRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_PublicProductRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[PublicProductRead]]"
       },
       "ResponseModel_PageResult_RequestLogRead__": {
         "properties": {
@@ -6735,6 +9759,102 @@
         ],
         "title": "ResponseModel[PageResult[SessionRead]]"
       },
+      "ResponseModel_PageResult_ShippingTemplateRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_ShippingTemplateRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[ShippingTemplateRead]]"
+      },
+      "ResponseModel_ProductRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProductRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[ProductRead]"
+      },
+      "ResponseModel_PublicProductRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PublicProductRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PublicProductRead]"
+      },
       "ResponseModel_RefreshSessionOut_": {
         "properties": {
           "code": {
@@ -6798,6 +9918,38 @@
           "request_id"
         ],
         "title": "ResponseModel[RoleRead]"
+      },
+      "ResponseModel_ShippingTemplateRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ShippingTemplateRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[ShippingTemplateRead]"
       },
       "ResponseModel_SiteProfileRead_": {
         "properties": {
@@ -7024,6 +10176,42 @@
         ],
         "title": "ResponseModel[bool]"
       },
+      "ResponseModel_list_AddressRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AddressRead"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[list[AddressRead]]"
+      },
       "ResponseModel_list_AdminRead__": {
         "properties": {
           "code": {
@@ -7059,6 +10247,42 @@
           "request_id"
         ],
         "title": "ResponseModel[list[AdminRead]]"
+      },
+      "ResponseModel_list_CategoryRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRead"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[list[CategoryRead]]"
       },
       "ResponseModel_list_PermissionRead__": {
         "properties": {
@@ -7479,6 +10703,352 @@
         ],
         "title": "SessionRead"
       },
+      "ShippingRegion-Input": {
+        "properties": {
+          "provinces": {
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9]{6}$"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Provinces",
+            "description": "省份行政编码，空数组表示唯一默认地区"
+          },
+          "first_unit": {
+            "type": "integer",
+            "maximum": 1000000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "First Unit",
+            "description": "首件数或首重克数"
+          },
+          "first_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)"
+              }
+            ],
+            "title": "First Price",
+            "description": "首费，人民币元"
+          },
+          "additional_unit": {
+            "type": "integer",
+            "maximum": 1000000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Additional Unit",
+            "description": "续件数或续重克数"
+          },
+          "additional_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)"
+              }
+            ],
+            "title": "Additional Price",
+            "description": "每续单位费用，人民币元"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "provinces",
+          "first_unit",
+          "first_price",
+          "additional_unit",
+          "additional_price"
+        ],
+        "title": "ShippingRegion"
+      },
+      "ShippingRegion-Output": {
+        "properties": {
+          "provinces": {
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9]{6}$"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Provinces",
+            "description": "省份行政编码，空数组表示唯一默认地区"
+          },
+          "first_unit": {
+            "type": "integer",
+            "maximum": 1000000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "First Unit",
+            "description": "首件数或首重克数"
+          },
+          "first_price": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)",
+            "title": "First Price",
+            "description": "首费，人民币元"
+          },
+          "additional_unit": {
+            "type": "integer",
+            "maximum": 1000000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Additional Unit",
+            "description": "续件数或续重克数"
+          },
+          "additional_price": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)",
+            "title": "Additional Price",
+            "description": "每续单位费用，人民币元"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "provinces",
+          "first_unit",
+          "first_price",
+          "additional_unit",
+          "additional_price"
+        ],
+        "title": "ShippingRegion"
+      },
+      "ShippingTemplateInput": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "模板名称"
+          },
+          "pricing_method": {
+            "type": "string",
+            "enum": [
+              "piece",
+              "weight"
+            ],
+            "title": "Pricing Method",
+            "description": "按件或按克计价"
+          },
+          "regions": {
+            "items": {
+              "$ref": "#/components/schemas/ShippingRegion-Input"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Regions",
+            "description": "含唯一默认地区的计费规则"
+          },
+          "free_shipping_threshold": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Shipping Threshold",
+            "description": "包邮商品金额门槛，空表示不设置"
+          },
+          "excluded_provinces": {
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9]{6}$"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Excluded Provinces",
+            "description": "不参与满额包邮的省份"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "是否允许使用",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "pricing_method",
+          "regions"
+        ],
+        "title": "ShippingTemplateInput"
+      },
+      "ShippingTemplateRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "模板名称"
+          },
+          "pricing_method": {
+            "type": "string",
+            "enum": [
+              "piece",
+              "weight"
+            ],
+            "title": "Pricing Method",
+            "description": "按件或按克计价"
+          },
+          "regions": {
+            "items": {
+              "$ref": "#/components/schemas/ShippingRegion-Output"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Regions",
+            "description": "含唯一默认地区的计费规则"
+          },
+          "free_shipping_threshold": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Shipping Threshold",
+            "description": "包邮商品金额门槛，空表示不设置"
+          },
+          "excluded_provinces": {
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9]{6}$"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Excluded Provinces",
+            "description": "不参与满额包邮的省份"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "是否允许使用",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "运费模板 ID"
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "当前编辑版本"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "pricing_method",
+          "regions",
+          "id",
+          "revision"
+        ],
+        "title": "ShippingTemplateRead"
+      },
+      "ShippingTemplateUpdate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "模板名称"
+          },
+          "pricing_method": {
+            "type": "string",
+            "enum": [
+              "piece",
+              "weight"
+            ],
+            "title": "Pricing Method",
+            "description": "按件或按克计价"
+          },
+          "regions": {
+            "items": {
+              "$ref": "#/components/schemas/ShippingRegion-Input"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Regions",
+            "description": "含唯一默认地区的计费规则"
+          },
+          "free_shipping_threshold": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Shipping Threshold",
+            "description": "包邮商品金额门槛，空表示不设置"
+          },
+          "excluded_provinces": {
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9]{6}$"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Excluded Provinces",
+            "description": "不参与满额包邮的省份"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "是否允许使用",
+            "default": true
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "读取模板时获得的编辑版本"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "pricing_method",
+          "regions",
+          "revision"
+        ],
+        "title": "ShippingTemplateUpdate"
+      },
       "SiteLogoRead": {
         "properties": {
           "url": {
@@ -7627,6 +11197,177 @@
           "revision"
         ],
         "title": "SiteSettingPatchIn"
+      },
+      "SkuInput": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Code",
+            "description": "全局唯一 SKU 编码"
+          },
+          "specifications": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Specifications",
+            "description": "规格组合，无规格为默认 SKU"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)"
+              }
+            ],
+            "title": "Price",
+            "description": "基础售价人民币元"
+          },
+          "weight_grams": {
+            "type": "integer",
+            "maximum": 1000000000.0,
+            "minimum": 0.0,
+            "title": "Weight Grams",
+            "description": "重量克数，虚拟商品为零"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "是否启用 SKU",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "price",
+          "weight_grams"
+        ],
+        "title": "SkuInput"
+      },
+      "SkuRead": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Code",
+            "description": "全局唯一 SKU 编码"
+          },
+          "specifications": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Specifications",
+            "description": "规格组合，无规格为默认 SKU"
+          },
+          "price": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)",
+            "title": "Price",
+            "description": "基础售价人民币元"
+          },
+          "weight_grams": {
+            "type": "integer",
+            "maximum": 1000000000.0,
+            "minimum": 0.0,
+            "title": "Weight Grams",
+            "description": "重量克数，虚拟商品为零"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "是否启用 SKU",
+            "default": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "稳定 SKU ID"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "price",
+          "weight_grams",
+          "id"
+        ],
+        "title": "SkuRead"
+      },
+      "SkuUpdate": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Code",
+            "description": "全局唯一 SKU 编码"
+          },
+          "specifications": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Specifications",
+            "description": "规格组合，无规格为默认 SKU"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)"
+              }
+            ],
+            "title": "Price",
+            "description": "基础售价人民币元"
+          },
+          "weight_grams": {
+            "type": "integer",
+            "maximum": 1000000000.0,
+            "minimum": 0.0,
+            "title": "Weight Grams",
+            "description": "重量克数，虚拟商品为零"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "是否启用 SKU",
+            "default": true
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "商品当前版本，变体编辑共用商品版本"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "price",
+          "weight_grams",
+          "revision"
+        ],
+        "title": "SkuUpdate"
       },
       "StatusUpdateIn": {
         "properties": {

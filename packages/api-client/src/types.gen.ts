@@ -29,6 +29,222 @@ export type ActionResult = {
 };
 
 /**
+ * AddressInput
+ */
+export type AddressInput = {
+    /**
+     * Receiver Name
+     *
+     * 收件人姓名
+     */
+    receiver_name: string;
+    /**
+     * Mobile
+     *
+     * 收件联系电话，可含国际区号
+     */
+    mobile: string;
+    /**
+     * Province Code
+     *
+     * 省份行政编码
+     */
+    province_code: string;
+    /**
+     * City Code
+     *
+     * 城市行政编码
+     */
+    city_code: string;
+    /**
+     * District Code
+     *
+     * 区县行政编码
+     */
+    district_code: string;
+    /**
+     * Province
+     *
+     * 省份名称
+     */
+    province: string;
+    /**
+     * City
+     *
+     * 城市名称
+     */
+    city: string;
+    /**
+     * District
+     *
+     * 区县名称
+     */
+    district: string;
+    /**
+     * Street Address
+     *
+     * 详细收货地址
+     */
+    street_address: string;
+    /**
+     * Is Default
+     *
+     * 是否设为默认地址
+     */
+    is_default?: boolean;
+};
+
+/**
+ * AddressRead
+ */
+export type AddressRead = {
+    /**
+     * Receiver Name
+     *
+     * 收件人姓名
+     */
+    receiver_name: string;
+    /**
+     * Mobile
+     *
+     * 收件联系电话，可含国际区号
+     */
+    mobile: string;
+    /**
+     * Province Code
+     *
+     * 省份行政编码
+     */
+    province_code: string;
+    /**
+     * City Code
+     *
+     * 城市行政编码
+     */
+    city_code: string;
+    /**
+     * District Code
+     *
+     * 区县行政编码
+     */
+    district_code: string;
+    /**
+     * Province
+     *
+     * 省份名称
+     */
+    province: string;
+    /**
+     * City
+     *
+     * 城市名称
+     */
+    city: string;
+    /**
+     * District
+     *
+     * 区县名称
+     */
+    district: string;
+    /**
+     * Street Address
+     *
+     * 详细收货地址
+     */
+    street_address: string;
+    /**
+     * Is Default
+     *
+     * 是否设为默认地址
+     */
+    is_default?: boolean;
+    /**
+     * Id
+     *
+     * 收货地址 ID
+     */
+    id: string;
+    /**
+     * Revision
+     *
+     * 当前编辑版本
+     */
+    revision: number;
+};
+
+/**
+ * AddressUpdate
+ */
+export type AddressUpdate = {
+    /**
+     * Receiver Name
+     *
+     * 收件人姓名
+     */
+    receiver_name: string;
+    /**
+     * Mobile
+     *
+     * 收件联系电话，可含国际区号
+     */
+    mobile: string;
+    /**
+     * Province Code
+     *
+     * 省份行政编码
+     */
+    province_code: string;
+    /**
+     * City Code
+     *
+     * 城市行政编码
+     */
+    city_code: string;
+    /**
+     * District Code
+     *
+     * 区县行政编码
+     */
+    district_code: string;
+    /**
+     * Province
+     *
+     * 省份名称
+     */
+    province: string;
+    /**
+     * City
+     *
+     * 城市名称
+     */
+    city: string;
+    /**
+     * District
+     *
+     * 区县名称
+     */
+    district: string;
+    /**
+     * Street Address
+     *
+     * 详细收货地址
+     */
+    street_address: string;
+    /**
+     * Is Default
+     *
+     * 是否设为默认地址
+     */
+    is_default?: boolean;
+    /**
+     * Revision
+     *
+     * 读取地址时获得的编辑版本
+     */
+    revision: number;
+};
+
+/**
  * AdminAuthSessionOut
  */
 export type AdminAuthSessionOut = {
@@ -751,6 +967,114 @@ export type BodyUploadAssetApiV1AssetsUploadPost = {
 };
 
 /**
+ * CategoryInput
+ */
+export type CategoryInput = {
+    /**
+     * Name
+     *
+     * 分类名称
+     */
+    name: string;
+    /**
+     * Parent Id
+     *
+     * 父分类 ID，根分类为空
+     */
+    parent_id?: string | null;
+    /**
+     * Sort Order
+     *
+     * 排序值
+     */
+    sort_order?: number;
+    /**
+     * Is Active
+     *
+     * 分类是否启用
+     */
+    is_active?: boolean;
+};
+
+/**
+ * CategoryRead
+ */
+export type CategoryRead = {
+    /**
+     * Name
+     *
+     * 分类名称
+     */
+    name: string;
+    /**
+     * Parent Id
+     *
+     * 父分类 ID，根分类为空
+     */
+    parent_id?: string | null;
+    /**
+     * Sort Order
+     *
+     * 排序值
+     */
+    sort_order?: number;
+    /**
+     * Is Active
+     *
+     * 分类是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Id
+     *
+     * 分类 ID
+     */
+    id: string;
+    /**
+     * Revision
+     *
+     * 分类版本
+     */
+    revision: number;
+};
+
+/**
+ * CategoryUpdate
+ */
+export type CategoryUpdate = {
+    /**
+     * Name
+     *
+     * 分类名称
+     */
+    name: string;
+    /**
+     * Parent Id
+     *
+     * 父分类 ID，根分类为空
+     */
+    parent_id?: string | null;
+    /**
+     * Sort Order
+     *
+     * 排序值
+     */
+    sort_order?: number;
+    /**
+     * Is Active
+     *
+     * 分类是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Revision
+     *
+     * 读取分类时获得的版本
+     */
+    revision: number;
+};
+
+/**
  * ConfirmationAction
  */
 export type ConfirmationAction = 'users:disable' | 'users:credentials:reset' | 'users:sessions:revoke' | 'admins:create' | 'admins:superuser:change' | 'admins:status:change' | 'admins:credentials:reset' | 'admins:roles:assign' | 'admins:sessions:revoke' | 'roles:delete' | 'roles:permissions:assign' | 'assets:delete';
@@ -777,6 +1101,66 @@ export type DatabaseHealthRead = {
      * 诊断详情，如 migration_heads_matched 或错误原因
      */
     details: string;
+};
+
+/**
+ * FreightQuote
+ */
+export type FreightQuote = {
+    /**
+     * Template Id
+     *
+     * 运费模板 ID
+     */
+    template_id: string;
+    /**
+     * Revision
+     *
+     * 计费规则版本
+     */
+    revision: number;
+    /**
+     * Freight
+     *
+     * 运费人民币元
+     */
+    freight: string;
+    /**
+     * Free Shipping
+     *
+     * 是否满足包邮条件
+     */
+    free_shipping: boolean;
+};
+
+/**
+ * FreightQuoteInput
+ */
+export type FreightQuoteInput = {
+    /**
+     * Province Code
+     *
+     * 收货省份行政编码
+     */
+    province_code: string;
+    /**
+     * Pieces
+     *
+     * 总件数
+     */
+    pieces: number;
+    /**
+     * Weight Grams
+     *
+     * 总重量克数
+     */
+    weight_grams: number;
+    /**
+     * Items Amount
+     *
+     * 商品金额，不含运费
+     */
+    items_amount: number | string;
 };
 
 /**
@@ -811,6 +1195,138 @@ export type InfrastructureOverviewRead = {
      * 认证与会话安全机制摘要
      */
     security: SecurityConfigurationRead;
+};
+
+/**
+ * InventoryAdjustment
+ */
+export type InventoryAdjustment = {
+    /**
+     * Request Id
+     *
+     * 同 SKU 内唯一的业务幂等号
+     */
+    request_id: string;
+    /**
+     * Revision
+     *
+     * 读取库存时获得的版本
+     */
+    revision: number;
+    /**
+     * Quantity Delta
+     *
+     * 增加为正，减少为负，禁止零
+     */
+    quantity_delta: number;
+    /**
+     * Reason
+     *
+     * 库存调整原因
+     */
+    reason: string;
+};
+
+/**
+ * InventoryMovementRead
+ */
+export type InventoryMovementRead = {
+    /**
+     * Id
+     *
+     * 流水 ID
+     */
+    id: string;
+    /**
+     * Sku Id
+     *
+     * SKU ID
+     */
+    sku_id: string;
+    /**
+     * Request Id
+     *
+     * 幂等请求 ID
+     */
+    request_id: string;
+    /**
+     * Actor Id
+     *
+     * 操作管理员 ID
+     */
+    actor_id: string;
+    /**
+     * Quantity Delta
+     *
+     * 调整数量
+     */
+    quantity_delta: number;
+    /**
+     * Before Available
+     *
+     * 调整前可售库存
+     */
+    before_available: number;
+    /**
+     * After Available
+     *
+     * 调整后可售库存
+     */
+    after_available: number;
+    /**
+     * Expected Revision
+     *
+     * 请求期望版本
+     */
+    expected_revision: number;
+    /**
+     * Resulting Revision
+     *
+     * 完成后版本
+     */
+    resulting_revision: number;
+    /**
+     * Reason
+     *
+     * 调整原因
+     */
+    reason: string;
+    /**
+     * Created At
+     *
+     * 流水创建时间
+     */
+    created_at: string;
+};
+
+/**
+ * InventoryRead
+ */
+export type InventoryRead = {
+    /**
+     * Sku Id
+     *
+     * SKU ID
+     */
+    sku_id: string;
+    /**
+     * Available
+     *
+     * 当前可售库存
+     */
+    available: number;
+    /**
+     * Reserved
+     *
+     * 订单占用库存
+     */
+    reserved: number;
+    /**
+     * Revision
+     *
+     * 库存版本
+     */
+    revision: number;
 };
 
 /**
@@ -1036,6 +1552,42 @@ export type PageResultAuditEventRead = {
 };
 
 /**
+ * PageResult[InventoryMovementRead]
+ */
+export type PageResultInventoryMovementRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<InventoryMovementRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
  * PageResult[LoginEventRead]
  */
 export type PageResultLoginEventRead = {
@@ -1045,6 +1597,78 @@ export type PageResultLoginEventRead = {
      * 当前分页中的资源列表
      */
     items: Array<LoginEventRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[ProductRead]
+ */
+export type PageResultProductRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<ProductRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[PublicProductRead]
+ */
+export type PageResultPublicProductRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<PublicProductRead>;
     /**
      * Page
      *
@@ -1180,6 +1804,42 @@ export type PageResultSessionRead = {
 };
 
 /**
+ * PageResult[ShippingTemplateRead]
+ */
+export type PageResultShippingTemplateRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<ShippingTemplateRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
  * PasswordChangeIn
  */
 export type PasswordChangeIn = {
@@ -1255,6 +1915,234 @@ export type PermissionRead = {
      * 该权限是否允许分配给普通角色
      */
     assignable_to_roles: boolean;
+};
+
+/**
+ * ProductCreate
+ */
+export type ProductCreate = {
+    /**
+     * Name
+     *
+     * 商品名称
+     */
+    name: string;
+    /**
+     * Description
+     *
+     * 纯文本商品说明
+     */
+    description?: string;
+    /**
+     * Product Type
+     *
+     * 实物或虚拟商品
+     */
+    product_type: 'physical' | 'virtual';
+    /**
+     * Category Id
+     *
+     * 所属分类 ID
+     */
+    category_id: string;
+    /**
+     * Shipping Template Id
+     *
+     * 实物运费模板，虚拟商品为空
+     */
+    shipping_template_id?: string | null;
+    /**
+     * Image Asset Ids
+     *
+     * 有序图片资产 ID，首张为主图
+     */
+    image_asset_ids?: Array<string>;
+    /**
+     * Skus
+     *
+     * 初始 SKU，无规格也需默认 SKU
+     */
+    skus: Array<SkuInput>;
+};
+
+/**
+ * ProductRead
+ */
+export type ProductRead = {
+    /**
+     * Name
+     *
+     * 商品名称
+     */
+    name: string;
+    /**
+     * Description
+     *
+     * 纯文本商品说明
+     */
+    description?: string;
+    /**
+     * Product Type
+     *
+     * 实物或虚拟商品
+     */
+    product_type: 'physical' | 'virtual';
+    /**
+     * Category Id
+     *
+     * 所属分类 ID
+     */
+    category_id: string;
+    /**
+     * Shipping Template Id
+     *
+     * 实物运费模板，虚拟商品为空
+     */
+    shipping_template_id?: string | null;
+    /**
+     * Image Asset Ids
+     *
+     * 有序图片资产 ID，首张为主图
+     */
+    image_asset_ids?: Array<string>;
+    /**
+     * Id
+     *
+     * 商品 ID
+     */
+    id: string;
+    /**
+     * Status
+     *
+     * 商品状态
+     */
+    status: 'draft' | 'on_sale' | 'off_sale';
+    /**
+     * Revision
+     *
+     * 商品版本
+     */
+    revision: number;
+    /**
+     * Skus
+     *
+     * 商品全部 SKU
+     */
+    skus: Array<SkuRead>;
+};
+
+/**
+ * ProductStatusUpdate
+ */
+export type ProductStatusUpdate = {
+    /**
+     * Revision
+     *
+     * 读取商品时获得的版本
+     */
+    revision: number;
+    /**
+     * Status
+     *
+     * 上架或下架
+     */
+    status: 'on_sale' | 'off_sale';
+};
+
+/**
+ * ProductUpdate
+ */
+export type ProductUpdate = {
+    /**
+     * Name
+     *
+     * 商品名称
+     */
+    name: string;
+    /**
+     * Description
+     *
+     * 纯文本商品说明
+     */
+    description?: string;
+    /**
+     * Product Type
+     *
+     * 实物或虚拟商品
+     */
+    product_type: 'physical' | 'virtual';
+    /**
+     * Category Id
+     *
+     * 所属分类 ID
+     */
+    category_id: string;
+    /**
+     * Shipping Template Id
+     *
+     * 实物运费模板，虚拟商品为空
+     */
+    shipping_template_id?: string | null;
+    /**
+     * Image Asset Ids
+     *
+     * 有序图片资产 ID，首张为主图
+     */
+    image_asset_ids?: Array<string>;
+    /**
+     * Revision
+     *
+     * 读取商品时获得的版本
+     */
+    revision: number;
+};
+
+/**
+ * PublicProductRead
+ */
+export type PublicProductRead = {
+    /**
+     * Id
+     *
+     * 商品 ID
+     */
+    id: string;
+    /**
+     * Name
+     *
+     * 商品名称
+     */
+    name: string;
+    /**
+     * Description
+     *
+     * 商品纯文本说明
+     */
+    description: string;
+    /**
+     * Product Type
+     *
+     * 商品类型
+     */
+    product_type: 'physical' | 'virtual';
+    /**
+     * Category Id
+     *
+     * 分类 ID
+     */
+    category_id: string;
+    /**
+     * Images
+     *
+     * 图片公开地址
+     */
+    images: Array<string>;
+    /**
+     * Skus
+     *
+     * 启用中的商品变体
+     */
+    skus: Array<SkuRead>;
 };
 
 /**
@@ -1441,6 +2329,34 @@ export type ResponseModelActionResult = {
      * 响应业务数据
      */
     data: ActionResult;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[AddressRead]
+ */
+export type ResponseModelAddressRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: AddressRead;
     /**
      * Request Id
      *
@@ -1702,6 +2618,148 @@ export type ResponseModelBatchActionResult = {
 };
 
 /**
+ * ResponseModel[CategoryRead]
+ */
+export type ResponseModelCategoryRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: CategoryRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[FreightQuote]
+ */
+export type ResponseModelFreightQuote = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: FreightQuote;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[InventoryMovementRead]
+ */
+export type ResponseModelInventoryMovementRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: InventoryMovementRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[InventoryRead]
+ */
+export type ResponseModelInventoryRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: InventoryRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[NoneType]
+ */
+export type ResponseModelNoneType = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * Data
+     *
+     * 响应业务数据
+     */
+    data: null;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[PageResult[AdminRead]]
  */
 export type ResponseModelPageResultAdminRead = {
@@ -1814,6 +2872,34 @@ export type ResponseModelPageResultAuditEventRead = {
 };
 
 /**
+ * ResponseModel[PageResult[InventoryMovementRead]]
+ */
+export type ResponseModelPageResultInventoryMovementRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultInventoryMovementRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[PageResult[LoginEventRead]]
  */
 export type ResponseModelPageResultLoginEventRead = {
@@ -1833,6 +2919,62 @@ export type ResponseModelPageResultLoginEventRead = {
      * 响应业务数据
      */
     data: PageResultLoginEventRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[ProductRead]]
+ */
+export type ResponseModelPageResultProductRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultProductRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[PublicProductRead]]
+ */
+export type ResponseModelPageResultPublicProductRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultPublicProductRead;
     /**
      * Request Id
      *
@@ -1926,6 +3068,90 @@ export type ResponseModelPageResultSessionRead = {
 };
 
 /**
+ * ResponseModel[PageResult[ShippingTemplateRead]]
+ */
+export type ResponseModelPageResultShippingTemplateRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultShippingTemplateRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[ProductRead]
+ */
+export type ResponseModelProductRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: ProductRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PublicProductRead]
+ */
+export type ResponseModelPublicProductRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PublicProductRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[RefreshSessionOut]
  */
 export type ResponseModelRefreshSessionOut = {
@@ -1973,6 +3199,34 @@ export type ResponseModelRoleRead = {
      * 响应业务数据
      */
     data: RoleRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[ShippingTemplateRead]
+ */
+export type ResponseModelShippingTemplateRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: ShippingTemplateRead;
     /**
      * Request Id
      *
@@ -2180,6 +3434,36 @@ export type ResponseModelBool = {
 };
 
 /**
+ * ResponseModel[list[AddressRead]]
+ */
+export type ResponseModelListAddressRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * Data
+     *
+     * 响应业务数据
+     */
+    data: Array<AddressRead>;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[list[AdminRead]]
  */
 export type ResponseModelListAdminRead = {
@@ -2201,6 +3485,36 @@ export type ResponseModelListAdminRead = {
      * 响应业务数据
      */
     data: Array<AdminRead>;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[list[CategoryRead]]
+ */
+export type ResponseModelListCategoryRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * Data
+     *
+     * 响应业务数据
+     */
+    data: Array<CategoryRead>;
     /**
      * Request Id
      *
@@ -2504,6 +3818,222 @@ export type SessionRead = {
 };
 
 /**
+ * ShippingRegion
+ */
+export type ShippingRegionInput = {
+    /**
+     * Provinces
+     *
+     * 省份行政编码，空数组表示唯一默认地区
+     */
+    provinces: Array<string>;
+    /**
+     * First Unit
+     *
+     * 首件数或首重克数
+     */
+    first_unit: number;
+    /**
+     * First Price
+     *
+     * 首费，人民币元
+     */
+    first_price: number | string;
+    /**
+     * Additional Unit
+     *
+     * 续件数或续重克数
+     */
+    additional_unit: number;
+    /**
+     * Additional Price
+     *
+     * 每续单位费用，人民币元
+     */
+    additional_price: number | string;
+};
+
+/**
+ * ShippingRegion
+ */
+export type ShippingRegionOutput = {
+    /**
+     * Provinces
+     *
+     * 省份行政编码，空数组表示唯一默认地区
+     */
+    provinces: Array<string>;
+    /**
+     * First Unit
+     *
+     * 首件数或首重克数
+     */
+    first_unit: number;
+    /**
+     * First Price
+     *
+     * 首费，人民币元
+     */
+    first_price: string;
+    /**
+     * Additional Unit
+     *
+     * 续件数或续重克数
+     */
+    additional_unit: number;
+    /**
+     * Additional Price
+     *
+     * 每续单位费用，人民币元
+     */
+    additional_price: string;
+};
+
+/**
+ * ShippingTemplateInput
+ */
+export type ShippingTemplateInput = {
+    /**
+     * Name
+     *
+     * 模板名称
+     */
+    name: string;
+    /**
+     * Pricing Method
+     *
+     * 按件或按克计价
+     */
+    pricing_method: 'piece' | 'weight';
+    /**
+     * Regions
+     *
+     * 含唯一默认地区的计费规则
+     */
+    regions: Array<ShippingRegionInput>;
+    /**
+     * Free Shipping Threshold
+     *
+     * 包邮商品金额门槛，空表示不设置
+     */
+    free_shipping_threshold?: number | string | null;
+    /**
+     * Excluded Provinces
+     *
+     * 不参与满额包邮的省份
+     */
+    excluded_provinces?: Array<string>;
+    /**
+     * Is Active
+     *
+     * 是否允许使用
+     */
+    is_active?: boolean;
+};
+
+/**
+ * ShippingTemplateRead
+ */
+export type ShippingTemplateRead = {
+    /**
+     * Name
+     *
+     * 模板名称
+     */
+    name: string;
+    /**
+     * Pricing Method
+     *
+     * 按件或按克计价
+     */
+    pricing_method: 'piece' | 'weight';
+    /**
+     * Regions
+     *
+     * 含唯一默认地区的计费规则
+     */
+    regions: Array<ShippingRegionOutput>;
+    /**
+     * Free Shipping Threshold
+     *
+     * 包邮商品金额门槛，空表示不设置
+     */
+    free_shipping_threshold?: string | null;
+    /**
+     * Excluded Provinces
+     *
+     * 不参与满额包邮的省份
+     */
+    excluded_provinces?: Array<string>;
+    /**
+     * Is Active
+     *
+     * 是否允许使用
+     */
+    is_active?: boolean;
+    /**
+     * Id
+     *
+     * 运费模板 ID
+     */
+    id: string;
+    /**
+     * Revision
+     *
+     * 当前编辑版本
+     */
+    revision: number;
+};
+
+/**
+ * ShippingTemplateUpdate
+ */
+export type ShippingTemplateUpdate = {
+    /**
+     * Name
+     *
+     * 模板名称
+     */
+    name: string;
+    /**
+     * Pricing Method
+     *
+     * 按件或按克计价
+     */
+    pricing_method: 'piece' | 'weight';
+    /**
+     * Regions
+     *
+     * 含唯一默认地区的计费规则
+     */
+    regions: Array<ShippingRegionInput>;
+    /**
+     * Free Shipping Threshold
+     *
+     * 包邮商品金额门槛，空表示不设置
+     */
+    free_shipping_threshold?: number | string | null;
+    /**
+     * Excluded Provinces
+     *
+     * 不参与满额包邮的省份
+     */
+    excluded_provinces?: Array<string>;
+    /**
+     * Is Active
+     *
+     * 是否允许使用
+     */
+    is_active?: boolean;
+    /**
+     * Revision
+     *
+     * 读取模板时获得的编辑版本
+     */
+    revision: number;
+};
+
+/**
  * SiteLogoRead
  */
 export type SiteLogoRead = {
@@ -2597,6 +4127,132 @@ export type SiteSettingPatchIn = {
      * Web 默认站点描述
      */
     description?: string | null;
+};
+
+/**
+ * SkuInput
+ */
+export type SkuInput = {
+    /**
+     * Code
+     *
+     * 全局唯一 SKU 编码
+     */
+    code: string;
+    /**
+     * Specifications
+     *
+     * 规格组合，无规格为默认 SKU
+     */
+    specifications?: {
+        [key: string]: string;
+    };
+    /**
+     * Price
+     *
+     * 基础售价人民币元
+     */
+    price: number | string;
+    /**
+     * Weight Grams
+     *
+     * 重量克数，虚拟商品为零
+     */
+    weight_grams: number;
+    /**
+     * Is Active
+     *
+     * 是否启用 SKU
+     */
+    is_active?: boolean;
+};
+
+/**
+ * SkuRead
+ */
+export type SkuRead = {
+    /**
+     * Code
+     *
+     * 全局唯一 SKU 编码
+     */
+    code: string;
+    /**
+     * Specifications
+     *
+     * 规格组合，无规格为默认 SKU
+     */
+    specifications?: {
+        [key: string]: string;
+    };
+    /**
+     * Price
+     *
+     * 基础售价人民币元
+     */
+    price: string;
+    /**
+     * Weight Grams
+     *
+     * 重量克数，虚拟商品为零
+     */
+    weight_grams: number;
+    /**
+     * Is Active
+     *
+     * 是否启用 SKU
+     */
+    is_active?: boolean;
+    /**
+     * Id
+     *
+     * 稳定 SKU ID
+     */
+    id: string;
+};
+
+/**
+ * SkuUpdate
+ */
+export type SkuUpdate = {
+    /**
+     * Code
+     *
+     * 全局唯一 SKU 编码
+     */
+    code: string;
+    /**
+     * Specifications
+     *
+     * 规格组合，无规格为默认 SKU
+     */
+    specifications?: {
+        [key: string]: string;
+    };
+    /**
+     * Price
+     *
+     * 基础售价人民币元
+     */
+    price: number | string;
+    /**
+     * Weight Grams
+     *
+     * 重量克数，虚拟商品为零
+     */
+    weight_grams: number;
+    /**
+     * Is Active
+     *
+     * 是否启用 SKU
+     */
+    is_active?: boolean;
+    /**
+     * Revision
+     *
+     * 商品当前版本，变体编辑共用商品版本
+     */
+    revision: number;
 };
 
 /**
@@ -3042,6 +4698,758 @@ export type ValidationError = {
         [key: string]: unknown;
     };
 };
+
+export type AdminCategoriesApiV1AdminProductCategoriesGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/product-categories';
+};
+
+export type AdminCategoriesApiV1AdminProductCategoriesGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminCategoriesApiV1AdminProductCategoriesGetError = AdminCategoriesApiV1AdminProductCategoriesGetErrors[keyof AdminCategoriesApiV1AdminProductCategoriesGetErrors];
+
+export type AdminCategoriesApiV1AdminProductCategoriesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListCategoryRead;
+};
+
+export type AdminCategoriesApiV1AdminProductCategoriesGetResponse = AdminCategoriesApiV1AdminProductCategoriesGetResponses[keyof AdminCategoriesApiV1AdminProductCategoriesGetResponses];
+
+export type CreateCategoryApiV1AdminProductCategoriesPostData = {
+    body: CategoryInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/product-categories';
+};
+
+export type CreateCategoryApiV1AdminProductCategoriesPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CreateCategoryApiV1AdminProductCategoriesPostError = CreateCategoryApiV1AdminProductCategoriesPostErrors[keyof CreateCategoryApiV1AdminProductCategoriesPostErrors];
+
+export type CreateCategoryApiV1AdminProductCategoriesPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelCategoryRead;
+};
+
+export type CreateCategoryApiV1AdminProductCategoriesPostResponse = CreateCategoryApiV1AdminProductCategoriesPostResponses[keyof CreateCategoryApiV1AdminProductCategoriesPostResponses];
+
+export type UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutData = {
+    body: CategoryUpdate;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/product-categories/{category_id}';
+};
+
+export type UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutError = UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutErrors[keyof UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutErrors];
+
+export type UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCategoryRead;
+};
+
+export type UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutResponse = UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutResponses[keyof UpdateCategoryApiV1AdminProductCategoriesCategoryIdPutResponses];
+
+export type AdminProductsApiV1AdminProductsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/products';
+};
+
+export type AdminProductsApiV1AdminProductsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminProductsApiV1AdminProductsGetError = AdminProductsApiV1AdminProductsGetErrors[keyof AdminProductsApiV1AdminProductsGetErrors];
+
+export type AdminProductsApiV1AdminProductsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultProductRead;
+};
+
+export type AdminProductsApiV1AdminProductsGetResponse = AdminProductsApiV1AdminProductsGetResponses[keyof AdminProductsApiV1AdminProductsGetResponses];
+
+export type CreateProductApiV1AdminProductsPostData = {
+    body: ProductCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/products';
+};
+
+export type CreateProductApiV1AdminProductsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CreateProductApiV1AdminProductsPostError = CreateProductApiV1AdminProductsPostErrors[keyof CreateProductApiV1AdminProductsPostErrors];
+
+export type CreateProductApiV1AdminProductsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelProductRead;
+};
+
+export type CreateProductApiV1AdminProductsPostResponse = CreateProductApiV1AdminProductsPostResponses[keyof CreateProductApiV1AdminProductsPostResponses];
+
+export type AdminProductApiV1AdminProductsProductIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/products/{product_id}';
+};
+
+export type AdminProductApiV1AdminProductsProductIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminProductApiV1AdminProductsProductIdGetError = AdminProductApiV1AdminProductsProductIdGetErrors[keyof AdminProductApiV1AdminProductsProductIdGetErrors];
+
+export type AdminProductApiV1AdminProductsProductIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelProductRead;
+};
+
+export type AdminProductApiV1AdminProductsProductIdGetResponse = AdminProductApiV1AdminProductsProductIdGetResponses[keyof AdminProductApiV1AdminProductsProductIdGetResponses];
+
+export type UpdateProductApiV1AdminProductsProductIdPutData = {
+    body: ProductUpdate;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/products/{product_id}';
+};
+
+export type UpdateProductApiV1AdminProductsProductIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateProductApiV1AdminProductsProductIdPutError = UpdateProductApiV1AdminProductsProductIdPutErrors[keyof UpdateProductApiV1AdminProductsProductIdPutErrors];
+
+export type UpdateProductApiV1AdminProductsProductIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelProductRead;
+};
+
+export type UpdateProductApiV1AdminProductsProductIdPutResponse = UpdateProductApiV1AdminProductsProductIdPutResponses[keyof UpdateProductApiV1AdminProductsProductIdPutResponses];
+
+export type SetProductStatusApiV1AdminProductsProductIdStatusPutData = {
+    body: ProductStatusUpdate;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/products/{product_id}/status';
+};
+
+export type SetProductStatusApiV1AdminProductsProductIdStatusPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type SetProductStatusApiV1AdminProductsProductIdStatusPutError = SetProductStatusApiV1AdminProductsProductIdStatusPutErrors[keyof SetProductStatusApiV1AdminProductsProductIdStatusPutErrors];
+
+export type SetProductStatusApiV1AdminProductsProductIdStatusPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelProductRead;
+};
+
+export type SetProductStatusApiV1AdminProductsProductIdStatusPutResponse = SetProductStatusApiV1AdminProductsProductIdStatusPutResponses[keyof SetProductStatusApiV1AdminProductsProductIdStatusPutResponses];
+
+export type CreateSkuApiV1AdminProductsProductIdSkusPostData = {
+    body: SkuUpdate;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/products/{product_id}/skus';
+};
+
+export type CreateSkuApiV1AdminProductsProductIdSkusPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CreateSkuApiV1AdminProductsProductIdSkusPostError = CreateSkuApiV1AdminProductsProductIdSkusPostErrors[keyof CreateSkuApiV1AdminProductsProductIdSkusPostErrors];
+
+export type CreateSkuApiV1AdminProductsProductIdSkusPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelProductRead;
+};
+
+export type CreateSkuApiV1AdminProductsProductIdSkusPostResponse = CreateSkuApiV1AdminProductsProductIdSkusPostResponses[keyof CreateSkuApiV1AdminProductsProductIdSkusPostResponses];
+
+export type UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutData = {
+    body: SkuUpdate;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+        /**
+         * Sku Id
+         */
+        sku_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/products/{product_id}/skus/{sku_id}';
+};
+
+export type UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutError = UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutErrors[keyof UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutErrors];
+
+export type UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelProductRead;
+};
+
+export type UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutResponse = UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutResponses[keyof UpdateSkuApiV1AdminProductsProductIdSkusSkuIdPutResponses];
+
+export type InventoryReadApiV1AdminInventorySkuIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Sku Id
+         */
+        sku_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/inventory/{sku_id}';
+};
+
+export type InventoryReadApiV1AdminInventorySkuIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type InventoryReadApiV1AdminInventorySkuIdGetError = InventoryReadApiV1AdminInventorySkuIdGetErrors[keyof InventoryReadApiV1AdminInventorySkuIdGetErrors];
+
+export type InventoryReadApiV1AdminInventorySkuIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelInventoryRead;
+};
+
+export type InventoryReadApiV1AdminInventorySkuIdGetResponse = InventoryReadApiV1AdminInventorySkuIdGetResponses[keyof InventoryReadApiV1AdminInventorySkuIdGetResponses];
+
+export type InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostData = {
+    body: InventoryAdjustment;
+    path: {
+        /**
+         * Sku Id
+         */
+        sku_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/inventory/{sku_id}/adjustments';
+};
+
+export type InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostError = InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostErrors[keyof InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostErrors];
+
+export type InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelInventoryMovementRead;
+};
+
+export type InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostResponse = InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostResponses[keyof InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostResponses];
+
+export type InventoryHistoryApiV1AdminInventorySkuIdMovementsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Sku Id
+         */
+        sku_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/inventory/{sku_id}/movements';
+};
+
+export type InventoryHistoryApiV1AdminInventorySkuIdMovementsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type InventoryHistoryApiV1AdminInventorySkuIdMovementsGetError = InventoryHistoryApiV1AdminInventorySkuIdMovementsGetErrors[keyof InventoryHistoryApiV1AdminInventorySkuIdMovementsGetErrors];
+
+export type InventoryHistoryApiV1AdminInventorySkuIdMovementsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultInventoryMovementRead;
+};
+
+export type InventoryHistoryApiV1AdminInventorySkuIdMovementsGetResponse = InventoryHistoryApiV1AdminInventorySkuIdMovementsGetResponses[keyof InventoryHistoryApiV1AdminInventorySkuIdMovementsGetResponses];
+
+export type ShippingPageApiV1AdminShippingTemplatesGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/shipping-templates';
+};
+
+export type ShippingPageApiV1AdminShippingTemplatesGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ShippingPageApiV1AdminShippingTemplatesGetError = ShippingPageApiV1AdminShippingTemplatesGetErrors[keyof ShippingPageApiV1AdminShippingTemplatesGetErrors];
+
+export type ShippingPageApiV1AdminShippingTemplatesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultShippingTemplateRead;
+};
+
+export type ShippingPageApiV1AdminShippingTemplatesGetResponse = ShippingPageApiV1AdminShippingTemplatesGetResponses[keyof ShippingPageApiV1AdminShippingTemplatesGetResponses];
+
+export type ShippingCreateApiV1AdminShippingTemplatesPostData = {
+    body: ShippingTemplateInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/shipping-templates';
+};
+
+export type ShippingCreateApiV1AdminShippingTemplatesPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ShippingCreateApiV1AdminShippingTemplatesPostError = ShippingCreateApiV1AdminShippingTemplatesPostErrors[keyof ShippingCreateApiV1AdminShippingTemplatesPostErrors];
+
+export type ShippingCreateApiV1AdminShippingTemplatesPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelShippingTemplateRead;
+};
+
+export type ShippingCreateApiV1AdminShippingTemplatesPostResponse = ShippingCreateApiV1AdminShippingTemplatesPostResponses[keyof ShippingCreateApiV1AdminShippingTemplatesPostResponses];
+
+export type ShippingReadApiV1AdminShippingTemplatesTemplateIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Template Id
+         */
+        template_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/shipping-templates/{template_id}';
+};
+
+export type ShippingReadApiV1AdminShippingTemplatesTemplateIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ShippingReadApiV1AdminShippingTemplatesTemplateIdGetError = ShippingReadApiV1AdminShippingTemplatesTemplateIdGetErrors[keyof ShippingReadApiV1AdminShippingTemplatesTemplateIdGetErrors];
+
+export type ShippingReadApiV1AdminShippingTemplatesTemplateIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelShippingTemplateRead;
+};
+
+export type ShippingReadApiV1AdminShippingTemplatesTemplateIdGetResponse = ShippingReadApiV1AdminShippingTemplatesTemplateIdGetResponses[keyof ShippingReadApiV1AdminShippingTemplatesTemplateIdGetResponses];
+
+export type ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutData = {
+    body: ShippingTemplateUpdate;
+    path: {
+        /**
+         * Template Id
+         */
+        template_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/shipping-templates/{template_id}';
+};
+
+export type ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutError = ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutErrors[keyof ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutErrors];
+
+export type ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelShippingTemplateRead;
+};
+
+export type ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutResponse = ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutResponses[keyof ShippingUpdateApiV1AdminShippingTemplatesTemplateIdPutResponses];
+
+export type ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostData = {
+    body: FreightQuoteInput;
+    path: {
+        /**
+         * Template Id
+         */
+        template_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/shipping-templates/{template_id}/quote';
+};
+
+export type ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostError = ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostErrors[keyof ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostErrors];
+
+export type ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelFreightQuote;
+};
+
+export type ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostResponse = ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostResponses[keyof ShippingQuoteApiV1AdminShippingTemplatesTemplateIdQuotePostResponses];
+
+export type PublicCategoriesApiV1ProductCategoriesGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/product-categories';
+};
+
+export type PublicCategoriesApiV1ProductCategoriesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListCategoryRead;
+};
+
+export type PublicCategoriesApiV1ProductCategoriesGetResponse = PublicCategoriesApiV1ProductCategoriesGetResponses[keyof PublicCategoriesApiV1ProductCategoriesGetResponses];
+
+export type PublicProductsApiV1ProductsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/products';
+};
+
+export type PublicProductsApiV1ProductsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PublicProductsApiV1ProductsGetError = PublicProductsApiV1ProductsGetErrors[keyof PublicProductsApiV1ProductsGetErrors];
+
+export type PublicProductsApiV1ProductsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultPublicProductRead;
+};
+
+export type PublicProductsApiV1ProductsGetResponse = PublicProductsApiV1ProductsGetResponses[keyof PublicProductsApiV1ProductsGetResponses];
+
+export type PublicProductApiV1ProductsProductIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/products/{product_id}';
+};
+
+export type PublicProductApiV1ProductsProductIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PublicProductApiV1ProductsProductIdGetError = PublicProductApiV1ProductsProductIdGetErrors[keyof PublicProductApiV1ProductsProductIdGetErrors];
+
+export type PublicProductApiV1ProductsProductIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPublicProductRead;
+};
+
+export type PublicProductApiV1ProductsProductIdGetResponse = PublicProductApiV1ProductsProductIdGetResponses[keyof PublicProductApiV1ProductsProductIdGetResponses];
+
+export type AddressesListApiV1AddressesGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/addresses';
+};
+
+export type AddressesListApiV1AddressesGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AddressesListApiV1AddressesGetError = AddressesListApiV1AddressesGetErrors[keyof AddressesListApiV1AddressesGetErrors];
+
+export type AddressesListApiV1AddressesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListAddressRead;
+};
+
+export type AddressesListApiV1AddressesGetResponse = AddressesListApiV1AddressesGetResponses[keyof AddressesListApiV1AddressesGetResponses];
+
+export type AddressCreateApiV1AddressesPostData = {
+    body: AddressInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/addresses';
+};
+
+export type AddressCreateApiV1AddressesPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AddressCreateApiV1AddressesPostError = AddressCreateApiV1AddressesPostErrors[keyof AddressCreateApiV1AddressesPostErrors];
+
+export type AddressCreateApiV1AddressesPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelAddressRead;
+};
+
+export type AddressCreateApiV1AddressesPostResponse = AddressCreateApiV1AddressesPostResponses[keyof AddressCreateApiV1AddressesPostResponses];
+
+export type AddressDeleteApiV1AddressesAddressIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Address Id
+         */
+        address_id: string;
+    };
+    query: {
+        /**
+         * Revision
+         */
+        revision: number;
+    };
+    url: '/api/v1/addresses/{address_id}';
+};
+
+export type AddressDeleteApiV1AddressesAddressIdDeleteErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AddressDeleteApiV1AddressesAddressIdDeleteError = AddressDeleteApiV1AddressesAddressIdDeleteErrors[keyof AddressDeleteApiV1AddressesAddressIdDeleteErrors];
+
+export type AddressDeleteApiV1AddressesAddressIdDeleteResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelNoneType;
+};
+
+export type AddressDeleteApiV1AddressesAddressIdDeleteResponse = AddressDeleteApiV1AddressesAddressIdDeleteResponses[keyof AddressDeleteApiV1AddressesAddressIdDeleteResponses];
+
+export type AddressUpdateApiV1AddressesAddressIdPutData = {
+    body: AddressUpdate;
+    path: {
+        /**
+         * Address Id
+         */
+        address_id: string;
+    };
+    query?: never;
+    url: '/api/v1/addresses/{address_id}';
+};
+
+export type AddressUpdateApiV1AddressesAddressIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AddressUpdateApiV1AddressesAddressIdPutError = AddressUpdateApiV1AddressesAddressIdPutErrors[keyof AddressUpdateApiV1AddressesAddressIdPutErrors];
+
+export type AddressUpdateApiV1AddressesAddressIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelAddressRead;
+};
+
+export type AddressUpdateApiV1AddressesAddressIdPutResponse = AddressUpdateApiV1AddressesAddressIdPutResponses[keyof AddressUpdateApiV1AddressesAddressIdPutResponses];
 
 export type RegisterApiV1AuthRegisterPostData = {
     body: UserRegisterIn;

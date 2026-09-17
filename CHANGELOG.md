@@ -6,6 +6,8 @@
 
 ### Added
 
+- 落地商城后端 M1：三级分类、商品与稳定 SKU、图片引用保护、独立库存与幂等调整流水、本人收货地址、运费模板与 Decimal 试算；同步八张表的迁移文件、精确管理权限、审计、OpenAPI 和生成客户端，建立统一需求与四阶段计划。数据库迁移、权限同步、pytest 和真实并发验证未执行，交易、支付及分销仍为后续阶段。
+
 - 完成独立商城基线校正：项目身份、PRD、Backend 默认名称与 OpenAPI 契约统一为 `pinjie-mall`；CNB、TCR、GitHub Actions、Compose、发布与运维文档收敛为 Backend 和 Admin 两端。微信小程序确立为唯一 C 端的后续实现方向，`apps/web` 历史源码冻结保留，启动、构建、测试、镜像、发布、部署和 E2E 入口均已阻断或移除。远端商城资源、重型测试与生产部署未执行。
 
 - 手动 `CI - Full Validation` 增加默认 full、可选 smoke：smoke 跳过 Admin/Web Vitest 和 coverage，保留 Backend pytest、生产构建、四项目入口页面基线和桌面 Stage C；full v2 与 smoke v1 证据隔离，模式及 strict 拒绝 smoke 的 Guard 接入本地与 CI。Handoff 保持 strict/fast，fast 不主动核验 smoke；Admin 并发和候选镜像工作流保持原配置，真实 full/smoke 与发布部署未执行。
