@@ -260,50 +260,53 @@ class OrderService:
 
     async def confirm_payment(self, order_id: UUID, payment_reference: str, confirmed_at: datetime) -> OrderRead:
         async with transaction_scope(self.session):
-            order = await self.repository.order_by_id(order_id, lock=True)
-            if order is None:
-                raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
-            if order.status == "paid":
-                if order.payment_reference != payment_reference:
-                    raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="支付确认标识冲突")
-                return await self._read(order, order.user_id)
-            if order.status != "pending_payment":
-                raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前订单不能确认支付")
-            if confirmed_at.tzinfo is None:
-                raise AppException(
-                    status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="支付确认时间必须包含时区"
-                )
-            if confirmed_at.astimezone(UTC) >= order.expires_at:
-                raise AppException(
-                    status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="支付确认已超过订单支付时限"
-                )
-            reservations = await self.repository.reservations(order.id, lock=True)
-            accounts = await self.repository.inventory_accounts([item.sku_id for item in reservations])
-            account_by_sku = {account.sku_id: account for account in accounts}
-            for reservation in reservations:
-                if reservation.status != "reserved":
-                    raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="库存占用状态异常")
-                account = account_by_sku[reservation.sku_id]
-                account.reserved -= reservation.quantity
-                reservation.status = "confirmed"
-                reservation.revision += 1
-            order.status = "paid"
-            order.paid_at = confirmed_at
-            order.payment_reference = payment_reference
-            order.revision += 1
-            await self.repository.save(order)
-            await self.repository.save(
-                OrderEvent(
-                    order_id=order.id,
-                    revision=order.revision,
-                    from_status="pending_payment",
-                    to_status="paid",
-                    actor_type="payment",
-                    actor_id=None,
-                    reason="可信支付确认",
-                )
-            )
+            return await self.confirm_payment_in_open_transaction(order_id, payment_reference, confirmed_at)
+
+    async def confirm_payment_in_open_transaction(
+        self, order_id: UUID, payment_reference: str, confirmed_at: datetime
+    ) -> OrderRead:
+        order = await self.repository.order_by_id(order_id, lock=True)
+        if order is None:
+            raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
+        if order.status == "paid":
+            if order.payment_reference != payment_reference:
+                raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="支付确认标识冲突")
             return await self._read(order, order.user_id)
+        if order.status != "pending_payment":
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前订单不能确认支付")
+        if confirmed_at.tzinfo is None:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="支付确认时间必须包含时区")
+        if confirmed_at.astimezone(UTC) >= order.expires_at:
+            raise AppException(
+                status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="支付确认已超过订单支付时限"
+            )
+        reservations = await self.repository.reservations(order.id, lock=True)
+        accounts = await self.repository.inventory_accounts([item.sku_id for item in reservations])
+        account_by_sku = {account.sku_id: account for account in accounts}
+        for reservation in reservations:
+            if reservation.status != "reserved":
+                raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="库存占用状态异常")
+            account = account_by_sku[reservation.sku_id]
+            account.reserved -= reservation.quantity
+            reservation.status = "confirmed"
+            reservation.revision += 1
+        order.status = "paid"
+        order.paid_at = confirmed_at
+        order.payment_reference = payment_reference
+        order.revision += 1
+        await self.repository.save(order)
+        await self.repository.save(
+            OrderEvent(
+                order_id=order.id,
+                revision=order.revision,
+                from_status="pending_payment",
+                to_status="paid",
+                actor_type="payment",
+                actor_id=None,
+                reason="可信支付确认",
+            )
+        )
+        return await self._read(order, order.user_id)
 
     async def expire_due(self, limit: int = 100) -> int:
         now = datetime.now(UTC)

@@ -1312,6 +1312,60 @@ export type FreightQuoteInput = {
 };
 
 /**
+ * FulfillmentRead
+ */
+export type FulfillmentRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Order Id
+     */
+    order_id: string;
+    /**
+     * Product Type
+     */
+    product_type: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: string;
+    /**
+     * Carrier
+     */
+    carrier: string | null;
+    /**
+     * Tracking Number
+     */
+    tracking_number: string | null;
+    /**
+     * Delivery Reference
+     */
+    delivery_reference: string | null;
+    /**
+     * Shipped At
+     */
+    shipped_at: string | null;
+    /**
+     * Delivered At
+     */
+    delivered_at: string | null;
+    /**
+     * Auto Confirm At
+     */
+    auto_confirm_at: string | null;
+    /**
+     * Revision
+     */
+    revision: number;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -1912,6 +1966,42 @@ export type PageResultProductRead = {
 };
 
 /**
+ * PageResult[ProductReviewRead]
+ */
+export type PageResultProductReviewRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<ProductReviewRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
  * PageResult[PublicProductRead]
  */
 export type PageResultPublicProductRead = {
@@ -2122,6 +2212,70 @@ export type PasswordResetIn = {
 };
 
 /**
+ * PaymentAttemptCreate
+ */
+export type PaymentAttemptCreate = {
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+    /**
+     * Channel
+     */
+    channel: 'wechat' | 'alipay';
+};
+
+/**
+ * PaymentAttemptRead
+ */
+export type PaymentAttemptRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Order Id
+     */
+    order_id: string;
+    /**
+     * Channel
+     */
+    channel: 'wechat' | 'alipay';
+    /**
+     * Merchant Reference
+     */
+    merchant_reference: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: string;
+    /**
+     * Amount
+     */
+    amount: string;
+    /**
+     * Currency
+     */
+    currency: string;
+    /**
+     * Unavailable Reason
+     */
+    unavailable_reason: string | null;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+};
+
+/**
  * PermissionRead
  */
 export type PermissionRead = {
@@ -2281,6 +2435,48 @@ export type ProductRead = {
      * 商品全部 SKU
      */
     skus: Array<SkuRead>;
+};
+
+/**
+ * ProductReviewCreate
+ */
+export type ProductReviewCreate = {
+    /**
+     * Rating
+     */
+    rating: number;
+    /**
+     * Content
+     */
+    content?: string;
+};
+
+/**
+ * ProductReviewRead
+ */
+export type ProductReviewRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Product Id
+     */
+    product_id: string;
+    /**
+     * Rating
+     */
+    rating: number;
+    /**
+     * Content
+     */
+    content: string;
+    /**
+     * Published At
+     */
+    published_at: string;
 };
 
 /**
@@ -2474,6 +2670,104 @@ export type ReadinessStatus = {
 };
 
 /**
+ * ReceiptConfirm
+ */
+export type ReceiptConfirm = {
+    /**
+     * Revision
+     */
+    revision: number;
+};
+
+/**
+ * ReconciliationRecordCreate
+ */
+export type ReconciliationRecordCreate = {
+    /**
+     * Channel
+     */
+    channel: 'wechat' | 'alipay';
+    /**
+     * Channel Transaction Id
+     */
+    channel_transaction_id: string;
+    /**
+     * Source Reference
+     */
+    source_reference: string;
+    /**
+     * Source Hash
+     */
+    source_hash: string;
+    /**
+     * Amount
+     */
+    amount: number | string;
+    /**
+     * Currency
+     */
+    currency: 'CNY';
+    /**
+     * Occurred At
+     *
+     * 事件发生时间
+     */
+    occurred_at: string;
+};
+
+/**
+ * ReconciliationRecordRead
+ */
+export type ReconciliationRecordRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Channel
+     */
+    channel: 'wechat' | 'alipay';
+    /**
+     * Channel Transaction Id
+     */
+    channel_transaction_id: string;
+    /**
+     * Source Reference
+     */
+    source_reference: string;
+    /**
+     * Amount
+     */
+    amount: string;
+    /**
+     * Currency
+     */
+    currency: string;
+    /**
+     * Occurred At
+     *
+     * 事件发生时间
+     */
+    occurred_at: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: string;
+    /**
+     * Payment Attempt Id
+     */
+    payment_attempt_id: string | null;
+    /**
+     * Note
+     */
+    note: string | null;
+};
+
+/**
  * RedisHealthRead
  */
 export type RedisHealthRead = {
@@ -2525,6 +2819,108 @@ export type RefreshSessionOut = {
      * 会话绝对过期时间
      */
     absolute_expires_at: string;
+};
+
+/**
+ * RefundLine
+ */
+export type RefundLine = {
+    /**
+     * Order Item Id
+     */
+    order_item_id: string;
+    /**
+     * Quantity
+     */
+    quantity: number;
+};
+
+/**
+ * RefundRequestCreate
+ */
+export type RefundRequestCreate = {
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<RefundLine>;
+    /**
+     * Reason
+     */
+    reason: string;
+};
+
+/**
+ * RefundRequestRead
+ */
+export type RefundRequestRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Order Id
+     */
+    order_id: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: string;
+    /**
+     * Amount
+     */
+    amount: string;
+    /**
+     * Currency
+     */
+    currency: string;
+    /**
+     * Reason
+     */
+    reason: string;
+    /**
+     * Review Note
+     */
+    review_note: string | null;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Reviewed At
+     */
+    reviewed_at: string | null;
+    /**
+     * Confirmed At
+     */
+    confirmed_at: string | null;
+};
+
+/**
+ * RefundReview
+ */
+export type RefundReview = {
+    /**
+     * Note
+     */
+    note: string;
+    /**
+     * Revision
+     */
+    revision: number;
 };
 
 /**
@@ -3038,6 +3434,34 @@ export type ResponseModelFreightQuote = {
 };
 
 /**
+ * ResponseModel[FulfillmentRead]
+ */
+export type ResponseModelFulfillmentRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: FulfillmentRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[InventoryMovementRead]
  */
 export type ResponseModelInventoryMovementRead = {
@@ -3348,6 +3772,34 @@ export type ResponseModelPageResultProductRead = {
 };
 
 /**
+ * ResponseModel[PageResult[ProductReviewRead]]
+ */
+export type ResponseModelPageResultProductReviewRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultProductReviewRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[PageResult[PublicProductRead]]
  */
 export type ResponseModelPageResultPublicProductRead = {
@@ -3488,6 +3940,34 @@ export type ResponseModelPageResultShippingTemplateRead = {
 };
 
 /**
+ * ResponseModel[PaymentAttemptRead]
+ */
+export type ResponseModelPaymentAttemptRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PaymentAttemptRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[ProductRead]
  */
 export type ResponseModelProductRead = {
@@ -3507,6 +3987,34 @@ export type ResponseModelProductRead = {
      * 响应业务数据
      */
     data: ProductRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[ProductReviewRead]
+ */
+export type ResponseModelProductReviewRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: ProductReviewRead;
     /**
      * Request Id
      *
@@ -3544,6 +4052,34 @@ export type ResponseModelPublicProductRead = {
 };
 
 /**
+ * ResponseModel[ReconciliationRecordRead]
+ */
+export type ResponseModelReconciliationRecordRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: ReconciliationRecordRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[RefreshSessionOut]
  */
 export type ResponseModelRefreshSessionOut = {
@@ -3563,6 +4099,34 @@ export type ResponseModelRefreshSessionOut = {
      * 响应业务数据
      */
     data: RefreshSessionOut;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[RefundRequestRead]
+ */
+export type ResponseModelRefundRequestRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: RefundRequestRead;
     /**
      * Request Id
      *
@@ -3976,6 +4540,36 @@ export type ResponseModelListPermissionRead = {
 };
 
 /**
+ * ResponseModel[list[RefundRequestRead]]
+ */
+export type ResponseModelListRefundRequestRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * Data
+     *
+     * 响应业务数据
+     */
+    data: Array<RefundRequestRead>;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * RoleBulkDeleteIn
  */
 export type RoleBulkDeleteIn = {
@@ -4237,6 +4831,24 @@ export type SessionRead = {
      * 会话撤销时间
      */
     revoked_at: string | null;
+};
+
+/**
+ * ShipmentCreate
+ */
+export type ShipmentCreate = {
+    /**
+     * Carrier
+     */
+    carrier: string;
+    /**
+     * Tracking Number
+     */
+    tracking_number: string;
+    /**
+     * Revision
+     */
+    revision: number;
 };
 
 /**
@@ -5153,6 +5765,20 @@ export type ValidationError = {
     ctx?: {
         [key: string]: unknown;
     };
+};
+
+/**
+ * VirtualDeliveryCreate
+ */
+export type VirtualDeliveryCreate = {
+    /**
+     * Delivery Reference
+     */
+    delivery_reference: string;
+    /**
+     * Revision
+     */
+    revision: number;
 };
 
 export type AdminCategoriesApiV1AdminProductCategoriesGetData = {
@@ -6126,6 +6752,374 @@ export type OrderCancelApiV1OrdersOrderIdCancelPostResponses = {
 };
 
 export type OrderCancelApiV1OrdersOrderIdCancelPostResponse = OrderCancelApiV1OrdersOrderIdCancelPostResponses[keyof OrderCancelApiV1OrdersOrderIdCancelPostResponses];
+
+export type InitiatePaymentApiV1OrdersOrderIdPaymentAttemptsPostData = {
+    body: PaymentAttemptCreate;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/{order_id}/payment-attempts';
+};
+
+export type InitiatePaymentApiV1OrdersOrderIdPaymentAttemptsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type InitiatePaymentApiV1OrdersOrderIdPaymentAttemptsPostError = InitiatePaymentApiV1OrdersOrderIdPaymentAttemptsPostErrors[keyof InitiatePaymentApiV1OrdersOrderIdPaymentAttemptsPostErrors];
+
+export type InitiatePaymentApiV1OrdersOrderIdPaymentAttemptsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelPaymentAttemptRead;
+};
+
+export type InitiatePaymentApiV1OrdersOrderIdPaymentAttemptsPostResponse = InitiatePaymentApiV1OrdersOrderIdPaymentAttemptsPostResponses[keyof InitiatePaymentApiV1OrdersOrderIdPaymentAttemptsPostResponses];
+
+export type FulfillmentReadApiV1OrdersOrderIdFulfillmentGetData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/{order_id}/fulfillment';
+};
+
+export type FulfillmentReadApiV1OrdersOrderIdFulfillmentGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type FulfillmentReadApiV1OrdersOrderIdFulfillmentGetError = FulfillmentReadApiV1OrdersOrderIdFulfillmentGetErrors[keyof FulfillmentReadApiV1OrdersOrderIdFulfillmentGetErrors];
+
+export type FulfillmentReadApiV1OrdersOrderIdFulfillmentGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelFulfillmentRead;
+};
+
+export type FulfillmentReadApiV1OrdersOrderIdFulfillmentGetResponse = FulfillmentReadApiV1OrdersOrderIdFulfillmentGetResponses[keyof FulfillmentReadApiV1OrdersOrderIdFulfillmentGetResponses];
+
+export type ConfirmReceiptApiV1OrdersOrderIdFulfillmentConfirmReceiptPostData = {
+    body: ReceiptConfirm;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/{order_id}/fulfillment/confirm-receipt';
+};
+
+export type ConfirmReceiptApiV1OrdersOrderIdFulfillmentConfirmReceiptPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ConfirmReceiptApiV1OrdersOrderIdFulfillmentConfirmReceiptPostError = ConfirmReceiptApiV1OrdersOrderIdFulfillmentConfirmReceiptPostErrors[keyof ConfirmReceiptApiV1OrdersOrderIdFulfillmentConfirmReceiptPostErrors];
+
+export type ConfirmReceiptApiV1OrdersOrderIdFulfillmentConfirmReceiptPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelFulfillmentRead;
+};
+
+export type ConfirmReceiptApiV1OrdersOrderIdFulfillmentConfirmReceiptPostResponse = ConfirmReceiptApiV1OrdersOrderIdFulfillmentConfirmReceiptPostResponses[keyof ConfirmReceiptApiV1OrdersOrderIdFulfillmentConfirmReceiptPostResponses];
+
+export type RefundListApiV1OrdersOrderIdRefundsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/{order_id}/refunds';
+};
+
+export type RefundListApiV1OrdersOrderIdRefundsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type RefundListApiV1OrdersOrderIdRefundsGetError = RefundListApiV1OrdersOrderIdRefundsGetErrors[keyof RefundListApiV1OrdersOrderIdRefundsGetErrors];
+
+export type RefundListApiV1OrdersOrderIdRefundsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListRefundRequestRead;
+};
+
+export type RefundListApiV1OrdersOrderIdRefundsGetResponse = RefundListApiV1OrdersOrderIdRefundsGetResponses[keyof RefundListApiV1OrdersOrderIdRefundsGetResponses];
+
+export type RefundCreateApiV1OrdersOrderIdRefundsPostData = {
+    body: RefundRequestCreate;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/{order_id}/refunds';
+};
+
+export type RefundCreateApiV1OrdersOrderIdRefundsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type RefundCreateApiV1OrdersOrderIdRefundsPostError = RefundCreateApiV1OrdersOrderIdRefundsPostErrors[keyof RefundCreateApiV1OrdersOrderIdRefundsPostErrors];
+
+export type RefundCreateApiV1OrdersOrderIdRefundsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelRefundRequestRead;
+};
+
+export type RefundCreateApiV1OrdersOrderIdRefundsPostResponse = RefundCreateApiV1OrdersOrderIdRefundsPostResponses[keyof RefundCreateApiV1OrdersOrderIdRefundsPostResponses];
+
+export type ReviewCreateApiV1OrderItemsOrderItemIdReviewPostData = {
+    body: ProductReviewCreate;
+    path: {
+        /**
+         * Order Item Id
+         */
+        order_item_id: string;
+    };
+    query?: never;
+    url: '/api/v1/order-items/{order_item_id}/review';
+};
+
+export type ReviewCreateApiV1OrderItemsOrderItemIdReviewPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ReviewCreateApiV1OrderItemsOrderItemIdReviewPostError = ReviewCreateApiV1OrderItemsOrderItemIdReviewPostErrors[keyof ReviewCreateApiV1OrderItemsOrderItemIdReviewPostErrors];
+
+export type ReviewCreateApiV1OrderItemsOrderItemIdReviewPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelProductReviewRead;
+};
+
+export type ReviewCreateApiV1OrderItemsOrderItemIdReviewPostResponse = ReviewCreateApiV1OrderItemsOrderItemIdReviewPostResponses[keyof ReviewCreateApiV1OrderItemsOrderItemIdReviewPostResponses];
+
+export type ReviewPageApiV1ProductsProductIdReviewsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/products/{product_id}/reviews';
+};
+
+export type ReviewPageApiV1ProductsProductIdReviewsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ReviewPageApiV1ProductsProductIdReviewsGetError = ReviewPageApiV1ProductsProductIdReviewsGetErrors[keyof ReviewPageApiV1ProductsProductIdReviewsGetErrors];
+
+export type ReviewPageApiV1ProductsProductIdReviewsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultProductReviewRead;
+};
+
+export type ReviewPageApiV1ProductsProductIdReviewsGetResponse = ReviewPageApiV1ProductsProductIdReviewsGetResponses[keyof ReviewPageApiV1ProductsProductIdReviewsGetResponses];
+
+export type AdminShipApiV1AdminOrdersOrderIdFulfillmentShipmentPostData = {
+    body: ShipmentCreate;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/orders/{order_id}/fulfillment/shipment';
+};
+
+export type AdminShipApiV1AdminOrdersOrderIdFulfillmentShipmentPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminShipApiV1AdminOrdersOrderIdFulfillmentShipmentPostError = AdminShipApiV1AdminOrdersOrderIdFulfillmentShipmentPostErrors[keyof AdminShipApiV1AdminOrdersOrderIdFulfillmentShipmentPostErrors];
+
+export type AdminShipApiV1AdminOrdersOrderIdFulfillmentShipmentPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelFulfillmentRead;
+};
+
+export type AdminShipApiV1AdminOrdersOrderIdFulfillmentShipmentPostResponse = AdminShipApiV1AdminOrdersOrderIdFulfillmentShipmentPostResponses[keyof AdminShipApiV1AdminOrdersOrderIdFulfillmentShipmentPostResponses];
+
+export type AdminDeliverVirtualApiV1AdminOrdersOrderIdFulfillmentVirtualDeliveryPostData = {
+    body: VirtualDeliveryCreate;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/orders/{order_id}/fulfillment/virtual-delivery';
+};
+
+export type AdminDeliverVirtualApiV1AdminOrdersOrderIdFulfillmentVirtualDeliveryPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminDeliverVirtualApiV1AdminOrdersOrderIdFulfillmentVirtualDeliveryPostError = AdminDeliverVirtualApiV1AdminOrdersOrderIdFulfillmentVirtualDeliveryPostErrors[keyof AdminDeliverVirtualApiV1AdminOrdersOrderIdFulfillmentVirtualDeliveryPostErrors];
+
+export type AdminDeliverVirtualApiV1AdminOrdersOrderIdFulfillmentVirtualDeliveryPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelFulfillmentRead;
+};
+
+export type AdminDeliverVirtualApiV1AdminOrdersOrderIdFulfillmentVirtualDeliveryPostResponse = AdminDeliverVirtualApiV1AdminOrdersOrderIdFulfillmentVirtualDeliveryPostResponses[keyof AdminDeliverVirtualApiV1AdminOrdersOrderIdFulfillmentVirtualDeliveryPostResponses];
+
+export type AdminApproveRefundApiV1AdminRefundsRefundIdApprovePostData = {
+    body: RefundReview;
+    path: {
+        /**
+         * Refund Id
+         */
+        refund_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/refunds/{refund_id}/approve';
+};
+
+export type AdminApproveRefundApiV1AdminRefundsRefundIdApprovePostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminApproveRefundApiV1AdminRefundsRefundIdApprovePostError = AdminApproveRefundApiV1AdminRefundsRefundIdApprovePostErrors[keyof AdminApproveRefundApiV1AdminRefundsRefundIdApprovePostErrors];
+
+export type AdminApproveRefundApiV1AdminRefundsRefundIdApprovePostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelRefundRequestRead;
+};
+
+export type AdminApproveRefundApiV1AdminRefundsRefundIdApprovePostResponse = AdminApproveRefundApiV1AdminRefundsRefundIdApprovePostResponses[keyof AdminApproveRefundApiV1AdminRefundsRefundIdApprovePostResponses];
+
+export type AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostData = {
+    body: RefundReview;
+    path: {
+        /**
+         * Refund Id
+         */
+        refund_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/refunds/{refund_id}/reject';
+};
+
+export type AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostError = AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostErrors[keyof AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostErrors];
+
+export type AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelRefundRequestRead;
+};
+
+export type AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponse = AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponses[keyof AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponses];
+
+export type AdminReconcileApiV1AdminReconciliationRecordsPostData = {
+    body: ReconciliationRecordCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/reconciliation-records';
+};
+
+export type AdminReconcileApiV1AdminReconciliationRecordsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminReconcileApiV1AdminReconciliationRecordsPostError = AdminReconcileApiV1AdminReconciliationRecordsPostErrors[keyof AdminReconcileApiV1AdminReconciliationRecordsPostErrors];
+
+export type AdminReconcileApiV1AdminReconciliationRecordsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelReconciliationRecordRead;
+};
+
+export type AdminReconcileApiV1AdminReconciliationRecordsPostResponse = AdminReconcileApiV1AdminReconciliationRecordsPostResponses[keyof AdminReconcileApiV1AdminReconciliationRecordsPostResponses];
 
 export type RegisterApiV1AuthRegisterPostData = {
     body: UserRegisterIn;

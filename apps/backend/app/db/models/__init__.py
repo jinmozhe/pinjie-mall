@@ -4,6 +4,17 @@ from .address import UserAddress
 from .asset import Asset
 from .base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
 from .cart import CartItem
+from .commerce_lifecycle import (
+    Fulfillment,
+    FulfillmentEvent,
+    PaymentAttempt,
+    PaymentEvent,
+    ProductReview,
+    ReconciliationRecord,
+    RefundEvent,
+    RefundItem,
+    RefundRequest,
+)
 from .identity import (
     Admin,
     AdminRefreshToken,
@@ -29,6 +40,15 @@ from .system_setting import SystemSetting
 __all__ = [
     "CartItem",
     "Category",
+    "Fulfillment",
+    "FulfillmentEvent",
+    "PaymentAttempt",
+    "PaymentEvent",
+    "ProductReview",
+    "ReconciliationRecord",
+    "RefundEvent",
+    "RefundItem",
+    "RefundRequest",
     "InventoryAccount",
     "InventoryMovement",
     "InventoryReservation",
