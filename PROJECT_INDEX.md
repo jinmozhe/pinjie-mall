@@ -19,6 +19,8 @@
 | 项目身份与阶段导航 | [PROJECT_INDEX.md](PROJECT_INDEX.md) | 项目身份、当前阶段、活动计划和权威入口 |
 | 详细实现状态 | 实际源码、配置、迁移、生成契约与对应架构文档 | 判断具体能力、接口和运行机制是否已经实现 |
 | 产品需求基线 | [docs/PROJECT_REQUIREMENTS.md](docs/PROJECT_REQUIREMENTS.md) | 商城目标用户、能力、非目标和验收边界 |
+| 小程序详细需求 | [docs/MINIAPP_PRD.md](docs/MINIAPP_PRD.md) | 小程序用户流程、交付分组与专项验收；不代表工程已启动 |
+| 小程序工程设计 | [docs/architecture/miniapp-architecture.md](docs/architecture/miniapp-architecture.md) | 待实施的目录、分层、调用链与状态归属 |
 | 计划规则 | [plans/README.md](plans/README.md) | 计划创建、格式、状态、完成和保护规则 |
 | 计划永久登记 | [plans/INDEX.md](plans/INDEX.md) | 全部实施计划的路径、状态、结果、范围和用途 |
 | 项目文档清单 | [docs/README.md](docs/README.md) | `docs/` 下全部项目文档导航 |
@@ -31,4 +33,4 @@
 
 ## 活动计划
 
-当前无活动计划。四阶段后端建设与 M1 至 M4 边界审查修复计划均已结束，结果和验证边界见 [plans/INDEX.md](plans/INDEX.md)。
+当前无活动计划。小程序 PRD 与配套目录、分层和执行链路文档已完成，工程开发留待后续专项实施。已结束计划继续保留在[计划永久登记](plans/INDEX.md)。

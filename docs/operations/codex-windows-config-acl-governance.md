@@ -699,7 +699,4 @@ DACL 没有适用于所有故障的通用写命令。应根据证据选择以下
 
 - [AI 助手开发与文档读取指南](ai-assisted-development-workflow.md)：说明何时读取本文以及任务、计划和独立授权流程。
 - [Windows 本地开发环境手册](local-dev-environment.md)：说明 uv、pnpm、本机 PostgreSQL、Docker Desktop Redis 和 Windows 原生开发基线。
-- [Codex Windows ACL 长期治理计划](../../plans/2026-08-22_CodexWindowsACL长期治理计划.md)：保存 2026-08-22 本机 A/B 验证和历史实施证据。
-- [Codex Windows 配置与 ACL 标准文档计划](../../plans/2026-08-22_CodexWindows配置与ACL标准文档计划.md)：保存本文建立、确认、实施和验证记录。
-- [Codex Windows 网络与 Schannel 边界治理计划](../../plans/2026-08-23_CodexWindows网络与Schannel边界治理计划.md)：保存默认联网决策、系统 HTTPS 客户端边界和本次同步记录。
-- [Codex Windows gh Keyring 宿主执行治理计划](../../plans/2026-08-24_CodexWindowsGhKeyring宿主执行治理计划.md)：保存 GitHub CLI 凭据上下文、准确宿主执行、审批规则和安全边界的实施记录。
+- 上述历史 ACL 治理计划文件未纳入当前仓库；本手册保留当前可执行的配置、权限、联网、Schannel 和 GitHub CLI 宿主执行边界。
