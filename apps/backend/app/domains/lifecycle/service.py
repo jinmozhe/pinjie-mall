@@ -22,6 +22,7 @@ from app.db.models.commerce_lifecycle import (
     RefundRequest,
 )
 from app.db.transaction import transaction_scope
+from app.domains.distribution import DistributionService
 from app.domains.orders import OrderService
 
 from .repository import LifecycleRepository
@@ -38,6 +39,7 @@ from .schemas import (
     RefundReview,
     ShipmentCreate,
     VerifiedPaymentConfirmation,
+    VerifiedRefundConfirmation,
     VirtualDeliveryCreate,
 )
 
@@ -195,6 +197,12 @@ class LifecycleService:
                 payload_hash=data.payload_hash,
             )
         )
+        await DistributionService(self.session).freeze_commissions_for_payment_in_open_transaction(
+            order_id=order.id,
+            source_user_id=order.user_id,
+            base_amount=order.items_amount,
+            paid_at=confirmed_at,
+        )
         return self._payment_read(attempt)
 
     async def fulfillment_for_user(self, user_id: UUID, order_id: UUID) -> FulfillmentRead:
@@ -270,6 +278,7 @@ class LifecycleService:
                 reason="管理员完成虚拟交付",
             )
         )
+        await DistributionService(self.session).schedule_settlement_for_delivery_in_open_transaction(order.id, now)
         return self._fulfillment_read(fulfillment)
 
     async def confirm_receipt(self, user_id: UUID, order_id: UUID, revision: int) -> FulfillmentRead:
@@ -315,6 +324,9 @@ class LifecycleService:
                 actor_id=actor_id,
                 reason=reason,
             )
+        )
+        await DistributionService(self.session).schedule_settlement_for_delivery_in_open_transaction(
+            fulfillment.order_id, now
         )
 
     async def create_refund(self, user_id: UUID, order_id: UUID, data: RefundRequestCreate) -> RefundRequestRead:
@@ -404,6 +416,54 @@ class LifecycleService:
                 )
             )
             return self._refund_read(refund)
+
+    async def confirm_verified_refund(self, data: VerifiedRefundConfirmation) -> RefundRequestRead:
+        async with transaction_scope(self.session):
+            return await self.confirm_verified_refund_in_open_transaction(data)
+
+    async def confirm_verified_refund_in_open_transaction(self, data: VerifiedRefundConfirmation) -> RefundRequestRead:
+        confirmed_at = self._require_aware(data.confirmed_at, "退款确认时间")
+        refund = await self.repository.refund(data.refund_request_id, lock=True)
+        if refund is None:
+            raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="退款申请不存在")
+        if refund.status == "succeeded":
+            if refund.channel_refund_id != data.channel_refund_id:
+                raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款确认内容冲突")
+            return self._refund_read(refund)
+        if refund.status not in {"approved", "processing"}:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前退款申请不能确认成功")
+        duplicate = await self.repository.refund_by_channel(data.channel_refund_id, lock=True)
+        if duplicate is not None and duplicate.id != refund.id:
+            raise AppException(
+                status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="渠道退款流水已被其他退款申请使用"
+            )
+        order = await self.repository.order(refund.order_id, lock=True)
+        if order is None or order.currency != refund.currency:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款订单状态异常")
+        previous_status = refund.status
+        refund.status = "succeeded"
+        refund.channel_refund_id = data.channel_refund_id
+        refund.confirmed_at = confirmed_at
+        refund.revision += 1
+        await self.repository.save(refund)
+        await self.repository.save(
+            RefundEvent(
+                refund_request_id=refund.id,
+                revision=refund.revision,
+                from_status=previous_status,
+                to_status="succeeded",
+                actor_type="payment",
+                actor_id=None,
+                reason="可信渠道退款确认",
+            )
+        )
+        await DistributionService(self.session).recover_for_refund_in_open_transaction(
+            refund_request_id=refund.id,
+            order_id=order.id,
+            refunded_amount=refund.amount,
+            refunded_at=confirmed_at,
+        )
+        return self._refund_read(refund)
 
     async def refunds_for_user(self, user_id: UUID, order_id: UUID) -> list[RefundRequestRead]:
         order = await self.repository.user_order(user_id, order_id)

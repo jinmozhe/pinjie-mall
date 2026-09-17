@@ -12,6 +12,7 @@ from .schemas import (
     RefundReview,
     ShipmentCreate,
     VerifiedPaymentConfirmation,
+    VerifiedRefundConfirmation,
     VirtualDeliveryCreate,
 )
 
@@ -29,5 +30,6 @@ __all__ = [
     "RefundReview",
     "ShipmentCreate",
     "VerifiedPaymentConfirmation",
+    "VerifiedRefundConfirmation",
     "VirtualDeliveryCreate",
 ]

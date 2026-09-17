@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.commerce_router import router as commerce_router
+from app.api.distribution_router import router as distribution_router
 from app.api.lifecycle_router import router as lifecycle_router
 from app.api.transaction_router import router as transaction_router
 from app.domains.admin.auth_router import router as admin_auth_router
@@ -14,6 +15,7 @@ from app.domains.users.router import router as users_router
 
 api_router = APIRouter()
 api_router.include_router(commerce_router)
+api_router.include_router(distribution_router)
 api_router.include_router(transaction_router)
 api_router.include_router(lifecycle_router)
 api_router.include_router(auth_router)

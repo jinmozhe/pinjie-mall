@@ -15,6 +15,14 @@ from .commerce_lifecycle import (
     RefundItem,
     RefundRequest,
 )
+from .distribution import (
+    CommissionRecord,
+    CommissionRecovery,
+    MemberProfile,
+    WalletAccount,
+    WalletLedger,
+    WithdrawalRequest,
+)
 from .identity import (
     Admin,
     AdminRefreshToken,
@@ -39,6 +47,12 @@ from .system_setting import SystemSetting
 
 __all__ = [
     "CartItem",
+    "CommissionRecord",
+    "CommissionRecovery",
+    "MemberProfile",
+    "WalletAccount",
+    "WalletLedger",
+    "WithdrawalRequest",
     "Category",
     "Fulfillment",
     "FulfillmentEvent",
