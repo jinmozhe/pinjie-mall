@@ -5,7 +5,7 @@ from uuid import UUID
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.db.repositories.commerce_access import CommerceAccessRepository
-from app.domains.admin.permissions import PERMISSION_CODES, PermissionCode
+from app.domains.admin.permissions import PermissionCode
 from app.domains.distribution import DistributionService, WithdrawalRead, WithdrawalReview
 from app.services.security_events import AuditCoordinator
 
@@ -29,7 +29,7 @@ class AdminDistributionApplicationService:
     async def _write(self, permission: PermissionCode, target_id: UUID, operation: Callable[[], Awaitable[T]]) -> T:
         async def authorized() -> T:
             admin = await self.access.get_admin_for_update(self.actor_id)
-            if admin is None or not admin.is_active or permission.value not in PERMISSION_CODES:
+            if admin is None or not admin.is_active:
                 raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="当前管理员权限已失效")
             granted = admin.is_superuser or any(
                 role.is_active and any(item.is_active and item.code == permission.value for item in role.permissions)

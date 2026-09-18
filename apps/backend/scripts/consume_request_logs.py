@@ -5,6 +5,7 @@ import socket
 from datetime import datetime
 from typing import cast
 
+from loguru import logger
 from redis.asyncio import Redis
 from redis.exceptions import ResponseError
 from redis.typing import EncodableT
@@ -61,7 +62,8 @@ async def _persist(
         async with resources.session_factory() as session, transaction_scope(session):
             RequestLogRepository(session).add(item)
     except IntegrityError:
-        pass
+        # 重复日志消息幂等忽略
+        logger.bind(message_id=message_id).debug("忽略已存在的重复请求日志")
     except (KeyError, TypeError, ValueError) as exc:
         dead_letter_fields = cast(dict[EncodableT, EncodableT], fields.copy())
         dead_letter_fields["source_message_id"] = message_id

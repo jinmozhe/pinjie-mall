@@ -9,8 +9,8 @@ def masked_ip(value: str | None) -> str | None:
     except ValueError:
         return None
     if isinstance(address, ipaddress.IPv4Address):
-        return str(ipaddress.ip_network(f"{address}/24", strict=False).network_address) + "/24"
-    return str(ipaddress.ip_network(f"{address}/64", strict=False).network_address) + "/64"
+        return str(ipaddress.ip_network(f"{address}/24", strict=False))
+    return str(ipaddress.ip_network(f"{address}/64", strict=False))
 
 
 __all__ = ["masked_ip"]

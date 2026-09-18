@@ -203,8 +203,10 @@ class OrderService:
             await self.access.require_active_user(user_id)
             await self.repository.lock_user_checkout(user_id)
             existing = await self.repository.order_by_request(user_id, data.request_id, lock=True)
+            # 提前计算一次 normalize 结果，后续幂等校验和 payload 复用同一结果。
+            normalized = self._normalize(data)
             normalized_payload = {
-                "items": [{"sku_id": str(sku_id), "quantity": quantity} for sku_id, quantity in self._normalize(data)],
+                "items": [{"sku_id": str(sku_id), "quantity": quantity} for sku_id, quantity in normalized],
                 "address_id": str(data.address_id) if data.address_id else None,
                 "quote_fingerprint": data.quote_fingerprint,
             }
@@ -215,7 +217,7 @@ class OrderService:
                 previous_items = await self.repository.items(existing.id)
                 previous_address_id = existing.address_snapshot.get("id") if existing.address_snapshot else None
                 if (
-                    sorted((item.sku_id, item.quantity) for item in previous_items) != self._normalize(data)
+                    sorted((item.sku_id, item.quantity) for item in previous_items) != normalized
                     or previous_address_id != (str(data.address_id) if data.address_id else None)
                     or existing.quote_fingerprint != data.quote_fingerprint
                 ):

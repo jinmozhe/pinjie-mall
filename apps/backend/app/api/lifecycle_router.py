@@ -65,6 +65,8 @@ async def initiate_payment(
 async def fulfillment_read(
     order_id: UUID, service: Lifecycle, current: UserPrincipal
 ) -> ResponseModel[FulfillmentRead]:
+    # 资源归属校验：service.fulfillment_for_user 内部通过 user_order(user_id, order_id)
+    # 联合过滤 user_id + order_id，非本人订单返回 404，不存在 IDOR 越权风险。
     return success_response(
         data=await service.fulfillment_for_user(current.user.id, order_id),
         request_id=current_request_id(),
@@ -110,6 +112,8 @@ async def refund_create(
 async def refund_list(
     order_id: UUID, service: Lifecycle, current: UserPrincipal
 ) -> ResponseModel[list[RefundRequestRead]]:
+    # 资源归属校验：service.refunds_for_user 内部通过 user_order(user_id, order_id)
+    # 联合过滤 user_id + order_id，非本人订单返回 404，不存在 IDOR 越权风险。
     return success_response(
         data=await service.refunds_for_user(current.user.id, order_id),
         request_id=current_request_id(),

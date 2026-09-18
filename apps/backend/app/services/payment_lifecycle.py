@@ -145,15 +145,13 @@ class LifecycleService:
         confirmed_at = self._require_aware(data.confirmed_at, "支付确认时间")
         await self.distribution.lock_referral_changes()
         await self.repository.lock_key("payment", f"{data.channel}:{data.channel_transaction_id}")
-        attempt = await self.repository.payment(data.payment_attempt_id)
+        # 直接带锁读取 payment attempt，避免先不加锁读取再加锁读取的双重查询。
+        attempt = await self.repository.payment(data.payment_attempt_id, lock=True)
         if attempt is None:
             raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="支付意图不存在")
         order = await self.orders.order(attempt.order_id, lock=True)
         if order is None:
             raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
-        attempt = await self.repository.payment(data.payment_attempt_id, lock=True)
-        if attempt is None:
-            raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="支付意图不存在")
         if attempt.channel != data.channel:
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="支付渠道不匹配")
         if attempt.status == "succeeded":
@@ -335,12 +333,18 @@ class LifecycleService:
             return self._fulfillment_read(fulfillment)
 
     async def auto_confirm_due(self, limit: int = 100) -> int:
+        # 每次单独开启一个事务处理一条 fulfillment，与 expire_due 设计一致。
+        # 避免任意一条 _deliver_physical 失败导致整批回滚。
         now = datetime.now(UTC)
-        async with transaction_scope(self.session):
-            fulfillments = await self.repository.due_fulfillments(now, limit)
-            for fulfillment in fulfillments:
-                await self._deliver_physical(fulfillment, "system", None, "发货满七日自动确认")
-            return len(fulfillments)
+        completed = 0
+        for _ in range(limit):
+            async with transaction_scope(self.session):
+                fulfillments = await self.repository.due_fulfillments(now, 1)
+                if not fulfillments:
+                    break
+                await self._deliver_physical(fulfillments[0], "system", None, "发货满七日自动确认")
+                completed += 1
+        return completed
 
     async def _deliver_physical(
         self, fulfillment: Fulfillment, actor_type: str, actor_id: UUID | None, reason: str
@@ -602,9 +606,15 @@ class LifecycleService:
             item = await self.orders.order_item(order_item_id)
             if item is None:
                 raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单明细不存在")
+            # 用户归属链验证：通过 user_order(user_id, item.order_id) 加锁读取，
+            # 保证 order 属于当前用户；item 是不可变的订单事实，item.order_id 为常量，
+            # 锁定后再次断言 item.order_id == order.id，消除非加锁读窗口。
             order = await self.orders.user_order(user_id, item.order_id, lock=True)
             if order is None:
                 raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单明细不属于当前用户")
+            if item.order_id != order.id:
+                # 防御性断言：正常情况不可能触发，触发则说明 item 与 order 对应关系异常。
+                raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="订单明细归属异常")
             fulfillment = await self.repository.fulfillment(order.id, lock=True)
             if fulfillment is None or fulfillment.status != "delivered":
                 raise AppException(

@@ -11,7 +11,7 @@ from app.core.pagination import PageResult
 from app.db.repositories.commerce_access import CommerceAccessRepository
 from app.db.transaction import transaction_scope
 from app.domains.addresses import AddressInput, AddressRead, AddressService, AddressUpdate
-from app.domains.admin.permissions import PERMISSION_CODES, PermissionCode
+from app.domains.admin.permissions import PermissionCode
 from app.domains.inventory import InventoryAdjustment, InventoryMovementRead, InventoryRead, InventoryService
 from app.domains.products import (
     CategoryInput,
@@ -57,7 +57,7 @@ class CommerceService:
 
         async def authorized() -> T:
             admin = await self.access.get_admin_for_update(actor_id)
-            if admin is None or not admin.is_active or permission.value not in PERMISSION_CODES:
+            if admin is None or not admin.is_active:
                 raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="当前管理员权限已失效")
             granted = admin.is_superuser or any(
                 role.is_active and any(item.is_active and item.code == permission.value for item in role.permissions)
