@@ -17,7 +17,7 @@
 
 | 路径 | 状态 | 结果 | 影响范围 | 用途 |
 | --- | --- | --- | --- | --- |
-| `plans/2026-09-18_Admin电商分阶段建设计划.md` | 实施中 | 不适用 | Backend、Admin、API Client、Database、Documentation | A0 至 A4 实现及应用验证完成，临时资源清理和最终文本门禁受工具策略阻塞 |
+| `plans/2026-09-18_Admin电商分阶段建设计划.md` | 已结束 | 已完成；A0 至 A4 本地实现、授权验证、文档收尾和临时资源清理完成，Backend 测试及适用轻量门禁通过，Admin 动态验收未执行 | Backend、Admin、API Client、Database、Documentation | 按 A0 至 A4 建立测试基线并交付商品、订单履约、售后支付查询与会员分销财务页面 |
 | `plans/2026-09-17_小程序PRD编制计划.md` | 已结束 | 已完成；PRD 与配套目录、分层和执行链路文档已交付，工程尚未启动 | Documentation | 编制小程序 PRD 与配套目录、分层和执行链路设计，关联既有产品基线 |
 | `plans/2026-09-17_商城M1至M4边界审查修复计划.md` | 已结束 | 已完成；四阶段本地审查修复、契约同步和轻量验证完成，动态测试及实际迁移未执行 | Backend、API Client、Database、Documentation | 逐阶段审查并修复商城实现的冲突、兼容与边界问题 |
 | `plans/2026-09-17_商城后端四阶段建设计划.md` | 已结束 | 已完成；M0 至 M4 后端本地实现、契约同步和适用轻量验证已完成 | Backend、API Client、Database、Documentation | 建立商品交易、支付售后、会员分销、双轨钱包和提现的后端基础 |
