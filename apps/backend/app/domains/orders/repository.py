@@ -62,7 +62,7 @@ class OrderRepository:
     async def items(self, order_id: UUID) -> list[OrderItem]:
         return list(
             await self.session.scalars(
-                select(OrderItem).where(OrderItem.order_id == order_id).order_by(OrderItem.created_at, OrderItem.id)
+                select(OrderItem).where(OrderItem.order_id == order_id).order_by(OrderItem.id)
             )
         )
 
@@ -73,7 +73,7 @@ class OrderRepository:
         count = int(await self.session.scalar(select(func.count()).select_from(Order)) or 0)
         rows = await self.session.scalars(
             select(Order)
-            .order_by(Order.created_at.desc(), Order.id.desc())
+            .order_by(Order.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )

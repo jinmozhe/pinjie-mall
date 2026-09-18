@@ -30,7 +30,7 @@ class InventoryRepository:
         query = select(InventoryMovement).where(InventoryMovement.sku_id == sku_id)
         total = int(await self.session.scalar(select(func.count()).select_from(query.subquery())) or 0)
         rows = await self.session.scalars(
-            query.order_by(InventoryMovement.created_at.desc(), InventoryMovement.id)
+            query.order_by(InventoryMovement.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )

@@ -18,7 +18,7 @@ class ProductRepository:
     async def categories(self) -> list[Category]:
         return list(
             await self.session.scalars(
-                select(Category).order_by(Category.sort_order, Category.id).execution_options(populate_existing=True)
+                select(Category).order_by(Category.sort_order.asc().nulls_last(), Category.id.desc()).execution_options(populate_existing=True)
             )
         )
 
@@ -33,7 +33,7 @@ class ProductRepository:
             await self.session.scalars(
                 select(ProductSku)
                 .where(ProductSku.product_id == product_id)
-                .order_by(ProductSku.created_at, ProductSku.id)
+                .order_by(ProductSku.id)
                 .execution_options(populate_existing=True)
             )
         )
@@ -85,7 +85,7 @@ class ProductRepository:
         variants = await self.session.scalars(
             select(ProductSku)
             .where(ProductSku.product_id.in_(product_ids))
-            .order_by(ProductSku.product_id, ProductSku.created_at, ProductSku.id)
+            .order_by(ProductSku.product_id, ProductSku.id)
         )
         for variant in variants:
             skus[variant.product_id].append(variant)
@@ -149,7 +149,7 @@ class ProductRepository:
             )
         total = int(await self.session.scalar(select(func.count()).select_from(query.subquery())) or 0)
         rows = await self.session.scalars(
-            query.order_by(Product.created_at.desc(), Product.id).offset((page - 1) * page_size).limit(page_size)
+            query.order_by(Product.id.desc()).offset((page - 1) * page_size).limit(page_size)
         )
         return list(rows), total
 

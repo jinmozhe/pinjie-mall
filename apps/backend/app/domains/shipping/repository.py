@@ -20,7 +20,7 @@ class ShippingRepository:
         total = int(await self.session.scalar(select(func.count()).select_from(ShippingTemplate)) or 0)
         rows = await self.session.scalars(
             select(ShippingTemplate)
-            .order_by(ShippingTemplate.created_at.desc(), ShippingTemplate.id)
+            .order_by(ShippingTemplate.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )

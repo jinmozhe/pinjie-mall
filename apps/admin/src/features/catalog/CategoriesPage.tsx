@@ -21,10 +21,10 @@ function CategoryEditor({ target, rows, done, close }: { target: CategoryRead | 
     else await commerceApi.createCategory(input);
     message.success("分类已保存"); await done(); close();
   }}>
-    <Form form={form} layout="vertical" initialValues={target ?? { sort_order: 0, is_active: true, parent_id: null }}>
+    <Form form={form} layout="vertical" initialValues={target ?? { sort_order: null, is_active: true, parent_id: null }}>
       <Form.Item name="name" label="分类名称" rules={[{ required: true, whitespace: true, max: 100 }]}><Input maxLength={100} /></Form.Item>
       <Form.Item name="parent_id" label="上级分类"><Select allowClear placeholder="顶级分类" options={rows.filter((row) => row.id !== target?.id).map((row) => ({ value: row.id, label: row.name }))} /></Form.Item>
-      <Form.Item name="sort_order" label="排序值" rules={[{ required: true }]}><InputNumber min={-1000000} max={1000000} precision={0} /></Form.Item>
+      <Form.Item name="sort_order" label="排序权重" extra="值越小越靠前，不填则自动排最后"><InputNumber min={0} precision={0} style={{ width: "100%" }} /></Form.Item>
       <Form.Item name="is_active" label="启用" valuePropName="checked"><Switch /></Form.Item>
       <Alert type="info" title="分类最多三级；停用上级分类会使其下商品不可售。" />
     </Form>
@@ -51,7 +51,7 @@ export function CategoriesPage() {
       ]} columns={[
         { title: "名称", dataIndex: "name", ellipsis: true },
         { title: "上级分类", render: (_, row) => query.data?.find((item) => item.id === row.parent_id)?.name ?? "顶级分类" },
-        { title: "排序", dataIndex: "sort_order" },
+        { title: "排序", render: (_: unknown, row: CategoryRead) => row.sort_order ?? "—" },
         { title: "状态", render: (_, row) => <Tag color={row.is_active ? "success" : "default"}>{row.is_active ? "启用" : "停用"}</Tag> },
         { title: "操作", width: "1%", render: (_, row) => write && <Button icon={<EditOutlined />} disabled={batch.isPending} onClick={() => setEdit({ target: row })}>编辑</Button> },
       ]} />}

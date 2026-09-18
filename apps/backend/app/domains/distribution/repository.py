@@ -91,7 +91,7 @@ class DistributionRepository:
         rows = await self.session.scalars(
             select(CommissionRecord)
             .where(filter_clause)
-            .order_by(CommissionRecord.created_at.desc(), CommissionRecord.id.desc())
+            .order_by(CommissionRecord.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )
@@ -159,7 +159,7 @@ class DistributionRepository:
         rows = await self.session.scalars(
             select(WithdrawalRequest)
             .where(filter_clause)
-            .order_by(WithdrawalRequest.created_at.desc(), WithdrawalRequest.id.desc())
+            .order_by(WithdrawalRequest.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )
@@ -172,7 +172,7 @@ class DistributionRepository:
         rows = await self.session.scalars(
             select(WithdrawalRequest)
             .where(WithdrawalRequest.status == "requested")
-            .order_by(WithdrawalRequest.created_at, WithdrawalRequest.id)
+            .order_by(WithdrawalRequest.id)
             .offset((page - 1) * page_size)
             .limit(page_size)
         )

@@ -19,7 +19,7 @@ class CartRepository:
     async def list_for_user(self, user_id: UUID) -> list[CartItem]:
         return list(
             await self.session.scalars(
-                select(CartItem).where(CartItem.user_id == user_id).order_by(CartItem.created_at, CartItem.id)
+                select(CartItem).where(CartItem.user_id == user_id).order_by(CartItem.id)
             )
         )
 

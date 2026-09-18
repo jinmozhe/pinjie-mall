@@ -12143,12 +12143,17 @@
             "description": "父分类 ID，根分类为空"
           },
           "sort_order": {
-            "type": "integer",
-            "maximum": 1000000.0,
-            "minimum": -1000000.0,
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Sort Order",
-            "description": "排序值",
-            "default": 0
+            "description": "排序权重，值越小越靠前，不填则自动排最后"
           },
           "is_active": {
             "type": "boolean",
@@ -12187,12 +12192,17 @@
             "description": "父分类 ID，根分类为空"
           },
           "sort_order": {
-            "type": "integer",
-            "maximum": 1000000.0,
-            "minimum": -1000000.0,
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Sort Order",
-            "description": "排序值",
-            "default": 0
+            "description": "排序权重，值越小越靠前，不填则自动排最后"
           },
           "is_active": {
             "type": "boolean",
@@ -12244,12 +12254,17 @@
             "description": "父分类 ID，根分类为空"
           },
           "sort_order": {
-            "type": "integer",
-            "maximum": 1000000.0,
-            "minimum": -1000000.0,
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Sort Order",
-            "description": "排序值",
-            "default": 0
+            "description": "排序权重，值越小越靠前，不填则自动排最后"
           },
           "is_active": {
             "type": "boolean",
