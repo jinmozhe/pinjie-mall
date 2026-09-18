@@ -182,10 +182,17 @@ Service、Domain 和 Repository 禁止依赖 FastAPI `Request`、`Response`、`D
 4. 查询采用 SQLAlchemy 2.x `select()`、`insert()`、`update()` 和 `delete()` 风格。唯一结果使用 `scalar_one()`、`scalar_one_or_none()` 或同等明确语义。
 5. 异步关联显式使用 `selectinload`、`joinedload` 或专用查询投影，禁止在响应序列化阶段触发懒加载。
 6. 大列表必须分页；排序字段使用白名单映射，禁止将用户输入直接作为列名或 SQL 片段。
-7. 禁止使用 `text()`、字符串格式化或拼接把用户输入写入 SQL。确需原生 SQL 时使用绑定参数、限定在 Repository，并增加安全与数据库集成测试。
-8. 高频过滤、排序、状态扫描、外键和唯一性必须结合真实查询评估索引；禁止无证据为所有字段建索引。
-9. 并发写入根据业务不变量选择数据库唯一约束、原子条件更新、乐观版本或悲观锁。只在确有竞争证据时使用 `FOR UPDATE`，并规定锁顺序和超时。
-10. Repository 返回领域需要的实体或 DTO，不返回 HTTP 响应，也不隐藏“无结果”和数据库故障之间的区别。
+7. **列表排序规范**：项目主键采用 UUID v7（时间戳单调递增），`id` 字段本身已承载创建时间语义，列表查询禁止将 `created_at` 与 `id` 冗余组合排序，统一按以下规则执行：
+   - **分页列表（倒序）**：使用 `order_by(Model.id.desc())`，等价于按创建时间倒序，直接利用主键索引，不得额外添加 `.created_at.desc()` 兜底；
+   - **从属子列表（正序）**：如订单明细、SKU、购物车、地址，使用 `order_by(Model.id)`，不得额外添加 `.created_at`；
+   - **含人工排序的列表**：如分类，使用 `order_by(Model.sort_order.asc().nulls_last(), Model.id.desc())`；
+   - **业务时间字段**：按 `auto_confirm_at`、`expires_at`、`published_at` 等业务含义字段排序的查询，该字段语义不同于创建时间，可按实际需要排序，不受此规范约束；
+   - **加锁防死锁查询**：`with_for_update()` 场景的排序用于固定锁顺序（如按 `user_id`、`sku_id` 排），不强制改为 `id` 排序；
+   - 所有排序字段变更必须评估现有索引是否能覆盖，无法覆盖时必须新增相应索引。
+8. 禁止使用 `text()`、字符串格式化或拼接把用户输入写入 SQL。确需原生 SQL 时使用绑定参数、限定在 Repository，并增加安全与数据库集成测试。
+9. 高频过滤、排序、状态扫描、外键和唯一性必须结合真实查询评估索引；禁止无证据为所有字段建索引。
+10. 并发写入根据业务不变量选择数据库唯一约束、原子条件更新、乐观版本或悲观锁。只在确有竞争证据时使用 `FOR UPDATE`，并规定锁顺序和超时。
+11. Repository 返回领域需要的实体或 DTO，不返回 HTTP 响应，也不隐藏“无结果”和数据库故障之间的区别。
 
 ## 9. Model 与 PostgreSQL
 
@@ -200,6 +207,13 @@ Service、Domain 和 Repository 禁止依赖 FastAPI `Request`、`Response`、`D
 9. 软删除、归档和物理删除表达不同语义，按领域明确选择。所有相关查询必须明确是否包含已删除或已归档数据。
 10. 禁止未经设计的级联物理删除核心可追溯数据；高风险记录优先状态化保留并受保留期与隐私要求约束。
 11. 新增 Model 必须进入 Alembic metadata 的明确导入链，并验证 Schema、ORM、数据库类型和 OpenAPI 语义一致。
+12. **人工排序字段（sort_order）规范**：需要人工控制显示顺序的实体才允许定义 `sort_order` 字段，统一遵守以下规则：
+    - 列类型使用 `Integer`，**必须**设置 `nullable=True, default=None`；禁止 `NOT NULL DEFAULT 0`。
+    - Python 类型标注使用 `Mapped[int | None]`，Pydantic Schema 使用 `int | None = Field(default=None, ge=0)`，不支持负值。
+    - 字段语义：`NULL` 表示未人工设置，自动排最后；正整数越小越靠前（相同值时以 `id.desc()` 兜底）。
+    - 查询排序固定使用 `Model.sort_order.asc().nulls_last(), Model.id.desc()`，禁止将 0 作为"未设置"标记。
+    - 字段 comment 使用"排序权重，值越小越靠前，NULL 表示未人工设置自动排最后"。
+    - 新增时必须同步新增 Alembic 迁移，明确去掉 `NOT NULL` 约束和 DEFAULT 值，并提供 downgrade 回滚路径（将 NULL 回填为 0）。
 
 ## 10. Alembic 与数据库演进
 
@@ -352,5 +366,7 @@ Backend 详细设计、实现和评审至少核对：
 - 是否存在同步 I/O 阻塞事件循环、无界并发、无限重试和无总预算调用。
 - Liveness、Readiness 和 Startup 是否各自回答正确问题。
 - 实际门禁、跳过项、未执行项和剩余风险是否如实记录。
+- 列表查询排序是否遵守第 8 节第 7 条规范：分页列表用 `id.desc()`，禁止冗余添加 `created_at.desc()`；从属子列表用 `id` 正序；含 `sort_order` 的列表用 `sort_order.asc().nulls_last(), id.desc()`。
+- 新增 `sort_order` 字段是否符合第 9 节第 12 条规范：`nullable=True, default=None`，`ge=0`，禁止 `NOT NULL DEFAULT 0`，并同步 Alembic 迁移。
 
 发现标准无法覆盖的新型高风险边界时，先更新当前计划；涉及长期技术取舍时新增 ADR；确认后的稳定规则再进入对应权威文档。禁止在单个实现中私自创造例外。
