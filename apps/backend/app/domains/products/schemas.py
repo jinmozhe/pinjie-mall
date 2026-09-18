@@ -12,7 +12,7 @@ class CategoryInput(BaseModel):
 
     name: str = Field(min_length=1, max_length=100, description="分类名称")
     parent_id: UUID | None = Field(default=None, description="父分类 ID，根分类为空")
-    sort_order: int = Field(default=0, ge=-1000000, le=1000000, description="排序值")
+    sort_order: int | None = Field(default=None, ge=0, description="排序权重，值越小越靠前，不填则自动排最后")
     is_active: bool = Field(default=True, strict=True, description="分类是否启用")
 
 

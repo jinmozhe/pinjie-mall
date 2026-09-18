@@ -21,7 +21,7 @@ class AddressRepository:
             await self.session.scalars(
                 select(UserAddress)
                 .where(UserAddress.user_id == user_id)
-                .order_by(UserAddress.created_at, UserAddress.id)
+                .order_by(UserAddress.id)
                 .execution_options(populate_existing=True)
             )
         )

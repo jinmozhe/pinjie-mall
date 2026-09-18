@@ -125,10 +125,10 @@ async def test_payment_cannot_confirm_missing_or_mismatched_inventory_reservatio
 class CatalogStore:
     def __init__(self):
         self.parent = Category(
-            id=new_uuid7(), name="停用父分类", is_active=False, parent_id=None, sort_order=0, revision=1
+            id=new_uuid7(), name="停用父分类", is_active=False, parent_id=None, sort_order=None, revision=1
         )
         self.category = Category(
-            id=new_uuid7(), name="启用子分类", is_active=True, parent_id=self.parent.id, sort_order=0, revision=1
+            id=new_uuid7(), name="启用子分类", is_active=True, parent_id=self.parent.id, sort_order=None, revision=1
         )
         self.product = Product(
             id=new_uuid7(),

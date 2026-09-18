@@ -1221,9 +1221,9 @@ export type CategoryInput = {
     /**
      * Sort Order
      *
-     * 排序值
+     * 排序权重，值越小越靠前，不填则自动排最后
      */
-    sort_order?: number;
+    sort_order?: number | null;
     /**
      * Is Active
      *
@@ -1251,9 +1251,9 @@ export type CategoryRead = {
     /**
      * Sort Order
      *
-     * 排序值
+     * 排序权重，值越小越靠前，不填则自动排最后
      */
-    sort_order?: number;
+    sort_order?: number | null;
     /**
      * Is Active
      *
@@ -1293,9 +1293,9 @@ export type CategoryUpdate = {
     /**
      * Sort Order
      *
-     * 排序值
+     * 排序权重，值越小越靠前，不填则自动排最后
      */
-    sort_order?: number;
+    sort_order?: number | null;
     /**
      * Is Active
      *

@@ -19,7 +19,7 @@ class Category(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     parent_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("product_categories.id", ondelete="RESTRICT"), nullable=True, index=True, comment="父分类 ID"
     )
-    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0, comment="排序值")
+    sort_order: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None, comment="排序权重，值越小越靠前，NULL 表示未人工设置自动排最后")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, comment="分类启用状态")
     revision: Mapped[int] = mapped_column(Integer, nullable=False, default=1, comment="编辑版本")
 

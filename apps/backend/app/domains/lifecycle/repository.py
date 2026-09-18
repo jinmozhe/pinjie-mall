@@ -163,7 +163,7 @@ class LifecycleRepository:
         total = int(await self.session.scalar(select(func.count()).select_from(RefundRequest)) or 0)
         rows = await self.session.scalars(
             select(RefundRequest)
-            .order_by(RefundRequest.created_at.desc(), RefundRequest.id.desc())
+            .order_by(RefundRequest.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )
