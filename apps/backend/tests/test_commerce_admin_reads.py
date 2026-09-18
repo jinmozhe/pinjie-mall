@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from app.api.commerce_reporting_router import get_commerce_reporting_service
 from app.api.dependencies import get_current_admin, get_db_session
 from app.api.lifecycle_dependencies import get_lifecycle_service
 from app.api.transaction_dependencies import get_order_service
@@ -23,6 +24,10 @@ class ReadService:
     def __init__(self):
         self.order_id = new_uuid7()
         self.calls = 0
+
+    async def page(self, resource, schema, filters):
+        self.calls += 1
+        return PageResult[schema].create(items=[], total=0, page=filters.page, page_size=filters.page_size)
 
     async def admin_page(self, page, page_size):
         self.calls += 1
@@ -74,6 +79,12 @@ class ReadService:
         ("/admin/orders/{id}", "orders:read"),
         ("/admin/orders/{id}/fulfillment", "orders:read"),
         ("/admin/refunds", "refunds:read"),
+        ("/admin/payments", "payments:read"),
+        ("/admin/reconciliation-records", "reconciliation:read"),
+        ("/admin/members", "members:read"),
+        ("/admin/commissions", "commissions:read"),
+        ("/admin/wallets", "wallets:read"),
+        ("/admin/withdrawals", "withdrawals:read"),
     ],
 )
 @pytest.mark.parametrize(("identity", "expected"), [("missing", 401), ("wrong_permission", 403), ("allowed", 200)])
@@ -86,6 +97,7 @@ async def test_management_read_requires_exact_permission(route, permission, iden
 
     app.dependency_overrides[get_db_session] = session
     app.dependency_overrides[get_order_service] = lambda: service
+    app.dependency_overrides[get_commerce_reporting_service] = lambda: service
     app.dependency_overrides[get_lifecycle_service] = lambda: service
     if identity != "missing":
         app.dependency_overrides[get_current_admin] = lambda: SimpleNamespace(
@@ -104,6 +116,7 @@ async def test_management_list_rejects_unbounded_page_size():
     app = create_app(Settings.model_construct(log_file_enabled=False))
     service = ReadService()
     app.dependency_overrides[get_order_service] = lambda: service
+    app.dependency_overrides[get_commerce_reporting_service] = lambda: service
     app.dependency_overrides[get_current_admin] = lambda: SimpleNamespace(permissions=frozenset({"orders:read"}))
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:
         response = await client.get("/api/v1/admin/orders?page_size=101")

@@ -6,6 +6,2529 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v1/admin/orders": {
+      "get": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "查询订单列表",
+        "operationId": "orders_page_api_v1_admin_orders_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "记录标识，会员列表使用用户标识",
+              "title": "Record Id"
+            },
+            "description": "记录标识，会员列表使用用户标识"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "用户标识，佣金列表使用受益人标识",
+              "title": "User Id"
+            },
+            "description": "用户标识，佣金列表使用受益人标识"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "订单标识",
+              "title": "Order Id"
+            },
+            "description": "订单标识"
+          },
+          {
+            "name": "inviter_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "直接推荐人标识",
+              "title": "Inviter Id"
+            },
+            "description": "直接推荐人标识"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "状态代码",
+              "title": "Status"
+            },
+            "description": "状态代码"
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "wechat",
+                    "alipay"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "支付渠道",
+              "title": "Channel"
+            },
+            "description": "支付渠道"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "physical",
+                    "virtual"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品类型",
+              "title": "Product Type"
+            },
+            "description": "商品类型"
+          },
+          {
+            "name": "wallet_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "commission",
+                    "consumption"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "钱包轨道",
+              "title": "Wallet Type"
+            },
+            "description": "钱包轨道"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_AdminOrderSummary__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/orders/export": {
+      "post": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "导出选中订单",
+        "description": "仅导出一至一百条选中记录的公开字段，不修改业务状态。",
+        "operationId": "orders_export_api_v1_admin_orders_export_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedCommerceIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CommerceExportRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/refunds": {
+      "get": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "查询退款列表",
+        "operationId": "refunds_page_api_v1_admin_refunds_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "记录标识，会员列表使用用户标识",
+              "title": "Record Id"
+            },
+            "description": "记录标识，会员列表使用用户标识"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "用户标识，佣金列表使用受益人标识",
+              "title": "User Id"
+            },
+            "description": "用户标识，佣金列表使用受益人标识"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "订单标识",
+              "title": "Order Id"
+            },
+            "description": "订单标识"
+          },
+          {
+            "name": "inviter_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "直接推荐人标识",
+              "title": "Inviter Id"
+            },
+            "description": "直接推荐人标识"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "状态代码",
+              "title": "Status"
+            },
+            "description": "状态代码"
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "wechat",
+                    "alipay"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "支付渠道",
+              "title": "Channel"
+            },
+            "description": "支付渠道"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "physical",
+                    "virtual"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品类型",
+              "title": "Product Type"
+            },
+            "description": "商品类型"
+          },
+          {
+            "name": "wallet_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "commission",
+                    "consumption"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "钱包轨道",
+              "title": "Wallet Type"
+            },
+            "description": "钱包轨道"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_RefundRequestRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/refunds/export": {
+      "post": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "导出选中退款",
+        "description": "仅导出一至一百条选中记录的公开字段，不修改业务状态。",
+        "operationId": "refunds_export_api_v1_admin_refunds_export_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedCommerceIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CommerceExportRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/withdrawals": {
+      "get": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "查询提现列表",
+        "operationId": "withdrawals_page_api_v1_admin_withdrawals_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "记录标识，会员列表使用用户标识",
+              "title": "Record Id"
+            },
+            "description": "记录标识，会员列表使用用户标识"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "用户标识，佣金列表使用受益人标识",
+              "title": "User Id"
+            },
+            "description": "用户标识，佣金列表使用受益人标识"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "订单标识",
+              "title": "Order Id"
+            },
+            "description": "订单标识"
+          },
+          {
+            "name": "inviter_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "直接推荐人标识",
+              "title": "Inviter Id"
+            },
+            "description": "直接推荐人标识"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "状态代码",
+              "title": "Status"
+            },
+            "description": "状态代码"
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "wechat",
+                    "alipay"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "支付渠道",
+              "title": "Channel"
+            },
+            "description": "支付渠道"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "physical",
+                    "virtual"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品类型",
+              "title": "Product Type"
+            },
+            "description": "商品类型"
+          },
+          {
+            "name": "wallet_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "commission",
+                    "consumption"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "钱包轨道",
+              "title": "Wallet Type"
+            },
+            "description": "钱包轨道"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_WithdrawalRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/withdrawals/export": {
+      "post": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "导出选中提现",
+        "description": "仅导出一至一百条选中记录的公开字段，不修改业务状态。",
+        "operationId": "withdrawals_export_api_v1_admin_withdrawals_export_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedCommerceIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CommerceExportRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/payments": {
+      "get": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "查询支付列表",
+        "operationId": "payments_page_api_v1_admin_payments_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "记录标识，会员列表使用用户标识",
+              "title": "Record Id"
+            },
+            "description": "记录标识，会员列表使用用户标识"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "用户标识，佣金列表使用受益人标识",
+              "title": "User Id"
+            },
+            "description": "用户标识，佣金列表使用受益人标识"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "订单标识",
+              "title": "Order Id"
+            },
+            "description": "订单标识"
+          },
+          {
+            "name": "inviter_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "直接推荐人标识",
+              "title": "Inviter Id"
+            },
+            "description": "直接推荐人标识"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "状态代码",
+              "title": "Status"
+            },
+            "description": "状态代码"
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "wechat",
+                    "alipay"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "支付渠道",
+              "title": "Channel"
+            },
+            "description": "支付渠道"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "physical",
+                    "virtual"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品类型",
+              "title": "Product Type"
+            },
+            "description": "商品类型"
+          },
+          {
+            "name": "wallet_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "commission",
+                    "consumption"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "钱包轨道",
+              "title": "Wallet Type"
+            },
+            "description": "钱包轨道"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_PaymentAttemptRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/payments/export": {
+      "post": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "导出选中支付",
+        "description": "仅导出一至一百条选中记录的公开字段，不修改业务状态。",
+        "operationId": "payments_export_api_v1_admin_payments_export_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedCommerceIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CommerceExportRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/reconciliation-records": {
+      "get": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "查询对账列表",
+        "operationId": "reconciliation_records_page_api_v1_admin_reconciliation_records_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "记录标识，会员列表使用用户标识",
+              "title": "Record Id"
+            },
+            "description": "记录标识，会员列表使用用户标识"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "用户标识，佣金列表使用受益人标识",
+              "title": "User Id"
+            },
+            "description": "用户标识，佣金列表使用受益人标识"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "订单标识",
+              "title": "Order Id"
+            },
+            "description": "订单标识"
+          },
+          {
+            "name": "inviter_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "直接推荐人标识",
+              "title": "Inviter Id"
+            },
+            "description": "直接推荐人标识"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "状态代码",
+              "title": "Status"
+            },
+            "description": "状态代码"
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "wechat",
+                    "alipay"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "支付渠道",
+              "title": "Channel"
+            },
+            "description": "支付渠道"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "physical",
+                    "virtual"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品类型",
+              "title": "Product Type"
+            },
+            "description": "商品类型"
+          },
+          {
+            "name": "wallet_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "commission",
+                    "consumption"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "钱包轨道",
+              "title": "Wallet Type"
+            },
+            "description": "钱包轨道"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_ReconciliationRecordRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "支付与售后"
+        ],
+        "summary": "导入渠道对账记录",
+        "operationId": "admin_reconcile_api_v1_admin_reconciliation_records_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconciliationRecordCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ReconciliationRecordRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/reconciliation-records/export": {
+      "post": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "导出选中对账",
+        "description": "仅导出一至一百条选中记录的公开字段，不修改业务状态。",
+        "operationId": "reconciliation_records_export_api_v1_admin_reconciliation_records_export_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedCommerceIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CommerceExportRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/members": {
+      "get": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "查询会员与推荐关系列表",
+        "operationId": "members_page_api_v1_admin_members_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "记录标识，会员列表使用用户标识",
+              "title": "Record Id"
+            },
+            "description": "记录标识，会员列表使用用户标识"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "用户标识，佣金列表使用受益人标识",
+              "title": "User Id"
+            },
+            "description": "用户标识，佣金列表使用受益人标识"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "订单标识",
+              "title": "Order Id"
+            },
+            "description": "订单标识"
+          },
+          {
+            "name": "inviter_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "直接推荐人标识",
+              "title": "Inviter Id"
+            },
+            "description": "直接推荐人标识"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "状态代码",
+              "title": "Status"
+            },
+            "description": "状态代码"
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "wechat",
+                    "alipay"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "支付渠道",
+              "title": "Channel"
+            },
+            "description": "支付渠道"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "physical",
+                    "virtual"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品类型",
+              "title": "Product Type"
+            },
+            "description": "商品类型"
+          },
+          {
+            "name": "wallet_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "commission",
+                    "consumption"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "钱包轨道",
+              "title": "Wallet Type"
+            },
+            "description": "钱包轨道"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_MemberProfileRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/members/export": {
+      "post": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "导出选中会员与推荐关系",
+        "description": "仅导出一至一百条选中记录的公开字段，不修改业务状态。",
+        "operationId": "members_export_api_v1_admin_members_export_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedCommerceIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CommerceExportRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/commissions": {
+      "get": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "查询佣金列表",
+        "operationId": "commissions_page_api_v1_admin_commissions_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "记录标识，会员列表使用用户标识",
+              "title": "Record Id"
+            },
+            "description": "记录标识，会员列表使用用户标识"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "用户标识，佣金列表使用受益人标识",
+              "title": "User Id"
+            },
+            "description": "用户标识，佣金列表使用受益人标识"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "订单标识",
+              "title": "Order Id"
+            },
+            "description": "订单标识"
+          },
+          {
+            "name": "inviter_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "直接推荐人标识",
+              "title": "Inviter Id"
+            },
+            "description": "直接推荐人标识"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "状态代码",
+              "title": "Status"
+            },
+            "description": "状态代码"
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "wechat",
+                    "alipay"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "支付渠道",
+              "title": "Channel"
+            },
+            "description": "支付渠道"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "physical",
+                    "virtual"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品类型",
+              "title": "Product Type"
+            },
+            "description": "商品类型"
+          },
+          {
+            "name": "wallet_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "commission",
+                    "consumption"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "钱包轨道",
+              "title": "Wallet Type"
+            },
+            "description": "钱包轨道"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_CommissionRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/commissions/export": {
+      "post": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "导出选中佣金",
+        "description": "仅导出一至一百条选中记录的公开字段，不修改业务状态。",
+        "operationId": "commissions_export_api_v1_admin_commissions_export_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedCommerceIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CommerceExportRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/wallets": {
+      "get": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "查询钱包列表",
+        "operationId": "wallets_page_api_v1_admin_wallets_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "记录标识，会员列表使用用户标识",
+              "title": "Record Id"
+            },
+            "description": "记录标识，会员列表使用用户标识"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "用户标识，佣金列表使用受益人标识",
+              "title": "User Id"
+            },
+            "description": "用户标识，佣金列表使用受益人标识"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "订单标识",
+              "title": "Order Id"
+            },
+            "description": "订单标识"
+          },
+          {
+            "name": "inviter_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "直接推荐人标识",
+              "title": "Inviter Id"
+            },
+            "description": "直接推荐人标识"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "状态代码",
+              "title": "Status"
+            },
+            "description": "状态代码"
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "wechat",
+                    "alipay"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "支付渠道",
+              "title": "Channel"
+            },
+            "description": "支付渠道"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "physical",
+                    "virtual"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品类型",
+              "title": "Product Type"
+            },
+            "description": "商品类型"
+          },
+          {
+            "name": "wallet_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "commission",
+                    "consumption"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "钱包轨道",
+              "title": "Wallet Type"
+            },
+            "description": "钱包轨道"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_AdminWalletRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/wallets/export": {
+      "post": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "导出选中钱包",
+        "description": "仅导出一至一百条选中记录的公开字段，不修改业务状态。",
+        "operationId": "wallets_export_api_v1_admin_wallets_export_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedCommerceIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CommerceExportRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/wallets/{wallet_id}/ledgers": {
+      "get": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "查询钱包不可变流水",
+        "operationId": "wallet_ledgers_api_v1_admin_wallets__wallet_id__ledgers_get",
+        "parameters": [
+          {
+            "name": "wallet_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Wallet Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_WalletLedgerRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/product-categories": {
       "get": {
         "tags": [
@@ -217,6 +2740,89 @@
             "description": "每页数量"
           },
           {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品名称或 SKU 编码关键词",
+              "title": "Search"
+            },
+            "description": "商品名称或 SKU 编码关键词"
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品所属分类标识",
+              "title": "Category Id"
+            },
+            "description": "商品所属分类标识"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "draft",
+                    "on_sale",
+                    "off_sale"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品状态",
+              "title": "Status"
+            },
+            "description": "商品状态"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "physical",
+                    "virtual"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品类型",
+              "title": "Product Type"
+            },
+            "description": "商品类型"
+          },
+          {
             "name": "pinjie_admin_access",
             "in": "cookie",
             "required": false,
@@ -297,6 +2903,183 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseModel_ProductRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/product-categories/status/batch": {
+      "patch": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "原子批量启停商品分类",
+        "operationId": "categories_status_batch_api_v1_admin_product_categories_status_batch_patch",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActiveStatusBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_BatchCompleted_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/products/status/batch": {
+      "patch": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "原子批量上下架商品",
+        "operationId": "products_status_batch_api_v1_admin_products_status_batch_patch",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductStatusBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_BatchCompleted_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/shipping-templates/status/batch": {
+      "patch": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "原子批量启停运费模板",
+        "operationId": "shipping_status_batch_api_v1_admin_shipping_templates_status_batch_patch",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActiveStatusBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_BatchCompleted_"
                 }
               }
             }
@@ -699,6 +3482,75 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseModel_InventoryRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/products/{product_id}/skus/status/batch": {
+      "patch": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "原子批量启停商品变体",
+        "operationId": "skus_status_batch_api_v1_admin_products__product_id__skus_status_batch_patch",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkuStatusBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ProductRead_"
                 }
               }
             }
@@ -1978,82 +4830,6 @@
         }
       }
     },
-    "/api/v1/admin/withdrawals": {
-      "get": {
-        "tags": [
-          "会员分销"
-        ],
-        "summary": "查看待审核提现申请",
-        "operationId": "admin_withdrawals_read_api_v1_admin_withdrawals_get",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "description": "页码，从一开始",
-              "default": 1,
-              "title": "Page"
-            },
-            "description": "页码，从一开始"
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "description": "每页数量",
-              "default": 20,
-              "title": "Page Size"
-            },
-            "description": "每页数量"
-          },
-          {
-            "name": "pinjie_admin_access",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Pinjie Admin Access"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "请求成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseModel_PageResult_WithdrawalRead__"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "请求参数校验失败",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/admin/withdrawals/{withdrawal_id}/approve": {
       "post": {
         "tags": [
@@ -2175,78 +4951,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseModel_WithdrawalRead_"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "请求参数校验失败",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/admin/orders": {
-      "get": {
-        "tags": [
-          "交易"
-        ],
-        "summary": "查看管理订单列表",
-        "operationId": "admin_order_page_api_v1_admin_orders_get",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 1,
-              "title": "Page"
-            }
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 20,
-              "title": "Page Size"
-            }
-          },
-          {
-            "name": "pinjie_admin_access",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Pinjie Admin Access"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "请求成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseModel_PageResult_AdminOrderSummary__"
                 }
               }
             }
@@ -2774,82 +5478,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseModel_OrderRead_"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "请求参数校验失败",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/admin/refunds": {
-      "get": {
-        "tags": [
-          "支付与售后"
-        ],
-        "summary": "查看管理退款申请列表",
-        "operationId": "admin_refund_page_api_v1_admin_refunds_get",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "description": "页码，从一开始",
-              "default": 1,
-              "title": "Page"
-            },
-            "description": "页码，从一开始"
-          },
-          {
-            "name": "page_size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "description": "每页数量",
-              "default": 20,
-              "title": "Page Size"
-            },
-            "description": "每页数量"
-          },
-          {
-            "name": "pinjie_admin_access",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Pinjie Admin Access"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "请求成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseModel_PageResult_RefundRequestRead__"
                 }
               }
             }
@@ -3647,65 +6275,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseModel_RefundRequestRead_"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "请求参数校验失败",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/admin/reconciliation-records": {
-      "post": {
-        "tags": [
-          "支付与售后"
-        ],
-        "summary": "导入渠道对账记录",
-        "operationId": "admin_reconcile_api_v1_admin_reconciliation_records_post",
-        "parameters": [
-          {
-            "name": "pinjie_admin_access",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Pinjie Admin Access"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReconciliationRecordCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "请求成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseModel_ReconciliationRecordRead_"
                 }
               }
             }
@@ -7940,6 +10509,32 @@
         "type": "object",
         "title": "ActionResult"
       },
+      "ActiveStatusBatch": {
+        "properties": {
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/VersionedTarget"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Targets",
+            "description": "一至一百个不重复的目标及版本"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "统一设置的启用状态"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "targets",
+          "is_active"
+        ],
+        "title": "ActiveStatusBatch"
+      },
       "AddressInput": {
         "properties": {
           "receiver_name": {
@@ -8419,7 +11014,8 @@
           "user_id": {
             "type": "string",
             "format": "uuid",
-            "title": "User Id"
+            "title": "User Id",
+            "description": "用户标识"
           },
           "status": {
             "type": "string",
@@ -8428,21 +11024,25 @@
           },
           "product_type": {
             "type": "string",
-            "title": "Product Type"
+            "title": "Product Type",
+            "description": "实物或虚拟商品类型"
           },
           "currency": {
             "type": "string",
-            "title": "Currency"
+            "title": "Currency",
+            "description": "货币代码"
           },
           "items_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Items Amount"
+            "title": "Items Amount",
+            "description": "商品合计金额，单位人民币元"
           },
           "total_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Total Amount"
+            "title": "Total Amount",
+            "description": "订单应付总金额，单位人民币元"
           },
           "expires_at": {
             "type": "string",
@@ -8466,7 +11066,8 @@
                 "type": "null"
               }
             ],
-            "title": "Paid At"
+            "title": "Paid At",
+            "description": "可信支付确认时间"
           },
           "payment_reference": {
             "anyOf": [
@@ -8477,7 +11078,8 @@
                 "type": "null"
               }
             ],
-            "title": "Payment Reference"
+            "title": "Payment Reference",
+            "description": "已确认支付参考号"
           }
         },
         "type": "object",
@@ -9027,6 +11629,68 @@
         ],
         "title": "AdminUserRead"
       },
+      "AdminWalletRead": {
+        "properties": {
+          "wallet_type": {
+            "type": "string",
+            "title": "Wallet Type",
+            "description": "佣金或消费钱包类型"
+          },
+          "available_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Available Amount",
+            "description": "可用余额，单位人民币元"
+          },
+          "frozen_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Frozen Amount",
+            "description": "冻结余额，单位人民币元"
+          },
+          "debt_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debt Amount",
+            "description": "待追回欠款，单位人民币元"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "最近更新时间"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "钱包账户标识"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id",
+            "description": "账户所属会员标识"
+          }
+        },
+        "type": "object",
+        "required": [
+          "wallet_type",
+          "available_amount",
+          "frozen_amount",
+          "debt_amount",
+          "revision",
+          "updated_at",
+          "id",
+          "user_id"
+        ],
+        "title": "AdminWalletRead"
+      },
       "AssetBulkDeleteIn": {
         "properties": {
           "asset_ids": {
@@ -9292,6 +11956,22 @@
         ],
         "title": "BatchActionResult"
       },
+      "BatchCompleted": {
+        "properties": {
+          "completed_count": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Completed Count",
+            "description": "原子完成的目标数量"
+          }
+        },
+        "type": "object",
+        "required": [
+          "completed_count"
+        ],
+        "title": "BatchCompleted"
+      },
       "Body_update_site_logo_api_v1_admin_settings_site_logo_put": {
         "properties": {
           "file": {
@@ -9339,13 +12019,15 @@
           "sku_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Sku Id"
+            "title": "Sku Id",
+            "description": "商品变体标识"
           },
           "quantity": {
             "type": "integer",
             "maximum": 999.0,
             "minimum": 1.0,
-            "title": "Quantity"
+            "title": "Quantity",
+            "description": "商品数量"
           }
         },
         "additionalProperties": false,
@@ -9367,19 +12049,23 @@
           "sku_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Sku Id"
+            "title": "Sku Id",
+            "description": "商品变体标识"
           },
           "quantity": {
             "type": "integer",
-            "title": "Quantity"
+            "title": "Quantity",
+            "description": "商品数量"
           },
           "selected": {
             "type": "boolean",
-            "title": "Selected"
+            "title": "Selected",
+            "description": "购物车条目是否选中"
           },
           "revision": {
             "type": "integer",
-            "title": "Revision"
+            "title": "Revision",
+            "description": "资源并发控制版本"
           }
         },
         "type": "object",
@@ -9411,7 +12097,8 @@
                 "type": "null"
               }
             ],
-            "title": "Quantity"
+            "title": "Quantity",
+            "description": "商品数量"
           },
           "selected": {
             "anyOf": [
@@ -9422,7 +12109,8 @@
                 "type": "null"
               }
             ],
-            "title": "Selected"
+            "title": "Selected",
+            "description": "购物车条目是否选中"
           }
         },
         "additionalProperties": false,
@@ -9589,13 +12277,15 @@
           "sku_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Sku Id"
+            "title": "Sku Id",
+            "description": "商品变体标识"
           },
           "quantity": {
             "type": "integer",
             "maximum": 999.0,
             "minimum": 1.0,
-            "title": "Quantity"
+            "title": "Quantity",
+            "description": "商品数量"
           }
         },
         "additionalProperties": false,
@@ -9621,26 +12311,31 @@
               "$ref": "#/components/schemas/ShippingQuoteGroup"
             },
             "type": "array",
-            "title": "Shipping"
+            "title": "Shipping",
+            "description": "按运费模板分组的报价明细"
           },
           "product_type": {
             "type": "string",
-            "title": "Product Type"
+            "title": "Product Type",
+            "description": "实物或虚拟商品类型"
           },
           "items_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Items Amount"
+            "title": "Items Amount",
+            "description": "商品合计金额，单位人民币元"
           },
           "freight_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Freight Amount"
+            "title": "Freight Amount",
+            "description": "订单运费，单位人民币元"
           },
           "total_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Total Amount"
+            "title": "Total Amount",
+            "description": "订单应付总金额，单位人民币元"
           },
           "address_id": {
             "anyOf": [
@@ -9652,7 +12347,8 @@
                 "type": "null"
               }
             ],
-            "title": "Address Id"
+            "title": "Address Id",
+            "description": "收货地址标识"
           },
           "address_snapshot": {
             "anyOf": [
@@ -9664,11 +12360,13 @@
                 "type": "null"
               }
             ],
-            "title": "Address Snapshot"
+            "title": "Address Snapshot",
+            "description": "下单时固化的收货地址快照"
           },
           "fingerprint": {
             "type": "string",
-            "title": "Fingerprint"
+            "title": "Fingerprint",
+            "description": "服务端报价指纹"
           },
           "expires_at": {
             "type": "string",
@@ -9721,7 +12419,8 @@
                 "type": "null"
               }
             ],
-            "title": "Address Id"
+            "title": "Address Id",
+            "description": "收货地址标识"
           },
           "quote_fingerprint": {
             "anyOf": [
@@ -9734,7 +12433,8 @@
                 "type": "null"
               }
             ],
-            "title": "Quote Fingerprint"
+            "title": "Quote Fingerprint",
+            "description": "提交时核对的服务端报价指纹"
           }
         },
         "additionalProperties": false,
@@ -9744,6 +12444,35 @@
           "items"
         ],
         "title": "CheckoutRequest"
+      },
+      "CommerceExportRead": {
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Columns",
+            "description": "白名单字段名称"
+          },
+          "rows": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Rows",
+            "description": "按字段顺序序列化的记录，金额保留精度"
+          }
+        },
+        "type": "object",
+        "required": [
+          "columns",
+          "rows"
+        ],
+        "title": "CommerceExportRead"
       },
       "CommissionRead": {
         "properties": {
@@ -9756,41 +12485,49 @@
           "order_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Order Id"
+            "title": "Order Id",
+            "description": "订单标识"
           },
           "source_user_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Source User Id"
+            "title": "Source User Id",
+            "description": "产生佣金的购买用户标识"
           },
           "beneficiary_user_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Beneficiary User Id"
+            "title": "Beneficiary User Id",
+            "description": "佣金受益用户标识"
           },
           "level": {
             "type": "integer",
-            "title": "Level"
+            "title": "Level",
+            "description": "推荐佣金层级，最多两级"
           },
           "base_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Base Amount"
+            "title": "Base Amount",
+            "description": "佣金计提基数，单位人民币元"
           },
           "rate": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Rate"
+            "title": "Rate",
+            "description": "佣金比例快照"
           },
           "amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Amount"
+            "title": "Amount",
+            "description": "业务金额，单位人民币元"
           },
           "recovered_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Recovered Amount"
+            "title": "Recovered Amount",
+            "description": "累计追回佣金，单位人民币元"
           },
           "status": {
             "type": "string",
@@ -9800,7 +12537,8 @@
           "frozen_at": {
             "type": "string",
             "format": "date-time",
-            "title": "Frozen At"
+            "title": "Frozen At",
+            "description": "佣金冻结时间"
           },
           "settle_after": {
             "anyOf": [
@@ -9812,7 +12550,8 @@
                 "type": "null"
               }
             ],
-            "title": "Settle After"
+            "title": "Settle After",
+            "description": "允许结算的最早时间"
           },
           "settled_at": {
             "anyOf": [
@@ -9824,7 +12563,8 @@
                 "type": "null"
               }
             ],
-            "title": "Settled At"
+            "title": "Settled At",
+            "description": "佣金结算时间"
           },
           "recovered_at": {
             "anyOf": [
@@ -9836,7 +12576,8 @@
                 "type": "null"
               }
             ],
-            "title": "Recovered At"
+            "title": "Recovered At",
+            "description": "最近佣金追回时间"
           }
         },
         "type": "object",
@@ -10001,11 +12742,13 @@
           "order_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Order Id"
+            "title": "Order Id",
+            "description": "订单标识"
           },
           "product_type": {
             "type": "string",
-            "title": "Product Type"
+            "title": "Product Type",
+            "description": "实物或虚拟商品类型"
           },
           "status": {
             "type": "string",
@@ -10021,7 +12764,8 @@
                 "type": "null"
               }
             ],
-            "title": "Carrier"
+            "title": "Carrier",
+            "description": "物流承运商"
           },
           "tracking_number": {
             "anyOf": [
@@ -10032,7 +12776,8 @@
                 "type": "null"
               }
             ],
-            "title": "Tracking Number"
+            "title": "Tracking Number",
+            "description": "物流运单号"
           },
           "delivery_reference": {
             "anyOf": [
@@ -10043,7 +12788,8 @@
                 "type": "null"
               }
             ],
-            "title": "Delivery Reference"
+            "title": "Delivery Reference",
+            "description": "虚拟商品交付凭证"
           },
           "shipped_at": {
             "anyOf": [
@@ -10055,7 +12801,8 @@
                 "type": "null"
               }
             ],
-            "title": "Shipped At"
+            "title": "Shipped At",
+            "description": "实物发货时间"
           },
           "delivered_at": {
             "anyOf": [
@@ -10067,7 +12814,8 @@
                 "type": "null"
               }
             ],
-            "title": "Delivered At"
+            "title": "Delivered At",
+            "description": "订单交付完成时间"
           },
           "auto_confirm_at": {
             "anyOf": [
@@ -10079,11 +12827,13 @@
                 "type": "null"
               }
             ],
-            "title": "Auto Confirm At"
+            "title": "Auto Confirm At",
+            "description": "自动确认收货时间"
           },
           "revision": {
             "type": "integer",
-            "title": "Revision"
+            "title": "Revision",
+            "description": "资源并发控制版本"
           }
         },
         "type": "object",
@@ -10196,7 +12946,7 @@
             "type": "string",
             "format": "uuid",
             "title": "Sku Id",
-            "description": "SKU ID"
+            "description": "SKU 标识"
           },
           "request_id": {
             "type": "string",
@@ -10269,7 +13019,7 @@
             "type": "string",
             "format": "uuid",
             "title": "Sku Id",
-            "description": "SKU ID"
+            "description": "SKU 标识"
           },
           "available": {
             "type": "integer",
@@ -10413,15 +13163,18 @@
           "user_id": {
             "type": "string",
             "format": "uuid",
-            "title": "User Id"
+            "title": "User Id",
+            "description": "用户标识"
           },
           "invitation_code": {
             "type": "string",
-            "title": "Invitation Code"
+            "title": "Invitation Code",
+            "description": "会员邀请码"
           },
           "level_code": {
             "type": "string",
-            "title": "Level Code"
+            "title": "Level Code",
+            "description": "会员等级代码"
           },
           "inviter_id": {
             "anyOf": [
@@ -10433,7 +13186,8 @@
                 "type": "null"
               }
             ],
-            "title": "Inviter Id"
+            "title": "Inviter Id",
+            "description": "首次绑定的推荐用户标识"
           },
           "bound_at": {
             "anyOf": [
@@ -10445,7 +13199,8 @@
                 "type": "null"
               }
             ],
-            "title": "Bound At"
+            "title": "Bound At",
+            "description": "推荐关系首次绑定时间"
           },
           "created_at": {
             "type": "string",
@@ -10476,36 +13231,43 @@
           "sku_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Sku Id"
+            "title": "Sku Id",
+            "description": "商品变体标识"
           },
           "product_name": {
             "type": "string",
-            "title": "Product Name"
+            "title": "Product Name",
+            "description": "商品名称快照"
           },
           "sku_code": {
             "type": "string",
-            "title": "Sku Code"
+            "title": "Sku Code",
+            "description": "商品变体编码快照"
           },
           "specifications": {
             "additionalProperties": {
               "type": "string"
             },
             "type": "object",
-            "title": "Specifications"
+            "title": "Specifications",
+            "description": "商品规格名称与取值"
           },
           "quantity": {
             "type": "integer",
-            "title": "Quantity"
+            "title": "Quantity",
+            "description": "商品数量"
           },
           "unit_price": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Unit Price"
+            "title": "Unit Price",
+            "description": "成交单价，单位人民币元"
           },
           "line_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Line Amount"
+            "title": "Line Amount",
+            "description": "订单明细金额，单位人民币元"
           }
         },
         "type": "object",
@@ -10536,22 +13298,26 @@
           },
           "product_type": {
             "type": "string",
-            "title": "Product Type"
+            "title": "Product Type",
+            "description": "实物或虚拟商品类型"
           },
           "items_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Items Amount"
+            "title": "Items Amount",
+            "description": "商品合计金额，单位人民币元"
           },
           "freight_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Freight Amount"
+            "title": "Freight Amount",
+            "description": "订单运费，单位人民币元"
           },
           "total_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Total Amount"
+            "title": "Total Amount",
+            "description": "订单应付总金额，单位人民币元"
           },
           "address_snapshot": {
             "anyOf": [
@@ -10563,7 +13329,8 @@
                 "type": "null"
               }
             ],
-            "title": "Address Snapshot"
+            "title": "Address Snapshot",
+            "description": "下单时固化的收货地址快照"
           },
           "expires_at": {
             "type": "string",
@@ -10579,7 +13346,8 @@
           },
           "revision": {
             "type": "integer",
-            "title": "Revision"
+            "title": "Revision",
+            "description": "资源并发控制版本"
           },
           "items": {
             "items": {
@@ -10746,6 +13514,53 @@
           "total_pages"
         ],
         "title": "PageResult[AdminUserRead]"
+      },
+      "PageResult_AdminWalletRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminWalletRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[AdminWalletRead]"
       },
       "PageResult_AssetRead_": {
         "properties": {
@@ -10982,6 +13797,100 @@
         ],
         "title": "PageResult[LoginEventRead]"
       },
+      "PageResult_MemberProfileRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MemberProfileRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[MemberProfileRead]"
+      },
+      "PageResult_PaymentAttemptRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentAttemptRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[PaymentAttemptRead]"
+      },
       "PageResult_ProductRead_": {
         "properties": {
           "items": {
@@ -11122,6 +14031,53 @@
           "total_pages"
         ],
         "title": "PageResult[PublicProductRead]"
+      },
+      "PageResult_ReconciliationRecordRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReconciliationRecordRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[ReconciliationRecordRead]"
       },
       "PageResult_RefundRequestRead_": {
         "properties": {
@@ -11358,6 +14314,53 @@
         ],
         "title": "PageResult[ShippingTemplateRead]"
       },
+      "PageResult_WalletLedgerRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WalletLedgerRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[WalletLedgerRead]"
+      },
       "PageResult_WithdrawalRead_": {
         "properties": {
           "items": {
@@ -11461,7 +14464,8 @@
               "wechat",
               "alipay"
             ],
-            "title": "Channel"
+            "title": "Channel",
+            "description": "支付渠道代码"
           }
         },
         "additionalProperties": false,
@@ -11483,7 +14487,8 @@
           "order_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Order Id"
+            "title": "Order Id",
+            "description": "订单标识"
           },
           "channel": {
             "type": "string",
@@ -11491,11 +14496,13 @@
               "wechat",
               "alipay"
             ],
-            "title": "Channel"
+            "title": "Channel",
+            "description": "支付渠道代码"
           },
           "merchant_reference": {
             "type": "string",
-            "title": "Merchant Reference"
+            "title": "Merchant Reference",
+            "description": "商户支付意图参考号"
           },
           "status": {
             "type": "string",
@@ -11505,11 +14512,13 @@
           "amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Amount"
+            "title": "Amount",
+            "description": "业务金额，单位人民币元"
           },
           "currency": {
             "type": "string",
-            "title": "Currency"
+            "title": "Currency",
+            "description": "货币代码"
           },
           "unavailable_reason": {
             "anyOf": [
@@ -11520,7 +14529,8 @@
                 "type": "null"
               }
             ],
-            "title": "Unavailable Reason"
+            "title": "Unavailable Reason",
+            "description": "渠道不可用原因"
           },
           "created_at": {
             "type": "string",
@@ -11780,13 +14790,15 @@
             "type": "integer",
             "maximum": 5.0,
             "minimum": 1.0,
-            "title": "Rating"
+            "title": "Rating",
+            "description": "一至五星评分"
           },
           "content": {
             "type": "string",
             "maxLength": 1000,
             "title": "Content",
-            "default": ""
+            "default": "",
+            "description": "评价文本内容"
           }
         },
         "additionalProperties": false,
@@ -11807,20 +14819,24 @@
           "product_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Product Id"
+            "title": "Product Id",
+            "description": "商品标识"
           },
           "rating": {
             "type": "integer",
-            "title": "Rating"
+            "title": "Rating",
+            "description": "一至五星评分"
           },
           "content": {
             "type": "string",
-            "title": "Content"
+            "title": "Content",
+            "description": "评价文本内容"
           },
           "published_at": {
             "type": "string",
             "format": "date-time",
-            "title": "Published At"
+            "title": "Published At",
+            "description": "评价发布时间"
           }
         },
         "type": "object",
@@ -11832,6 +14848,36 @@
           "published_at"
         ],
         "title": "ProductReviewRead"
+      },
+      "ProductStatusBatch": {
+        "properties": {
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/VersionedTarget"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Targets",
+            "description": "一至一百个不重复的目标及版本"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "on_sale",
+              "off_sale"
+            ],
+            "title": "Status",
+            "description": "统一设置的商品上下架状态"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "targets",
+          "status"
+        ],
+        "title": "ProductStatusBatch"
       },
       "ProductStatusUpdate": {
         "properties": {
@@ -11997,53 +15043,64 @@
           "sku_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Sku Id"
+            "title": "Sku Id",
+            "description": "商品变体标识"
           },
           "product_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Product Id"
+            "title": "Product Id",
+            "description": "商品标识"
           },
           "product_name": {
             "type": "string",
-            "title": "Product Name"
+            "title": "Product Name",
+            "description": "商品名称快照"
           },
           "sku_code": {
             "type": "string",
-            "title": "Sku Code"
+            "title": "Sku Code",
+            "description": "商品变体编码快照"
           },
           "specifications": {
             "additionalProperties": {
               "type": "string"
             },
             "type": "object",
-            "title": "Specifications"
+            "title": "Specifications",
+            "description": "商品规格名称与取值"
           },
           "quantity": {
             "type": "integer",
-            "title": "Quantity"
+            "title": "Quantity",
+            "description": "商品数量"
           },
           "unit_price": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Unit Price"
+            "title": "Unit Price",
+            "description": "成交单价，单位人民币元"
           },
           "line_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Line Amount"
+            "title": "Line Amount",
+            "description": "订单明细金额，单位人民币元"
           },
           "weight_grams": {
             "type": "integer",
-            "title": "Weight Grams"
+            "title": "Weight Grams",
+            "description": "计费重量，单位克"
           },
           "product_revision": {
             "type": "integer",
-            "title": "Product Revision"
+            "title": "Product Revision",
+            "description": "报价时商品版本"
           },
           "product_type": {
             "type": "string",
-            "title": "Product Type"
+            "title": "Product Type",
+            "description": "实物或虚拟商品类型"
           },
           "shipping_template_id": {
             "anyOf": [
@@ -12055,7 +15112,8 @@
                 "type": "null"
               }
             ],
-            "title": "Shipping Template Id"
+            "title": "Shipping Template Id",
+            "description": "运费模板标识"
           }
         },
         "type": "object",
@@ -12108,7 +15166,8 @@
           "revision": {
             "type": "integer",
             "exclusiveMinimum": 0.0,
-            "title": "Revision"
+            "title": "Revision",
+            "description": "资源并发控制版本"
           }
         },
         "additionalProperties": false,
@@ -12126,25 +15185,29 @@
               "wechat",
               "alipay"
             ],
-            "title": "Channel"
+            "title": "Channel",
+            "description": "支付渠道代码"
           },
           "channel_transaction_id": {
             "type": "string",
             "maxLength": 160,
             "minLength": 1,
-            "title": "Channel Transaction Id"
+            "title": "Channel Transaction Id",
+            "description": "渠道交易流水号"
           },
           "source_reference": {
             "type": "string",
             "maxLength": 160,
             "minLength": 1,
-            "title": "Source Reference"
+            "title": "Source Reference",
+            "description": "来源账单参考号"
           },
           "source_hash": {
             "type": "string",
             "maxLength": 64,
             "minLength": 64,
-            "title": "Source Hash"
+            "title": "Source Hash",
+            "description": "来源账单内容摘要"
           },
           "amount": {
             "anyOf": [
@@ -12157,12 +15220,14 @@
                 "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)"
               }
             ],
-            "title": "Amount"
+            "title": "Amount",
+            "description": "业务金额，单位人民币元"
           },
           "currency": {
             "type": "string",
             "const": "CNY",
-            "title": "Currency"
+            "title": "Currency",
+            "description": "货币代码"
           },
           "occurred_at": {
             "type": "string",
@@ -12198,24 +15263,29 @@
               "wechat",
               "alipay"
             ],
-            "title": "Channel"
+            "title": "Channel",
+            "description": "支付渠道代码"
           },
           "channel_transaction_id": {
             "type": "string",
-            "title": "Channel Transaction Id"
+            "title": "Channel Transaction Id",
+            "description": "渠道交易流水号"
           },
           "source_reference": {
             "type": "string",
-            "title": "Source Reference"
+            "title": "Source Reference",
+            "description": "来源账单参考号"
           },
           "amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Amount"
+            "title": "Amount",
+            "description": "业务金额，单位人民币元"
           },
           "currency": {
             "type": "string",
-            "title": "Currency"
+            "title": "Currency",
+            "description": "货币代码"
           },
           "occurred_at": {
             "type": "string",
@@ -12238,7 +15308,8 @@
                 "type": "null"
               }
             ],
-            "title": "Payment Attempt Id"
+            "title": "Payment Attempt Id",
+            "description": "支付意图标识"
           },
           "note": {
             "anyOf": [
@@ -12249,7 +15320,8 @@
                 "type": "null"
               }
             ],
-            "title": "Note"
+            "title": "Note",
+            "description": "操作说明或核对备注"
           }
         },
         "type": "object",
@@ -12362,13 +15434,15 @@
           "order_item_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Order Item Id"
+            "title": "Order Item Id",
+            "description": "订单明细标识"
           },
           "quantity": {
             "type": "integer",
             "maximum": 999.0,
             "minimum": 1.0,
-            "title": "Quantity"
+            "title": "Quantity",
+            "description": "商品数量"
           }
         },
         "additionalProperties": false,
@@ -12401,7 +15475,8 @@
             "type": "string",
             "maxLength": 300,
             "minLength": 1,
-            "title": "Reason"
+            "title": "Reason",
+            "description": "申请原因"
           }
         },
         "additionalProperties": false,
@@ -12424,7 +15499,8 @@
           "order_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Order Id"
+            "title": "Order Id",
+            "description": "订单标识"
           },
           "status": {
             "type": "string",
@@ -12434,15 +15510,18 @@
           "amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Amount"
+            "title": "Amount",
+            "description": "业务金额，单位人民币元"
           },
           "currency": {
             "type": "string",
-            "title": "Currency"
+            "title": "Currency",
+            "description": "货币代码"
           },
           "reason": {
             "type": "string",
-            "title": "Reason"
+            "title": "Reason",
+            "description": "申请原因"
           },
           "review_note": {
             "anyOf": [
@@ -12453,7 +15532,8 @@
                 "type": "null"
               }
             ],
-            "title": "Review Note"
+            "title": "Review Note",
+            "description": "审核说明"
           },
           "created_at": {
             "type": "string",
@@ -12471,7 +15551,8 @@
                 "type": "null"
               }
             ],
-            "title": "Reviewed At"
+            "title": "Reviewed At",
+            "description": "审核时间"
           },
           "confirmed_at": {
             "anyOf": [
@@ -12483,11 +15564,13 @@
                 "type": "null"
               }
             ],
-            "title": "Confirmed At"
+            "title": "Confirmed At",
+            "description": "权威渠道确认时间"
           },
           "revision": {
             "type": "integer",
-            "title": "Revision"
+            "title": "Revision",
+            "description": "资源并发控制版本"
           }
         },
         "type": "object",
@@ -12512,12 +15595,14 @@
             "type": "string",
             "maxLength": 300,
             "minLength": 1,
-            "title": "Note"
+            "title": "Note",
+            "description": "操作说明或核对备注"
           },
           "revision": {
             "type": "integer",
             "exclusiveMinimum": 0.0,
-            "title": "Revision"
+            "title": "Revision",
+            "description": "资源并发控制版本"
           }
         },
         "additionalProperties": false,
@@ -13000,6 +16085,38 @@
         ],
         "title": "ResponseModel[BatchActionResult]"
       },
+      "ResponseModel_BatchCompleted_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/BatchCompleted",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[BatchCompleted]"
+      },
       "ResponseModel_CartItemRead_": {
         "properties": {
           "code": {
@@ -13095,6 +16212,38 @@
           "request_id"
         ],
         "title": "ResponseModel[CheckoutQuote]"
+      },
+      "ResponseModel_CommerceExportRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CommerceExportRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[CommerceExportRead]"
       },
       "ResponseModel_FreightQuote_": {
         "properties": {
@@ -13417,6 +16566,38 @@
         ],
         "title": "ResponseModel[PageResult[AdminUserRead]]"
       },
+      "ResponseModel_PageResult_AdminWalletRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_AdminWalletRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[AdminWalletRead]]"
+      },
       "ResponseModel_PageResult_AssetRead__": {
         "properties": {
           "code": {
@@ -13577,6 +16758,70 @@
         ],
         "title": "ResponseModel[PageResult[LoginEventRead]]"
       },
+      "ResponseModel_PageResult_MemberProfileRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_MemberProfileRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[MemberProfileRead]]"
+      },
+      "ResponseModel_PageResult_PaymentAttemptRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_PaymentAttemptRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[PaymentAttemptRead]]"
+      },
       "ResponseModel_PageResult_ProductRead__": {
         "properties": {
           "code": {
@@ -13672,6 +16917,38 @@
           "request_id"
         ],
         "title": "ResponseModel[PageResult[PublicProductRead]]"
+      },
+      "ResponseModel_PageResult_ReconciliationRecordRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_ReconciliationRecordRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[ReconciliationRecordRead]]"
       },
       "ResponseModel_PageResult_RefundRequestRead__": {
         "properties": {
@@ -13832,6 +17109,38 @@
           "request_id"
         ],
         "title": "ResponseModel[PageResult[ShippingTemplateRead]]"
+      },
+      "ResponseModel_PageResult_WalletLedgerRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_WalletLedgerRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[WalletLedgerRead]]"
       },
       "ResponseModel_PageResult_WithdrawalRead__": {
         "properties": {
@@ -14942,6 +18251,27 @@
         ],
         "title": "SecurityConfigurationRead"
       },
+      "SelectedCommerceIds": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Ids",
+            "description": "一至一百条选中记录，会员使用用户标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "ids"
+        ],
+        "title": "SelectedCommerceIds"
+      },
       "SessionRead": {
         "properties": {
           "id": {
@@ -15051,18 +18381,21 @@
             "type": "string",
             "maxLength": 80,
             "minLength": 1,
-            "title": "Carrier"
+            "title": "Carrier",
+            "description": "物流承运商"
           },
           "tracking_number": {
             "type": "string",
             "maxLength": 120,
             "minLength": 1,
-            "title": "Tracking Number"
+            "title": "Tracking Number",
+            "description": "物流运单号"
           },
           "revision": {
             "type": "integer",
             "exclusiveMinimum": 0.0,
-            "title": "Revision"
+            "title": "Revision",
+            "description": "资源并发控制版本"
           }
         },
         "additionalProperties": false,
@@ -15086,7 +18419,8 @@
                 "type": "null"
               }
             ],
-            "title": "Template Id"
+            "title": "Template Id",
+            "description": "运费模板标识"
           },
           "revision": {
             "anyOf": [
@@ -15097,29 +18431,35 @@
                 "type": "null"
               }
             ],
-            "title": "Revision"
+            "title": "Revision",
+            "description": "资源并发控制版本"
           },
           "product_type": {
             "type": "string",
-            "title": "Product Type"
+            "title": "Product Type",
+            "description": "实物或虚拟商品类型"
           },
           "pieces": {
             "type": "integer",
-            "title": "Pieces"
+            "title": "Pieces",
+            "description": "计费件数"
           },
           "weight_grams": {
             "type": "integer",
-            "title": "Weight Grams"
+            "title": "Weight Grams",
+            "description": "计费重量，单位克"
           },
           "items_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Items Amount"
+            "title": "Items Amount",
+            "description": "商品合计金额，单位人民币元"
           },
           "freight": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Freight"
+            "title": "Freight",
+            "description": "本组运费，单位人民币元"
           }
         },
         "type": "object",
@@ -15737,6 +19077,40 @@
           "id"
         ],
         "title": "SkuRead"
+      },
+      "SkuStatusBatch": {
+        "properties": {
+          "sku_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Sku Ids",
+            "description": "同一商品内明确选中的变体标识"
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "读取商品时的共享版本"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "统一设置的变体启用状态"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "sku_ids",
+          "revision",
+          "is_active"
+        ],
+        "title": "SkuStatusBatch"
       },
       "SkuUpdate": {
         "properties": {
@@ -16458,18 +19832,43 @@
         ],
         "title": "ValidationError"
       },
+      "VersionedTarget": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "明确选中的资源标识"
+          },
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "用户读取时的资源版本"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision"
+        ],
+        "title": "VersionedTarget"
+      },
       "VirtualDeliveryCreate": {
         "properties": {
           "delivery_reference": {
             "type": "string",
             "maxLength": 200,
             "minLength": 1,
-            "title": "Delivery Reference"
+            "title": "Delivery Reference",
+            "description": "虚拟商品交付凭证"
           },
           "revision": {
             "type": "integer",
             "exclusiveMinimum": 0.0,
-            "title": "Revision"
+            "title": "Revision",
+            "description": "资源并发控制版本"
           }
         },
         "additionalProperties": false,
@@ -16484,26 +19883,31 @@
         "properties": {
           "wallet_type": {
             "type": "string",
-            "title": "Wallet Type"
+            "title": "Wallet Type",
+            "description": "佣金或消费钱包类型"
           },
           "available_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Available Amount"
+            "title": "Available Amount",
+            "description": "可用余额，单位人民币元"
           },
           "frozen_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Frozen Amount"
+            "title": "Frozen Amount",
+            "description": "冻结余额，单位人民币元"
           },
           "debt_amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Debt Amount"
+            "title": "Debt Amount",
+            "description": "待追回欠款，单位人民币元"
           },
           "revision": {
             "type": "integer",
-            "title": "Revision"
+            "title": "Revision",
+            "description": "资源并发控制版本"
           },
           "updated_at": {
             "type": "string",
@@ -16522,6 +19926,75 @@
           "updated_at"
         ],
         "title": "WalletAccountRead"
+      },
+      "WalletLedgerRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "流水标识"
+          },
+          "wallet_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Wallet Id",
+            "description": "钱包标识"
+          },
+          "entry_type": {
+            "type": "string",
+            "title": "Entry Type",
+            "description": "资金变动类型"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "description": "可用余额变化"
+          },
+          "frozen_delta": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Frozen Delta",
+            "description": "冻结余额变化"
+          },
+          "debt_delta": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debt Delta",
+            "description": "欠款变化"
+          },
+          "reference_type": {
+            "type": "string",
+            "title": "Reference Type",
+            "description": "关联业务类型"
+          },
+          "reference_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reference Id",
+            "description": "关联业务标识"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "入账时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "wallet_id",
+          "entry_type",
+          "amount",
+          "frozen_delta",
+          "debt_delta",
+          "reference_type",
+          "reference_id",
+          "created_at"
+        ],
+        "title": "WalletLedgerRead"
       },
       "WithdrawalCreate": {
         "properties": {
@@ -16542,7 +20015,8 @@
                 "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,13}|(?=[\\d.]{1,16}0*$)\\d{0,13}\\.\\d{0,2}0*$)"
               }
             ],
-            "title": "Amount"
+            "title": "Amount",
+            "description": "业务金额，单位人民币元"
           },
           "destination_reference": {
             "type": "string",
@@ -16572,20 +20046,24 @@
           "user_id": {
             "type": "string",
             "format": "uuid",
-            "title": "User Id"
+            "title": "User Id",
+            "description": "用户标识"
           },
           "amount": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
-            "title": "Amount"
+            "title": "Amount",
+            "description": "业务金额，单位人民币元"
           },
           "currency": {
             "type": "string",
-            "title": "Currency"
+            "title": "Currency",
+            "description": "货币代码"
           },
           "destination_reference": {
             "type": "string",
-            "title": "Destination Reference"
+            "title": "Destination Reference",
+            "description": "脱敏收款目标引用"
           },
           "status": {
             "type": "string",
@@ -16601,7 +20079,8 @@
                 "type": "null"
               }
             ],
-            "title": "Review Note"
+            "title": "Review Note",
+            "description": "审核说明"
           },
           "reviewed_by_id": {
             "anyOf": [
@@ -16613,7 +20092,8 @@
                 "type": "null"
               }
             ],
-            "title": "Reviewed By Id"
+            "title": "Reviewed By Id",
+            "description": "审核管理员标识"
           },
           "reviewed_at": {
             "anyOf": [
@@ -16625,7 +20105,8 @@
                 "type": "null"
               }
             ],
-            "title": "Reviewed At"
+            "title": "Reviewed At",
+            "description": "审核时间"
           },
           "channel_reference": {
             "anyOf": [
@@ -16636,7 +20117,8 @@
                 "type": "null"
               }
             ],
-            "title": "Channel Reference"
+            "title": "Channel Reference",
+            "description": "渠道执行参考号"
           },
           "confirmed_at": {
             "anyOf": [
@@ -16648,11 +20130,13 @@
                 "type": "null"
               }
             ],
-            "title": "Confirmed At"
+            "title": "Confirmed At",
+            "description": "权威渠道确认时间"
           },
           "revision": {
             "type": "integer",
-            "title": "Revision"
+            "title": "Revision",
+            "description": "资源并发控制版本"
           },
           "created_at": {
             "type": "string",
@@ -16691,13 +20175,15 @@
           "revision": {
             "type": "integer",
             "minimum": 1.0,
-            "title": "Revision"
+            "title": "Revision",
+            "description": "资源并发控制版本"
           },
           "note": {
             "type": "string",
             "maxLength": 300,
             "minLength": 1,
-            "title": "Note"
+            "title": "Note",
+            "description": "操作说明或核对备注"
           }
         },
         "additionalProperties": false,

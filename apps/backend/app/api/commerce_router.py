@@ -1,10 +1,11 @@
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
 from app.api.commerce_dependencies import AdminCommerce, PublicCommerce, UserAddresses
 from app.api.dependencies import require_admin_csrf, require_permission, require_web_csrf
+from app.core.batch import ActiveStatusBatch, BatchCompleted
 from app.core.context import current_request_id
 from app.core.pagination import PageResult
 from app.core.response import ResponseModel, success_response
@@ -21,7 +22,7 @@ from app.domains.products import (
     ProductUpdate,
     SkuUpdate,
 )
-from app.domains.products.schemas import PublicProductRead
+from app.domains.products.schemas import ProductStatusBatch, PublicProductRead, SkuStatusBatch
 from app.domains.shipping import ShippingTemplateInput, ShippingTemplateRead
 from app.domains.shipping.schemas import FreightQuote, FreightQuoteInput, ShippingTemplateUpdate
 
@@ -70,9 +71,55 @@ async def update_category(
     dependencies=[Depends(require_permission(PermissionCode.PRODUCTS_READ))],
 )
 async def admin_products(
-    service: AdminCommerce, page: Page = 1, page_size: PageSize = 20
+    service: AdminCommerce,
+    page: Page = 1,
+    page_size: PageSize = 20,
+    search: Annotated[str | None, Query(max_length=200, description="商品名称或 SKU 编码关键词")] = None,
+    category_id: Annotated[UUID | None, Query(description="商品所属分类标识")] = None,
+    status: Annotated[Literal["draft", "on_sale", "off_sale"] | None, Query(description="商品状态")] = None,
+    product_type: Annotated[Literal["physical", "virtual"] | None, Query(description="商品类型")] = None,
 ) -> ResponseModel[PageResult[ProductRead]]:
-    return success_response(data=await service.product_page(page, page_size), request_id=current_request_id())
+    return success_response(
+        data=await service.product_page(
+            page,
+            page_size,
+            search=search,
+            category_id=category_id,
+            status=status,
+            product_type=product_type,
+        ),
+        request_id=current_request_id(),
+    )
+
+
+@router.patch(
+    "/admin/product-categories/status/batch",
+    response_model=ResponseModel[BatchCompleted],
+    summary="原子批量启停商品分类",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.PRODUCT_CATEGORIES_UPDATE))],
+)
+async def categories_status_batch(payload: ActiveStatusBatch, service: AdminCommerce) -> ResponseModel[BatchCompleted]:
+    return success_response(data=await service.categories_status_batch(payload), request_id=current_request_id())
+
+
+@router.patch(
+    "/admin/products/status/batch",
+    response_model=ResponseModel[BatchCompleted],
+    summary="原子批量上下架商品",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.PRODUCTS_UPDATE))],
+)
+async def products_status_batch(payload: ProductStatusBatch, service: AdminCommerce) -> ResponseModel[BatchCompleted]:
+    return success_response(data=await service.products_status_batch(payload), request_id=current_request_id())
+
+
+@router.patch(
+    "/admin/shipping-templates/status/batch",
+    response_model=ResponseModel[BatchCompleted],
+    summary="原子批量启停运费模板",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.SHIPPING_UPDATE))],
+)
+async def shipping_status_batch(payload: ActiveStatusBatch, service: AdminCommerce) -> ResponseModel[BatchCompleted]:
+    return success_response(data=await service.shipping_status_batch(payload), request_id=current_request_id())
 
 
 @router.get(
@@ -151,6 +198,18 @@ async def update_sku(
 )
 async def inventory_read(sku_id: UUID, service: AdminCommerce) -> ResponseModel[InventoryRead]:
     return success_response(data=await service.inventory_read(sku_id), request_id=current_request_id())
+
+
+@router.patch(
+    "/admin/products/{product_id}/skus/status/batch",
+    response_model=ResponseModel[ProductRead],
+    summary="原子批量启停商品变体",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.PRODUCTS_UPDATE))],
+)
+async def skus_status_batch(
+    product_id: UUID, payload: SkuStatusBatch, service: AdminCommerce
+) -> ResponseModel[ProductRead]:
+    return success_response(data=await service.skus_status_batch(product_id, payload), request_id=current_request_id())
 
 
 @router.post(

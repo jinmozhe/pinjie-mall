@@ -45,7 +45,7 @@ def _settings(**updates: object) -> Settings:
         **TEST_SECRETS,
     }
     values.update(updates)
-    return Settings(**values)
+    return Settings(_env_file=None, **values)
 
 
 @pytest.mark.parametrize("prefix", ["api/v1", "/api/v1/"])

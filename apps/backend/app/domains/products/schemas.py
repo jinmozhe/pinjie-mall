@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from app.core.batch import VersionedBatch
+
 
 class CategoryInput(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
@@ -110,6 +112,25 @@ class ProductStatusUpdate(BaseModel):
 
     revision: int = Field(gt=0, description="读取商品时获得的版本")
     status: Literal["on_sale", "off_sale"] = Field(description="上架或下架")
+
+
+class ProductStatusBatch(VersionedBatch):
+    status: Literal["on_sale", "off_sale"] = Field(description="统一设置的商品上下架状态")
+
+
+class SkuStatusBatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    sku_ids: list[UUID] = Field(min_length=1, max_length=100, description="同一商品内明确选中的变体标识")
+    revision: int = Field(gt=0, description="读取商品时的共享版本")
+    is_active: bool = Field(strict=True, description="统一设置的变体启用状态")
+
+    @field_validator("sku_ids")
+    @classmethod
+    def unique_ids(cls, values: list[UUID]) -> list[UUID]:
+        if len(values) != len(set(values)):
+            raise ValueError("SKU 标识不能重复")
+        return values
 
 
 class ProductRead(ProductInput):
