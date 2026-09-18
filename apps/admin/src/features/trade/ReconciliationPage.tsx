@@ -15,7 +15,9 @@ function ReconciliationEditor({ close }: { close: () => void }) {
   const client = useQueryClient();
   return <EditorModal title="录入渠道对账记录" onClose={close} onSave={async () => {
     const values = await form.validateFields();
-    await commerceApi.reconcile({ ...values, occurred_at: new Date(values.occurred_at).toISOString() });
+    const date = new Date(values.occurred_at);
+    if (Number.isNaN(date.getTime())) throw new Error("请输入有效的渠道发生时间");
+    await commerceApi.reconcile({ ...values, occurred_at: date.toISOString() });
     message.success("对账记录已保存"); await client.invalidateQueries({ queryKey: ["commerce-reconciliation-records"] }); close();
   }}>
     <Alert type="info" title="请根据可信渠道账单录入。匹配结果仅用于对账，不改变支付或订单状态。" />

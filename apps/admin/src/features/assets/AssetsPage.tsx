@@ -219,7 +219,7 @@ export function AssetsPage() {
               <Button className="table-toolbar-reset" icon={<ReloadOutlined />} onClick={resetFilters}>重置</Button>
             </div>
           )]}
-          scroll={{ x: 940 }}
+          scroll={{ x: "max-content" }}
           pagination={{
             current: page,
             pageSize: assets.data.page_size,
@@ -283,6 +283,8 @@ export function AssetsPage() {
               title: "操作",
               key: "actions",
               width: "1%",
+              onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+              onCell: () => ({ style: { whiteSpace: "nowrap" } }),
               render: (_, row) => (
                 <Space className="table-actions" size={[2, 0]} wrap={false}>
                   {isImage(row) ? (

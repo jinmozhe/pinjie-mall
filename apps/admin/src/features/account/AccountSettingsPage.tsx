@@ -19,8 +19,8 @@ export function AccountSettingsPage() {
     mutationFn: (values: AdminProfileUpdateIn) => adminApi.updateProfile(values),
     onSuccess: async (updated) => {
       message.success("个人基本信息已更新");
-      queryClient.setQueryData(["admin-auth-me"], updated);
-      await queryClient.invalidateQueries({ queryKey: ["admin-auth-me"] });
+      queryClient.setQueryData(["admin-me"], updated);
+      await queryClient.invalidateQueries({ queryKey: ["admin-me"] });
       // 触发页面刷新以同步全局 layout 状态
       window.location.reload();
     },

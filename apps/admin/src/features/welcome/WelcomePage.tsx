@@ -2,11 +2,11 @@ import {
   AuditOutlined,
   CloudServerOutlined,
   DashboardOutlined,
-  HomeOutlined,
   RocketOutlined,
   SafetyCertificateOutlined,
   TeamOutlined,
   UserOutlined,
+  WechatOutlined,
 } from "@ant-design/icons";
 import { ProCard } from "@ant-design/pro-components";
 import { history } from "@umijs/max";
@@ -49,7 +49,7 @@ export function WelcomePage() {
                   您好，{current?.display_name || current?.username || "管理员"}！
                 </Typography.Title>
                 <Typography.Paragraph style={{ color: "rgba(255, 255, 255, 0.88)", fontSize: 15, margin: 0, maxWidth: 640 }}>
-                  本系统是 Pinjie Mall 的统一管理控制台。采用模块化单体架构，提供后台运营所需的权限管理、系统设置与安全审计能力；商品、订单和分销等商城业务将在后续计划中实施。
+                  本系统是 Pinjie Mall 的统一管理控制台。采用模块化单体架构，提供商品管理、订单履约、分销财务、统一资产、系统设置与全链路安全审计能力，支撑微信小程序商城高效运营。
                 </Typography.Paragraph>
               </Space>
             </Col>
@@ -151,19 +151,19 @@ export function WelcomePage() {
               headerBordered
               title={
                 <Space>
-                  <HomeOutlined style={{ color: "#fa8c16" }} />
-                  <Typography.Text strong>Next.js 用户端</Typography.Text>
+                  <WechatOutlined style={{ color: "#52c41a" }} />
+                  <Typography.Text strong>微信小程序端</Typography.Text>
                 </Space>
               }
               style={{ height: "100%" }}
             >
               <Typography.Paragraph type="secondary" style={{ fontSize: 13, marginBottom: 8 }}>
-                Next.js + React + Tailwind CSS，具备服务端 SSR 认证恢复、受限 BFF 管道及桌面移动端自适应。
+                独立电商与多级分销唯一面向 C 端的终端形态，紧凑轻量，直连高可用后端 API。
               </Typography.Paragraph>
               <Space wrap size={[4, 4]}>
-                <Tag color="orange">Next.js</Tag>
-                <Tag color="orange">SSR</Tag>
-                <Tag color="orange">Tailwind</Tag>
+                <Tag color="green">微信小程序</Tag>
+                <Tag color="green">分销裂变</Tag>
+                <Tag color="green">C端交互</Tag>
               </Space>
             </ProCard>
           </Col>

@@ -51,7 +51,7 @@ export function CategoriesPage() {
       ]} columns={[
         { title: "名称", dataIndex: "name", ellipsis: true },
         { title: "上级分类", render: (_, row) => query.data?.find((item) => item.id === row.parent_id)?.name ?? "顶级分类" },
-        { title: "排序", render: (_: unknown, row: CategoryRead) => row.sort_order ?? "—" },
+        { title: "排序", render: (_: unknown, row: CategoryRead) => row.sort_order ?? "-" },
         { title: "状态", render: (_, row) => <Tag color={row.is_active ? "success" : "default"}>{row.is_active ? "启用" : "停用"}</Tag> },
         { title: "操作", width: "1%", render: (_, row) => write && <Button icon={<EditOutlined />} disabled={batch.isPending} onClick={() => setEdit({ target: row })}>编辑</Button> },
       ]} />}

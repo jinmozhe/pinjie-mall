@@ -1,7 +1,6 @@
 import { defineConfig } from "@umijs/max";
+import proxy from "./proxy";
 import routes from "./routes";
-
-const backendURL = process.env.BACKEND_INTERNAL_URL ?? "http://127.0.0.1:8000";
 
 export default defineConfig({
   title: "Pinjie Console",
@@ -18,20 +17,7 @@ export default defineConfig({
   hash: false,
   esbuildMinifyIIFE: true,
   npmClient: "pnpm",
-  proxy: {
-    "/api/v1": {
-      target: backendURL,
-      changeOrigin: false,
-    },
-    "/static/uploads": {
-      target: backendURL,
-      changeOrigin: false,
-    },
-    "/static/settings": {
-      target: backendURL,
-      changeOrigin: false,
-    },
-  },
+  proxy: proxy.dev,
   define: {
     "process.env.APP_ENV": process.env.APP_ENV ?? "development",
     "process.env.VITE_API_URL": process.env.VITE_API_URL ?? "",
