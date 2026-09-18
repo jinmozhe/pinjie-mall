@@ -18,9 +18,7 @@ class CartRepository:
 
     async def list_for_user(self, user_id: UUID) -> list[CartItem]:
         return list(
-            await self.session.scalars(
-                select(CartItem).where(CartItem.user_id == user_id).order_by(CartItem.id)
-            )
+            await self.session.scalars(select(CartItem).where(CartItem.user_id == user_id).order_by(CartItem.id))
         )
 
     async def get(self, user_id: UUID, item_id: UUID, *, lock: bool = False) -> CartItem | None:

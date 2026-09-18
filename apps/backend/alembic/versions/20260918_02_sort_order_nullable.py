@@ -19,8 +19,7 @@ def upgrade() -> None:
     op.execute("ALTER TABLE product_categories ALTER COLUMN sort_order DROP NOT NULL")
     op.execute("ALTER TABLE product_categories ALTER COLUMN sort_order DROP DEFAULT")
     op.execute(
-        "COMMENT ON COLUMN product_categories.sort_order IS "
-        "'排序权重，值越小越靠前，NULL 表示未人工设置自动排最后'"
+        "COMMENT ON COLUMN product_categories.sort_order IS '排序权重，值越小越靠前，NULL 表示未人工设置自动排最后'"
     )
 
 

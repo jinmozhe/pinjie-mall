@@ -18,7 +18,9 @@ class ProductRepository:
     async def categories(self) -> list[Category]:
         return list(
             await self.session.scalars(
-                select(Category).order_by(Category.sort_order.asc().nulls_last(), Category.id.desc()).execution_options(populate_existing=True)
+                select(Category)
+                .order_by(Category.sort_order.asc().nulls_last(), Category.id.desc())
+                .execution_options(populate_existing=True)
             )
         )
 
