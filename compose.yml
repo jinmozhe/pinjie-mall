@@ -5,7 +5,7 @@ services:
   redis:
     image: redis:8.10.0-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"  # 宿主机 6379 已被占用，本地开发使用 6380
     volumes:
       - redis_data:/data
     restart: unless-stopped

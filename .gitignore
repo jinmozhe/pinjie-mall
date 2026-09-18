@@ -11,6 +11,8 @@ __pycache__/
 .pytest_cache/
 .pytest-cache-runtime/
 .pytest-tmp/
+# Codex / 本地阶段验证临时目录
+/.tmp-admin-commerce-*/
 htmlcov/
 .coverage
 .coverage.*
@@ -61,6 +63,23 @@ test-results/
 
 # 本地临时参考资料
 /temp/
+
+# 压缩包与归档文件
+*.7z
+*.bz2
+*.gz
+*.gzip
+*.lz
+*.lz4
+*.rar
+*.tar
+*.tar.bz2
+*.tar.gz
+*.tar.xz
+*.tgz
+*.xz
+*.zip
+*.zst
 
 # ============================================================
 # 环境变量（绝不入库）
