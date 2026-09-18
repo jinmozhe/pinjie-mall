@@ -104,6 +104,8 @@ class CommerceReportingService:
         self.session = session
 
     async def page[T: BaseModel](self, resource: str, schema: type[T], filters: CommerceFilters) -> PageResult[T]:
+        if resource not in _RESOURCES:
+            raise AppException(status_code=422, code=ErrorCode.VALIDATION_ERROR, message="不支持的查询资源类型")
         model, expected_schema = _RESOURCES[resource]
         if schema is not expected_schema:
             raise ValueError("查询输出契约不匹配")

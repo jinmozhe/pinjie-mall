@@ -62,7 +62,12 @@ async def cart_delete(item_id: UUID, cart: Cart, current: UserPrincipal) -> Resp
     return success_response(data=None, request_id=current_request_id())
 
 
-@router.post("/checkout/preview", response_model=ResponseModel[CheckoutQuote], summary="服务端结算预览")
+@router.post(
+    "/checkout/preview",
+    response_model=ResponseModel[CheckoutQuote],
+    summary="服务端结算预览",
+    dependencies=[Depends(require_web_csrf)],
+)
 async def checkout_preview(
     payload: CheckoutRequest, orders: Orders, current: UserPrincipal
 ) -> ResponseModel[CheckoutQuote]:
@@ -82,6 +87,8 @@ async def order_create(payload: CheckoutRequest, orders: Orders, current: UserPr
 
 @router.get("/orders/{order_id}", response_model=ResponseModel[OrderRead], summary="查看本人订单")
 async def order_read(order_id: UUID, orders: Orders, current: UserPrincipal) -> ResponseModel[OrderRead]:
+    # 资源归属校验：orders.read 内部通过 repository.order(user_id, order_id)
+    # 联合过滤 user_id + order_id，非本人订单返回 404，不存在 IDOR 越权风险。
     return success_response(data=await orders.read(current.user.id, order_id), request_id=current_request_id())
 
 

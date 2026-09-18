@@ -332,6 +332,12 @@ class AdminAccountService:
         admin: Admin,
         payload: AdminConfirmIn,
     ) -> AdminConfirmOut:
+        # 设计说明：本方法为前端兼容性占位实现。
+        # confirmation_token 仅用于客户端 UI 流程标识，服务端不持久化、不验证该 token。
+        # 安全边界：本次操作仅验证当前密码（下方 verify），敏感操作的最终授权由
+        # 各业务端点独立进行密码/权限校验，而非依赖此 token 作为二次确认凭据。
+        # 若未来需要真正的服务端 token 确认机制，必须将 token 摘要与 action、
+        # 过期时间一同持久化到数据库或 Redis，并在对应接口查库验证后再放行。
         if not await self.password_manager.verify(payload.current_password, admin.password_hash):
             raise AppException(
                 status_code=401,

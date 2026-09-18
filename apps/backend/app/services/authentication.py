@@ -267,14 +267,7 @@ class WebAuthService(_AuthBase):
             )
             raise _auth_error()
         verified, updated_hash = await self.password_manager.verify_and_update(payload.password, user.password_hash)
-        if not verified:
-            await self.record_failure(
-                identifier=payload.username,
-                event_type="login",
-                reason_code="INVALID_CREDENTIALS",
-                principal_id=user.id,
-            )
-            raise _auth_error()
+        # 账户状态检查在密码验证之前拒绝，防止通过响应差异泄露"密码正确但已禁用"的信息。
         if not user.is_active or user.deleted_at is not None:
             await self.record_failure(
                 identifier=payload.username,
@@ -283,6 +276,14 @@ class WebAuthService(_AuthBase):
                 principal_id=user.id,
             )
             raise AppException(status_code=403, code=ErrorCode.AUTH_ACCOUNT_DISABLED, message="账户已停用")
+        if not verified:
+            await self.record_failure(
+                identifier=payload.username,
+                event_type="login",
+                reason_code="INVALID_CREDENTIALS",
+                principal_id=user.id,
+            )
+            raise _auth_error()
 
         now = datetime.now(UTC)
         artifacts, login_session, refresh = self._new_session(user, now)
@@ -530,14 +531,7 @@ class AdminAuthService(_AuthBase):
             )
             raise _auth_error()
         verified, updated_hash = await self.password_manager.verify_and_update(payload.password, admin.password_hash)
-        if not verified:
-            await self.record_failure(
-                identifier=payload.username,
-                event_type="login",
-                reason_code="INVALID_CREDENTIALS",
-                principal_id=admin.id,
-            )
-            raise _auth_error()
+        # 账户状态检查在密码验证之前拒绝，防止通过响应差异泄露"密码正确但已禁用"的信息。
         if not admin.is_active:
             await self.record_failure(
                 identifier=payload.username,
@@ -546,6 +540,14 @@ class AdminAuthService(_AuthBase):
                 principal_id=admin.id,
             )
             raise AppException(status_code=403, code=ErrorCode.AUTH_ACCOUNT_DISABLED, message="账户已停用")
+        if not verified:
+            await self.record_failure(
+                identifier=payload.username,
+                event_type="login",
+                reason_code="INVALID_CREDENTIALS",
+                principal_id=admin.id,
+            )
+            raise _auth_error()
         now = datetime.now(UTC)
         artifacts, login_session, refresh = self._new_session(admin, now)
         async with transaction_scope(self.session):
