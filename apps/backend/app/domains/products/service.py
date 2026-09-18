@@ -1,6 +1,7 @@
 from typing import Literal, cast
 from uuid import UUID
 
+from app.core.batch import ActiveStatusBatch, BatchCompleted
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
@@ -20,6 +21,7 @@ from .schemas import (
     PublicProductRead,
     SkuInput,
     SkuRead,
+    SkuStatusBatch,
     SkuUpdate,
     validate_category_tree,
 )
@@ -154,8 +156,24 @@ class ProductService:
             skus=[SkuRead.model_validate(sku) for sku in await self.repository.skus(row.id) if sku.is_active],
         )
 
-    async def page(self, page: int, page_size: int) -> PageResult[ProductRead]:
-        rows, total = await self.repository.page(page, page_size)
+    async def page(
+        self,
+        page: int,
+        page_size: int,
+        *,
+        search: str | None = None,
+        category_id: UUID | None = None,
+        status: str | None = None,
+        product_type: str | None = None,
+    ) -> PageResult[ProductRead]:
+        rows, total = await self.repository.page(
+            page,
+            page_size,
+            search=search,
+            category_id=category_id,
+            status=status,
+            product_type=product_type,
+        )
         variants, image_ids, _ = await self.repository.details([row.id for row in rows])
         return PageResult[ProductRead].create(
             items=[
@@ -210,6 +228,22 @@ class ProductService:
             await self._write_sku(row.id, sku)
         await self.repository.replace_images(row.id, data.image_asset_ids)
         return await self.read(row.id)
+
+    async def set_categories_active(self, data: ActiveStatusBatch) -> BatchCompleted:
+        await self.repository.lock_catalog()
+        categories = {row.id: row for row in await self.repository.categories()}
+        for target in sorted(data.targets, key=lambda item: item.id):
+            row = categories.get(target.id)
+            if row is None:
+                raise AppException(status_code=404, code=ErrorCode.CATEGORY_NOT_FOUND, message="分类不存在")
+            if row.revision != target.revision:
+                raise AppException(
+                    status_code=409, code=ErrorCode.CATEGORY_REVISION_CONFLICT, message="分类已变更，请刷新后重试"
+                )
+            row.is_active = data.is_active
+            row.revision += 1
+            await self.repository.save(row)
+        return BatchCompleted(completed_count=len(data.targets))
 
     async def update(self, product_id: UUID, data: ProductUpdate) -> ProductRead:
         await self.repository.lock_catalog()
@@ -273,6 +307,22 @@ class ProductService:
             )
         if row.product_type == "virtual" and any(sku.weight_grams != 0 for sku in skus):
             raise AppException(status_code=409, code=ErrorCode.PRODUCT_NOT_PUBLISHABLE, message="虚拟商品重量必须为零")
+
+    async def set_skus_active(self, product_id: UUID, data: SkuStatusBatch) -> ProductRead:
+        await self.repository.lock_catalog()
+        product = await self._get(product_id, lock=True)
+        self._check_revision(product, data.revision)
+        rows = {sku.id: sku for sku in await self.repository.skus(product_id)}
+        if any(sku_id not in rows for sku_id in data.sku_ids):
+            raise AppException(status_code=404, code=ErrorCode.SKU_NOT_FOUND, message="SKU 不属于此商品")
+        for sku_id in sorted(data.sku_ids):
+            rows[sku_id].is_active = data.is_active
+            await self.repository.save(rows[sku_id])
+        if product.status == "on_sale":
+            await self.validate_publish(product_id)
+        product.revision += 1
+        await self.repository.save(product)
+        return await self.read(product_id)
 
     async def set_status(self, product_id: UUID, data: ProductStatusUpdate) -> ProductRead:
         await self.repository.lock_catalog()

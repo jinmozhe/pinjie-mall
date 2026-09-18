@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import delete, func, select, text
+from sqlalchemy import delete, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
@@ -106,8 +106,33 @@ class ProductRepository:
             self.session.add(ProductImage(product_id=product_id, asset_id=asset_id, position=position))
         await self.session.flush()
 
-    async def page(self, page: int, page_size: int, *, public: bool = False) -> tuple[list[Product], int]:
+    async def page(
+        self,
+        page: int,
+        page_size: int,
+        *,
+        public: bool = False,
+        search: str | None = None,
+        category_id: UUID | None = None,
+        status: str | None = None,
+        product_type: str | None = None,
+    ) -> tuple[list[Product], int]:
         query = select(Product)
+        if search:
+            query = query.where(
+                or_(
+                    Product.name.icontains(search, autoescape=True),
+                    Product.id.in_(
+                        select(ProductSku.product_id).where(ProductSku.code.icontains(search, autoescape=True))
+                    ),
+                )
+            )
+        if category_id is not None:
+            query = query.where(Product.category_id == category_id)
+        if status is not None:
+            query = query.where(Product.status == status)
+        if product_type is not None:
+            query = query.where(Product.product_type == product_type)
         if public:
             parent = aliased(Category)
             grandparent = aliased(Category)

@@ -103,18 +103,6 @@ async def withdrawals_read(
     )
 
 
-@router.get(
-    "/admin/withdrawals",
-    response_model=ResponseModel[WithdrawalPage],
-    summary="查看待审核提现申请",
-    dependencies=[Depends(require_permission(PermissionCode.WITHDRAWALS_READ))],
-)
-async def admin_withdrawals_read(
-    service: Distribution, page: Page = 1, page_size: PageSize = 20
-) -> ResponseModel[WithdrawalPage]:
-    return success_response(data=await service.pending_withdrawals(page, page_size), request_id=current_request_id())
-
-
 @router.post(
     "/admin/withdrawals/{withdrawal_id}/approve",
     response_model=ResponseModel[WithdrawalRead],

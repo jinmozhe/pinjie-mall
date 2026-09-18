@@ -32,18 +32,6 @@ PageSize = Annotated[int, Query(ge=1, le=100, description="每页数量")]
 
 
 @router.get(
-    "/admin/refunds",
-    response_model=ResponseModel[PageResult[RefundRequestRead]],
-    summary="查看管理退款申请列表",
-    dependencies=[Depends(require_permission(PermissionCode.REFUNDS_READ))],
-)
-async def admin_refund_page(
-    service: Lifecycle, page: Page = 1, page_size: PageSize = 20
-) -> ResponseModel[PageResult[RefundRequestRead]]:
-    return success_response(data=await service.admin_refunds(page, page_size), request_id=current_request_id())
-
-
-@router.get(
     "/admin/orders/{order_id}/fulfillment",
     response_model=ResponseModel[FulfillmentRead],
     summary="查看管理订单履约状态",

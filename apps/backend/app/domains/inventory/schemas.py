@@ -23,7 +23,7 @@ class InventoryAdjustment(BaseModel):
 class InventoryRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    sku_id: UUID = Field(description="SKU ID")
+    sku_id: UUID = Field(description="SKU 标识")
     available: int = Field(ge=0, description="当前可售库存")
     reserved: int = Field(ge=0, description="订单占用库存")
     revision: int = Field(gt=0, description="库存版本")
@@ -33,7 +33,7 @@ class InventoryMovementRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID = Field(description="流水 ID")
-    sku_id: UUID = Field(description="SKU ID")
+    sku_id: UUID = Field(description="SKU 标识")
     request_id: UUID = Field(description="幂等请求 ID")
     actor_id: UUID = Field(description="操作管理员 ID")
     quantity_delta: int = Field(description="调整数量")

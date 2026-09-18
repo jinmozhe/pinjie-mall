@@ -4,6 +4,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.batch import ActiveStatusBatch, BatchCompleted
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.pagination import PageResult
@@ -23,7 +24,7 @@ from app.domains.products import (
     ProductUpdate,
     SkuUpdate,
 )
-from app.domains.products.schemas import PublicProductRead
+from app.domains.products.schemas import ProductStatusBatch, PublicProductRead, SkuStatusBatch
 from app.domains.shipping import ShippingService, ShippingTemplateInput, ShippingTemplateRead
 from app.domains.shipping.schemas import FreightQuote, FreightQuoteInput, ShippingTemplateUpdate
 from app.services.security_events import AuditCoordinator
@@ -94,8 +95,57 @@ class CommerceService:
             lambda: self.products.save_category(data, category_id),
         )
 
-    async def product_page(self, page: int, page_size: int) -> PageResult[ProductRead]:
-        return await self.products.page(page, page_size)
+    async def product_page(
+        self,
+        page: int,
+        page_size: int,
+        *,
+        search: str | None = None,
+        category_id: UUID | None = None,
+        status: str | None = None,
+        product_type: str | None = None,
+    ) -> PageResult[ProductRead]:
+        return await self.products.page(
+            page,
+            page_size,
+            search=search,
+            category_id=category_id,
+            status=status,
+            product_type=product_type,
+        )
+
+    async def categories_status_batch(self, data: ActiveStatusBatch) -> BatchCompleted:
+        return await self._write(
+            PermissionCode.PRODUCT_CATEGORIES_UPDATE, None, lambda: self.products.set_categories_active(data)
+        )
+
+    async def shipping_status_batch(self, data: ActiveStatusBatch) -> BatchCompleted:
+        return await self._write(
+            PermissionCode.SHIPPING_UPDATE, None, lambda: self.shipping.set_active_batch(data, self._actor())
+        )
+
+    async def products_status_batch(self, data: ProductStatusBatch) -> BatchCompleted:
+        async def operation() -> BatchCompleted:
+            await self.products.lock_changes()
+            # 同批商品可能共享多个运费模板；先按模板 ID 排序锁定，避免与其他批量命令倒序持锁。
+            products = [
+                await self.products.read(target.id) for target in sorted(data.targets, key=lambda item: item.id)
+            ]
+            if data.status == "on_sale":
+                templates = {
+                    product.shipping_template_id for product in products if product.shipping_template_id is not None
+                }
+                for template_id in sorted(templates):
+                    await self.shipping.require_active(template_id)
+                for product in products:
+                    await self._product_dependencies(product.image_asset_ids, None)
+            for target in sorted(data.targets, key=lambda item: item.id):
+                await self.products.set_status(
+                    target.id, ProductStatusUpdate(revision=target.revision, status=data.status)
+                )
+            return BatchCompleted(completed_count=len(data.targets))
+
+        return await self._write(PermissionCode.PRODUCTS_UPDATE, None, operation)
 
     async def product_read(self, product_id: UUID) -> ProductRead:
         return await self.products.read(product_id)
@@ -164,6 +214,16 @@ class CommerceService:
 
     async def inventory_read(self, sku_id: UUID) -> InventoryRead:
         return await self.inventory.read(sku_id)
+
+    async def skus_status_batch(self, product_id: UUID, data: SkuStatusBatch) -> ProductRead:
+        async def operation() -> ProductRead:
+            await self.products.lock_changes()
+            product = await self.products.read(product_id)
+            if product.status == "on_sale" and product.shipping_template_id is not None:
+                await self.shipping.require_active(product.shipping_template_id)
+            return await self.products.set_skus_active(product_id, data)
+
+        return await self._write(PermissionCode.PRODUCTS_UPDATE, product_id, operation)
 
     async def adjust_inventory(self, sku_id: UUID, data: InventoryAdjustment) -> InventoryMovementRead:
         return await self._write(

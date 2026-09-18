@@ -82,14 +82,14 @@ async def assert_test_database_migration_is_current() -> AsyncIterator[None]:
                     f"\n"
                     f"请在 apps/backend 目录下运行以下命令升级测试数据库：\n"
                     f"\n"
-                    f'  $env:DATABASE_URL = "{database_url}"\n'
+                    f"  将 DATABASE_URL 安全设置为隔离测试库连接配置（禁止输出连接串）。\n"
                     f"  uv run alembic upgrade head\n"
                 )
             else:
                 pytest.fail(
                     f"\n"
                     f"无法连接测试数据库（状态: {state}）。\n"
-                    f"  TEST_DATABASE_URL: {database_url}\n"
+                    f"  请检查 TEST_DATABASE_URL 配置，禁止在日志中输出连接串。\n"
                     f"\n"
                     f"请确认 PostgreSQL 服务已启动且测试数据库存在。\n"
                 )

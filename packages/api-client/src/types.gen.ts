@@ -29,6 +29,24 @@ export type ActionResult = {
 };
 
 /**
+ * ActiveStatusBatch
+ */
+export type ActiveStatusBatch = {
+    /**
+     * Targets
+     *
+     * 一至一百个不重复的目标及版本
+     */
+    targets: Array<VersionedTarget>;
+    /**
+     * Is Active
+     *
+     * 统一设置的启用状态
+     */
+    is_active: boolean;
+};
+
+/**
  * AddressInput
  */
 export type AddressInput = {
@@ -408,6 +426,8 @@ export type AdminOrderSummary = {
     id: string;
     /**
      * User Id
+     *
+     * 用户标识
      */
     user_id: string;
     /**
@@ -418,18 +438,26 @@ export type AdminOrderSummary = {
     status: string;
     /**
      * Product Type
+     *
+     * 实物或虚拟商品类型
      */
     product_type: string;
     /**
      * Currency
+     *
+     * 货币代码
      */
     currency: string;
     /**
      * Items Amount
+     *
+     * 商品合计金额，单位人民币元
      */
     items_amount: string;
     /**
      * Total Amount
+     *
+     * 订单应付总金额，单位人民币元
      */
     total_amount: string;
     /**
@@ -446,10 +474,14 @@ export type AdminOrderSummary = {
     created_at: string;
     /**
      * Paid At
+     *
+     * 可信支付确认时间
      */
     paid_at: string | null;
     /**
      * Payment Reference
+     *
+     * 已确认支付参考号
      */
     payment_reference: string | null;
 };
@@ -797,6 +829,60 @@ export type AdminUserRead = {
 };
 
 /**
+ * AdminWalletRead
+ */
+export type AdminWalletRead = {
+    /**
+     * Wallet Type
+     *
+     * 佣金或消费钱包类型
+     */
+    wallet_type: string;
+    /**
+     * Available Amount
+     *
+     * 可用余额，单位人民币元
+     */
+    available_amount: string;
+    /**
+     * Frozen Amount
+     *
+     * 冻结余额，单位人民币元
+     */
+    frozen_amount: string;
+    /**
+     * Debt Amount
+     *
+     * 待追回欠款，单位人民币元
+     */
+    debt_amount: string;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+    /**
+     * Id
+     *
+     * 钱包账户标识
+     */
+    id: string;
+    /**
+     * User Id
+     *
+     * 账户所属会员标识
+     */
+    user_id: string;
+};
+
+/**
  * AssetBulkDeleteIn
  */
 export type AssetBulkDeleteIn = {
@@ -993,6 +1079,18 @@ export type BatchActionResult = {
 };
 
 /**
+ * BatchCompleted
+ */
+export type BatchCompleted = {
+    /**
+     * Completed Count
+     *
+     * 原子完成的目标数量
+     */
+    completed_count: number;
+};
+
+/**
  * Body_update_site_logo_api_v1_admin_settings_site_logo_put
  */
 export type BodyUpdateSiteLogoApiV1AdminSettingsSiteLogoPut = {
@@ -1032,10 +1130,14 @@ export type BodyUploadAssetApiV1AssetsUploadPost = {
 export type CartItemInput = {
     /**
      * Sku Id
+     *
+     * 商品变体标识
      */
     sku_id: string;
     /**
      * Quantity
+     *
+     * 商品数量
      */
     quantity: number;
 };
@@ -1052,18 +1154,26 @@ export type CartItemRead = {
     id: string;
     /**
      * Sku Id
+     *
+     * 商品变体标识
      */
     sku_id: string;
     /**
      * Quantity
+     *
+     * 商品数量
      */
     quantity: number;
     /**
      * Selected
+     *
+     * 购物车条目是否选中
      */
     selected: boolean;
     /**
      * Revision
+     *
+     * 资源并发控制版本
      */
     revision: number;
 };
@@ -1080,10 +1190,14 @@ export type CartItemUpdate = {
     revision: number;
     /**
      * Quantity
+     *
+     * 商品数量
      */
     quantity?: number | null;
     /**
      * Selected
+     *
+     * 购物车条目是否选中
      */
     selected?: boolean | null;
 };
@@ -1202,10 +1316,14 @@ export type CategoryUpdate = {
 export type CheckoutLine = {
     /**
      * Sku Id
+     *
+     * 商品变体标识
      */
     sku_id: string;
     /**
      * Quantity
+     *
+     * 商品数量
      */
     quantity: number;
 };
@@ -1222,36 +1340,52 @@ export type CheckoutQuote = {
     items: Array<QuoteLine>;
     /**
      * Shipping
+     *
+     * 按运费模板分组的报价明细
      */
     shipping: Array<ShippingQuoteGroup>;
     /**
      * Product Type
+     *
+     * 实物或虚拟商品类型
      */
     product_type: string;
     /**
      * Items Amount
+     *
+     * 商品合计金额，单位人民币元
      */
     items_amount: string;
     /**
      * Freight Amount
+     *
+     * 订单运费，单位人民币元
      */
     freight_amount: string;
     /**
      * Total Amount
+     *
+     * 订单应付总金额，单位人民币元
      */
     total_amount: string;
     /**
      * Address Id
+     *
+     * 收货地址标识
      */
     address_id: string | null;
     /**
      * Address Snapshot
+     *
+     * 下单时固化的收货地址快照
      */
     address_snapshot: {
         [key: string]: unknown;
     } | null;
     /**
      * Fingerprint
+     *
+     * 服务端报价指纹
      */
     fingerprint: string;
     /**
@@ -1280,12 +1414,34 @@ export type CheckoutRequest = {
     items: Array<CheckoutLine>;
     /**
      * Address Id
+     *
+     * 收货地址标识
      */
     address_id?: string | null;
     /**
      * Quote Fingerprint
+     *
+     * 提交时核对的服务端报价指纹
      */
     quote_fingerprint?: string | null;
+};
+
+/**
+ * CommerceExportRead
+ */
+export type CommerceExportRead = {
+    /**
+     * Columns
+     *
+     * 白名单字段名称
+     */
+    columns: Array<string>;
+    /**
+     * Rows
+     *
+     * 按字段顺序序列化的记录，金额保留精度
+     */
+    rows: Array<Array<string>>;
 };
 
 /**
@@ -1300,34 +1456,50 @@ export type CommissionRead = {
     id: string;
     /**
      * Order Id
+     *
+     * 订单标识
      */
     order_id: string;
     /**
      * Source User Id
+     *
+     * 产生佣金的购买用户标识
      */
     source_user_id: string;
     /**
      * Beneficiary User Id
+     *
+     * 佣金受益用户标识
      */
     beneficiary_user_id: string;
     /**
      * Level
+     *
+     * 推荐佣金层级，最多两级
      */
     level: number;
     /**
      * Base Amount
+     *
+     * 佣金计提基数，单位人民币元
      */
     base_amount: string;
     /**
      * Rate
+     *
+     * 佣金比例快照
      */
     rate: string;
     /**
      * Amount
+     *
+     * 业务金额，单位人民币元
      */
     amount: string;
     /**
      * Recovered Amount
+     *
+     * 累计追回佣金，单位人民币元
      */
     recovered_amount: string;
     /**
@@ -1338,18 +1510,26 @@ export type CommissionRead = {
     status: string;
     /**
      * Frozen At
+     *
+     * 佣金冻结时间
      */
     frozen_at: string;
     /**
      * Settle After
+     *
+     * 允许结算的最早时间
      */
     settle_after: string | null;
     /**
      * Settled At
+     *
+     * 佣金结算时间
      */
     settled_at: string | null;
     /**
      * Recovered At
+     *
+     * 最近佣金追回时间
      */
     recovered_at: string | null;
 };
@@ -1455,10 +1635,14 @@ export type FulfillmentRead = {
     id: string;
     /**
      * Order Id
+     *
+     * 订单标识
      */
     order_id: string;
     /**
      * Product Type
+     *
+     * 实物或虚拟商品类型
      */
     product_type: string;
     /**
@@ -1469,30 +1653,44 @@ export type FulfillmentRead = {
     status: string;
     /**
      * Carrier
+     *
+     * 物流承运商
      */
     carrier: string | null;
     /**
      * Tracking Number
+     *
+     * 物流运单号
      */
     tracking_number: string | null;
     /**
      * Delivery Reference
+     *
+     * 虚拟商品交付凭证
      */
     delivery_reference: string | null;
     /**
      * Shipped At
+     *
+     * 实物发货时间
      */
     shipped_at: string | null;
     /**
      * Delivered At
+     *
+     * 订单交付完成时间
      */
     delivered_at: string | null;
     /**
      * Auto Confirm At
+     *
+     * 自动确认收货时间
      */
     auto_confirm_at: string | null;
     /**
      * Revision
+     *
+     * 资源并发控制版本
      */
     revision: number;
 };
@@ -1574,7 +1772,7 @@ export type InventoryMovementRead = {
     /**
      * Sku Id
      *
-     * SKU ID
+     * SKU 标识
      */
     sku_id: string;
     /**
@@ -1640,7 +1838,7 @@ export type InventoryRead = {
     /**
      * Sku Id
      *
-     * SKU ID
+     * SKU 标识
      */
     sku_id: string;
     /**
@@ -1747,22 +1945,32 @@ export type LoginEventRead = {
 export type MemberProfileRead = {
     /**
      * User Id
+     *
+     * 用户标识
      */
     user_id: string;
     /**
      * Invitation Code
+     *
+     * 会员邀请码
      */
     invitation_code: string;
     /**
      * Level Code
+     *
+     * 会员等级代码
      */
     level_code: string;
     /**
      * Inviter Id
+     *
+     * 首次绑定的推荐用户标识
      */
     inviter_id: string | null;
     /**
      * Bound At
+     *
+     * 推荐关系首次绑定时间
      */
     bound_at: string | null;
     /**
@@ -1785,32 +1993,46 @@ export type OrderItemRead = {
     id: string;
     /**
      * Sku Id
+     *
+     * 商品变体标识
      */
     sku_id: string;
     /**
      * Product Name
+     *
+     * 商品名称快照
      */
     product_name: string;
     /**
      * Sku Code
+     *
+     * 商品变体编码快照
      */
     sku_code: string;
     /**
      * Specifications
+     *
+     * 商品规格名称与取值
      */
     specifications: {
         [key: string]: string;
     };
     /**
      * Quantity
+     *
+     * 商品数量
      */
     quantity: number;
     /**
      * Unit Price
+     *
+     * 成交单价，单位人民币元
      */
     unit_price: string;
     /**
      * Line Amount
+     *
+     * 订单明细金额，单位人民币元
      */
     line_amount: string;
 };
@@ -1833,22 +2055,32 @@ export type OrderRead = {
     status: string;
     /**
      * Product Type
+     *
+     * 实物或虚拟商品类型
      */
     product_type: string;
     /**
      * Items Amount
+     *
+     * 商品合计金额，单位人民币元
      */
     items_amount: string;
     /**
      * Freight Amount
+     *
+     * 订单运费，单位人民币元
      */
     freight_amount: string;
     /**
      * Total Amount
+     *
+     * 订单应付总金额，单位人民币元
      */
     total_amount: string;
     /**
      * Address Snapshot
+     *
+     * 下单时固化的收货地址快照
      */
     address_snapshot: {
         [key: string]: unknown;
@@ -1867,6 +2099,8 @@ export type OrderRead = {
     created_at: string;
     /**
      * Revision
+     *
+     * 资源并发控制版本
      */
     revision: number;
     /**
@@ -1959,6 +2193,42 @@ export type PageResultAdminUserRead = {
      * 当前分页中的资源列表
      */
     items: Array<AdminUserRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[AdminWalletRead]
+ */
+export type PageResultAdminWalletRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<AdminWalletRead>;
     /**
      * Page
      *
@@ -2166,6 +2436,78 @@ export type PageResultLoginEventRead = {
 };
 
 /**
+ * PageResult[MemberProfileRead]
+ */
+export type PageResultMemberProfileRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MemberProfileRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[PaymentAttemptRead]
+ */
+export type PageResultPaymentAttemptRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<PaymentAttemptRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
  * PageResult[ProductRead]
  */
 export type PageResultProductRead = {
@@ -2247,6 +2589,42 @@ export type PageResultPublicProductRead = {
      * 当前分页中的资源列表
      */
     items: Array<PublicProductRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[ReconciliationRecordRead]
+ */
+export type PageResultReconciliationRecordRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<ReconciliationRecordRead>;
     /**
      * Page
      *
@@ -2454,6 +2832,42 @@ export type PageResultShippingTemplateRead = {
 };
 
 /**
+ * PageResult[WalletLedgerRead]
+ */
+export type PageResultWalletLedgerRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<WalletLedgerRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
  * PageResult[WithdrawalRead]
  */
 export type PageResultWithdrawalRead = {
@@ -2531,6 +2945,8 @@ export type PaymentAttemptCreate = {
     request_id: string;
     /**
      * Channel
+     *
+     * 支付渠道代码
      */
     channel: 'wechat' | 'alipay';
 };
@@ -2547,14 +2963,20 @@ export type PaymentAttemptRead = {
     id: string;
     /**
      * Order Id
+     *
+     * 订单标识
      */
     order_id: string;
     /**
      * Channel
+     *
+     * 支付渠道代码
      */
     channel: 'wechat' | 'alipay';
     /**
      * Merchant Reference
+     *
+     * 商户支付意图参考号
      */
     merchant_reference: string;
     /**
@@ -2565,14 +2987,20 @@ export type PaymentAttemptRead = {
     status: string;
     /**
      * Amount
+     *
+     * 业务金额，单位人民币元
      */
     amount: string;
     /**
      * Currency
+     *
+     * 货币代码
      */
     currency: string;
     /**
      * Unavailable Reason
+     *
+     * 渠道不可用原因
      */
     unavailable_reason: string | null;
     /**
@@ -2751,10 +3179,14 @@ export type ProductRead = {
 export type ProductReviewCreate = {
     /**
      * Rating
+     *
+     * 一至五星评分
      */
     rating: number;
     /**
      * Content
+     *
+     * 评价文本内容
      */
     content?: string;
 };
@@ -2771,20 +3203,46 @@ export type ProductReviewRead = {
     id: string;
     /**
      * Product Id
+     *
+     * 商品标识
      */
     product_id: string;
     /**
      * Rating
+     *
+     * 一至五星评分
      */
     rating: number;
     /**
      * Content
+     *
+     * 评价文本内容
      */
     content: string;
     /**
      * Published At
+     *
+     * 评价发布时间
      */
     published_at: string;
+};
+
+/**
+ * ProductStatusBatch
+ */
+export type ProductStatusBatch = {
+    /**
+     * Targets
+     *
+     * 一至一百个不重复的目标及版本
+     */
+    targets: Array<VersionedTarget>;
+    /**
+     * Status
+     *
+     * 统一设置的商品上下架状态
+     */
+    status: 'on_sale' | 'off_sale';
 };
 
 /**
@@ -2907,52 +3365,76 @@ export type PublicProductRead = {
 export type QuoteLine = {
     /**
      * Sku Id
+     *
+     * 商品变体标识
      */
     sku_id: string;
     /**
      * Product Id
+     *
+     * 商品标识
      */
     product_id: string;
     /**
      * Product Name
+     *
+     * 商品名称快照
      */
     product_name: string;
     /**
      * Sku Code
+     *
+     * 商品变体编码快照
      */
     sku_code: string;
     /**
      * Specifications
+     *
+     * 商品规格名称与取值
      */
     specifications: {
         [key: string]: string;
     };
     /**
      * Quantity
+     *
+     * 商品数量
      */
     quantity: number;
     /**
      * Unit Price
+     *
+     * 成交单价，单位人民币元
      */
     unit_price: string;
     /**
      * Line Amount
+     *
+     * 订单明细金额，单位人民币元
      */
     line_amount: string;
     /**
      * Weight Grams
+     *
+     * 计费重量，单位克
      */
     weight_grams: number;
     /**
      * Product Revision
+     *
+     * 报价时商品版本
      */
     product_revision: number;
     /**
      * Product Type
+     *
+     * 实物或虚拟商品类型
      */
     product_type: string;
     /**
      * Shipping Template Id
+     *
+     * 运费模板标识
      */
     shipping_template_id: string | null;
 };
@@ -2983,6 +3465,8 @@ export type ReadinessStatus = {
 export type ReceiptConfirm = {
     /**
      * Revision
+     *
+     * 资源并发控制版本
      */
     revision: number;
 };
@@ -2993,26 +3477,38 @@ export type ReceiptConfirm = {
 export type ReconciliationRecordCreate = {
     /**
      * Channel
+     *
+     * 支付渠道代码
      */
     channel: 'wechat' | 'alipay';
     /**
      * Channel Transaction Id
+     *
+     * 渠道交易流水号
      */
     channel_transaction_id: string;
     /**
      * Source Reference
+     *
+     * 来源账单参考号
      */
     source_reference: string;
     /**
      * Source Hash
+     *
+     * 来源账单内容摘要
      */
     source_hash: string;
     /**
      * Amount
+     *
+     * 业务金额，单位人民币元
      */
     amount: number | string;
     /**
      * Currency
+     *
+     * 货币代码
      */
     currency: 'CNY';
     /**
@@ -3035,22 +3531,32 @@ export type ReconciliationRecordRead = {
     id: string;
     /**
      * Channel
+     *
+     * 支付渠道代码
      */
     channel: 'wechat' | 'alipay';
     /**
      * Channel Transaction Id
+     *
+     * 渠道交易流水号
      */
     channel_transaction_id: string;
     /**
      * Source Reference
+     *
+     * 来源账单参考号
      */
     source_reference: string;
     /**
      * Amount
+     *
+     * 业务金额，单位人民币元
      */
     amount: string;
     /**
      * Currency
+     *
+     * 货币代码
      */
     currency: string;
     /**
@@ -3067,10 +3573,14 @@ export type ReconciliationRecordRead = {
     status: string;
     /**
      * Payment Attempt Id
+     *
+     * 支付意图标识
      */
     payment_attempt_id: string | null;
     /**
      * Note
+     *
+     * 操作说明或核对备注
      */
     note: string | null;
 };
@@ -3147,10 +3657,14 @@ export type RefreshSessionOut = {
 export type RefundLine = {
     /**
      * Order Item Id
+     *
+     * 订单明细标识
      */
     order_item_id: string;
     /**
      * Quantity
+     *
+     * 商品数量
      */
     quantity: number;
 };
@@ -3173,6 +3687,8 @@ export type RefundRequestCreate = {
     items: Array<RefundLine>;
     /**
      * Reason
+     *
+     * 申请原因
      */
     reason: string;
 };
@@ -3189,6 +3705,8 @@ export type RefundRequestRead = {
     id: string;
     /**
      * Order Id
+     *
+     * 订单标识
      */
     order_id: string;
     /**
@@ -3199,18 +3717,26 @@ export type RefundRequestRead = {
     status: string;
     /**
      * Amount
+     *
+     * 业务金额，单位人民币元
      */
     amount: string;
     /**
      * Currency
+     *
+     * 货币代码
      */
     currency: string;
     /**
      * Reason
+     *
+     * 申请原因
      */
     reason: string;
     /**
      * Review Note
+     *
+     * 审核说明
      */
     review_note: string | null;
     /**
@@ -3221,14 +3747,20 @@ export type RefundRequestRead = {
     created_at: string;
     /**
      * Reviewed At
+     *
+     * 审核时间
      */
     reviewed_at: string | null;
     /**
      * Confirmed At
+     *
+     * 权威渠道确认时间
      */
     confirmed_at: string | null;
     /**
      * Revision
+     *
+     * 资源并发控制版本
      */
     revision: number;
 };
@@ -3239,10 +3771,14 @@ export type RefundRequestRead = {
 export type RefundReview = {
     /**
      * Note
+     *
+     * 操作说明或核对备注
      */
     note: string;
     /**
      * Revision
+     *
+     * 资源并发控制版本
      */
     revision: number;
 };
@@ -3646,6 +4182,34 @@ export type ResponseModelBatchActionResult = {
 };
 
 /**
+ * ResponseModel[BatchCompleted]
+ */
+export type ResponseModelBatchCompleted = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: BatchCompleted;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[CartItemRead]
  */
 export type ResponseModelCartItemRead = {
@@ -3721,6 +4285,34 @@ export type ResponseModelCheckoutQuote = {
      * 响应业务数据
      */
     data: CheckoutQuote;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[CommerceExportRead]
+ */
+export type ResponseModelCommerceExportRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: CommerceExportRead;
     /**
      * Request Id
      *
@@ -4012,6 +4604,34 @@ export type ResponseModelPageResultAdminUserRead = {
 };
 
 /**
+ * ResponseModel[PageResult[AdminWalletRead]]
+ */
+export type ResponseModelPageResultAdminWalletRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultAdminWalletRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[PageResult[AssetRead]]
  */
 export type ResponseModelPageResultAssetRead = {
@@ -4152,6 +4772,62 @@ export type ResponseModelPageResultLoginEventRead = {
 };
 
 /**
+ * ResponseModel[PageResult[MemberProfileRead]]
+ */
+export type ResponseModelPageResultMemberProfileRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultMemberProfileRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[PaymentAttemptRead]]
+ */
+export type ResponseModelPageResultPaymentAttemptRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultPaymentAttemptRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[PageResult[ProductRead]]
  */
 export type ResponseModelPageResultProductRead = {
@@ -4227,6 +4903,34 @@ export type ResponseModelPageResultPublicProductRead = {
      * 响应业务数据
      */
     data: PageResultPublicProductRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[ReconciliationRecordRead]]
+ */
+export type ResponseModelPageResultReconciliationRecordRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultReconciliationRecordRead;
     /**
      * Request Id
      *
@@ -4367,6 +5071,34 @@ export type ResponseModelPageResultShippingTemplateRead = {
      * 响应业务数据
      */
     data: PageResultShippingTemplateRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[WalletLedgerRead]]
+ */
+export type ResponseModelPageResultWalletLedgerRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultWalletLedgerRead;
     /**
      * Request Id
      *
@@ -5290,6 +6022,18 @@ export type SecurityConfigurationRead = {
 };
 
 /**
+ * SelectedCommerceIds
+ */
+export type SelectedCommerceIds = {
+    /**
+     * Ids
+     *
+     * 一至一百条选中记录，会员使用用户标识
+     */
+    ids: Array<string>;
+};
+
+/**
  * SessionRead
  */
 export type SessionRead = {
@@ -5361,14 +6105,20 @@ export type SessionRead = {
 export type ShipmentCreate = {
     /**
      * Carrier
+     *
+     * 物流承运商
      */
     carrier: string;
     /**
      * Tracking Number
+     *
+     * 物流运单号
      */
     tracking_number: string;
     /**
      * Revision
+     *
+     * 资源并发控制版本
      */
     revision: number;
 };
@@ -5379,30 +6129,44 @@ export type ShipmentCreate = {
 export type ShippingQuoteGroup = {
     /**
      * Template Id
+     *
+     * 运费模板标识
      */
     template_id: string | null;
     /**
      * Revision
+     *
+     * 资源并发控制版本
      */
     revision: number | null;
     /**
      * Product Type
+     *
+     * 实物或虚拟商品类型
      */
     product_type: string;
     /**
      * Pieces
+     *
+     * 计费件数
      */
     pieces: number;
     /**
      * Weight Grams
+     *
+     * 计费重量，单位克
      */
     weight_grams: number;
     /**
      * Items Amount
+     *
+     * 商品合计金额，单位人民币元
      */
     items_amount: string;
     /**
      * Freight
+     *
+     * 本组运费，单位人民币元
      */
     freight: string;
 };
@@ -5799,6 +6563,30 @@ export type SkuRead = {
      * 稳定 SKU ID
      */
     id: string;
+};
+
+/**
+ * SkuStatusBatch
+ */
+export type SkuStatusBatch = {
+    /**
+     * Sku Ids
+     *
+     * 同一商品内明确选中的变体标识
+     */
+    sku_ids: Array<string>;
+    /**
+     * Revision
+     *
+     * 读取商品时的共享版本
+     */
+    revision: number;
+    /**
+     * Is Active
+     *
+     * 统一设置的变体启用状态
+     */
+    is_active: boolean;
 };
 
 /**
@@ -6290,15 +7078,37 @@ export type ValidationError = {
 };
 
 /**
+ * VersionedTarget
+ */
+export type VersionedTarget = {
+    /**
+     * Id
+     *
+     * 明确选中的资源标识
+     */
+    id: string;
+    /**
+     * Revision
+     *
+     * 用户读取时的资源版本
+     */
+    revision: number;
+};
+
+/**
  * VirtualDeliveryCreate
  */
 export type VirtualDeliveryCreate = {
     /**
      * Delivery Reference
+     *
+     * 虚拟商品交付凭证
      */
     delivery_reference: string;
     /**
      * Revision
+     *
+     * 资源并发控制版本
      */
     revision: number;
 };
@@ -6309,22 +7119,32 @@ export type VirtualDeliveryCreate = {
 export type WalletAccountRead = {
     /**
      * Wallet Type
+     *
+     * 佣金或消费钱包类型
      */
     wallet_type: string;
     /**
      * Available Amount
+     *
+     * 可用余额，单位人民币元
      */
     available_amount: string;
     /**
      * Frozen Amount
+     *
+     * 冻结余额，单位人民币元
      */
     frozen_amount: string;
     /**
      * Debt Amount
+     *
+     * 待追回欠款，单位人民币元
      */
     debt_amount: string;
     /**
      * Revision
+     *
+     * 资源并发控制版本
      */
     revision: number;
     /**
@@ -6333,6 +7153,66 @@ export type WalletAccountRead = {
      * 最近更新时间
      */
     updated_at: string;
+};
+
+/**
+ * WalletLedgerRead
+ */
+export type WalletLedgerRead = {
+    /**
+     * Id
+     *
+     * 流水标识
+     */
+    id: string;
+    /**
+     * Wallet Id
+     *
+     * 钱包标识
+     */
+    wallet_id: string;
+    /**
+     * Entry Type
+     *
+     * 资金变动类型
+     */
+    entry_type: string;
+    /**
+     * Amount
+     *
+     * 可用余额变化
+     */
+    amount: string;
+    /**
+     * Frozen Delta
+     *
+     * 冻结余额变化
+     */
+    frozen_delta: string;
+    /**
+     * Debt Delta
+     *
+     * 欠款变化
+     */
+    debt_delta: string;
+    /**
+     * Reference Type
+     *
+     * 关联业务类型
+     */
+    reference_type: string;
+    /**
+     * Reference Id
+     *
+     * 关联业务标识
+     */
+    reference_id: string;
+    /**
+     * Created At
+     *
+     * 入账时间
+     */
+    created_at: string;
 };
 
 /**
@@ -6347,6 +7227,8 @@ export type WithdrawalCreate = {
     request_id: string;
     /**
      * Amount
+     *
+     * 业务金额，单位人民币元
      */
     amount: number | string;
     /**
@@ -6369,18 +7251,26 @@ export type WithdrawalRead = {
     id: string;
     /**
      * User Id
+     *
+     * 用户标识
      */
     user_id: string;
     /**
      * Amount
+     *
+     * 业务金额，单位人民币元
      */
     amount: string;
     /**
      * Currency
+     *
+     * 货币代码
      */
     currency: string;
     /**
      * Destination Reference
+     *
+     * 脱敏收款目标引用
      */
     destination_reference: string;
     /**
@@ -6391,26 +7281,38 @@ export type WithdrawalRead = {
     status: string;
     /**
      * Review Note
+     *
+     * 审核说明
      */
     review_note: string | null;
     /**
      * Reviewed By Id
+     *
+     * 审核管理员标识
      */
     reviewed_by_id: string | null;
     /**
      * Reviewed At
+     *
+     * 审核时间
      */
     reviewed_at: string | null;
     /**
      * Channel Reference
+     *
+     * 渠道执行参考号
      */
     channel_reference: string | null;
     /**
      * Confirmed At
+     *
+     * 权威渠道确认时间
      */
     confirmed_at: string | null;
     /**
      * Revision
+     *
+     * 资源并发控制版本
      */
     revision: number;
     /**
@@ -6433,13 +7335,969 @@ export type WithdrawalRead = {
 export type WithdrawalReview = {
     /**
      * Revision
+     *
+     * 资源并发控制版本
      */
     revision: number;
     /**
      * Note
+     *
+     * 操作说明或核对备注
      */
     note: string;
 };
+
+export type OrdersPageApiV1AdminOrdersGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+        /**
+         * Record Id
+         *
+         * 记录标识，会员列表使用用户标识
+         */
+        record_id?: string | null;
+        /**
+         * User Id
+         *
+         * 用户标识，佣金列表使用受益人标识
+         */
+        user_id?: string | null;
+        /**
+         * Order Id
+         *
+         * 订单标识
+         */
+        order_id?: string | null;
+        /**
+         * Inviter Id
+         *
+         * 直接推荐人标识
+         */
+        inviter_id?: string | null;
+        /**
+         * Status
+         *
+         * 状态代码
+         */
+        status?: string | null;
+        /**
+         * Channel
+         *
+         * 支付渠道
+         */
+        channel?: 'wechat' | 'alipay' | null;
+        /**
+         * Product Type
+         *
+         * 商品类型
+         */
+        product_type?: 'physical' | 'virtual' | null;
+        /**
+         * Wallet Type
+         *
+         * 钱包轨道
+         */
+        wallet_type?: 'commission' | 'consumption' | null;
+    };
+    url: '/api/v1/admin/orders';
+};
+
+export type OrdersPageApiV1AdminOrdersGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersPageApiV1AdminOrdersGetError = OrdersPageApiV1AdminOrdersGetErrors[keyof OrdersPageApiV1AdminOrdersGetErrors];
+
+export type OrdersPageApiV1AdminOrdersGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultAdminOrderSummary;
+};
+
+export type OrdersPageApiV1AdminOrdersGetResponse = OrdersPageApiV1AdminOrdersGetResponses[keyof OrdersPageApiV1AdminOrdersGetResponses];
+
+export type OrdersExportApiV1AdminOrdersExportPostData = {
+    body: SelectedCommerceIds;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/orders/export';
+};
+
+export type OrdersExportApiV1AdminOrdersExportPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersExportApiV1AdminOrdersExportPostError = OrdersExportApiV1AdminOrdersExportPostErrors[keyof OrdersExportApiV1AdminOrdersExportPostErrors];
+
+export type OrdersExportApiV1AdminOrdersExportPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommerceExportRead;
+};
+
+export type OrdersExportApiV1AdminOrdersExportPostResponse = OrdersExportApiV1AdminOrdersExportPostResponses[keyof OrdersExportApiV1AdminOrdersExportPostResponses];
+
+export type RefundsPageApiV1AdminRefundsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+        /**
+         * Record Id
+         *
+         * 记录标识，会员列表使用用户标识
+         */
+        record_id?: string | null;
+        /**
+         * User Id
+         *
+         * 用户标识，佣金列表使用受益人标识
+         */
+        user_id?: string | null;
+        /**
+         * Order Id
+         *
+         * 订单标识
+         */
+        order_id?: string | null;
+        /**
+         * Inviter Id
+         *
+         * 直接推荐人标识
+         */
+        inviter_id?: string | null;
+        /**
+         * Status
+         *
+         * 状态代码
+         */
+        status?: string | null;
+        /**
+         * Channel
+         *
+         * 支付渠道
+         */
+        channel?: 'wechat' | 'alipay' | null;
+        /**
+         * Product Type
+         *
+         * 商品类型
+         */
+        product_type?: 'physical' | 'virtual' | null;
+        /**
+         * Wallet Type
+         *
+         * 钱包轨道
+         */
+        wallet_type?: 'commission' | 'consumption' | null;
+    };
+    url: '/api/v1/admin/refunds';
+};
+
+export type RefundsPageApiV1AdminRefundsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type RefundsPageApiV1AdminRefundsGetError = RefundsPageApiV1AdminRefundsGetErrors[keyof RefundsPageApiV1AdminRefundsGetErrors];
+
+export type RefundsPageApiV1AdminRefundsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultRefundRequestRead;
+};
+
+export type RefundsPageApiV1AdminRefundsGetResponse = RefundsPageApiV1AdminRefundsGetResponses[keyof RefundsPageApiV1AdminRefundsGetResponses];
+
+export type RefundsExportApiV1AdminRefundsExportPostData = {
+    body: SelectedCommerceIds;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/refunds/export';
+};
+
+export type RefundsExportApiV1AdminRefundsExportPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type RefundsExportApiV1AdminRefundsExportPostError = RefundsExportApiV1AdminRefundsExportPostErrors[keyof RefundsExportApiV1AdminRefundsExportPostErrors];
+
+export type RefundsExportApiV1AdminRefundsExportPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommerceExportRead;
+};
+
+export type RefundsExportApiV1AdminRefundsExportPostResponse = RefundsExportApiV1AdminRefundsExportPostResponses[keyof RefundsExportApiV1AdminRefundsExportPostResponses];
+
+export type WithdrawalsPageApiV1AdminWithdrawalsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+        /**
+         * Record Id
+         *
+         * 记录标识，会员列表使用用户标识
+         */
+        record_id?: string | null;
+        /**
+         * User Id
+         *
+         * 用户标识，佣金列表使用受益人标识
+         */
+        user_id?: string | null;
+        /**
+         * Order Id
+         *
+         * 订单标识
+         */
+        order_id?: string | null;
+        /**
+         * Inviter Id
+         *
+         * 直接推荐人标识
+         */
+        inviter_id?: string | null;
+        /**
+         * Status
+         *
+         * 状态代码
+         */
+        status?: string | null;
+        /**
+         * Channel
+         *
+         * 支付渠道
+         */
+        channel?: 'wechat' | 'alipay' | null;
+        /**
+         * Product Type
+         *
+         * 商品类型
+         */
+        product_type?: 'physical' | 'virtual' | null;
+        /**
+         * Wallet Type
+         *
+         * 钱包轨道
+         */
+        wallet_type?: 'commission' | 'consumption' | null;
+    };
+    url: '/api/v1/admin/withdrawals';
+};
+
+export type WithdrawalsPageApiV1AdminWithdrawalsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type WithdrawalsPageApiV1AdminWithdrawalsGetError = WithdrawalsPageApiV1AdminWithdrawalsGetErrors[keyof WithdrawalsPageApiV1AdminWithdrawalsGetErrors];
+
+export type WithdrawalsPageApiV1AdminWithdrawalsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultWithdrawalRead;
+};
+
+export type WithdrawalsPageApiV1AdminWithdrawalsGetResponse = WithdrawalsPageApiV1AdminWithdrawalsGetResponses[keyof WithdrawalsPageApiV1AdminWithdrawalsGetResponses];
+
+export type WithdrawalsExportApiV1AdminWithdrawalsExportPostData = {
+    body: SelectedCommerceIds;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/withdrawals/export';
+};
+
+export type WithdrawalsExportApiV1AdminWithdrawalsExportPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type WithdrawalsExportApiV1AdminWithdrawalsExportPostError = WithdrawalsExportApiV1AdminWithdrawalsExportPostErrors[keyof WithdrawalsExportApiV1AdminWithdrawalsExportPostErrors];
+
+export type WithdrawalsExportApiV1AdminWithdrawalsExportPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommerceExportRead;
+};
+
+export type WithdrawalsExportApiV1AdminWithdrawalsExportPostResponse = WithdrawalsExportApiV1AdminWithdrawalsExportPostResponses[keyof WithdrawalsExportApiV1AdminWithdrawalsExportPostResponses];
+
+export type PaymentsPageApiV1AdminPaymentsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+        /**
+         * Record Id
+         *
+         * 记录标识，会员列表使用用户标识
+         */
+        record_id?: string | null;
+        /**
+         * User Id
+         *
+         * 用户标识，佣金列表使用受益人标识
+         */
+        user_id?: string | null;
+        /**
+         * Order Id
+         *
+         * 订单标识
+         */
+        order_id?: string | null;
+        /**
+         * Inviter Id
+         *
+         * 直接推荐人标识
+         */
+        inviter_id?: string | null;
+        /**
+         * Status
+         *
+         * 状态代码
+         */
+        status?: string | null;
+        /**
+         * Channel
+         *
+         * 支付渠道
+         */
+        channel?: 'wechat' | 'alipay' | null;
+        /**
+         * Product Type
+         *
+         * 商品类型
+         */
+        product_type?: 'physical' | 'virtual' | null;
+        /**
+         * Wallet Type
+         *
+         * 钱包轨道
+         */
+        wallet_type?: 'commission' | 'consumption' | null;
+    };
+    url: '/api/v1/admin/payments';
+};
+
+export type PaymentsPageApiV1AdminPaymentsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PaymentsPageApiV1AdminPaymentsGetError = PaymentsPageApiV1AdminPaymentsGetErrors[keyof PaymentsPageApiV1AdminPaymentsGetErrors];
+
+export type PaymentsPageApiV1AdminPaymentsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultPaymentAttemptRead;
+};
+
+export type PaymentsPageApiV1AdminPaymentsGetResponse = PaymentsPageApiV1AdminPaymentsGetResponses[keyof PaymentsPageApiV1AdminPaymentsGetResponses];
+
+export type PaymentsExportApiV1AdminPaymentsExportPostData = {
+    body: SelectedCommerceIds;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/payments/export';
+};
+
+export type PaymentsExportApiV1AdminPaymentsExportPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PaymentsExportApiV1AdminPaymentsExportPostError = PaymentsExportApiV1AdminPaymentsExportPostErrors[keyof PaymentsExportApiV1AdminPaymentsExportPostErrors];
+
+export type PaymentsExportApiV1AdminPaymentsExportPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommerceExportRead;
+};
+
+export type PaymentsExportApiV1AdminPaymentsExportPostResponse = PaymentsExportApiV1AdminPaymentsExportPostResponses[keyof PaymentsExportApiV1AdminPaymentsExportPostResponses];
+
+export type ReconciliationRecordsPageApiV1AdminReconciliationRecordsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+        /**
+         * Record Id
+         *
+         * 记录标识，会员列表使用用户标识
+         */
+        record_id?: string | null;
+        /**
+         * User Id
+         *
+         * 用户标识，佣金列表使用受益人标识
+         */
+        user_id?: string | null;
+        /**
+         * Order Id
+         *
+         * 订单标识
+         */
+        order_id?: string | null;
+        /**
+         * Inviter Id
+         *
+         * 直接推荐人标识
+         */
+        inviter_id?: string | null;
+        /**
+         * Status
+         *
+         * 状态代码
+         */
+        status?: string | null;
+        /**
+         * Channel
+         *
+         * 支付渠道
+         */
+        channel?: 'wechat' | 'alipay' | null;
+        /**
+         * Product Type
+         *
+         * 商品类型
+         */
+        product_type?: 'physical' | 'virtual' | null;
+        /**
+         * Wallet Type
+         *
+         * 钱包轨道
+         */
+        wallet_type?: 'commission' | 'consumption' | null;
+    };
+    url: '/api/v1/admin/reconciliation-records';
+};
+
+export type ReconciliationRecordsPageApiV1AdminReconciliationRecordsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ReconciliationRecordsPageApiV1AdminReconciliationRecordsGetError = ReconciliationRecordsPageApiV1AdminReconciliationRecordsGetErrors[keyof ReconciliationRecordsPageApiV1AdminReconciliationRecordsGetErrors];
+
+export type ReconciliationRecordsPageApiV1AdminReconciliationRecordsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultReconciliationRecordRead;
+};
+
+export type ReconciliationRecordsPageApiV1AdminReconciliationRecordsGetResponse = ReconciliationRecordsPageApiV1AdminReconciliationRecordsGetResponses[keyof ReconciliationRecordsPageApiV1AdminReconciliationRecordsGetResponses];
+
+export type AdminReconcileApiV1AdminReconciliationRecordsPostData = {
+    body: ReconciliationRecordCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/reconciliation-records';
+};
+
+export type AdminReconcileApiV1AdminReconciliationRecordsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminReconcileApiV1AdminReconciliationRecordsPostError = AdminReconcileApiV1AdminReconciliationRecordsPostErrors[keyof AdminReconcileApiV1AdminReconciliationRecordsPostErrors];
+
+export type AdminReconcileApiV1AdminReconciliationRecordsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelReconciliationRecordRead;
+};
+
+export type AdminReconcileApiV1AdminReconciliationRecordsPostResponse = AdminReconcileApiV1AdminReconciliationRecordsPostResponses[keyof AdminReconcileApiV1AdminReconciliationRecordsPostResponses];
+
+export type ReconciliationRecordsExportApiV1AdminReconciliationRecordsExportPostData = {
+    body: SelectedCommerceIds;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/reconciliation-records/export';
+};
+
+export type ReconciliationRecordsExportApiV1AdminReconciliationRecordsExportPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ReconciliationRecordsExportApiV1AdminReconciliationRecordsExportPostError = ReconciliationRecordsExportApiV1AdminReconciliationRecordsExportPostErrors[keyof ReconciliationRecordsExportApiV1AdminReconciliationRecordsExportPostErrors];
+
+export type ReconciliationRecordsExportApiV1AdminReconciliationRecordsExportPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommerceExportRead;
+};
+
+export type ReconciliationRecordsExportApiV1AdminReconciliationRecordsExportPostResponse = ReconciliationRecordsExportApiV1AdminReconciliationRecordsExportPostResponses[keyof ReconciliationRecordsExportApiV1AdminReconciliationRecordsExportPostResponses];
+
+export type MembersPageApiV1AdminMembersGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+        /**
+         * Record Id
+         *
+         * 记录标识，会员列表使用用户标识
+         */
+        record_id?: string | null;
+        /**
+         * User Id
+         *
+         * 用户标识，佣金列表使用受益人标识
+         */
+        user_id?: string | null;
+        /**
+         * Order Id
+         *
+         * 订单标识
+         */
+        order_id?: string | null;
+        /**
+         * Inviter Id
+         *
+         * 直接推荐人标识
+         */
+        inviter_id?: string | null;
+        /**
+         * Status
+         *
+         * 状态代码
+         */
+        status?: string | null;
+        /**
+         * Channel
+         *
+         * 支付渠道
+         */
+        channel?: 'wechat' | 'alipay' | null;
+        /**
+         * Product Type
+         *
+         * 商品类型
+         */
+        product_type?: 'physical' | 'virtual' | null;
+        /**
+         * Wallet Type
+         *
+         * 钱包轨道
+         */
+        wallet_type?: 'commission' | 'consumption' | null;
+    };
+    url: '/api/v1/admin/members';
+};
+
+export type MembersPageApiV1AdminMembersGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type MembersPageApiV1AdminMembersGetError = MembersPageApiV1AdminMembersGetErrors[keyof MembersPageApiV1AdminMembersGetErrors];
+
+export type MembersPageApiV1AdminMembersGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultMemberProfileRead;
+};
+
+export type MembersPageApiV1AdminMembersGetResponse = MembersPageApiV1AdminMembersGetResponses[keyof MembersPageApiV1AdminMembersGetResponses];
+
+export type MembersExportApiV1AdminMembersExportPostData = {
+    body: SelectedCommerceIds;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/members/export';
+};
+
+export type MembersExportApiV1AdminMembersExportPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type MembersExportApiV1AdminMembersExportPostError = MembersExportApiV1AdminMembersExportPostErrors[keyof MembersExportApiV1AdminMembersExportPostErrors];
+
+export type MembersExportApiV1AdminMembersExportPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommerceExportRead;
+};
+
+export type MembersExportApiV1AdminMembersExportPostResponse = MembersExportApiV1AdminMembersExportPostResponses[keyof MembersExportApiV1AdminMembersExportPostResponses];
+
+export type CommissionsPageApiV1AdminCommissionsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+        /**
+         * Record Id
+         *
+         * 记录标识，会员列表使用用户标识
+         */
+        record_id?: string | null;
+        /**
+         * User Id
+         *
+         * 用户标识，佣金列表使用受益人标识
+         */
+        user_id?: string | null;
+        /**
+         * Order Id
+         *
+         * 订单标识
+         */
+        order_id?: string | null;
+        /**
+         * Inviter Id
+         *
+         * 直接推荐人标识
+         */
+        inviter_id?: string | null;
+        /**
+         * Status
+         *
+         * 状态代码
+         */
+        status?: string | null;
+        /**
+         * Channel
+         *
+         * 支付渠道
+         */
+        channel?: 'wechat' | 'alipay' | null;
+        /**
+         * Product Type
+         *
+         * 商品类型
+         */
+        product_type?: 'physical' | 'virtual' | null;
+        /**
+         * Wallet Type
+         *
+         * 钱包轨道
+         */
+        wallet_type?: 'commission' | 'consumption' | null;
+    };
+    url: '/api/v1/admin/commissions';
+};
+
+export type CommissionsPageApiV1AdminCommissionsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CommissionsPageApiV1AdminCommissionsGetError = CommissionsPageApiV1AdminCommissionsGetErrors[keyof CommissionsPageApiV1AdminCommissionsGetErrors];
+
+export type CommissionsPageApiV1AdminCommissionsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultCommissionRead;
+};
+
+export type CommissionsPageApiV1AdminCommissionsGetResponse = CommissionsPageApiV1AdminCommissionsGetResponses[keyof CommissionsPageApiV1AdminCommissionsGetResponses];
+
+export type CommissionsExportApiV1AdminCommissionsExportPostData = {
+    body: SelectedCommerceIds;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/commissions/export';
+};
+
+export type CommissionsExportApiV1AdminCommissionsExportPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CommissionsExportApiV1AdminCommissionsExportPostError = CommissionsExportApiV1AdminCommissionsExportPostErrors[keyof CommissionsExportApiV1AdminCommissionsExportPostErrors];
+
+export type CommissionsExportApiV1AdminCommissionsExportPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommerceExportRead;
+};
+
+export type CommissionsExportApiV1AdminCommissionsExportPostResponse = CommissionsExportApiV1AdminCommissionsExportPostResponses[keyof CommissionsExportApiV1AdminCommissionsExportPostResponses];
+
+export type WalletsPageApiV1AdminWalletsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+        /**
+         * Record Id
+         *
+         * 记录标识，会员列表使用用户标识
+         */
+        record_id?: string | null;
+        /**
+         * User Id
+         *
+         * 用户标识，佣金列表使用受益人标识
+         */
+        user_id?: string | null;
+        /**
+         * Order Id
+         *
+         * 订单标识
+         */
+        order_id?: string | null;
+        /**
+         * Inviter Id
+         *
+         * 直接推荐人标识
+         */
+        inviter_id?: string | null;
+        /**
+         * Status
+         *
+         * 状态代码
+         */
+        status?: string | null;
+        /**
+         * Channel
+         *
+         * 支付渠道
+         */
+        channel?: 'wechat' | 'alipay' | null;
+        /**
+         * Product Type
+         *
+         * 商品类型
+         */
+        product_type?: 'physical' | 'virtual' | null;
+        /**
+         * Wallet Type
+         *
+         * 钱包轨道
+         */
+        wallet_type?: 'commission' | 'consumption' | null;
+    };
+    url: '/api/v1/admin/wallets';
+};
+
+export type WalletsPageApiV1AdminWalletsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type WalletsPageApiV1AdminWalletsGetError = WalletsPageApiV1AdminWalletsGetErrors[keyof WalletsPageApiV1AdminWalletsGetErrors];
+
+export type WalletsPageApiV1AdminWalletsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultAdminWalletRead;
+};
+
+export type WalletsPageApiV1AdminWalletsGetResponse = WalletsPageApiV1AdminWalletsGetResponses[keyof WalletsPageApiV1AdminWalletsGetResponses];
+
+export type WalletsExportApiV1AdminWalletsExportPostData = {
+    body: SelectedCommerceIds;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/wallets/export';
+};
+
+export type WalletsExportApiV1AdminWalletsExportPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type WalletsExportApiV1AdminWalletsExportPostError = WalletsExportApiV1AdminWalletsExportPostErrors[keyof WalletsExportApiV1AdminWalletsExportPostErrors];
+
+export type WalletsExportApiV1AdminWalletsExportPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommerceExportRead;
+};
+
+export type WalletsExportApiV1AdminWalletsExportPostResponse = WalletsExportApiV1AdminWalletsExportPostResponses[keyof WalletsExportApiV1AdminWalletsExportPostResponses];
+
+export type WalletLedgersApiV1AdminWalletsWalletIdLedgersGetData = {
+    body?: never;
+    path: {
+        /**
+         * Wallet Id
+         */
+        wallet_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/wallets/{wallet_id}/ledgers';
+};
+
+export type WalletLedgersApiV1AdminWalletsWalletIdLedgersGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type WalletLedgersApiV1AdminWalletsWalletIdLedgersGetError = WalletLedgersApiV1AdminWalletsWalletIdLedgersGetErrors[keyof WalletLedgersApiV1AdminWalletsWalletIdLedgersGetErrors];
+
+export type WalletLedgersApiV1AdminWalletsWalletIdLedgersGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultWalletLedgerRead;
+};
+
+export type WalletLedgersApiV1AdminWalletsWalletIdLedgersGetResponse = WalletLedgersApiV1AdminWalletsWalletIdLedgersGetResponses[keyof WalletLedgersApiV1AdminWalletsWalletIdLedgersGetResponses];
 
 export type AdminCategoriesApiV1AdminProductCategoriesGetData = {
     body?: never;
@@ -6537,6 +8395,30 @@ export type AdminProductsApiV1AdminProductsGetData = {
          * 每页数量
          */
         page_size?: number;
+        /**
+         * Search
+         *
+         * 商品名称或 SKU 编码关键词
+         */
+        search?: string | null;
+        /**
+         * Category Id
+         *
+         * 商品所属分类标识
+         */
+        category_id?: string | null;
+        /**
+         * Status
+         *
+         * 商品状态
+         */
+        status?: 'draft' | 'on_sale' | 'off_sale' | null;
+        /**
+         * Product Type
+         *
+         * 商品类型
+         */
+        product_type?: 'physical' | 'virtual' | null;
     };
     url: '/api/v1/admin/products';
 };
@@ -6583,6 +8465,81 @@ export type CreateProductApiV1AdminProductsPostResponses = {
 };
 
 export type CreateProductApiV1AdminProductsPostResponse = CreateProductApiV1AdminProductsPostResponses[keyof CreateProductApiV1AdminProductsPostResponses];
+
+export type CategoriesStatusBatchApiV1AdminProductCategoriesStatusBatchPatchData = {
+    body: ActiveStatusBatch;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/product-categories/status/batch';
+};
+
+export type CategoriesStatusBatchApiV1AdminProductCategoriesStatusBatchPatchErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CategoriesStatusBatchApiV1AdminProductCategoriesStatusBatchPatchError = CategoriesStatusBatchApiV1AdminProductCategoriesStatusBatchPatchErrors[keyof CategoriesStatusBatchApiV1AdminProductCategoriesStatusBatchPatchErrors];
+
+export type CategoriesStatusBatchApiV1AdminProductCategoriesStatusBatchPatchResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelBatchCompleted;
+};
+
+export type CategoriesStatusBatchApiV1AdminProductCategoriesStatusBatchPatchResponse = CategoriesStatusBatchApiV1AdminProductCategoriesStatusBatchPatchResponses[keyof CategoriesStatusBatchApiV1AdminProductCategoriesStatusBatchPatchResponses];
+
+export type ProductsStatusBatchApiV1AdminProductsStatusBatchPatchData = {
+    body: ProductStatusBatch;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/products/status/batch';
+};
+
+export type ProductsStatusBatchApiV1AdminProductsStatusBatchPatchErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ProductsStatusBatchApiV1AdminProductsStatusBatchPatchError = ProductsStatusBatchApiV1AdminProductsStatusBatchPatchErrors[keyof ProductsStatusBatchApiV1AdminProductsStatusBatchPatchErrors];
+
+export type ProductsStatusBatchApiV1AdminProductsStatusBatchPatchResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelBatchCompleted;
+};
+
+export type ProductsStatusBatchApiV1AdminProductsStatusBatchPatchResponse = ProductsStatusBatchApiV1AdminProductsStatusBatchPatchResponses[keyof ProductsStatusBatchApiV1AdminProductsStatusBatchPatchResponses];
+
+export type ShippingStatusBatchApiV1AdminShippingTemplatesStatusBatchPatchData = {
+    body: ActiveStatusBatch;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/shipping-templates/status/batch';
+};
+
+export type ShippingStatusBatchApiV1AdminShippingTemplatesStatusBatchPatchErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ShippingStatusBatchApiV1AdminShippingTemplatesStatusBatchPatchError = ShippingStatusBatchApiV1AdminShippingTemplatesStatusBatchPatchErrors[keyof ShippingStatusBatchApiV1AdminShippingTemplatesStatusBatchPatchErrors];
+
+export type ShippingStatusBatchApiV1AdminShippingTemplatesStatusBatchPatchResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelBatchCompleted;
+};
+
+export type ShippingStatusBatchApiV1AdminShippingTemplatesStatusBatchPatchResponse = ShippingStatusBatchApiV1AdminShippingTemplatesStatusBatchPatchResponses[keyof ShippingStatusBatchApiV1AdminShippingTemplatesStatusBatchPatchResponses];
 
 export type AdminProductApiV1AdminProductsProductIdGetData = {
     body?: never;
@@ -6767,6 +8724,36 @@ export type InventoryReadApiV1AdminInventorySkuIdGetResponses = {
 };
 
 export type InventoryReadApiV1AdminInventorySkuIdGetResponse = InventoryReadApiV1AdminInventorySkuIdGetResponses[keyof InventoryReadApiV1AdminInventorySkuIdGetResponses];
+
+export type SkusStatusBatchApiV1AdminProductsProductIdSkusStatusBatchPatchData = {
+    body: SkuStatusBatch;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/products/{product_id}/skus/status/batch';
+};
+
+export type SkusStatusBatchApiV1AdminProductsProductIdSkusStatusBatchPatchErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type SkusStatusBatchApiV1AdminProductsProductIdSkusStatusBatchPatchError = SkusStatusBatchApiV1AdminProductsProductIdSkusStatusBatchPatchErrors[keyof SkusStatusBatchApiV1AdminProductsProductIdSkusStatusBatchPatchErrors];
+
+export type SkusStatusBatchApiV1AdminProductsProductIdSkusStatusBatchPatchResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelProductRead;
+};
+
+export type SkusStatusBatchApiV1AdminProductsProductIdSkusStatusBatchPatchResponse = SkusStatusBatchApiV1AdminProductsProductIdSkusStatusBatchPatchResponses[keyof SkusStatusBatchApiV1AdminProductsProductIdSkusStatusBatchPatchResponses];
 
 export type InventoryAdjustApiV1AdminInventorySkuIdAdjustmentsPostData = {
     body: InventoryAdjustment;
@@ -7394,44 +9381,6 @@ export type WithdrawalCreateApiV1DistributionMeWithdrawalsPostResponses = {
 
 export type WithdrawalCreateApiV1DistributionMeWithdrawalsPostResponse = WithdrawalCreateApiV1DistributionMeWithdrawalsPostResponses[keyof WithdrawalCreateApiV1DistributionMeWithdrawalsPostResponses];
 
-export type AdminWithdrawalsReadApiV1AdminWithdrawalsGetData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Page
-         *
-         * 页码，从一开始
-         */
-        page?: number;
-        /**
-         * Page Size
-         *
-         * 每页数量
-         */
-        page_size?: number;
-    };
-    url: '/api/v1/admin/withdrawals';
-};
-
-export type AdminWithdrawalsReadApiV1AdminWithdrawalsGetErrors = {
-    /**
-     * 请求参数校验失败
-     */
-    422: HttpValidationError;
-};
-
-export type AdminWithdrawalsReadApiV1AdminWithdrawalsGetError = AdminWithdrawalsReadApiV1AdminWithdrawalsGetErrors[keyof AdminWithdrawalsReadApiV1AdminWithdrawalsGetErrors];
-
-export type AdminWithdrawalsReadApiV1AdminWithdrawalsGetResponses = {
-    /**
-     * 请求成功
-     */
-    200: ResponseModelPageResultWithdrawalRead;
-};
-
-export type AdminWithdrawalsReadApiV1AdminWithdrawalsGetResponse = AdminWithdrawalsReadApiV1AdminWithdrawalsGetResponses[keyof AdminWithdrawalsReadApiV1AdminWithdrawalsGetResponses];
-
 export type AdminApproveWithdrawalApiV1AdminWithdrawalsWithdrawalIdApprovePostData = {
     body: WithdrawalReview;
     path: {
@@ -7491,40 +9440,6 @@ export type AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResp
 };
 
 export type AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponse = AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponses[keyof AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponses];
-
-export type AdminOrderPageApiV1AdminOrdersGetData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Page
-         */
-        page?: number;
-        /**
-         * Page Size
-         */
-        page_size?: number;
-    };
-    url: '/api/v1/admin/orders';
-};
-
-export type AdminOrderPageApiV1AdminOrdersGetErrors = {
-    /**
-     * 请求参数校验失败
-     */
-    422: HttpValidationError;
-};
-
-export type AdminOrderPageApiV1AdminOrdersGetError = AdminOrderPageApiV1AdminOrdersGetErrors[keyof AdminOrderPageApiV1AdminOrdersGetErrors];
-
-export type AdminOrderPageApiV1AdminOrdersGetResponses = {
-    /**
-     * 请求成功
-     */
-    200: ResponseModelPageResultAdminOrderSummary;
-};
-
-export type AdminOrderPageApiV1AdminOrdersGetResponse = AdminOrderPageApiV1AdminOrdersGetResponses[keyof AdminOrderPageApiV1AdminOrdersGetResponses];
 
 export type AdminOrderReadApiV1AdminOrdersOrderIdGetData = {
     body?: never;
@@ -7775,44 +9690,6 @@ export type OrderCancelApiV1OrdersOrderIdCancelPostResponses = {
 };
 
 export type OrderCancelApiV1OrdersOrderIdCancelPostResponse = OrderCancelApiV1OrdersOrderIdCancelPostResponses[keyof OrderCancelApiV1OrdersOrderIdCancelPostResponses];
-
-export type AdminRefundPageApiV1AdminRefundsGetData = {
-    body?: never;
-    path?: never;
-    query?: {
-        /**
-         * Page
-         *
-         * 页码，从一开始
-         */
-        page?: number;
-        /**
-         * Page Size
-         *
-         * 每页数量
-         */
-        page_size?: number;
-    };
-    url: '/api/v1/admin/refunds';
-};
-
-export type AdminRefundPageApiV1AdminRefundsGetErrors = {
-    /**
-     * 请求参数校验失败
-     */
-    422: HttpValidationError;
-};
-
-export type AdminRefundPageApiV1AdminRefundsGetError = AdminRefundPageApiV1AdminRefundsGetErrors[keyof AdminRefundPageApiV1AdminRefundsGetErrors];
-
-export type AdminRefundPageApiV1AdminRefundsGetResponses = {
-    /**
-     * 请求成功
-     */
-    200: ResponseModelPageResultRefundRequestRead;
-};
-
-export type AdminRefundPageApiV1AdminRefundsGetResponse = AdminRefundPageApiV1AdminRefundsGetResponses[keyof AdminRefundPageApiV1AdminRefundsGetResponses];
 
 export type AdminFulfillmentReadApiV1AdminOrdersOrderIdFulfillmentGetData = {
     body?: never;
@@ -8186,31 +10063,6 @@ export type AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponses = {
 };
 
 export type AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponse = AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponses[keyof AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponses];
-
-export type AdminReconcileApiV1AdminReconciliationRecordsPostData = {
-    body: ReconciliationRecordCreate;
-    path?: never;
-    query?: never;
-    url: '/api/v1/admin/reconciliation-records';
-};
-
-export type AdminReconcileApiV1AdminReconciliationRecordsPostErrors = {
-    /**
-     * 请求参数校验失败
-     */
-    422: HttpValidationError;
-};
-
-export type AdminReconcileApiV1AdminReconciliationRecordsPostError = AdminReconcileApiV1AdminReconciliationRecordsPostErrors[keyof AdminReconcileApiV1AdminReconciliationRecordsPostErrors];
-
-export type AdminReconcileApiV1AdminReconciliationRecordsPostResponses = {
-    /**
-     * 请求成功
-     */
-    201: ResponseModelReconciliationRecordRead;
-};
-
-export type AdminReconcileApiV1AdminReconciliationRecordsPostResponse = AdminReconcileApiV1AdminReconciliationRecordsPostResponses[keyof AdminReconcileApiV1AdminReconciliationRecordsPostResponses];
 
 export type RegisterApiV1AuthRegisterPostData = {
     body: UserRegisterIn;

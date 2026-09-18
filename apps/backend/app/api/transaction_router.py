@@ -1,31 +1,16 @@
-from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 
 from app.api.dependencies import require_permission, require_web_csrf
 from app.api.transaction_dependencies import Cart, Orders, UserPrincipal
 from app.core.context import current_request_id
-from app.core.pagination import PageResult
 from app.core.response import ResponseModel, success_response
 from app.domains.admin.permissions import PermissionCode
 from app.domains.cart import CartItemInput, CartItemRead, CartItemUpdate
 from app.domains.orders import CheckoutQuote, CheckoutRequest, OrderRead
-from app.domains.orders.schemas import AdminOrderSummary
 
 router = APIRouter(tags=["交易"])
-
-
-@router.get(
-    "/admin/orders",
-    response_model=ResponseModel[PageResult[AdminOrderSummary]],
-    summary="查看管理订单列表",
-    dependencies=[Depends(require_permission(PermissionCode.ORDERS_READ))],
-)
-async def admin_order_page(
-    orders: Orders, page: Annotated[int, Query(ge=1)] = 1, page_size: Annotated[int, Query(ge=1, le=100)] = 20
-) -> ResponseModel[PageResult[AdminOrderSummary]]:
-    return success_response(data=await orders.admin_page(page, page_size), request_id=current_request_id())
 
 
 @router.get(

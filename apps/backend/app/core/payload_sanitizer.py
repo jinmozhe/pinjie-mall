@@ -32,6 +32,10 @@ _COMMERCE_PRIVATE_PREFIXES = (
     "/api/v1/admin/refunds",
     "/api/v1/admin/withdrawals",
     "/api/v1/admin/reconciliation-records",
+    "/api/v1/admin/payments",
+    "/api/v1/admin/members",
+    "/api/v1/admin/commissions",
+    "/api/v1/admin/wallets",
 )
 
 

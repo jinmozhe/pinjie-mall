@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from app.core.batch import ActiveStatusBatch, BatchCompleted
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
@@ -82,3 +83,17 @@ class ShippingService:
         return FreightQuote(
             template_id=template.id, revision=template.revision, freight=freight, free_shipping=freight == 0
         )
+
+    async def set_active_batch(self, data: ActiveStatusBatch, actor_id: UUID) -> BatchCompleted:
+        for target in sorted(data.targets, key=lambda item: item.id):
+            template = await self.read(target.id, lock=True)
+            await self.update(
+                target.id,
+                ShippingTemplateUpdate(
+                    **template.model_dump(exclude={"id", "revision", "is_active"}),
+                    revision=target.revision,
+                    is_active=data.is_active,
+                ),
+                actor_id,
+            )
+        return BatchCompleted(completed_count=len(data.targets))

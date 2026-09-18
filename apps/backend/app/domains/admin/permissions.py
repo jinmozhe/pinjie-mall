@@ -11,6 +11,19 @@ class PermissionDefinition:
 
 
 class PermissionCode(StrEnum):
+    PAYMENTS_READ = "payments:read"
+    RECONCILIATION_READ = "reconciliation:read"
+    MEMBERS_READ = "members:read"
+    COMMISSIONS_READ = "commissions:read"
+    WALLETS_READ = "wallets:read"
+    ORDERS_EXPORT = "orders:export"
+    REFUNDS_EXPORT = "refunds:export"
+    WITHDRAWALS_EXPORT = "withdrawals:export"
+    PAYMENTS_EXPORT = "payments:export"
+    RECONCILIATION_EXPORT = "reconciliation:export"
+    MEMBERS_EXPORT = "members:export"
+    COMMISSIONS_EXPORT = "commissions:export"
+    WALLETS_EXPORT = "wallets:export"
     PRODUCT_CATEGORIES_READ = "product-categories:read"
     PRODUCT_CATEGORIES_CREATE = "product-categories:create"
     PRODUCT_CATEGORIES_UPDATE = "product-categories:update"
@@ -65,6 +78,19 @@ class PermissionCode(StrEnum):
 
 
 PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
+    PermissionDefinition("payments:read", "查看支付记录", "查询支付意图与渠道状态"),
+    PermissionDefinition("reconciliation:read", "查看对账记录", "查询渠道对账匹配及差异"),
+    PermissionDefinition("members:read", "查看会员档案", "查询会员等级及首次推荐关系"),
+    PermissionDefinition("commissions:read", "查看佣金", "查询两级佣金及追回状态"),
+    PermissionDefinition("wallets:read", "查看钱包", "查询双轨钱包及不可变流水"),
+    PermissionDefinition("orders:export", "导出订单", "导出选中订单摘要"),
+    PermissionDefinition("refunds:export", "导出退款", "导出选中退款申请"),
+    PermissionDefinition("withdrawals:export", "导出提现", "导出选中提现申请"),
+    PermissionDefinition("payments:export", "导出支付", "导出选中支付记录"),
+    PermissionDefinition("reconciliation:export", "导出对账", "导出选中对账记录"),
+    PermissionDefinition("members:export", "导出会员", "导出选中会员及推荐关系"),
+    PermissionDefinition("commissions:export", "导出佣金", "导出选中佣金记录"),
+    PermissionDefinition("wallets:export", "导出钱包", "导出选中钱包余额摘要"),
     PermissionDefinition("orders:read", "查看订单", "查看订单列表、成交快照和履约状态"),
     PermissionDefinition("refunds:read", "查看退款", "查看退款申请及审核版本"),
     PermissionDefinition("product-categories:read", "查看商品分类", "查看商品分类树"),
@@ -125,7 +151,7 @@ PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
 
 PERMISSION_CODES = frozenset(item.code for item in PERMISSION_CATALOG)
 ROLE_ASSIGNABLE_PERMISSION_CODES = frozenset(item.code for item in PERMISSION_CATALOG if item.assignable_to_roles)
-CATALOG_VERSION = "2026-09-17.3"
+CATALOG_VERSION = "2026-09-18.1"
 
 __all__ = [
     "CATALOG_VERSION",
