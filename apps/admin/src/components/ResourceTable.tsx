@@ -23,7 +23,7 @@ export function ResourceTable<T extends object>({ title, rows, columns, rowKey =
         onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
         onCell: () => ({ style: { whiteSpace: "nowrap" } }),
       }))}
-      scroll={rows.length ? { x: "max-content" } : undefined}
+      scroll={{ x: "max-content" }}
       options={{ reload: () => { retry(); }, density: true, setting: true, fullScreen: true }}
       pagination={onPage ? { current: page, total, pageSize: 20, showSizeChanger: false, onChange: onPage } : false}
       rowSelection={selection ? { selectedRowKeys: selection.keys, onChange: selection.onChange,
