@@ -61,9 +61,7 @@ class OrderRepository:
 
     async def items(self, order_id: UUID) -> list[OrderItem]:
         return list(
-            await self.session.scalars(
-                select(OrderItem).where(OrderItem.order_id == order_id).order_by(OrderItem.id)
-            )
+            await self.session.scalars(select(OrderItem).where(OrderItem.order_id == order_id).order_by(OrderItem.id))
         )
 
     async def item(self, order_item_id: UUID) -> OrderItem | None:
@@ -72,10 +70,7 @@ class OrderRepository:
     async def page(self, page: int, page_size: int) -> tuple[list[Order], int]:
         count = int(await self.session.scalar(select(func.count()).select_from(Order)) or 0)
         rows = await self.session.scalars(
-            select(Order)
-            .order_by(Order.id.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            select(Order).order_by(Order.id.desc()).offset((page - 1) * page_size).limit(page_size)
         )
         return list(rows), count
 

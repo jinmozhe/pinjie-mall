@@ -162,10 +162,7 @@ class LifecycleRepository:
     async def refund_page(self, page: int, page_size: int) -> tuple[list[RefundRequest], int]:
         total = int(await self.session.scalar(select(func.count()).select_from(RefundRequest)) or 0)
         rows = await self.session.scalars(
-            select(RefundRequest)
-            .order_by(RefundRequest.id.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            select(RefundRequest).order_by(RefundRequest.id.desc()).offset((page - 1) * page_size).limit(page_size)
         )
         return list(rows), total
 
