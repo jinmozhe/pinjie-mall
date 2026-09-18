@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import { CommerceList } from "./CommerceList";
 import { EditorModal } from "./EditorModal";
-import { canAccess, useCurrentAdmin } from "@/features/auth";
+import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi, type CommerceFilters } from "@/lib/api/commerce";
 
 type ReviewRow = RefundRequestRead | WithdrawalRead;

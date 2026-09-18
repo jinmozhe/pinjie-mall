@@ -8,9 +8,23 @@ export function useLockedMutation<TData, TVariables>(options: UseMutationOptions
     try { await options.onSettled?.(...args); }
     finally { lock.current = false; }
   } });
-  return { ...mutation, mutate: (variables: TVariables) => {
-    if (lock.current) return;
-    lock.current = true;
-    mutation.mutate(variables);
-  } };
+  return {
+    ...mutation,
+    mutate: (variables: TVariables) => {
+      if (lock.current) return;
+      lock.current = true;
+      mutation.mutate(variables);
+    },
+    mutateAsync: async (variables: TVariables) => {
+      if (lock.current) {
+        return Promise.reject(new Error("操作正在处理中，请勿重复提交"));
+      }
+      lock.current = true;
+      try {
+        return await mutation.mutateAsync(variables);
+      } finally {
+        lock.current = false;
+      }
+    },
+  };
 }

@@ -315,7 +315,7 @@ export function UsersPage() {
               <Button className="table-toolbar-reset" onClick={resetSearch}>重置</Button>
             </div>
           )]}
-          scroll={{ x: lifecycle === "deleted" ? 1180 : 900 }}
+          scroll={{ x: "max-content" }}
           pagination={{
             current: page,
             pageSize: 20,

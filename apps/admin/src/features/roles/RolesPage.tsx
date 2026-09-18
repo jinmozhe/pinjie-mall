@@ -349,7 +349,7 @@ export function RolesPage() {
               </Button>
             </Space>
           )}
-          scroll={{ x: 760 }}
+          scroll={{ x: "max-content" }}
           pagination={false}
           columns={[
             { title: "角色", dataIndex: "name", render: (_, row) => <div className="table-primary-cell role-primary-cell"><Typography.Text strong>{row.name}</Typography.Text><Badge className="role-code-badge" count={row.code} /></div> },
@@ -366,13 +366,20 @@ export function RolesPage() {
               />
             ) },
             { title: "更新时间", dataIndex: "updated_at", width: 170, responsive: ["xl"], render: (_, row) => formatTime(row.updated_at) },
-            { title: "操作", width: 220, render: (_, row) => (
-              <Space className="table-actions" size={[2, 0]} wrap>
-                {canUpdate && <Button type="link" size="small" icon={<EditOutlined />} onClick={() => { setEditing(row); roleForm.setFieldsValue({ code: row.code, name: row.name, description: row.description, is_active: row.is_active }); }}>编辑</Button>}
-                {canAssignPermissions && <Button type="link" size="small" icon={<SafetyOutlined />} onClick={() => { setPermissionSearch(""); setPermissionTarget(row); permissionForm.setFieldsValue({ permission_codes: row.permissions }); }}>权限</Button>}
-                {canDelete && <Button type="link" danger size="small" icon={<DeleteOutlined />} onClick={() => begin("删除未使用角色", "确认后该角色及其权限关联将被永久删除，删除后无法恢复。", () => deleteRoleMutation.mutateAsync(row.id))}>删除</Button>}
-              </Space>
-            ) },
+            {
+              title: "操作",
+              key: "actions",
+              width: "1%",
+              onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+              onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+              render: (_, row) => (
+                <Space className="table-actions" size={[2, 0]} wrap={false}>
+                  {canUpdate && <Button type="link" size="small" icon={<EditOutlined />} onClick={() => { setEditing(row); roleForm.setFieldsValue({ code: row.code, name: row.name, description: row.description, is_active: row.is_active }); }}>编辑</Button>}
+                  {canAssignPermissions && <Button type="link" size="small" icon={<SafetyOutlined />} onClick={() => { setPermissionSearch(""); setPermissionTarget(row); permissionForm.setFieldsValue({ permission_codes: row.permissions }); }}>权限</Button>}
+                  {canDelete && <Button type="link" danger size="small" icon={<DeleteOutlined />} onClick={() => begin("删除未使用角色", "确认后该角色及其权限关联将被永久删除，删除后无法恢复。", () => deleteRoleMutation.mutateAsync(row.id))}>删除</Button>}
+                </Space>
+              ),
+            },
           ]}
         />
       )}

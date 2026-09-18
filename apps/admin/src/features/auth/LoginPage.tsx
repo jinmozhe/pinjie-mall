@@ -3,15 +3,27 @@ import {
   SafetyCertificateOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import { history } from "@umijs/max";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Alert, Button, Form, Input, Tooltip } from "antd";
 import { useEffect } from "react";
 
 import { adminApi } from "@/lib/api/admin";
 import { errorMessage } from "@/lib/api/http";
-import { navigate } from "@/lib/navigation";
 
 type LoginValues = { username: string; password: string };
+
+function getSafeRedirectTarget(): string {
+  if (typeof window === "undefined") return "/welcome";
+  const params = new URLSearchParams(window.location.search);
+  const redirect = params.get("redirect");
+  if (!redirect) return "/welcome";
+  // 仅允许以单个斜杠开头的站内相对路径，防止开放重定向漏洞
+  if (redirect.startsWith("/") && !redirect.startsWith("//")) {
+    return redirect;
+  }
+  return "/welcome";
+}
 
 export function LoginPage({
   authenticated = false,
@@ -21,14 +33,16 @@ export function LoginPage({
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (authenticated) navigate("/welcome");
+    if (authenticated) {
+      history.replace(getSafeRedirectTarget());
+    }
   }, [authenticated]);
 
   const login = useMutation({
     mutationFn: (values: LoginValues) => adminApi.login(values),
     onSuccess: (session) => {
       queryClient.setQueryData(["admin-me"], session.principal);
-      navigate("/welcome");
+      history.replace(getSafeRedirectTarget());
       if (process.env.NODE_ENV !== "test") window.location.reload();
     },
   });

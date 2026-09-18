@@ -5,7 +5,7 @@ import { Alert, Button, Form, Input, Select, Space, message } from "antd";
 import { useRef, useState, type Key, type ReactNode } from "react";
 
 import { ResourceTable } from "./ResourceTable";
-import { canAccess, useCurrentAdmin } from "@/features/auth";
+import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi, type CommerceFilters, type CommerceResource } from "@/lib/api/commerce";
 import { errorMessage } from "@/lib/api/http";
 
