@@ -9,9 +9,9 @@ export function startAdminPreview() {
   const dist = resolve(root, "apps/admin/dist");
   const config = resolve(root, "apps/admin/nginx.conf");
   if (!existsSync(resolve(dist, "index.html"))) throw new Error("Build Admin before production preview.");
-  const backend = new URL(process.env.E2E_BACKEND_URL ?? "http://127.0.0.1:8000");
-  if (backend.href !== "http://127.0.0.1:8000/") {
-    throw new Error("Production Admin preview requires the local Backend on 127.0.0.1:8000.");
+  const backend = new URL(process.env.E2E_BACKEND_URL ?? "http://127.0.0.1:18168");
+  if (backend.href !== "http://127.0.0.1:18168/") {
+    throw new Error("Production Admin preview requires the local Backend on 127.0.0.1:18168.");
   }
   const name = `pinjie-admin-preview-${randomUUID()}`;
   const network = process.platform === "linux"

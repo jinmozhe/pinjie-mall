@@ -89,7 +89,7 @@ if (process.argv[2] === "cleanup") {
           healthcheck: { test: ["CMD-SHELL", "pg_isready -U postgres -d pinjie_candidate_test"], interval: "2s", timeout: "2s", retries: 30 } },
         redis: { image: "redis:8.10.0-alpine", healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: "2s", timeout: "2s", retries: 30 } },
         backend: { image: request.images.backend.release.image.reference, platform: "linux/amd64", environment,
-          ports: ["127.0.0.1:8000:8000"], depends_on: { postgres: { condition: "service_healthy" }, redis: { condition: "service_healthy" } } },
+          ports: ["127.0.0.1:18168:18168"], depends_on: { postgres: { condition: "service_healthy" }, redis: { condition: "service_healthy" } } },
         admin: { image: request.images.admin.release.image.reference, platform: "linux/amd64", ports: ["127.0.0.1:3001:3001"],
           depends_on: { backend: { condition: "service_healthy" } } },
       },

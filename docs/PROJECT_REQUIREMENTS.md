@@ -82,7 +82,7 @@ Pinjie Mall 面向零售商家及其消费者，提供微信小程序商城、�
 | BASE-API-002 | API Client 由契约生成 | `packages/api-client/src/` 不手工修改，Admin 和后续小程序消费者使用业务数据 |
 | BASE-DB-001 | PostgreSQL 是关系数据权威来源 | 结构通过 Alembic 演进，环境和数据所有权隔离 |
 | BASE-DB-002 | Redis 不保存唯一业务事实 | 缓存、限流、会话和锁具备命名空间、TTL 和失败语义 |
-| BASE-OPS-001 | 本地只运行 Backend 8000 与 Admin 3001 | Web 端口，包括 3000，禁止监听和暴露 |
+| BASE-OPS-001 | 本地只运行 Backend 18168 与 Admin 3001 | Web 端口，包括 3000，禁止监听和暴露 |
 | BASE-OPS-002 | Backend 与 Admin 使用不可变镜像交付 | 生产 Compose 不声明 Web 服务，镜像使用完整 digest |
 | BASE-OPS-003 | CI、发布和部署分离 | 发布和部署需要独立授权，失败关闭且可追溯 |
 | BASE-QUAL-001 | 未实现和未验证状态如实记录 | 不以文档、Mock 或静态检查伪造业务已交付 |

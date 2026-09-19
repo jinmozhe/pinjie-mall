@@ -19,6 +19,7 @@
 | --- | --- | --- | --- | --- |
 | `plans/2026-09-19_Admin全量审查修复计划.md` | 已结束 | 已完成；修复七项 Admin 全量审查问题，轻量与治理门禁通过，重型验证未执行 | Admin、Documentation | 修复权限保存、设置并发、角色分页、会话恢复、上传互锁及过期测试断言 |
 | `plans/2026-09-19_后端安全并发审查修复计划.md` | 已结束 | 已完成；认证、权限、事务、文件副作用、配置与可靠性修复完成，Backend 轻量门禁通过，最终新增回归用例后 pytest 未重跑 | Backend、Documentation | 修复全量审查发现的认证、权限、事务、文件副作用、配置与可靠性缺陷 |
+| `plans/2026-09-19_Backend端口迁移计划.md` | 已结束 | 已完成；Backend 运行链路统一迁移到 `18168`，轻量门禁、治理检查和变更 Markdown 定向检查通过；全仓 Markdown 检查被既有 `.git/codex-git-sync/20260919-012500/pr-body.md` 阻断 | Backend、Admin、Deployment、Documentation | 将 Backend 固定端口从 `8000` 迁移到 `18168` 并同步运行链路 |
 | `plans/2026-09-18_排序规范统一计划.md` | 已结束 | 已完成；sort_order 可空化、大数据表按 UUID v7 id 排序统一，全栈轻量门禁通过 | Backend、Admin、API Client、Database | 修复分类排序默认值语义缺陷，统一全项目大数据表排序规范 |
 | `plans/2026-09-18_Admin电商分阶段建设计划.md` | 已结束 | 已完成；A0 至 A4 本地实现、授权验证、文档收尾和临时资源清理完成，Backend 测试及适用轻量门禁通过，Admin 动态验收未执行 | Backend、Admin、API Client、Database、Documentation | 按 A0 至 A4 建立测试基线并交付商品、订单履约、售后支付查询与会员分销财务页面 |
 | `plans/2026-09-17_小程序PRD编制计划.md` | 已结束 | 已完成；PRD 与配套目录、分层和执行链路文档已交付，工程尚未启动 | Documentation | 编制小程序 PRD 与配套目录、分层和执行链路设计，关联既有产品基线 |

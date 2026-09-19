@@ -13,7 +13,7 @@
 
 ```text
 Windows 本机
-├── Backend：uv + 标准 CPython 3.14 + 项目 .venv，端口 8000
+├── Backend：uv + 标准 CPython 3.14 + 项目 .venv，端口 18168
 ├── Admin：pnpm + Umi Max，端口 3001
 ├── 小程序端：微信小程序（前阶段暂不开发，由后续专项阶段实施）
 └── PostgreSQL：本机服务，端口 5432
@@ -32,7 +32,7 @@ Anaconda 或 Miniconda 不属于本项目的前置依赖。日常后端命令统
 ```text
 1Panel
 ├── OpenResty
-│   ├── api.yourdomain.com   → 127.0.0.1:8000
+│   ├── api.yourdomain.com   → 127.0.0.1:18168
 │   └── admin.yourdomain.com → 127.0.0.1:3001
 ├── 共享 PostgreSQL 18.4：每项目独立数据库、角色和密码
 ├── 共享 Redis 8.10.0：每项目独立逻辑库编号；高隔离场景使用独立 ACL 用户
@@ -207,10 +207,10 @@ PONG
 ```powershell
 Set-Location apps/backend
 uv run alembic upgrade head
-uv run uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 18168
 ```
 
-访问地址：`http://localhost:8000`
+访问地址：`http://localhost:18168`
 
 ### 终端二：Admin
 

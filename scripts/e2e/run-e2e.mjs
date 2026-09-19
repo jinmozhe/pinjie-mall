@@ -5,7 +5,7 @@ import { createServer } from "node:net";
 import { startAdminPreview } from "./admin-preview.mjs";
 
 const root = resolve(import.meta.dirname, "..", "..");
-const backendURL = process.env.E2E_BACKEND_URL ?? "http://127.0.0.1:8000";
+const backendURL = process.env.E2E_BACKEND_URL ?? "http://127.0.0.1:18168";
 const adminCLI = resolve(root, "scripts", "e2e", "admin-preview.mjs");
 const playwrightCLI = resolve(root, "node_modules", "@playwright", "test", "cli.js");
 const ownedServices = [];
