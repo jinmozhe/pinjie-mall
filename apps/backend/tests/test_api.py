@@ -26,12 +26,15 @@ async def test_system_status_returns_unavailable_without_resources(client) -> No
 
 
 @pytest.mark.asyncio
-async def test_system_status_returns_safe_success_payload(client, fake_resources) -> None:
+async def test_system_status_returns_safe_success_payload(client, fake_resources, monkeypatch) -> None:
     from app.main import app
 
-    app.state.resources = fake_resources
-    app.state.settings = app.state.settings.model_copy(
-        update={"database_url": "postgresql+asyncpg://u:p@localhost:5432/app"}
+    # 使用 monkeypatch 确保测试结束后自动恢复 app.state，防止污染后续测试
+    monkeypatch.setattr(app.state, "resources", fake_resources)
+    monkeypatch.setattr(
+        app.state,
+        "settings",
+        app.state.settings.model_copy(update={"database_url": "postgresql+asyncpg://u:p@localhost:5432/app"}),
     )
     with patch(
         "app.domains.system.router.check_readiness",

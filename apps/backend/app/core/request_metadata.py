@@ -83,7 +83,9 @@ async def publish_request_log(
     principal_type: str | None = None
     principal_id: str | None = None
     hmac_key: str | None = None
-    _, _, web_hmac, admin_hmac = settings.authentication_secrets()
+    # 直接读取字段值避免热路径重复执行 authentication_secrets() 的完整校验逻辑
+    web_hmac = settings.web_token_hmac_key
+    admin_hmac = settings.admin_token_hmac_key
     if value := getattr(request.state, "current_admin_id", None):
         principal_type = "admin"
         principal_id = str(value)

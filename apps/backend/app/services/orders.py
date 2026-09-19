@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import json
 from dataclasses import dataclass
@@ -86,13 +87,15 @@ class OrderService:
         normalized = self._normalize(data)
         catalog = await self.products.checkout_skus([sku_id for sku_id, _ in normalized])
         types = {sku.product_type for sku in catalog}
-        templates_by_id = {
-            template_id: await self.shipping.read(template_id, lock=lock)
-            for template_id in sorted(
-                {sku.shipping_template_id for sku in catalog if sku.shipping_template_id is not None},
-                key=lambda item: item.hex,
-            )
-        }
+        template_ids = sorted(
+            {sku.shipping_template_id for sku in catalog if sku.shipping_template_id is not None},
+            key=lambda item: item.hex,
+        )
+        # 并发加载所有运费模板，避免多模板场景下的串行 I/O 往返
+        template_results = await asyncio.gather(
+            *[self.shipping.read(tid, lock=lock) for tid in template_ids]
+        )
+        templates_by_id = dict(zip(template_ids, template_results))
         by_sku = {sku.id: sku for sku in catalog}
         if len(types) != 1:
             raise AppException(status_code=409, code=ErrorCode.CHECKOUT_INVALID, message="实物和虚拟商品必须分开下单")

@@ -73,12 +73,17 @@ async def admin_database():
             created_username=created_username,
         )
     finally:
-        async with factory() as session:
-            await session.execute(delete(AuditEvent).where(AuditEvent.actor_id == actor_id))
-            await session.execute(delete(Asset).where(Asset.uploader_id == actor_id))
-            await session.execute(delete(Admin).where(or_(Admin.id == actor_id, Admin.username == created_username)))
-            await session.commit()
-        await engine.dispose()
+        try:
+            async with factory() as session:
+                await session.execute(delete(AuditEvent).where(AuditEvent.actor_id == actor_id))
+                await session.execute(delete(Asset).where(Asset.uploader_id == actor_id))
+                await session.execute(
+                    delete(Admin).where(or_(Admin.id == actor_id, Admin.username == created_username))
+                )
+                await session.commit()
+        finally:
+            # 确保无论清理 SQL 是否失败，引擎连接池都能被正确关闭
+            await engine.dispose()
 
 
 @pytest.mark.integration

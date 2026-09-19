@@ -61,15 +61,20 @@ async def _persist(
         item = _request_log(fields)
         async with resources.session_factory() as session, transaction_scope(session):
             RequestLogRepository(session).add(item)
+        # 正常写入成功后确认消息
+        await redis.xack(stream, GROUP_NAME, message_id)
     except IntegrityError:
-        # 重复日志消息幂等忽略
+        # 重复日志消息幂等忽略，同样确认以避免卡在 PEL
         logger.bind(message_id=message_id).debug("忽略已存在的重复请求日志")
+        await redis.xack(stream, GROUP_NAME, message_id)
     except (KeyError, TypeError, ValueError) as exc:
+        # 格式错误消息：先写死信队列，写入成功后再确认
+        # 若死信写入失败，不确认消息，让其留在 PEL 等待重试
         dead_letter_fields = cast(dict[EncodableT, EncodableT], fields.copy())
         dead_letter_fields["source_message_id"] = message_id
         dead_letter_fields["error"] = type(exc).__name__
         await redis.xadd(dead_letter, dead_letter_fields)
-    await redis.xack(stream, GROUP_NAME, message_id)
+        await redis.xack(stream, GROUP_NAME, message_id)
 
 
 async def _reclaim_pending(

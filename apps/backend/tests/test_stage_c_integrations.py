@@ -1139,7 +1139,7 @@ async def test_request_log_consumer_reclaims_pending_and_routes_invalid_messages
         try:
             await redis.xgroup_create(stream, GROUP_NAME, id="0", mkstream=True)
         except ResponseError as exc:
-            if "BUSYGROUP" not in str(exc):
+            if not str(exc).startswith("BUSYGROUP"):
                 raise
         await redis.xadd(stream, valid_fields)
         await redis.xadd(stream, {"request_id": str(new_uuid7())})

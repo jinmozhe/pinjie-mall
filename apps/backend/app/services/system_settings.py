@@ -294,6 +294,8 @@ class SystemSettingsService:
         )
 
     def _require_actor(self) -> uuid.UUID:
+        # 此处 actor_id 为 None 属于调用方编程错误（未正确传入 actor），
+        # 使用 RuntimeError 而非 AppException，不对外暴露为业务错误
         if self._actor_id is None:
             raise RuntimeError("an admin actor is required for system setting writes")
         return self._actor_id

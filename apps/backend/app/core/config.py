@@ -204,8 +204,9 @@ class Settings(BaseSettings):
                 raise ValueError("REDIS_URL is required when REDIS_MODE=required")
             if urlsplit(self.redis_url).scheme not in {"redis", "rediss"}:
                 raise ValueError("REDIS_URL must use redis or rediss")
-        else:
-            raise ValueError("REDIS_MODE must be required while authentication is enabled")
+        elif self.redis_mode != "disabled":
+            # 仅允许 required 或 disabled，其他值不合法
+            raise ValueError("REDIS_MODE must be 'required' or 'disabled'")
         if self.environment == "test":
             if self.test_redis_url is None:
                 raise ValueError("TEST_REDIS_URL is required in test environment")
@@ -282,10 +283,15 @@ class Settings(BaseSettings):
 
     def authentication_secrets(self) -> tuple[str, str, str, str]:
         self._validate_authentication_secrets()
-        assert self.web_jwt_secret is not None
-        assert self.admin_jwt_secret is not None
-        assert self.web_token_hmac_key is not None
-        assert self.admin_token_hmac_key is not None
+        # 使用显式检查而非 assert，确保在 python -O 优化模式下仍能正确验证
+        if self.web_jwt_secret is None:
+            raise RuntimeError("web_jwt_secret must not be None after validation")
+        if self.admin_jwt_secret is None:
+            raise RuntimeError("admin_jwt_secret must not be None after validation")
+        if self.web_token_hmac_key is None:
+            raise RuntimeError("web_token_hmac_key must not be None after validation")
+        if self.admin_token_hmac_key is None:
+            raise RuntimeError("admin_token_hmac_key must not be None after validation")
         return (
             self.web_jwt_secret,
             self.admin_jwt_secret,

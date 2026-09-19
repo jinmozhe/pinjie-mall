@@ -19,5 +19,5 @@ async def check_redis(client: Redis | None, timeout: float) -> bool:
     try:
         async with asyncio.timeout(timeout):
             return bool(await client.ping())
-    except Exception, TimeoutError:
+    except (Exception, TimeoutError):
         return False
