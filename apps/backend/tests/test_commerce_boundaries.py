@@ -45,6 +45,9 @@ class Session:
     async def rollback(self):
         self.rollbacks += 1
 
+    async def scalars(self, _statement):
+        return []
+
 
 class Access:
     async def require_active_user(self, user_id):
@@ -58,6 +61,9 @@ class InventoryStore:
         self.events = []
 
     async def accounts(self, sku_ids):
+        return [self.account] if self.account.sku_id in sku_ids else []
+
+    async def available_accounts(self, sku_ids):
         return [self.account] if self.account.sku_id in sku_ids else []
 
     async def get(self, sku_id, *, lock=False):
@@ -120,6 +126,14 @@ async def test_payment_cannot_confirm_missing_or_mismatched_inventory_reservatio
     assert error.value.code == "ORDER_STOCK_REJECTED"
     assert store.account.available == 10
     assert not store.events
+
+
+@pytest.mark.asyncio
+async def test_checkout_preview_rejects_current_insufficient_inventory():
+    store = InventoryStore(available=1)
+    with pytest.raises(AppException) as error:
+        await InventoryService(store).require_available({store.account.sku_id: 2})
+    assert error.value.code == "ORDER_STOCK_REJECTED"
 
 
 class CatalogStore:

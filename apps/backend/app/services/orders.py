@@ -197,7 +197,9 @@ class OrderService:
         )
 
     async def preview(self, user_id: UUID, data: CheckoutRequest) -> CheckoutQuote:
-        return await self._quote(user_id, data)
+        quote = await self._quote(user_id, data)
+        await self.inventory.require_available({line.sku_id: line.quantity for line in quote.items})
+        return quote
 
     async def create(self, user_id: UUID, data: CheckoutRequest) -> OrderRead:
         async with transaction_scope(self.session):

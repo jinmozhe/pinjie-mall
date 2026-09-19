@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     api_v1_str: str = Field(default="/api/v1", validation_alias="API_V1_STR")
     database_url: str | None = Field(default=None, validation_alias="DATABASE_URL")
     test_database_url: str | None = Field(default=None, validation_alias="TEST_DATABASE_URL")
-    redis_mode: RedisMode = Field(default="disabled", validation_alias="REDIS_MODE")
+    redis_mode: RedisMode = Field(default="required", validation_alias="REDIS_MODE")
     redis_url: str | None = Field(default=None, validation_alias="REDIS_URL")
     test_redis_url: str | None = Field(default=None, validation_alias="TEST_REDIS_URL")
     web_origins: list[str] = Field(
@@ -199,14 +199,12 @@ class Settings(BaseSettings):
         settings_url = self.settings_media_base_url.rstrip("/") + "/"
         if upload_url.startswith(settings_url) or settings_url.startswith(upload_url):
             raise ValueError("UPLOAD_BASE_URL and SETTINGS_MEDIA_BASE_URL must not overlap")
-        if self.redis_mode == "required":
-            if self.redis_url is None:
-                raise ValueError("REDIS_URL is required when REDIS_MODE=required")
-            if urlsplit(self.redis_url).scheme not in {"redis", "rediss"}:
-                raise ValueError("REDIS_URL must use redis or rediss")
-        elif self.redis_mode != "disabled":
-            # 仅允许 required 或 disabled，其他值不合法
-            raise ValueError("REDIS_MODE must be 'required' or 'disabled'")
+        if self.redis_mode != "required":
+            raise ValueError("REDIS_MODE must be 'required' while authentication is enabled")
+        if self.redis_url is None:
+            raise ValueError("REDIS_URL is required when REDIS_MODE=required")
+        if urlsplit(self.redis_url).scheme not in {"redis", "rediss"}:
+            raise ValueError("REDIS_URL must use redis or rediss")
         if self.environment == "test":
             if self.test_redis_url is None:
                 raise ValueError("TEST_REDIS_URL is required in test environment")
@@ -218,6 +216,8 @@ class Settings(BaseSettings):
         if self.session_absolute_ttl_days <= self.refresh_idle_ttl_days:
             raise ValueError("SESSION_ABSOLUTE_TTL_DAYS must be greater than REFRESH_IDLE_TTL_DAYS")
         if self.environment == "production":
+            if self.debug:
+                raise ValueError("DEBUG must be false in production")
             if self.api_docs_enabled is True:
                 raise ValueError("API_DOCS_ENABLED must remain false in production unless explicitly reviewed")
             if not self.release_version:
@@ -237,6 +237,8 @@ class Settings(BaseSettings):
             if self.test_database_url is None:
                 raise ValueError("TEST_DATABASE_URL is required in test environment")
             self._validate_database_url(self.test_database_url, "TEST_DATABASE_URL")
+            if self.database_url != self.test_database_url:
+                raise ValueError("DATABASE_URL must match TEST_DATABASE_URL in test environment")
             database_name = urlsplit(self.test_database_url).path.removeprefix("/")
             if not database_name.endswith("_test"):
                 raise ValueError("TEST_DATABASE_URL database name must end with _test")

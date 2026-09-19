@@ -122,13 +122,15 @@ class SystemSettingsService:
             nonlocal prepared
             setting, current = await self._read("site", SiteSettingValue, for_update=True)
             self._check_revision(setting, revision)
-            new_logo = staged.value()
             prepared = await self._media.prepare_replace(
                 staged=staged,
                 old_logo=current.logo,
                 old_revision=setting.revision,
                 new_revision=setting.revision + 1,
             )
+            if prepared.new_logo is None:
+                raise RuntimeError("prepared logo replacement is missing its target value")
+            new_logo = SiteLogoValue.model_validate(prepared.new_logo)
             changed_fields["logo"] = {
                 "old": current.logo.model_dump(mode="json") if current.logo is not None else None,
                 "new": new_logo.model_dump(mode="json"),

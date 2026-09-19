@@ -148,7 +148,7 @@ class AssetService:
 
         asset_id = new_uuid7()
         date_bucket = datetime.now(UTC).strftime("%Y%m%d")
-        file_key = f"{scene.value}/{date_bucket}/{staged.file_hash[:16]}_{asset_id.hex[:12]}.{extension}"
+        file_key = f"{scene.value}/{date_bucket}/{staged.file_hash[:16]}_{asset_id.hex}.{extension}"
         url = f"{self._settings.upload_base_url}/{file_key}"
         asset = Asset(
             id=asset_id,

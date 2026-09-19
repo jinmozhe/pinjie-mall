@@ -34,9 +34,9 @@ class StagedSiteLogo:
     file_size: int
     sha256: str
 
-    def value(self) -> SiteLogoValue:
+    def value(self, *, file_key: str | None = None) -> SiteLogoValue:
         return SiteLogoValue(
-            path=f"site/logo.{self.extension}",
+            path=file_key or f"site/logo.{self.extension}",
             mime_type=self.mime_type,
             file_size=self.file_size,
             sha256=self.sha256,
@@ -183,10 +183,20 @@ class SettingsMediaStore:
     ) -> PreparedMediaOperation:
         self._ensure_layout_sync()
         operation_id = uuid.uuid4().hex
-        target_key = f"site/logo.{staged.extension}" if staged is not None else None
-        old_files = tuple(
-            FileMove(file_key=key, trash_token=str(self.trash_root / f"{operation_id}-{Path(key).suffix[1:]}"))
-            for key in self._existing_logo_keys()
+        target_key: str | None = None
+        new_logo: dict[str, Any] | None = None
+        if staged is not None:
+            target_key = f"site/logo-{operation_id}.{staged.extension}"
+            new_logo = staged.value(file_key=target_key).model_dump(mode="json")
+        old_files = (
+            (
+                FileMove(
+                    file_key=old_logo.path,
+                    trash_token=str(self.trash_root / f"{operation_id}-{Path(old_logo.path).suffix[1:]}"),
+                ),
+            )
+            if old_logo is not None
+            else ()
         )
         operation = PreparedMediaOperation(
             operation_id=operation_id,
@@ -195,7 +205,7 @@ class SettingsMediaStore:
             old_revision=old_revision,
             new_revision=new_revision,
             old_logo=old_logo.model_dump(mode="json") if old_logo is not None else None,
-            new_logo=staged.value().model_dump(mode="json") if staged is not None else None,
+            new_logo=new_logo,
             target_key=target_key,
             old_files=old_files,
         )
@@ -228,8 +238,11 @@ class SettingsMediaStore:
             trash = Path(move.trash_token)
             if trash.is_file():
                 target = self._safe_path(move.file_key)
-                target.parent.mkdir(parents=True, exist_ok=True)
-                os.replace(trash, target)
+                if not target.exists():
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    os.replace(trash, target)
+                else:
+                    trash.unlink()
         Path(operation.manifest_path).unlink(missing_ok=True)
 
     async def finalize(self, operation: PreparedMediaOperation) -> None:
@@ -276,9 +289,6 @@ class SettingsMediaStore:
             target.flush()
             os.fsync(target.fileno())
         os.replace(temporary, path)
-
-    def _existing_logo_keys(self) -> list[str]:
-        return [key for key in ("site/logo.png", "site/logo.jpg", "site/logo.webp") if self._safe_path(key).is_file()]
 
     def _matches_logo(self, path: Path, value: dict[str, Any] | None) -> bool:
         if value is None or not path.is_file() or path.stat().st_size != value.get("file_size"):

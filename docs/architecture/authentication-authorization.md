@@ -70,6 +70,8 @@
 
 系统设置使用四项独立权限：`settings:site:read`、`settings:site:update`、`settings:registration:read` 和 `settings:registration:update`。Admin 设置写接口同时要求管理员会话、准确权限、CSRF、revision 校验和审计；LOGO 上传与删除归站点更新权限，不复用文件资产权限。
 
+站点 LOGO 使用每次操作独立且不可变的 UUID 文件键。数据库提交失败时只补偿本次操作创建的临时对象，不覆盖或删除已有目标文件；并发更新依靠修订号和进程内串行化保护，避免旧操作回滚新提交的媒体。
+
 ## 6. CSRF 与来源校验
 
 - Cookie 身份的 `POST`、`PUT`、`PATCH` 和 `DELETE` 请求必须同时通过精确 Origin allowlist 与 `X-CSRF-Token` 校验。
@@ -86,6 +88,8 @@
 管理员、角色、权限及关联关系使用规范化表和外键。Admin 导航由前端代码维护，并按服务端返回的权限过滤，不建立动态菜单表。Dependency 校验端点权限，Service 在事务内读取权威资源状态并执行最终授权。超级管理员仍经过 Session、CSRF、最后超级管理员保护和审计链；会减少有效超级管理员数量的写操作在同一 PostgreSQL 事务内取得固定 advisory lock，串行执行计数和修改。
 
 最终授权使用的单个管理员锁定读取显式设置 `populate_existing=True`，刷新同一 AsyncSession 中在认证阶段已加载的属性和关联。数据库行锁与 ORM 状态刷新共同保证事务内校验读取最新状态，避免并发停用或降权后复用旧身份。
+
+管理端写用例由 `ManagementAuditCoordinator` 在同一事务内重新读取操作者、锁定并校验管理员会话和精确动作权限，再执行资源变更与审计。会话失效、降权或停用在事务提交前都会使本次操作拒绝，路由层的权限依赖不能替代这次权威复核。
 
 `admins:update` 只负责管理员资料与状态修改，不接受 `is_superuser`。超级管理员身份统一通过 `PATCH /api/v1/admin/admins/{admin_id}/superuser` 和系统权限 `admins:superuser:change` 变更；该权限在权限目录中可见，但标记为不可分配给角色，角色权限写接口拒绝保存。独立端点同时校验管理员会话、CSRF、准确权限和当前超级管理员身份，Service 在事务内重新读取操作者权威状态；创建管理员时提交 `is_superuser=true` 也执行同一权威校验，防止从创建入口绕过。Admin 只向当前超级管理员提供身份切换入口，界面控制不替代服务端授权。
 

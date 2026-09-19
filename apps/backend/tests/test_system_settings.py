@@ -4,7 +4,7 @@ import pytest
 from PIL import Image
 from pydantic import ValidationError
 
-from app.domains.settings.schemas import SiteSettingValue
+from app.domains.settings.schemas import SiteLogoValue, SiteSettingValue
 from app.services.settings_media import SettingsMediaStore
 
 
@@ -55,16 +55,21 @@ async def test_settings_media_rollback_restores_previous_logo(tmp_path) -> None:
     first = await store.stage_site_logo(_image_bytes("red"))
     initial = await store.prepare_replace(staged=first, old_logo=None, old_revision=1, new_revision=2)
     await store.finalize(initial)
-    assert await store.validate_logo(first.value())
+    assert initial.new_logo is not None
+    first_logo = SiteLogoValue.model_validate(initial.new_logo)
+    assert first_logo.path.startswith("site/logo-")
+    assert await store.validate_logo(first_logo)
 
     second = await store.stage_site_logo(_image_bytes("blue"))
     replacement = await store.prepare_replace(
         staged=second,
-        old_logo=first.value(),
+        old_logo=first_logo,
         old_revision=2,
         new_revision=3,
     )
+    assert replacement.new_logo is not None
+    assert SiteLogoValue.model_validate(replacement.new_logo).path != first_logo.path
     await store.rollback(replacement)
 
-    assert await store.validate_logo(first.value())
-    assert not await store.validate_logo(second.value())
+    assert await store.validate_logo(first_logo)
+    assert not await store.validate_logo(SiteLogoValue.model_validate(replacement.new_logo))

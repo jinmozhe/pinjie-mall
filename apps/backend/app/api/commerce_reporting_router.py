@@ -3,11 +3,19 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 
-from app.api.dependencies import DatabaseSession, require_admin_csrf, require_permission
+from app.api.dependencies import (
+    CurrentAdmin,
+    DatabaseSession,
+    get_current_admin,
+    get_resources,
+    require_admin_csrf,
+    require_permission,
+)
 from app.core.context import current_request_id
 from app.core.pagination import PageResult
+from app.core.request_metadata import request_metadata
 from app.core.response import ResponseModel, success_response
 from app.domains.admin.permissions import PermissionCode
 from app.domains.distribution import CommissionRead, MemberProfileRead, WithdrawalRead
@@ -21,12 +29,26 @@ from app.services.commerce_reporting import (
     SelectedCommerceIds,
     WalletLedgerRead,
 )
+from app.services.security_events import AuditCoordinator
 
 router = APIRouter(tags=["商城运营查询"])
 
 
-def get_commerce_reporting_service(session: DatabaseSession) -> CommerceReportingService:
-    return CommerceReportingService(session)
+def get_commerce_reporting_service(
+    request: Request,
+    session: DatabaseSession,
+    current: Annotated[CurrentAdmin, Depends(get_current_admin)],
+) -> CommerceReportingService:
+    resources = get_resources(request)
+    return CommerceReportingService(
+        session,
+        AuditCoordinator(
+            session=session,
+            session_factory=resources.session_factory,
+            actor_id=current.admin.id,
+            metadata=request_metadata(request),
+        ),
+    )
 
 
 Reporting = Annotated[CommerceReportingService, Depends(get_commerce_reporting_service)]

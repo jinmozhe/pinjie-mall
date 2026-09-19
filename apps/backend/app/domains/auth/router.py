@@ -97,16 +97,26 @@ async def refresh(
     csrf_token: Annotated[str, Depends(require_web_csrf_pair)],
     refresh_token: Annotated[str | None, Cookie(alias=WEB_COOKIES.refresh)] = None,
 ) -> ResponseModel[RefreshSessionOut]:
-    request.state.clear_auth_profile = "web"
-    if not refresh_token:
-        raise AppException(
-            status_code=401,
-            code=ErrorCode.AUTH_REQUIRED,
-            message="需要刷新令牌身份认证",
-            headers={"WWW-Authenticate": "Cookie"},
-        )
-    artifacts = await service.refresh(refresh_token, csrf_token)
-    request.state.clear_auth_profile = None
+    try:
+        if not refresh_token:
+            raise AppException(
+                status_code=401,
+                code=ErrorCode.AUTH_REQUIRED,
+                message="需要刷新令牌身份认证",
+                headers={"WWW-Authenticate": "Cookie"},
+            )
+        artifacts = await service.refresh(refresh_token, csrf_token)
+    except AppException as exc:
+        if exc.code in {
+            ErrorCode.AUTH_REQUIRED,
+            ErrorCode.AUTH_TOKEN_INVALID,
+            ErrorCode.AUTH_REFRESH_REUSE_DETECTED,
+            ErrorCode.AUTH_SESSION_REVOKED,
+            ErrorCode.AUTH_SESSION_EXPIRED,
+            ErrorCode.AUTH_ACCOUNT_DISABLED,
+        }:
+            request.state.clear_auth_profile = "web"
+        raise
     _set_session_cookies(response, request, artifacts)
     return success_response(
         data=RefreshSessionOut(

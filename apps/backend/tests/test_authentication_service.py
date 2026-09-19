@@ -389,6 +389,33 @@ async def test_web_login_updates_password_hash_when_rehash_needed() -> None:
         assert locked.password_hash == new_hash
 
 
+@pytest.mark.asyncio
+async def test_web_login_rejects_password_changed_after_verification() -> None:
+    user = _fake_user(credential_version=1)
+    locked = _fake_user(credential_version=2)
+    locked.id = user.id
+    locked.password_hash = "newer-password-hash"
+    pm = MagicMock()
+    pm.verify_and_update = AsyncMock(return_value=(True, None))
+    svc = _web_service(password_manager=pm)
+    svc.users.get_by_username = AsyncMock(return_value=user)
+    svc.users.get = AsyncMock(return_value=locked)
+    svc.sessions.add_web = MagicMock()
+
+    with (
+        patch("app.services.authentication.enforce_rate_limit", new=AsyncMock()),
+        patch("app.services.authentication.transaction_scope") as mock_txn,
+    ):
+        mock_txn.return_value.__aenter__ = AsyncMock()
+        mock_txn.return_value.__aexit__ = AsyncMock(return_value=False)
+
+        with pytest.raises(AppException) as exc_info:
+            await svc.login(UserLoginIn(username="browser-user", password="password"))
+
+    assert exc_info.value.code == ErrorCode.AUTH_INVALID_CREDENTIALS
+    svc.sessions.add_web.assert_not_called()
+
+
 # ---------------------------------------------------------------------------
 # WebAuthService.refresh -- edge cases
 # ---------------------------------------------------------------------------
@@ -655,6 +682,33 @@ async def test_admin_login_updates_password_hash_when_rehash_needed() -> None:
 
         await svc.login(AdminLoginIn(username="admin-user", password="password"))
         assert locked.password_hash == new_hash
+
+
+@pytest.mark.asyncio
+async def test_admin_login_rejects_password_changed_after_verification() -> None:
+    admin = _fake_admin(credential_version=1)
+    locked = _fake_admin(credential_version=2)
+    locked.id = admin.id
+    locked.password_hash = "newer-password-hash"
+    pm = MagicMock()
+    pm.verify_and_update = AsyncMock(return_value=(True, None))
+    svc = _admin_service(password_manager=pm)
+    svc.admins.get_by_username = AsyncMock(return_value=admin)
+    svc.admins.get = AsyncMock(return_value=locked)
+    svc.sessions.add_admin = MagicMock()
+
+    with (
+        patch("app.services.authentication.enforce_rate_limit", new=AsyncMock()),
+        patch("app.services.authentication.transaction_scope") as mock_txn,
+    ):
+        mock_txn.return_value.__aenter__ = AsyncMock()
+        mock_txn.return_value.__aexit__ = AsyncMock(return_value=False)
+
+        with pytest.raises(AppException) as exc_info:
+            await svc.login(AdminLoginIn(username="admin-user", password="password"))
+
+    assert exc_info.value.code == ErrorCode.AUTH_INVALID_CREDENTIALS
+    svc.sessions.add_admin.assert_not_called()
 
 
 # ---------------------------------------------------------------------------

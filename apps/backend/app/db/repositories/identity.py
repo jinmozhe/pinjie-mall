@@ -38,7 +38,7 @@ class UserRepository:
     async def get(self, user_id: uuid.UUID, *, for_update: bool = False) -> User | None:
         statement = select(User).where(User.id == user_id)
         if for_update:
-            statement = statement.with_for_update()
+            statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.execute(statement)).scalar_one_or_none()
 
     async def get_many(self, user_ids: list[uuid.UUID], *, for_update: bool = False) -> list[User]:
@@ -46,7 +46,7 @@ class UserRepository:
             return []
         statement = select(User).where(User.id.in_(user_ids)).order_by(User.id)
         if for_update:
-            statement = statement.with_for_update()
+            statement = statement.with_for_update().execution_options(populate_existing=True)
         return list((await self.session.scalars(statement)).all())
 
     async def get_by_email(self, email: str) -> User | None:
@@ -249,7 +249,7 @@ class SessionRepository:
     async def get_web(self, session_id: uuid.UUID, *, for_update: bool = False) -> UserSession | None:
         statement = select(UserSession).where(UserSession.id == session_id).options(selectinload(UserSession.user))
         if for_update:
-            statement = statement.with_for_update()
+            statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.execute(statement)).scalar_one_or_none()
 
     async def get_admin(self, session_id: uuid.UUID, *, for_update: bool = False) -> AdminSession | None:
@@ -259,7 +259,7 @@ class SessionRepository:
             .options(selectinload(AdminSession.admin).selectinload(Admin.roles).selectinload(Role.permissions))
         )
         if for_update:
-            statement = statement.with_for_update()
+            statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.execute(statement)).scalar_one_or_none()
 
     async def get_web_for_user(self, session_id: uuid.UUID, user_id: uuid.UUID) -> UserSession | None:

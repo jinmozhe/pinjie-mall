@@ -23,6 +23,7 @@ from app.db.models.order import Order
 from app.domains.distribution import CommissionRead, MemberProfileRead, WalletAccountRead, WithdrawalRead
 from app.domains.lifecycle import PaymentAttemptRead, ReconciliationRecordRead, RefundRequestRead
 from app.domains.orders.schemas import AdminOrderSummary
+from app.services.security_events import AuditCoordinator
 
 
 class AdminWalletRead(WalletAccountRead):
@@ -100,8 +101,9 @@ _FILTERS = {
 
 
 class CommerceReportingService:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession, audit: AuditCoordinator) -> None:
         self.session = session
+        self.audit = audit
 
     async def page[T: BaseModel](self, resource: str, schema: type[T], filters: CommerceFilters) -> PageResult[T]:
         if resource not in _RESOURCES:
@@ -135,17 +137,26 @@ class CommerceReportingService:
         )
 
     async def export(self, resource: str, selection: SelectedCommerceIds) -> CommerceExportRead:
-        model, schema = _RESOURCES[resource]
-        key = getattr(model, "user_id" if resource == "members" else "id")
-        rows = list(await self.session.scalars(select(model).where(key.in_(selection.ids)).order_by(key)))
-        if len(rows) != len(selection.ids):
-            raise AppException(
-                status_code=409, code=ErrorCode.STATE_CONFLICT, message="部分选中记录已不存在，请刷新后重新选择"
+        async def operation() -> CommerceExportRead:
+            model, schema = _RESOURCES[resource]
+            key = getattr(model, "user_id" if resource == "members" else "id")
+            rows = list(await self.session.scalars(select(model).where(key.in_(selection.ids)).order_by(key)))
+            if len(rows) != len(selection.ids):
+                raise AppException(
+                    status_code=409, code=ErrorCode.STATE_CONFLICT, message="部分选中记录已不存在，请刷新后重新选择"
+                )
+            columns = list(schema.model_fields)
+            values = [schema.model_validate(row).model_dump(mode="json") for row in rows]
+            return CommerceExportRead(
+                columns=columns, rows=[["" if row[c] is None else str(row[c]) for c in columns] for row in values]
             )
-        columns = list(schema.model_fields)
-        values = [schema.model_validate(row).model_dump(mode="json") for row in rows]
-        return CommerceExportRead(
-            columns=columns, rows=[["" if row[c] is None else str(row[c]) for c in columns] for row in values]
+
+        return await self.audit.execute(
+            action=f"commerce.{resource}.export",
+            target_type=resource,
+            target_id=None,
+            changed_fields={"record_ids": [str(item) for item in selection.ids], "record_count": len(selection.ids)},
+            operation=operation,
         )
 
     async def ledgers(self, wallet_id: UUID, page: int, page_size: int) -> PageResult[WalletLedgerRead]:

@@ -45,6 +45,16 @@ class InventoryRepository:
             )
         )
 
+    async def available_accounts(self, sku_ids: list[UUID]) -> list[InventoryAccount]:
+        return list(
+            await self.session.scalars(
+                select(InventoryAccount)
+                .where(InventoryAccount.sku_id.in_(sku_ids))
+                .order_by(InventoryAccount.sku_id)
+                .execution_options(populate_existing=True)
+            )
+        )
+
     async def reservations(self, order_id: UUID) -> list[InventoryReservation]:
         return list(
             await self.session.scalars(

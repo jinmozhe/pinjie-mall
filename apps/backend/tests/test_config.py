@@ -18,14 +18,50 @@ def test_local_settings_require_database_url() -> None:
     settings.validate_runtime()
 
 
-def test_test_database_requires_test_suffix() -> None:
+def test_test_database_requires_matching_test_target() -> None:
+    settings = Settings(
+        ENVIRONMENT="test",
+        DATABASE_URL="postgresql+asyncpg://u:p@localhost:5432/app_test",
+        TEST_DATABASE_URL="postgresql+asyncpg://u:p@localhost:5432/app_test",
+        **TEST_SECRETS,
+    )
+    settings.validate_runtime()
+
+
+def test_test_database_rejects_different_runtime_target() -> None:
     settings = Settings(
         ENVIRONMENT="test",
         DATABASE_URL="postgresql+asyncpg://u:p@localhost:5432/app",
         TEST_DATABASE_URL="postgresql+asyncpg://u:p@localhost:5432/app_test",
         **TEST_SECRETS,
     )
-    settings.validate_runtime()
+    with pytest.raises(ValueError, match="DATABASE_URL must match TEST_DATABASE_URL"):
+        settings.validate_runtime()
+
+
+def test_runtime_rejects_disabled_redis_when_authentication_is_enabled() -> None:
+    settings = Settings(
+        ENVIRONMENT="local",
+        DATABASE_URL="postgresql+asyncpg://u:p@localhost:5432/app",
+        **{**TEST_SECRETS, "REDIS_MODE": "disabled"},
+    )
+    with pytest.raises(ValueError, match="REDIS_MODE"):
+        settings.validate_runtime()
+
+
+def test_production_rejects_debug_sql_logging() -> None:
+    settings = Settings(
+        ENVIRONMENT="production",
+        DATABASE_URL="postgresql+asyncpg://u:p@localhost:5432/app",
+        DEBUG=True,
+        AUTH_COOKIE_SECURE=True,
+        RELEASE_VERSION="test",
+        TRUSTED_HOSTS=["mall.example.com"],
+        TRUSTED_PROXY_CIDRS=["127.0.0.1/32"],
+        **{**TEST_SECRETS, "REDIS_URL": "redis://localhost:6379/0"},
+    )
+    with pytest.raises(ValueError, match="DEBUG"):
+        settings.validate_runtime()
 
 
 def test_required_redis_requires_url() -> None:
