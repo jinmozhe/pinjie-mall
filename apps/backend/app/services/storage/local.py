@@ -31,7 +31,7 @@ def _detected_mime(header: bytes, path: Path, extension: str) -> str | None:
         try:
             with zipfile.ZipFile(path) as archive:
                 names = frozenset(archive.namelist())
-        except (OSError, zipfile.BadZipFile):
+        except OSError, zipfile.BadZipFile:
             return None
         if extension == "docx" and "[Content_Types].xml" in names and any(name.startswith("word/") for name in names):
             return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
