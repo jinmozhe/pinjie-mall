@@ -43,6 +43,7 @@ Backend 使用统一的 Loguru 入口同时支持标准错误流和可选本地�
 - 高风险管理操作使用审计意图、结果与 `request_id` 关联。成功业务变更与审计结果在同一事务提交；拒绝或异常由独立终结器记录，终结失败输出 critical 信号。
 - `REQUEST_LOG_MODE=metadata` 只持久化请求白名单元数据。Middleware 发布到 Redis Stream，独立 Consumer Group Worker 负责 pending reclaim、幂等入库、ACK 和 DLQ；队列故障不改变普通请求结果，但必须输出 critical 日志。
 - 登录安全事件和审计事件默认保留 180 天，请求元数据默认保留 30 天。保留清理由显式 dry-run/`--apply` 工具执行。
+- 安全日志清理按记录批次创建独立 `AsyncSession`，禁止跨并发任务共享会话。SQL 日志默认隐藏绑定参数；认证启用时 Redis 必须为 `required`，测试运行时 `DATABASE_URL` 与 `TEST_DATABASE_URL` 必须明确指向同一个独立测试库，且测试库名以 `_test` 结尾。
 
 Readiness 当前检查 PostgreSQL 与认证必需的 Redis。请求元数据功能关闭时不要求 Worker 存活；启用后必须单独监控 Stream backlog、pending 数、DLQ 增长和消费者心跳。
 

@@ -35,27 +35,22 @@ async def _run(args: argparse.Namespace) -> None:
     resources = create_resources(settings)
     try:
         async with resources.session_factory() as session:
-            # 并发执行 5 个 count 查询，减少干运行的等待时间
-            (
-                login_count_raw,
-                audit_count_raw,
-                request_count_raw,
-                user_session_count_raw,
-                admin_session_count_raw,
-            ) = await asyncio.gather(
-                session.scalar(
-                    select(func.count())
-                    .select_from(SecurityLoginEvent)
-                    .where(SecurityLoginEvent.occurred_at < security_cutoff)
-                ),
-                session.scalar(
-                    select(func.count()).select_from(AuditEvent).where(AuditEvent.occurred_at < security_cutoff)
-                ),
-                session.scalar(
-                    select(func.count()).select_from(RequestLog).where(RequestLog.occurred_at < request_cutoff)
-                ),
-                session.scalar(select(func.count()).select_from(UserSession).where(user_session_predicate)),
-                session.scalar(select(func.count()).select_from(AdminSession).where(admin_session_predicate)),
+            login_count_raw = await session.scalar(
+                select(func.count())
+                .select_from(SecurityLoginEvent)
+                .where(SecurityLoginEvent.occurred_at < security_cutoff)
+            )
+            audit_count_raw = await session.scalar(
+                select(func.count()).select_from(AuditEvent).where(AuditEvent.occurred_at < security_cutoff)
+            )
+            request_count_raw = await session.scalar(
+                select(func.count()).select_from(RequestLog).where(RequestLog.occurred_at < request_cutoff)
+            )
+            user_session_count_raw = await session.scalar(
+                select(func.count()).select_from(UserSession).where(user_session_predicate)
+            )
+            admin_session_count_raw = await session.scalar(
+                select(func.count()).select_from(AdminSession).where(admin_session_predicate)
             )
             login_count = int(login_count_raw or 0)
             audit_count = int(audit_count_raw or 0)

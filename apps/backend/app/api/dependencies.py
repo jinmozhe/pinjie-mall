@@ -423,6 +423,7 @@ def get_admin_management_service(
         password_manager=resources.password_manager,
         metadata=request_metadata(request),
         actor_id=current.admin.id,
+        actor_session_id=current.login_session.id,
         resources=resources,
         started_at=started_at,
     )

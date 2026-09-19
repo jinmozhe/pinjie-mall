@@ -33,6 +33,7 @@ def create_resources(settings: Settings) -> AppResources:
         pool_timeout=settings.db_pool_timeout,
         pool_recycle=1800,
         echo=settings.debug,
+        hide_parameters=True,
         native_inet_types=False,
         connect_args={"server_settings": {"lock_timeout": f"{max(1, int(settings.db_lock_timeout * 1000))}ms"}},
     )

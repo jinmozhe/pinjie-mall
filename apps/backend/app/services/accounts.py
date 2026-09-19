@@ -112,6 +112,12 @@ class UserAccountService:
                     code=ErrorCode.AUTH_SESSION_REVOKED,
                     message="身份认证会话已失效",
                 )
+            if not await self.password_manager.verify(payload.current_password, locked.password_hash):
+                raise AppException(
+                    status_code=401,
+                    code=ErrorCode.AUTH_INVALID_CREDENTIALS,
+                    message="当前密码错误",
+                )
             locked.password_hash = new_hash
             locked.credential_version += 1
             await self.sessions.revoke_web_for_user(locked.id, reason="password_changed", except_id=current_session.id)
@@ -269,6 +275,12 @@ class AdminAccountService:
                     status_code=401,
                     code=ErrorCode.AUTH_SESSION_REVOKED,
                     message="管理员会话已失效",
+                )
+            if not await self.password_manager.verify(payload.current_password, locked.password_hash):
+                raise AppException(
+                    status_code=401,
+                    code=ErrorCode.AUTH_INVALID_CREDENTIALS,
+                    message="当前密码错误",
                 )
             locked.password_hash = new_hash
             locked.credential_version += 1

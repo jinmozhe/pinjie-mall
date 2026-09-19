@@ -154,7 +154,7 @@ async def shop():
                 admin_distribution=AdminDistributionApplicationService(
                     distribution=distribution, access=access, audit=audit, actor_id=actor
                 ),
-                reporting=CommerceReportingService(session),
+                reporting=CommerceReportingService(session, audit),
                 addresses=AddressApplicationService(
                     session, AddressService(AddressRepository(session)), access, users[0]
                 ),

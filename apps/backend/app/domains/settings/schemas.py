@@ -20,7 +20,7 @@ TrimmedDescription = Annotated[str, AfterValidator(_trim), Field(max_length=500)
 class SiteLogoValue(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    path: str = Field(pattern=r"^site/logo\.(?:png|jpg|webp)$", description="配置媒体相对路径")
+    path: str = Field(pattern=r"^site/logo(?:-[0-9a-f]{32})?\.(?:png|jpg|webp)$", description="配置媒体相对路径")
     mime_type: str = Field(pattern=r"^image/(?:png|jpeg|webp)$", description="服务端确认的图片 MIME")
     file_size: int = Field(gt=0, le=2 * 1024 * 1024, description="LOGO 文件大小，单位为字节")
     sha256: str = Field(pattern=r"^[0-9a-f]{64}$", description="LOGO 文件 SHA-256 摘要")

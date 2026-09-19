@@ -99,6 +99,17 @@ class InventoryService:
             await self.repository.save(reservation)
             await self._reservation_event(reservation, account, before_available, before_reserved)
 
+    async def require_available(self, quantities: dict[UUID, int]) -> None:
+        accounts = await self.repository.available_accounts(sorted(quantities))
+        if not quantities or len(accounts) != len(quantities):
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STOCK_REJECTED, message="SKU 库存账户不存在")
+        for account in accounts:
+            quantity = quantities[account.sku_id]
+            if not 1 <= quantity <= 999 or account.available < quantity:
+                raise AppException(
+                    status_code=409, code=ErrorCode.ORDER_STOCK_REJECTED, message="库存不足或占用数量不合法"
+                )
+
     async def transition_reservations(
         self, order_id: UUID, quantities: dict[UUID, int], status: Literal["confirmed", "released"]
     ) -> None:

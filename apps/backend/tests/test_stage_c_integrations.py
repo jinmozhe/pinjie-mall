@@ -614,6 +614,7 @@ async def test_user_and_role_bulk_lifecycle_operations_are_atomic_and_audited() 
     resources = create_resources(settings)
     actor_id = new_uuid7()
     admin_id = new_uuid7()
+    actor_session_id = new_uuid7()
     user_ids = [new_uuid7(), new_uuid7()]
     user_session_ids = [new_uuid7(), new_uuid7()]
     admin_session_id = new_uuid7()
@@ -632,6 +633,7 @@ async def test_user_and_role_bulk_lifecycle_operations_are_atomic_and_audited() 
             password_manager=resources.password_manager,
             metadata=metadata,
             actor_id=actor_id,
+            actor_session_id=actor_session_id,
         )
 
     try:
@@ -650,7 +652,7 @@ async def test_user_and_role_bulk_lifecycle_operations_are_atomic_and_audited() 
                         display_name="Lifecycle Actor",
                         password_hash="not-used-by-this-test",
                         is_active=True,
-                        is_superuser=False,
+                        is_superuser=True,
                         credential_version=1,
                     ),
                     Admin(
@@ -700,6 +702,19 @@ async def test_user_and_role_bulk_lifecycle_operations_are_atomic_and_audited() 
                         absolute_expires_at=now + timedelta(days=30),
                     )
                 )
+            session.add(
+                AdminSession(
+                    id=actor_session_id,
+                    admin_id=actor_id,
+                    family_id=new_uuid7(),
+                    credential_profile="browser_cookie",
+                    client_id="pinjie-admin",
+                    csrf_digest="c" * 64,
+                    last_seen_at=now,
+                    idle_expires_at=now + timedelta(days=7),
+                    absolute_expires_at=now + timedelta(days=30),
+                )
+            )
             session.add(
                 AdminSession(
                     id=admin_session_id,
@@ -840,6 +855,7 @@ async def test_user_and_role_bulk_lifecycle_operations_are_atomic_and_audited() 
         async with resources.session_factory() as session, transaction_scope(session):
             await session.execute(delete(UserSession).where(UserSession.id.in_(user_session_ids)))
             await session.execute(delete(AdminSession).where(AdminSession.id == admin_session_id))
+            await session.execute(delete(AdminSession).where(AdminSession.id == actor_session_id))
             await session.execute(delete(AuditEvent).where(AuditEvent.actor_id == actor_id))
             await session.execute(delete(Admin).where(Admin.id.in_([actor_id, admin_id])))
             await session.execute(delete(Role).where(Role.id.in_([assigned_role_id, *unused_role_ids])))

@@ -266,7 +266,9 @@ class WebAuthService(_AuthBase):
                 reason_code="INVALID_CREDENTIALS",
             )
             raise _auth_error()
-        verified, updated_hash = await self.password_manager.verify_and_update(payload.password, user.password_hash)
+        verified_password_hash = user.password_hash
+        verified_credential_version = user.credential_version
+        verified, updated_hash = await self.password_manager.verify_and_update(payload.password, verified_password_hash)
         # 账户状态检查在密码验证之前拒绝，防止通过响应差异泄露"密码正确但已禁用"的信息。
         if not user.is_active or user.deleted_at is not None:
             await self.record_failure(
@@ -301,6 +303,11 @@ class WebAuthService(_AuthBase):
             locked = await self.users.get(user.id, for_update=True)
             if locked is None or not locked.is_active or locked.deleted_at is not None:
                 raise AppException(status_code=403, code=ErrorCode.AUTH_ACCOUNT_DISABLED, message="账户已停用")
+            if (
+                locked.password_hash != verified_password_hash
+                or locked.credential_version != verified_credential_version
+            ):
+                raise _auth_error()
             if updated_hash is not None:
                 locked.password_hash = updated_hash
             self.sessions.add_web(login_session, refresh)
@@ -530,7 +537,9 @@ class AdminAuthService(_AuthBase):
                 identifier=payload.username, event_type="login", reason_code="INVALID_CREDENTIALS"
             )
             raise _auth_error()
-        verified, updated_hash = await self.password_manager.verify_and_update(payload.password, admin.password_hash)
+        verified_password_hash = admin.password_hash
+        verified_credential_version = admin.credential_version
+        verified, updated_hash = await self.password_manager.verify_and_update(payload.password, verified_password_hash)
         # 账户状态检查在密码验证之前拒绝，防止通过响应差异泄露"密码正确但已禁用"的信息。
         if not admin.is_active:
             await self.record_failure(
@@ -554,6 +563,11 @@ class AdminAuthService(_AuthBase):
             locked = await self.admins.get(admin.id, for_update=True)
             if locked is None or not locked.is_active:
                 raise AppException(status_code=403, code=ErrorCode.AUTH_ACCOUNT_DISABLED, message="账户已停用")
+            if (
+                locked.password_hash != verified_password_hash
+                or locked.credential_version != verified_credential_version
+            ):
+                raise _auth_error()
             if updated_hash is not None:
                 locked.password_hash = updated_hash
             self.sessions.add_admin(login_session, refresh)

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from app.api.dependencies import get_web_auth_service
 from app.core.health import ReadinessResult
 
 
@@ -30,7 +31,7 @@ async def test_system_status_returns_safe_success_payload(client, fake_resources
     from app.main import app
 
     # 使用 monkeypatch 确保测试结束后自动恢复 app.state，防止污染后续测试
-    monkeypatch.setattr(app.state, "resources", fake_resources)
+    monkeypatch.setattr(app.state, "resources", fake_resources, raising=False)
     monkeypatch.setattr(
         app.state,
         "settings",
@@ -57,11 +58,17 @@ async def test_unknown_route_has_stable_error(client) -> None:
 
 @pytest.mark.asyncio
 async def test_validation_error_uses_chinese_top_level_message(client) -> None:
-    response = await client.post(
-        "/api/v1/auth/login",
-        headers={"Origin": "http://localhost:3000"},
-        json={"username": "browser-user", "password": "a" * 65},
-    )
+    from app.main import app
+
+    app.dependency_overrides[get_web_auth_service] = lambda: object()
+    try:
+        response = await client.post(
+            "/api/v1/auth/login",
+            headers={"Origin": "http://localhost:3000"},
+            json={"username": "browser-user", "password": "a" * 65},
+        )
+    finally:
+        app.dependency_overrides.pop(get_web_auth_service, None)
     assert response.status_code == 422
     assert response.json()["code"] == "VALIDATION_ERROR"
     assert response.json()["message"] == "请求参数校验失败"
