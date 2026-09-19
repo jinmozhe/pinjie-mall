@@ -92,9 +92,7 @@ class OrderService:
             key=lambda item: item.hex,
         )
         # 并发加载所有运费模板，避免多模板场景下的串行 I/O 往返
-        template_results = await asyncio.gather(
-            *[self.shipping.read(tid, lock=lock) for tid in template_ids]
-        )
+        template_results = await asyncio.gather(*[self.shipping.read(tid, lock=lock) for tid in template_ids])
         templates_by_id = dict(zip(template_ids, template_results))
         by_sku = {sku.id: sku for sku in catalog}
         if len(types) != 1:
