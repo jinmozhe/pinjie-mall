@@ -22,7 +22,7 @@ import defaultSettings from "../config/defaultSettings";
 import { AdminAvatar } from "./components/AdminAvatar";
 import { AdminContext } from "./features/auth/auth-context";
 import { adminApi } from "./lib/api/admin";
-import { errorMessage, isSessionError } from "./lib/api/http";
+import { errorMessage, isSessionError, setSessionExpiredHandler } from "./lib/api/http";
 import logoSvg from "./assets/logo.svg";
 import "./styles.css";
 
@@ -33,6 +33,18 @@ const queryClient = new QueryClient({
   },
 });
 
+let authenticated = false;
+setSessionExpiredHandler(() => {
+  if (!authenticated) return;
+  authenticated = false;
+  queryClient.clear();
+  const { pathname, search, hash } = history.location;
+  if (pathname === "/login") return;
+  history.replace(`/login?redirect=${encodeURIComponent(pathname + search + hash)}`);
+  // 重新初始化 Umi，移除旧 initialState、权限与正在执行的页面状态。
+  if (process.env.NODE_ENV !== "test") window.location.reload();
+});
+
 export type AdminInitialState = {
   currentAdmin?: AdminRead;
   bootstrapError?: string;
@@ -40,10 +52,13 @@ export type AdminInitialState = {
 };
 
 export async function getInitialState(): Promise<AdminInitialState> {
+  authenticated = false;
   const settings = defaultSettings;
   if (history.location.pathname === "/login") return { settings };
   try {
-    return { currentAdmin: await adminApi.me(), settings };
+    const currentAdmin = await adminApi.me();
+    authenticated = true;
+    return { currentAdmin, settings };
   } catch (error) {
     if (isSessionError(error)) {
       const { pathname, search, hash } = history.location;

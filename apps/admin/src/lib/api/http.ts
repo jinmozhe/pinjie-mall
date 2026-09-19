@@ -41,6 +41,15 @@ export function isSessionError(error: unknown): error is ApiError {
 }
 
 let refreshPromise: Promise<void> | null = null;
+let sessionExpiredHandler: (() => void) | undefined;
+
+export function setSessionExpiredHandler(handler: (() => void) | undefined): void {
+  sessionExpiredHandler = handler;
+}
+
+function reportSessionExpired(error: unknown): void {
+  if (isSessionError(error)) sessionExpiredHandler?.();
+}
 
 function readCookie(name: string): string | undefined {
   const prefix = `${encodeURIComponent(name)}=`;
@@ -99,9 +108,15 @@ export async function apiRequest<T>(
   if (!response.ok) {
     const error = await parseError(response);
     if (isSessionError(error) && options.retryAuth !== false && !AUTH_RETRY_EXCLUDED.has(path)) {
-      await refreshSession();
+      try {
+        await refreshSession();
+      } catch (refreshError) {
+        reportSessionExpired(refreshError);
+        throw refreshError;
+      }
       return apiRequest<T>(path, init, { ...options, retryAuth: false });
     }
+    if (path !== "/api/v1/admin/auth/login") reportSessionExpired(error);
     throw error;
   }
   const payload = (await response.json()) as ApiEnvelope<T>;

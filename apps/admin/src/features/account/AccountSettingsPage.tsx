@@ -2,21 +2,28 @@ import type { AdminProfileUpdateIn } from "@pinjie/api-client";
 import { KeyOutlined, SafetyCertificateOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Alert, Button, Card, Descriptions, Divider, Form, Input, Space, Tabs, Tag, Typography, message } from "antd";
+import { useRef, useState } from "react";
 
 import { PageFrame, formatTime } from "@/components/PageFrame";
 import { AvatarUploader } from "@/components/Uploader";
 import { useCurrentAdmin } from "@/features/auth";
 import { adminApi } from "@/lib/api/admin";
 import { errorMessage } from "@/lib/api/http";
+import { useLockedMutation } from "@/lib/useLockedMutation";
 
 export function AccountSettingsPage() {
   const current = useCurrentAdmin();
   const queryClient = useQueryClient();
   const [profileForm] = Form.useForm<AdminProfileUpdateIn>();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const uploadingAvatarRef = useRef(false);
   const [passwordForm] = Form.useForm<{ current_password: string; new_password: string; confirm_password: string }>();
 
-  const profileMutation = useMutation({
-    mutationFn: (values: AdminProfileUpdateIn) => adminApi.updateProfile(values),
+  const profileMutation = useLockedMutation({
+    mutationFn: (values: AdminProfileUpdateIn) => {
+      if (uploadingAvatarRef.current) throw new Error("头像正在上传，请完成后再保存");
+      return adminApi.updateProfile(values);
+    },
     onSuccess: async (updated) => {
       message.success("个人基本信息已更新");
       queryClient.setQueryData(["admin-me"], updated);
@@ -69,7 +76,10 @@ export function AccountSettingsPage() {
                     style={{ maxWidth: 480 }}
                   >
                     <Form.Item label="头像" name="avatar">
-                      <AvatarUploader disabled={profileMutation.isPending} />
+                      <AvatarUploader disabled={profileMutation.isPending} onUploadingChange={(uploading) => {
+                        uploadingAvatarRef.current = uploading;
+                        setUploadingAvatar(uploading);
+                      }} />
                     </Form.Item>
                     <Form.Item label="登录账号">
                       <Input aria-label="登录账号" value={current.username} disabled prefix={<UserOutlined />} />
@@ -82,7 +92,7 @@ export function AccountSettingsPage() {
                       <Input placeholder="请输入您的显示昵称" maxLength={100} />
                     </Form.Item>
                     <Form.Item style={{ marginTop: 24 }}>
-                      <Button type="primary" htmlType="submit" loading={profileMutation.isPending}>
+                      <Button type="primary" htmlType="submit" loading={profileMutation.isPending} disabled={uploadingAvatar}>
                         更新基本信息
                       </Button>
                     </Form.Item>

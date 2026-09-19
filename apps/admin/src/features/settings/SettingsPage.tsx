@@ -104,8 +104,8 @@ function SiteSettingsTab({ canUpdate }: { canUpdate: boolean }) {
 
   const save = useMutation({
     mutationFn: (values: SiteFormValues) => {
-      if (!query.data) throw new Error("站点设置尚未加载");
-      return adminApi.updateSiteSetting({ ...values, revision: query.data.revision });
+      if (hydratedRevision === undefined) throw new Error("站点设置尚未加载");
+      return adminApi.updateSiteSetting({ ...values, revision: hydratedRevision });
     },
     onSuccess: (data) => {
       acceptSavedForm(data);
@@ -118,12 +118,12 @@ function SiteSettingsTab({ canUpdate }: { canUpdate: boolean }) {
   });
 
   const uploadLogo = useMutation({
-    mutationFn: (file: globalThis.File) => {
-      if (!query.data) throw new Error("站点设置尚未加载");
-      return adminApi.uploadSiteLogo(file, query.data.revision);
-    },
-    onSuccess: (data) => {
+    mutationFn: ({ file, revision }: { file: globalThis.File; revision: number }) =>
+      adminApi.uploadSiteLogo(file, revision),
+    onSuccess: (data, { revision }) => {
       queryClient.setQueryData(SITE_QUERY_KEY, data);
+      // 只有同一基准上的 LOGO 写入可以推进文本草稿版本。
+      setHydratedRevision((current) => current === revision ? data.revision : current);
       setConflict(false);
       message.success("站点 LOGO 已更新");
     },
@@ -135,8 +135,9 @@ function SiteSettingsTab({ canUpdate }: { canUpdate: boolean }) {
 
   const deleteLogo = useMutation({
     mutationFn: (revision: number) => adminApi.deleteSiteLogo(revision),
-    onSuccess: (data) => {
+    onSuccess: (data, revision) => {
       queryClient.setQueryData(SITE_QUERY_KEY, data);
+      setHydratedRevision((current) => current === revision ? data.revision : current);
       setConflict(false);
       message.success("站点 LOGO 已移除");
     },
@@ -147,7 +148,7 @@ function SiteSettingsTab({ canUpdate }: { canUpdate: boolean }) {
 
   const loadLatest = async () => {
     const result = await query.refetch();
-    if (result.data) hydrate(result.data);
+    if (result.isSuccess) hydrate(result.data);
   };
 
   const beforeUpload = (file: globalThis.File) => {
@@ -159,7 +160,8 @@ function SiteSettingsTab({ canUpdate }: { canUpdate: boolean }) {
       message.error("站点 LOGO 不能超过 2 MB");
       return Upload.LIST_IGNORE;
     }
-    uploadLogo.mutate(file);
+    if (!query.isSuccess || pending || conflict) return Upload.LIST_IGNORE;
+    uploadLogo.mutate({ file, revision: query.data.revision });
     return Upload.LIST_IGNORE;
   };
 
@@ -300,21 +302,26 @@ function RegistrationSettingsTab({ canUpdate }: { canUpdate: boolean }) {
   const [form] = Form.useForm<RegistrationFormValues>();
   const queryClient = useQueryClient();
   const [dirty, setDirty] = useState(false);
+  const [hydratedRevision, setHydratedRevision] = useState<number>();
   const [conflict, setConflict] = useState(false);
   const query = useQuery({ queryKey: REGISTRATION_QUERY_KEY, queryFn: adminApi.registrationSetting });
 
   useEffect(() => {
-    if (query.data && !dirty) form.setFieldsValue({ enabled: query.data.enabled });
-  }, [query.data, dirty, form]);
+    if (query.data && hydratedRevision === undefined) {
+      form.setFieldsValue({ enabled: query.data.enabled });
+      setHydratedRevision(query.data.revision);
+    }
+  }, [query.data, hydratedRevision, form]);
 
   const save = useMutation({
     mutationFn: (values: RegistrationFormValues) => {
-      if (!query.data) throw new Error("注册设置尚未加载");
-      return adminApi.updateRegistrationSetting({ revision: query.data.revision, enabled: values.enabled });
+      if (hydratedRevision === undefined) throw new Error("注册设置尚未加载");
+      return adminApi.updateRegistrationSetting({ revision: hydratedRevision, enabled: values.enabled });
     },
     onSuccess: (data) => {
       queryClient.setQueryData(REGISTRATION_QUERY_KEY, data);
       form.setFieldsValue({ enabled: data.enabled });
+      setHydratedRevision(data.revision);
       setDirty(false);
       setConflict(false);
       message.success("注册设置已保存");
@@ -327,8 +334,9 @@ function RegistrationSettingsTab({ canUpdate }: { canUpdate: boolean }) {
 
   const loadLatest = async () => {
     const result = await query.refetch();
-    if (result.data) {
+    if (result.isSuccess) {
       form.setFieldsValue({ enabled: result.data.enabled });
+      setHydratedRevision(result.data.revision);
       setDirty(false);
       setConflict(false);
     }

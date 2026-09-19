@@ -4,6 +4,12 @@ import access from "./access";
 import type { AdminInitialState } from "./app";
 
 const settings = {} as AdminInitialState["settings"];
+const commerceDenied = {
+  canCatalog: false, canProducts: false, canCategories: false, canShipping: false,
+  canTrade: false, canPayments: false, canReconciliation: false, canMembers: false,
+  canCommissions: false, canWallets: false, canOrders: false, canRefunds: false,
+  canDistribution: false, canWithdrawals: false,
+};
 
 function state(permissions: string[] = [], isSuperuser = false): AdminInitialState {
   return {
@@ -25,6 +31,7 @@ function state(permissions: string[] = [], isSuperuser = false): AdminInitialSta
 describe("admin access mapping", () => {
   it("denies every protected area without a current administrator", () => {
     expect(access({ settings })).toEqual({
+      ...commerceDenied,
       canUsers: false,
       canAdmins: false,
       canRoles: false,
@@ -44,6 +51,7 @@ describe("admin access mapping", () => {
 
   it("maps ordinary read permissions and grants every area to superusers", () => {
     expect(access(state(["users:read", "admins:read", "roles:read", "assets:read", "system:overview:read", "settings:site:read"]))).toEqual({
+      ...commerceDenied,
       canUsers: true,
       canAdmins: true,
       canRoles: true,
@@ -53,6 +61,10 @@ describe("admin access mapping", () => {
       canSecurity: false,
     });
     expect(access(state([], true))).toEqual({
+      canCatalog: true, canProducts: true, canCategories: true, canShipping: true,
+      canTrade: true, canPayments: true, canReconciliation: true, canMembers: true,
+      canCommissions: true, canWallets: true, canOrders: true, canRefunds: true,
+      canDistribution: true, canWithdrawals: true,
       canUsers: true,
       canAdmins: true,
       canRoles: true,

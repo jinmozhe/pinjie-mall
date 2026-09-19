@@ -25,6 +25,7 @@ import { StatusToggleTag } from "@/components/StatusToggleTag";
 import { canAccess, useCurrentAdmin } from "@/features/auth";
 import { adminApi } from "@/lib/api/admin";
 import { errorMessage } from "@/lib/api/http";
+import { useLockedMutation } from "@/lib/useLockedMutation";
 
 type RoleForm = RoleCreateIn;
 type Confirmation = { description: string; title: string; execute: () => Promise<unknown> };
@@ -143,6 +144,7 @@ export function mergeVisiblePermissionSelection(
 export function RolesPage() {
   const current = useCurrentAdmin();
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
   const [editing, setEditing] = useState<RoleRead | "new" | null>(null);
   const [permissionTarget, setPermissionTarget] = useState<RoleRead | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
@@ -152,7 +154,7 @@ export function RolesPage() {
   const [roleForm] = Form.useForm<RoleForm>();
   const [permissionForm] = Form.useForm<{ permission_codes: string[] }>();
   const selectedPermissionCodes = Form.useWatch("permission_codes", permissionForm) ?? [];
-  const roles = useQuery({ queryKey: ["roles"], queryFn: () => adminApi.roles() });
+  const roles = useQuery({ queryKey: ["roles", page], queryFn: () => adminApi.roles(page) });
   const canReadPermissions = canAccess(current, "permissions:read");
   const canUpdate = canAccess(current, "roles:update");
   const canDelete = canAccess(current, "roles:delete");
@@ -202,7 +204,7 @@ export function RolesPage() {
   });
   const statusMutation = useMutation({
     mutationFn: ({ role, isActive }: { role: RoleRead; isActive: boolean }) =>
-      adminApi.updateRole(role.id, { name: role.name, description: role.description, is_active: isActive }),
+      adminApi.updateRole(role.id, { is_active: isActive }),
     onSuccess: async () => {
       message.success("角色状态已更新");
       await invalidate();
@@ -224,9 +226,11 @@ export function RolesPage() {
       await invalidate();
     },
   });
-  const assignPermissionsMutation = useMutation({
-    mutationFn: ({ roleId, permissionCodes }: { roleId: string; permissionCodes: string[] }) =>
-      adminApi.assignPermissions(roleId, permissionCodes),
+  const assignPermissionsMutation = useLockedMutation({
+    mutationFn: ({ roleId, permissionCodes }: { roleId: string; permissionCodes: string[] }) => {
+      if (!permissions.isSuccess) throw new Error("权限目录尚未成功加载，请重试后保存");
+      return adminApi.assignPermissions(roleId, filterPermissionCodes(permissionCodes, permissions.data));
+    },
     onSuccess: async () => {
       message.success("角色权限已更新，关联管理员会话已撤销");
       setPermissionTarget(null);
@@ -350,7 +354,13 @@ export function RolesPage() {
             </Space>
           )}
           scroll={{ x: "max-content" }}
-          pagination={false}
+          pagination={{
+            current: page,
+            pageSize: roles.data.page_size,
+            total: roles.data.total,
+            showSizeChanger: false,
+            onChange: (nextPage) => { setSelectedRowKeys([]); setPage(nextPage); },
+          }}
           columns={[
             { title: "角色", dataIndex: "name", render: (_, row) => <div className="table-primary-cell role-primary-cell"><Typography.Text strong>{row.name}</Typography.Text><Badge className="role-code-badge" count={row.code} /></div> },
             { title: "说明", dataIndex: "description", ellipsis: true, responsive: ["lg"], render: (value) => value || "-" },
@@ -394,7 +404,7 @@ export function RolesPage() {
         </Form>
       </Modal>
 
-      <Modal width={820} open={Boolean(permissionTarget)} title={permissionTarget ? `配置 ${permissionTarget.name} 的权限` : "配置权限"} okText="保存" confirmLoading={assignPermissionsMutation.isPending} onCancel={() => setPermissionTarget(null)} onOk={() => permissionForm.submit()}>
+      <Modal width={820} open={Boolean(permissionTarget)} title={permissionTarget ? `配置 ${permissionTarget.name} 的权限` : "配置权限"} okText="保存" confirmLoading={assignPermissionsMutation.isPending} okButtonProps={{ disabled: !permissions.isSuccess || assignPermissionsMutation.isPending }} cancelButtonProps={{ disabled: assignPermissionsMutation.isPending }} closable={!assignPermissionsMutation.isPending} maskClosable={!assignPermissionsMutation.isPending} keyboard={!assignPermissionsMutation.isPending} onCancel={() => { if (!assignPermissionsMutation.isPending) setPermissionTarget(null); }} onOk={() => permissionForm.submit()}>
         <QueryState loading={permissions.isLoading} error={permissions.isError ? errorMessage(permissions.error) : undefined} empty={permissions.data?.length === 0} onRetry={() => void permissions.refetch()} />
         {assignPermissionsMutation.isError && <Alert showIcon type="error" title={errorMessage(assignPermissionsMutation.error)} />}
         <Form form={permissionForm} layout="vertical" onFinish={({ permission_codes }) => {
@@ -402,7 +412,7 @@ export function RolesPage() {
           if (!target) return;
           assignPermissionsMutation.mutate({
             roleId: target.id,
-            permissionCodes: filterPermissionCodes(permission_codes, permissions.data ?? []),
+            permissionCodes: permission_codes,
           });
         }}>
           <Form.Item name="permission_codes" hidden><Input /></Form.Item>

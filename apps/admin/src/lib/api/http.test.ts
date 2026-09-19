@@ -1,13 +1,27 @@
 import { http, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { server } from "@/test/setup";
 
-import { ApiError, apiRequest, errorMessage, jsonBody } from "./http";
+import { ApiError, apiRequest, errorMessage, jsonBody, setSessionExpiredHandler } from "./http";
 
 const ok = <T>(data: T) => HttpResponse.json({ code: "OK", message: "操作成功", data, request_id: "request" });
 
 describe("admin HTTP authentication boundary", () => {
+  afterEach(() => setSessionExpiredHandler(undefined));
+
+  it.each(["refresh", "replay"])("reports terminal session failure from %s", async (failureAt) => {
+    const expired = vi.fn();
+    setSessionExpiredHandler(expired);
+    server.use(
+      http.get("http://localhost:3000/api/v1/admin/auth/me", () =>
+        HttpResponse.json({ code: "AUTH_SESSION_REVOKED" }, { status: 401 })),
+      http.post("http://localhost:3000/api/v1/admin/auth/refresh", () => failureAt === "refresh"
+        ? HttpResponse.json({ code: "AUTH_SESSION_REVOKED" }, { status: 401 }) : ok({})),
+    );
+    await expect(apiRequest("/api/v1/admin/auth/me")).rejects.toMatchObject({ code: "AUTH_SESSION_REVOKED" });
+    expect(expired).toHaveBeenCalledTimes(1);
+  });
   it("refreshes once after a protected request returns 401 and replays it once", async () => {
     let protectedCalls = 0;
     let refreshCalls = 0;
@@ -64,6 +78,8 @@ describe("admin HTTP authentication boundary", () => {
   });
 
   it.each(["AUTH_INVALID_CREDENTIALS", "UNKNOWN_ERROR"])("does not refresh a business or unknown 401: %s", async (code) => {
+    const expired = vi.fn();
+    setSessionExpiredHandler(expired);
     let refreshCalls = 0;
     let passwordCalls = 0;
     server.use(
@@ -79,9 +95,12 @@ describe("admin HTTP authentication boundary", () => {
     await expect(apiRequest("/api/v1/admin/auth/password", { method: "POST" })).rejects.toMatchObject({ status: 401, code });
     expect(passwordCalls).toBe(1);
     expect(refreshCalls).toBe(0);
+    expect(expired).not.toHaveBeenCalled();
   });
 
   it.each([[429, "RATE_LIMITED"], [503, "SERVICE_UNAVAILABLE"]] as const)("preserves refresh failure %s and its retry metadata", async (status, code) => {
+    const expired = vi.fn();
+    setSessionExpiredHandler(expired);
     let protectedCalls = 0;
     server.use(
       http.get("http://localhost:3000/api/v1/admin/auth/me", () => {
@@ -94,6 +113,7 @@ describe("admin HTTP authentication boundary", () => {
     );
     await expect(apiRequest("/api/v1/admin/auth/me")).rejects.toMatchObject({ status, code, requestId: "refresh-request", retryAfter: "5" });
     expect(protectedCalls).toBe(1);
+    expect(expired).not.toHaveBeenCalled();
   });
 
   it("adds JSON and CSRF headers to unsafe requests", async () => {
