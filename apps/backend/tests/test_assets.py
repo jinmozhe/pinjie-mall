@@ -99,8 +99,7 @@ def asset_api_service() -> AsyncMock:
 
 def _current_principal(*, admin: bool, csrf_token: str) -> SimpleNamespace:
     settings = app.state.settings
-    web_secret, admin_secret, web_hmac, admin_hmac = settings.authentication_secrets()
-    del web_secret, admin_secret
+    _, _, web_hmac, admin_hmac = settings.authentication_secrets()
     principal = SimpleNamespace(id=uuid.uuid7())
     login_session = SimpleNamespace(
         csrf_digest=token_digest(csrf_token, admin_hmac if admin else web_hmac),

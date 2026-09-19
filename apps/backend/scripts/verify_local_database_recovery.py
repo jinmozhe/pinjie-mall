@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import SplitResult, urlsplit, urlunsplit
 
-from app.core.config import Settings
+from app.core.config import get_settings
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
@@ -39,7 +39,7 @@ def parse_test_database_url(url: str | None) -> DatabaseTarget:
         raise ValueError("TEST_DATABASE_URL must use postgresql+asyncpg")
     if parsed.hostname not in {"127.0.0.1", "localhost", "::1"}:
         raise ValueError("Local recovery verification only accepts a local PostgreSQL host")
-    if not parsed.username or parsed.password is None:
+    if not parsed.username or not parsed.password:
         raise ValueError("TEST_DATABASE_URL must include a username and password")
     assert_safe_database_name(database, "TEST_DATABASE_URL database")
     return DatabaseTarget(
@@ -78,7 +78,7 @@ def main() -> None:
     parser.add_argument("--confirm-restore-database", required=True)
     args = parser.parse_args()
 
-    target = parse_test_database_url(Settings().test_database_url)
+    target = parse_test_database_url(get_settings().test_database_url)
     assert_safe_database_name(args.migration_database, "migration database")
     assert_safe_database_name(args.restore_database, "restore database")
     names = {target.database, args.migration_database, args.restore_database}
@@ -96,6 +96,9 @@ def main() -> None:
     dropdb = require_tool("dropdb")
     powershell = require_tool("powershell")
     recovery_script = WORKSPACE_ROOT / "scripts" / "operations" / "test-postgres-backup-restore.ps1"
+    # 执行前验证脚本路径，防止 WORKSPACE_ROOT 解析异常时执行非预期脚本
+    if not recovery_script.is_file():
+        raise RuntimeError(f"Recovery script not found: {recovery_script}")
     environment = os.environ.copy()
     environment["PGPASSWORD"] = target.password
     common_database_args = [
@@ -110,6 +113,7 @@ def main() -> None:
             "TEST_DATABASE_URL": target.url_for(target.database),
             "ENVIRONMENT": "test",
         }
+        # 连续执行两次 upgrade head 以验证迁移脚本的幂等性（重复执行应无副作用）
         run_checked([sys.executable, "-m", "alembic", "upgrade", "head"], environment=source_environment)
         run_checked([sys.executable, "-m", "alembic", "upgrade", "head"], environment=source_environment)
         run_checked([sys.executable, "-m", "alembic", "check"], environment=source_environment)
@@ -124,6 +128,7 @@ def main() -> None:
             "TEST_DATABASE_URL": target.url_for(args.migration_database),
             "ENVIRONMENT": "test",
         }
+        # 同样验证 migration 数据库的迁移幂等性
         run_checked([sys.executable, "-m", "alembic", "upgrade", "head"], environment=migration_environment)
         run_checked([sys.executable, "-m", "alembic", "upgrade", "head"], environment=migration_environment)
         run_checked([sys.executable, "-m", "alembic", "check"], environment=migration_environment)

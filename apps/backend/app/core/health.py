@@ -5,6 +5,7 @@ from pathlib import Path
 from alembic.config import Config
 from alembic.migration import MigrationContext
 from alembic.script import ScriptDirectory
+from loguru import logger
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
@@ -40,7 +41,9 @@ async def check_database(engine: AsyncEngine, timeout: float) -> tuple[bool, str
                 return True, "ok"
     except TimeoutError:
         return False, "timeout"
-    except Exception:
+    except Exception as exc:
+        # 记录异常供运维诊断，避免静默丢弃错误信息
+        logger.opt(exception=exc).warning("database health check failed")
         return False, "unavailable"
 
 

@@ -634,7 +634,7 @@ class AdminManagementService:
     async def list_admin_sessions(
         self, admin_id: uuid.UUID, *, page: int, page_size: int
     ) -> tuple[list[AdminSession], int]:
-        admin = await self.admins.get(admin_id, for_update=True)
+        admin = await self.admins.get(admin_id)
         if admin is None:
             raise AppException(status_code=404, code=ErrorCode.ADMIN_NOT_FOUND, message="管理员不存在")
         await self._require_superuser_target_access(admin)

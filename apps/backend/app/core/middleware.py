@@ -63,6 +63,32 @@ async def request_context_middleware(request: Request, call_next: Callable[[Requ
             request_body=request_body,
         )
         return response
+    except Exception:
+        # call_next 本身抛出异常时，记录请求日志后重新抛出
+        duration_ms = max(0, round((time.perf_counter() - started_at) * 1000))
+        route = request.scope.get("route")
+        route_template = getattr(route, "path", request.url.path)
+        logger.bind(
+            request_id=request_id,
+            trace_id=trace_id,
+            method=request.method,
+            route=route_template,
+            duration_ms=duration_ms,
+            status_code=500,
+        ).exception(
+            "request failed method={} route={} duration_ms={}",
+            request.method,
+            route_template,
+            duration_ms,
+        )
+        await publish_request_log(
+            request,
+            status_code=500,
+            duration_ms=duration_ms,
+            route_template=route_template,
+            request_body=None,
+        )
+        raise
     finally:
         request_id_context.reset(request_token)
         trace_id_context.reset(trace_token)

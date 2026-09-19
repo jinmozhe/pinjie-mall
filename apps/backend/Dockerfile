@@ -15,7 +15,7 @@ COPY apps/backend/alembic.ini ./alembic.ini
 COPY apps/backend/alembic ./alembic
 COPY apps/backend/app ./app
 COPY apps/backend/scripts ./scripts
-RUN uv sync --frozen --no-dev --no-install-project
+RUN uv sync --frozen --no-dev
 
 FROM python:3.14.7-slim-trixie@sha256:5b945726c4d7ffe6595dc7498ad17fd0397e373c5181c24819a7028e8b1276dc AS runtime
 

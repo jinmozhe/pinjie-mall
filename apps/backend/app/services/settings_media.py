@@ -293,7 +293,7 @@ class SettingsMediaStore:
                 while chunk := source.read(_CHUNK_SIZE):
                     digest.update(chunk)
             return digest.hexdigest() == value.get("sha256")
-        except OSError, ValueError:
+        except (OSError, ValueError):
             return False
 
     def _safe_path(self, file_key: str) -> Path:

@@ -24,50 +24,44 @@ async def _run(args: argparse.Namespace) -> None:
     security_cutoff = datetime.now(UTC) - timedelta(days=settings.security_event_retention_days)
     request_cutoff = datetime.now(UTC) - timedelta(days=settings.request_log_retention_days)
     session_cutoff = datetime.now(UTC) - timedelta(days=settings.session_retention_days)
+    user_session_predicate = or_(
+        UserSession.absolute_expires_at < session_cutoff,
+        UserSession.revoked_at < session_cutoff,
+    )
+    admin_session_predicate = or_(
+        AdminSession.absolute_expires_at < session_cutoff,
+        AdminSession.revoked_at < session_cutoff,
+    )
     resources = create_resources(settings)
     try:
         async with resources.session_factory() as session:
-            login_count = int(
-                (
-                    await session.scalar(
-                        select(func.count())
-                        .select_from(SecurityLoginEvent)
-                        .where(SecurityLoginEvent.occurred_at < security_cutoff)
-                    )
-                )
-                or 0
+            # 并发执行 5 个 count 查询，减少干运行的等待时间
+            (
+                login_count_raw,
+                audit_count_raw,
+                request_count_raw,
+                user_session_count_raw,
+                admin_session_count_raw,
+            ) = await asyncio.gather(
+                session.scalar(
+                    select(func.count())
+                    .select_from(SecurityLoginEvent)
+                    .where(SecurityLoginEvent.occurred_at < security_cutoff)
+                ),
+                session.scalar(
+                    select(func.count()).select_from(AuditEvent).where(AuditEvent.occurred_at < security_cutoff)
+                ),
+                session.scalar(
+                    select(func.count()).select_from(RequestLog).where(RequestLog.occurred_at < request_cutoff)
+                ),
+                session.scalar(select(func.count()).select_from(UserSession).where(user_session_predicate)),
+                session.scalar(select(func.count()).select_from(AdminSession).where(admin_session_predicate)),
             )
-            audit_count = int(
-                (
-                    await session.scalar(
-                        select(func.count()).select_from(AuditEvent).where(AuditEvent.occurred_at < security_cutoff)
-                    )
-                )
-                or 0
-            )
-            request_count = int(
-                (
-                    await session.scalar(
-                        select(func.count()).select_from(RequestLog).where(RequestLog.occurred_at < request_cutoff)
-                    )
-                )
-                or 0
-            )
-            user_session_predicate = or_(
-                UserSession.absolute_expires_at < session_cutoff,
-                UserSession.revoked_at < session_cutoff,
-            )
-            admin_session_predicate = or_(
-                AdminSession.absolute_expires_at < session_cutoff,
-                AdminSession.revoked_at < session_cutoff,
-            )
-            user_session_count = int(
-                (await session.scalar(select(func.count()).select_from(UserSession).where(user_session_predicate))) or 0
-            )
-            admin_session_count = int(
-                (await session.scalar(select(func.count()).select_from(AdminSession).where(admin_session_predicate)))
-                or 0
-            )
+            login_count = int(login_count_raw or 0)
+            audit_count = int(audit_count_raw or 0)
+            request_count = int(request_count_raw or 0)
+            user_session_count = int(user_session_count_raw or 0)
+            admin_session_count = int(admin_session_count_raw or 0)
             print(
                 f"login_events={login_count} audit_events={audit_count} request_logs={request_count} "
                 f"user_sessions={user_session_count} admin_sessions={admin_session_count}"

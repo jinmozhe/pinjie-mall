@@ -256,8 +256,10 @@ class AssetService:
             assets = await self._assets.get_many(asset_ids, for_update=True)
             if len(assets) != len(asset_ids):
                 raise AppException(status_code=404, code=ErrorCode.ASSET_NOT_FOUND, message=missing_message)
+            # 在循环外实例化 Repository，避免每次迭代重复创建对象
+            commerce_access = CommerceAccessRepository(self._session)
             for asset in assets:
-                if await CommerceAccessRepository(self._session).asset_is_product_image(asset.id):
+                if await commerce_access.asset_is_product_image(asset.id):
                     raise AppException(
                         status_code=409, code=ErrorCode.STATE_CONFLICT, message="商品图片正在被使用，无法删除"
                     )

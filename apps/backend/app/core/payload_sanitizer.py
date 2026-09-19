@@ -97,13 +97,13 @@ async def capture_error_request_body(
         body = getattr(request, "_body", None)
         if body is None:
             body = await request.body()
-    except ClientDisconnect, RuntimeError:
+    except (ClientDisconnect, RuntimeError):
         return None
     if not body:
         return None
     try:
         parsed = json.loads(body.decode("utf-8"))
-    except UnicodeDecodeError, json.JSONDecodeError:
+    except (UnicodeDecodeError, json.JSONDecodeError):
         return None
     sanitized = json.dumps(_sanitize_value(parsed), ensure_ascii=False, separators=(",", ":"))
     return _truncate(sanitized, max_chars=max_chars)
