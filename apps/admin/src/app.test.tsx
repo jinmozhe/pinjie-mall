@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 import defaultSettings from "../config/defaultSettings";
 import { getInitialState, layout, rootContainer } from "./app";
 import { server } from "./test/setup";
+import { apiRequest } from "./lib/api/http";
 
 const { history } = vi.hoisted(() => {
   const location = { hash: "", pathname: "/", search: "" };
@@ -80,6 +81,20 @@ describe("admin runtime lifecycle", () => {
     );
 
     await expect(getInitialState()).resolves.toMatchObject({ bootstrapError: "管理服务暂不可用" });
+  });
+
+  it("returns an expired running session to login with its original destination", async () => {
+    history.push("/users?search=active#row");
+    await getInitialState();
+    server.use(
+      http.get("http://localhost:3000/api/v1/admin/users", () =>
+        HttpResponse.json({ code: "AUTH_SESSION_REVOKED" }, { status: 401 })),
+      http.post("http://localhost:3000/api/v1/admin/auth/refresh", () =>
+        HttpResponse.json({ code: "AUTH_SESSION_REVOKED" }, { status: 401 })),
+    );
+    await expect(apiRequest("/api/v1/admin/users")).rejects.toMatchObject({ code: "AUTH_SESSION_REVOKED" });
+    expect(history.location.pathname).toBe("/login");
+    expect(new URLSearchParams(history.location.search).get("redirect")).toBe("/users?search=active#row");
   });
 
   it.each([429, 503])("keeps the current route when refresh returns %s during bootstrap", async (status) => {

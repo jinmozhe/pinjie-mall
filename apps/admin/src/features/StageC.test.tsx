@@ -24,6 +24,7 @@ import {
 import { SecurityPage } from "./security/SecurityPage";
 import { UsersPage } from "./users/UsersPage";
 import { server } from "../test/setup";
+import { adminApi } from "@/lib/api/admin";
 
 const now = "2026-08-15T00:00:00Z";
 const current: AdminRead = { id: "01900000-0000-7000-8000-000000000001", username: "stage-admin", display_name: "Stage Admin", is_active: true, is_superuser: true, roles: [], permissions: [], created_at: now, updated_at: now };
@@ -514,7 +515,7 @@ describe("stage C admin workspace", () => {
     expect(screen.getByText("停用")).toBeInTheDocument();
     expect(screen.getByText("0")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "启用角色：auditors" }));
-    await waitFor(() => expect(roleStatusPayload).toEqual({ name: "审计员", description: null, is_active: true }));
+    await waitFor(() => expect(roleStatusPayload).toEqual({ is_active: true }));
   }, 60_000);
 
   it("creates an administrator directly", async () => {
@@ -627,6 +628,49 @@ describe("stage C admin workspace", () => {
 
     await waitFor(() => expect(assignPayload).toEqual({ permission_codes: ["roles:update", "system:overview:read", "reports:export"] }));
   }, 60_000);
+
+  it("prevents permission writes until the catalog is available and preserves assigned permissions", async () => {
+    let fail = true;
+    server.use(http.get("http://localhost:3000/api/v1/admin/permissions", () => fail
+      ? HttpResponse.json({ code: "SERVICE_UNAVAILABLE", message: "权限目录不可用" }, { status: 503 })
+      : HttpResponse.json({ data: [{ id: "read", code: "users:read", name: "查看用户", is_active: true, assignable_to_roles: true }] })));
+    const assign = vi.spyOn(adminApi, "assignPermissions");
+    const user = userEvent.setup();
+    renderPage(<RolesPage />);
+    await screen.findByText("运营人员");
+    await user.click(screen.getByRole("button", { name: /权限/ }));
+    const dialog = await screen.findByRole("dialog", { name: "配置 运营人员 的权限" });
+    await within(dialog).findByText("权限目录不可用");
+    expect(within(dialog).getByRole("button", { name: /保\s*存/ })).toBeDisabled();
+    const form = dialog.querySelector("form");
+    if (!form) throw new Error("Missing permission form");
+    fireEvent.submit(form);
+    await within(dialog).findByText("权限目录尚未成功加载，请重试后保存");
+    expect(assign).not.toHaveBeenCalled();
+    fail = false;
+    await user.click(within(dialog).getByRole("button", { name: /重\s*试/ }));
+    await waitFor(() => expect(within(dialog).getByRole("button", { name: /保\s*存/ })).toBeEnabled());
+    await user.click(within(dialog).getByRole("button", { name: /保\s*存/ }));
+    await waitFor(() => expect(assign).toHaveBeenCalledWith("01900000-0000-7000-8000-000000000003", ["users:read"]));
+  });
+
+  it("loads the next role page and clears the previous selection", async () => {
+    const pages: number[] = [];
+    server.use(http.get("http://localhost:3000/api/v1/admin/roles", ({ request }) => {
+      const page = Number(new globalThis.URL(request.url).searchParams.get("page"));
+      pages.push(page);
+      return HttpResponse.json({ data: { items: [{ id: `role-${page}`, code: `role_${page}`, name: `角色页${page}`, description: null, is_active: true, permissions: [], created_at: now, updated_at: now }], page, page_size: 100, total: 101, total_pages: 2 } });
+    }));
+    const user = userEvent.setup();
+    renderPage(<RolesPage />);
+    await screen.findByText("角色页1");
+    await user.click(screen.getByRole("checkbox", { name: /Select row/ }));
+    expect(screen.getByText("已选择 1 项")).toBeInTheDocument();
+    await user.click(screen.getByTitle("2"));
+    expect(await screen.findByText("角色页2")).toBeInTheDocument();
+    expect(pages).toEqual([1, 2]);
+    expect(screen.queryByText("已选择 1 项")).not.toBeInTheDocument();
+  });
 
   it("selects roles and sends one atomic bulk hard-delete request", async () => {
     const user = userEvent.setup();

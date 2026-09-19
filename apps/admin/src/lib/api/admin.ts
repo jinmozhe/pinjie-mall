@@ -177,6 +177,15 @@ export const adminApi = {
       { method: "POST" },
     ),
   roles: (page = 1) => apiRequest<PageResultRoleRead>(`/api/v1/admin/roles?page=${page}&page_size=100`),
+  roleOptions: async ({ signal }: { signal?: globalThis.AbortSignal } = {}): Promise<RoleRead[]> => {
+    const first = await apiRequest<PageResultRoleRead>("/api/v1/admin/roles?page=1&page_size=100", { signal });
+    const roles = new Map(first.items.map((role) => [role.id, role]));
+    for (let page = 2; page <= first.total_pages; page += 1) {
+      const result = await apiRequest<PageResultRoleRead>(`/api/v1/admin/roles?page=${page}&page_size=100`, { signal });
+      for (const role of result.items) roles.set(role.id, role);
+    }
+    return [...roles.values()];
+  },
   createRole: (input: RoleCreateIn) =>
     apiRequest<RoleRead>("/api/v1/admin/roles", { method: "POST", body: jsonBody(input) }),
   updateRole: (id: string, input: RoleUpdateIn) =>

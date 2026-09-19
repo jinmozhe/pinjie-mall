@@ -72,7 +72,7 @@ export function AdminsPage() {
   const canReadSessions = canAccess(current, "admins:sessions:read");
   const canResetPassword = canAccess(current, "admins:credentials:reset");
   const canOperateAdmin = (admin: AdminRead) => current.is_superuser || !admin.is_superuser;
-  const roles = useQuery({ queryKey: ["roles-options"], queryFn: () => adminApi.roles(1), enabled: canReadRoles });
+  const roles = useQuery({ queryKey: ["roles-options"], queryFn: ({ signal }) => adminApi.roleOptions({ signal }), enabled: canReadRoles });
   const sessions = useQuery({
     queryKey: ["admin-sessions", sessionTarget?.id, sessionPage],
     queryFn: () => adminApi.adminSessions(sessionTarget!.id, sessionPage),
@@ -444,7 +444,10 @@ export function AdminsPage() {
           <Form.Item label="用户名" name="username" rules={[{ required: true }, { min: 3 }]}><Input autoComplete="off" /></Form.Item>
           <Form.Item label="显示名称" name="display_name"><Input maxLength={100} /></Form.Item>
           <Form.Item label="初始密码" name="initial_password" rules={[{ required: true }, { min: 6, max: 64, message: "密码必须为 6 至 64 个字符" }]}><Input.Password autoComplete="new-password" maxLength={64} /></Form.Item>
-          {canReadRoles && <Form.Item label="角色" name="role_ids"><Select mode="multiple" options={roles.data?.items.map((role) => ({ label: role.name, value: role.id }))} /></Form.Item>}
+          {canReadRoles && <>
+            <QueryState loading={roles.isLoading} error={roles.isError ? errorMessage(roles.error) : undefined} onRetry={() => void roles.refetch()} />
+            <Form.Item label="角色" name="role_ids"><Select mode="multiple" disabled={!roles.isSuccess} loading={roles.isFetching} options={roles.data?.map((role) => ({ label: role.name, value: role.id }))} /></Form.Item>
+          </>}
           {current.is_superuser && <Form.Item name="is_superuser" valuePropName="checked"><Checkbox>超级管理员</Checkbox></Form.Item>}
         </Form>
       </Modal>
@@ -491,13 +494,14 @@ export function AdminsPage() {
         </Form>
       </Modal>
 
-      <Modal open={Boolean(roleTarget)} title="分配角色" okText="保存" confirmLoading={assignRolesMutation.isPending} onCancel={() => setRoleTarget(null)} onOk={() => roleForm.submit()}>
+      <Modal open={Boolean(roleTarget)} title="分配角色" okText="保存" confirmLoading={assignRolesMutation.isPending} okButtonProps={{ disabled: !roles.isSuccess }} onCancel={() => setRoleTarget(null)} onOk={() => roleForm.submit()}>
+        <QueryState loading={roles.isLoading} error={roles.isError ? errorMessage(roles.error) : undefined} onRetry={() => void roles.refetch()} />
         {assignRolesMutation.isError && <Alert type="error" showIcon title={errorMessage(assignRolesMutation.error)} />}
         <Form form={roleForm} layout="vertical" onFinish={({ role_ids }) => {
           const target = roleTarget;
-          if (!target) return;
+          if (!target || !roles.isSuccess) return;
           assignRolesMutation.mutate({ adminId: target.id, roleIds: role_ids });
-        }}><Form.Item label="角色" name="role_ids"><Select mode="multiple" options={roles.data?.items.map((role) => ({ label: role.name, value: role.id }))} /></Form.Item></Form>
+        }}><Form.Item label="角色" name="role_ids"><Select mode="multiple" disabled={!roles.isSuccess} loading={roles.isFetching} options={roles.data?.map((role) => ({ label: role.name, value: role.id }))} /></Form.Item></Form>
       </Modal>
 
       <Drawer open={Boolean(sessionTarget)} styles={{ wrapper: { width: 560 } }} title={sessionTarget ? `${sessionTarget.username} 的会话` : "管理员会话"} onClose={() => { setSessionTarget(null); setSessionPage(1); }} extra={sessionTarget && canAccess(current, "admins:sessions:revoke") ? <Tooltip title={sessionTarget.id === current.id ? "不能在此处撤销自己的会话" : undefined}><span><Button danger disabled={sessionTarget.id === current.id} loading={revokeSessionsMutation.isPending} onClick={() => revokeSessionsMutation.mutate(sessionTarget.id)}>撤销全部</Button></span></Tooltip> : null}>

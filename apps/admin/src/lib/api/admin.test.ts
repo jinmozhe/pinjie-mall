@@ -1,11 +1,35 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { adminApi } from "./admin";
+import { http, HttpResponse } from "msw";
+import { server } from "@/test/setup";
 
 const targetId = "01900000-0000-7000-8000-000000000041";
 
 describe("admin API request shapes", () => {
   afterEach(() => vi.restoreAllMocks());
+
+  it("loads role options after the first 100 records", async () => {
+    const pages: number[] = [];
+    server.use(http.get("http://localhost:3000/api/v1/admin/roles", ({ request }) => {
+      const page = Number(new globalThis.URL(request.url).searchParams.get("page"));
+      pages.push(page);
+      const items = Array.from({ length: page === 1 ? 100 : 1 }, (_, index) => ({ id: `role-${(page - 1) * 100 + index}` }));
+      return HttpResponse.json({ data: { items, page, page_size: 100, total: 101, total_pages: 2 } });
+    }));
+    const roles = await adminApi.roleOptions();
+    expect(pages).toEqual([1, 2]);
+    expect(roles).toHaveLength(101);
+    expect(roles[100]?.id).toBe("role-100");
+  });
+
+  it("rejects incomplete role options when a later page fails", async () => {
+    server.use(http.get("http://localhost:3000/api/v1/admin/roles", ({ request }) =>
+      new globalThis.URL(request.url).searchParams.get("page") === "1"
+        ? HttpResponse.json({ data: { items: [{ id: "first" }], page: 1, page_size: 100, total: 101, total_pages: 2 } })
+        : HttpResponse.json({ code: "SERVICE_UNAVAILABLE" }, { status: 503 })));
+    await expect(adminApi.roleOptions()).rejects.toMatchObject({ status: 503 });
+  });
 
   it("sends uploads and uncovered bulk lifecycle requests", async () => {
     const bodies: Record<string, unknown> = {};

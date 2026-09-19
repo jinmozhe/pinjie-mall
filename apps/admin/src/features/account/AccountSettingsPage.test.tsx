@@ -106,6 +106,28 @@ describe("AccountSettingsPage", () => {
     });
   });
 
+  it("blocks profile submission during upload and allows retry after upload failure", async () => {
+    let rejectUpload: (error: Error) => void = () => { throw new Error("Upload not started"); };
+    vi.spyOn(adminApi, "uploadAsset").mockImplementation(() => new Promise((_, reject) => { rejectUpload = reject; }));
+    const save = vi.spyOn(adminApi, "updateProfile").mockRejectedValue(new Error("保留资料"));
+    const user = userEvent.setup();
+    const { container } = renderAccountSettingsPage();
+    const input = container.querySelector<globalThis.HTMLInputElement>('input[type="file"]');
+    if (!input) throw new Error("Missing upload input");
+    await user.upload(input, new globalThis.File(["png"], "avatar.png", { type: "image/png" }));
+    expect(screen.getByRole("button", { name: "更新基本信息" })).toBeDisabled();
+    const form = input.closest("form");
+    if (!form) throw new Error("Missing profile form");
+    fireEvent.submit(form);
+    await screen.findByText("头像正在上传，请完成后再保存");
+    expect(save).not.toHaveBeenCalled();
+    rejectUpload(new Error("上传失败"));
+    await screen.findByText("上传失败");
+    await waitFor(() => expect(screen.getByRole("button", { name: "更新基本信息" })).toBeEnabled());
+    await user.click(screen.getByRole("button", { name: "更新基本信息" }));
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+  });
+
   it("switches to security tab and renders password form and security metadata", async () => {
     renderAccountSettingsPage(mockAdmin);
     fireEvent.click(screen.getByText("安全设置"));

@@ -1,6 +1,6 @@
 import type { AdminRead, AdminSiteSettingRead } from "@pinjie/api-client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ConfigProvider, message } from "antd";
 import zhCN from "antd/locale/zh_CN";
@@ -43,10 +43,9 @@ const siteSetting: AdminSiteSettingRead = {
 const ok = <T,>(data: T) =>
   HttpResponse.json({ code: "OK", message: "操作成功", data, request_id: "test-request" });
 
-function renderSettingsPage(principal: AdminRead = admin) {
-  const client = new QueryClient({
+function renderSettingsPage(principal: AdminRead = admin, client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
+  })) {
   return render(
     <ConfigProvider locale={zhCN}>
       <QueryClientProvider client={client}>
@@ -60,6 +59,60 @@ function renderSettingsPage(principal: AdminRead = admin) {
 
 describe("SettingsPage", () => {
   afterEach(() => vi.restoreAllMocks());
+
+  it.each([false, true])("keeps the site draft revision after background refresh, including logo write: %s", async (writeLogo) => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    let latest = siteSetting;
+    const save = vi.spyOn(adminApi, "updateSiteSetting").mockRejectedValue(new Error("保留草稿"));
+    const upload = vi.spyOn(adminApi, "uploadSiteLogo").mockResolvedValue({ ...siteSetting, name: "远端名称", revision: 3 });
+    server.use(http.get("http://localhost:3000/api/v1/admin/settings/site", () => ok(latest)));
+    const user = userEvent.setup();
+    const { container } = renderSettingsPage(admin, client);
+    const name = await screen.findByLabelText("站点名称");
+    await user.clear(name);
+    await user.type(name, "本地草稿");
+    latest = { ...siteSetting, name: "远端名称", revision: 2 };
+    await act(async () => { await client.refetchQueries({ queryKey: ["settings", "site"] }); });
+    if (writeLogo) {
+      const input = container.querySelector<globalThis.HTMLInputElement>('input[type="file"]');
+      if (!input) throw new Error("Missing upload input");
+      await user.upload(input, new globalThis.File(["logo"], "logo.png", { type: "image/png" }));
+      await waitFor(() => expect(upload).toHaveBeenCalledWith(expect.any(globalThis.File), 2));
+      await waitFor(() => expect(screen.getByRole("button", { name: /保存设置/ })).toBeEnabled());
+    }
+    expect(name).toHaveValue("本地草稿");
+    await user.click(screen.getByRole("button", { name: /保存设置/ }));
+    await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({ name: "本地草稿", revision: 1 })));
+  });
+
+  it("advances the draft revision for its own logo update without losing text", async () => {
+    const save = vi.spyOn(adminApi, "updateSiteSetting").mockRejectedValue(new Error("保留草稿"));
+    vi.spyOn(adminApi, "uploadSiteLogo").mockResolvedValue({ ...siteSetting, revision: 2 });
+    server.use(http.get("http://localhost:3000/api/v1/admin/settings/site", () => ok(siteSetting)));
+    const user = userEvent.setup();
+    const { container } = renderSettingsPage();
+    fireEvent.change(await screen.findByLabelText("站点名称"), { target: { value: "本地草稿" } });
+    const input = container.querySelector<globalThis.HTMLInputElement>('input[type="file"]');
+    if (!input) throw new Error("Missing upload input");
+    await user.upload(input, new globalThis.File(["logo"], "logo.png", { type: "image/png" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /保存设置/ })).toBeEnabled());
+    await user.click(screen.getByRole("button", { name: /保存设置/ }));
+    await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({ name: "本地草稿", revision: 2 })));
+  });
+
+  it("keeps the registration draft revision after background refresh", async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+    let revision = 1;
+    const save = vi.spyOn(adminApi, "updateRegistrationSetting").mockRejectedValue(new Error("保留草稿"));
+    server.use(http.get("http://localhost:3000/api/v1/admin/settings/registration", () => ok({ enabled: false, revision, updated_at: now, updated_by: null })));
+    const user = userEvent.setup();
+    renderSettingsPage({ ...admin, is_superuser: false, permissions: ["settings:registration:read", "settings:registration:update"] }, client);
+    await user.click(await screen.findByRole("switch", { name: "开放用户注册" }));
+    revision = 2;
+    await act(async () => { await client.refetchQueries({ queryKey: ["settings", "registration"] }); });
+    await user.click(screen.getByRole("button", { name: /保存设置/ }));
+    await waitFor(() => expect(save).toHaveBeenCalledWith({ enabled: true, revision: 1 }));
+  });
 
   it("loads and saves site settings with the current revision", async () => {
     let payload: unknown;

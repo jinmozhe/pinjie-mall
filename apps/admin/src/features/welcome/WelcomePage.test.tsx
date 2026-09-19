@@ -44,13 +44,13 @@ function renderWelcomePage(principal: AdminRead = mockAdmin) {
 describe("WelcomePage", () => {
   it("renders welcome banner with current admin display name", () => {
     renderWelcomePage(mockAdmin);
-    expect(screen.getByText("欢迎使用 Pinjie Console")).toBeInTheDocument();
+    expect(screen.getByText("欢迎使用 Pinjie Mall 管理后台")).toBeInTheDocument();
     expect(screen.getByText("您好，欢迎管理员！")).toBeInTheDocument();
-    expect(screen.getByText("全栈母版架构特性")).toBeInTheDocument();
+    expect(screen.getByText("管理后台基础能力")).toBeInTheDocument();
     expect(screen.getByText("高性能后端")).toBeInTheDocument();
     expect(screen.getByText("安全与会话隔离")).toBeInTheDocument();
     expect(screen.getByText("现代化管理控制台")).toBeInTheDocument();
-    expect(screen.getByText("Next.js 用户端")).toBeInTheDocument();
+    expect(screen.getByText("微信小程序端")).toBeInTheDocument();
   });
 
   it("handles navigation clicks to workspace features", () => {
