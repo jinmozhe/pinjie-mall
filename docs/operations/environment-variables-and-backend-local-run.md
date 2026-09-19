@@ -49,7 +49,7 @@ docker compose -f compose.yml up -d redis
 uv sync --locked
 uv run alembic upgrade head
 uv run python -m scripts.sync_permissions --check
-uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
+uv run uvicorn app.main:app --host 127.0.0.1 --port 18168
 ```
 
 在仓库根目录启动 Admin：
@@ -58,7 +58,7 @@ uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
 pnpm --filter @pinjie/admin dev
 ```
 
-Admin 默认使用 3001。启动后检查 `http://127.0.0.1:8000/health/live` 与 `http://127.0.0.1:8000/health/ready`。实际数据库升级和权限写入会改变本地数据库，只在确认目标环境后执行。
+Admin 默认使用 3001。启动后检查 `http://127.0.0.1:18168/health/live` 与 `http://127.0.0.1:18168/health/ready`。实际数据库升级和权限写入会改变本地数据库，只在确认目标环境后执行。
 
 ## 5. 生产配置
 

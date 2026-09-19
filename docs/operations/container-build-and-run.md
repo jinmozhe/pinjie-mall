@@ -46,6 +46,6 @@ docker compose --env-file .env -f compose.prod.yml up -d --wait
 docker compose --env-file .env -f compose.prod.yml ps
 ```
 
-Backend 仅绑定 `127.0.0.1:8000`，Admin 仅绑定 `127.0.0.1:3001`，由 1Panel OpenResty 处理公网入口。PostgreSQL 和 Redis 使用外部 `1panel-network`；Backend 和请求日志消费者可以接入该网络，Admin 不得直接接入。
+Backend 仅绑定 `127.0.0.1:18168`，Admin 仅绑定 `127.0.0.1:3001`，由 1Panel OpenResty 处理公网入口。PostgreSQL 和 Redis 使用外部 `1panel-network`；Backend 和请求日志消费者可以接入该网络，Admin 不得直接接入。
 
 生产迁移、权限同步、镜像发布、部署和回滚均需单独授权。部署后核对 Backend 健康端点、Admin `/healthz`、运行镜像完整 digest 和 OpenResty 路由。

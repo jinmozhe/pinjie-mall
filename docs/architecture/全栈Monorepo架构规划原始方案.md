@@ -341,7 +341,7 @@
 
 项目的 `docker-compose.yml` 仅包含 `backend`、`admin` 与 `frontend` 三个应用容器：
 
-- **容器端口映射**：全部限制在本地环回口，例如 `127.0.0.1:8000`（后端 API）、`127.0.0.1:8001`（后台前端）、`127.0.0.1:8002`（展示端前端），严禁将端口直接暴露到公网 0.0.0.0。
+- **容器端口映射**：全部限制在本地环回口，例如 `127.0.0.1:18168`（后端 API）、`127.0.0.1:3001`（管理后台），严禁将端口直接暴露到公网 0.0.0.0。
 - **环境隔离**：生产环境变量（`POSTGRES_PASSWORD`、`SECRET_KEY` 等）通过 1Panel 的容器 / Compose 环境变量管理功能动态注入，绝不随代码入库。
 
 ### 5.2 1Panel OpenResty 网关代理与标头配置
@@ -349,7 +349,7 @@
 在 1Panel 站点的反向代理配置中，针对各服务配置如下代理规则：
 
 ```nginx
-# 示例：针对 api.yourdomain.com 反向代理到 http://127.0.0.1:8000
+# 示例：针对 api.yourdomain.com 反向代理到 http://127.0.0.1:18168
 proxy_set_header Host $host;
 proxy_set_header X-Real-IP $remote_addr;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -363,7 +363,7 @@ proxy_set_header X-Forwarded-Proto $scheme;
 后端容器启动命令配置为在 Python Web 服务启动前先升级表结构：
 
 ```bash
-uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips="*"
+uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 18168 --proxy-headers --forwarded-allow-ips="*"
 ```
 
 保证了代码发布后，数据库表结构会自动跟进最新迁移，无需手动介入操作。

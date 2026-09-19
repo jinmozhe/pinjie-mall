@@ -124,7 +124,7 @@ docker compose --env-file .env -f compose.prod.yml --profile request-logs up -d 
 | 入口 | 上游 |
 | --- | --- |
 | Admin | `http://127.0.0.1:3001` |
-| 独立 Backend 域名需要时 | `http://127.0.0.1:8000` |
+| 独立 Backend 域名需要时 | `http://127.0.0.1:18168` |
 
 转发时保留 `Host`、`X-Real-IP`、`X-Forwarded-For` 和 `X-Forwarded-Proto`。Backend 只信任 `TRUSTED_PROXY_CIDRS` 中明确登记的代理地址，禁止用全网段或通配值绕过来源校验。
 

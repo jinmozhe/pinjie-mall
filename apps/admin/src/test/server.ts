@@ -69,7 +69,7 @@ export const handlers = [
   http.get("http://localhost:3000/api/v1/system/status", () =>
     HttpResponse.json({ code: "OK", message: "操作成功", data: { status: "available" }, request_id: "test-request" }),
   ),
-  http.get("http://localhost:8000/api/v1/system/status", () =>
+  http.get("http://localhost:18168/api/v1/system/status", () =>
     HttpResponse.json({ code: "OK", message: "操作成功", data: { status: "available" }, request_id: "test-request" }),
   ),
   http.get("http://localhost:3001/api/v1/system/status", () =>

@@ -57,7 +57,7 @@ Windows 环境下，Playwright CLI 包装器可能因依赖 bash 不可用，可
 1. Docker Desktop Linux engine 已启动。
 2. 本机 PostgreSQL 已启动，且使用独立 `_test` 数据库。
 3. Redis 容器已启动并可通过 `redis-cli ping` 返回 `PONG`。
-4. Backend 已完成迁移并监听 `8000`。
+4. Backend 已完成迁移并监听 `18168`。
 
 Admin 默认只自动执行 typecheck 和 lint。Vitest、production build、局部浏览器冒烟和完整跨栈验证都需要用户在当前任务中明确授权；缺少完整环境时必须列出未执行项，不能用 MSW 或假数据替代真实 Backend、PostgreSQL 和 Redis 的跨栈测试。
 

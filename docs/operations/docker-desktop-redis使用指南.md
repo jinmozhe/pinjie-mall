@@ -13,7 +13,7 @@
 
 ```text
 Windows 本机开发拓扑
-├── Backend：uv + CPython 3.14 + FastAPI（端口 8000）
+├── Backend：uv + CPython 3.14 + FastAPI（端口 18168）
 ├── Admin：pnpm + Umi Max + React 19 + Ant Design 6（端口 3001）
 ├── Web：pnpm + Next.js 15（端口 3000）
 ├── PostgreSQL：Windows 本机服务（端口 5432）

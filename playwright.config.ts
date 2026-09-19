@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const backendURL = process.env.E2E_BACKEND_URL ?? "http://127.0.0.1:8000";
+const backendURL = process.env.E2E_BACKEND_URL ?? "http://127.0.0.1:18168";
 const e2eProfile = process.env.E2E_PROFILE ?? "full";
 const reuseExistingServer = false;
 

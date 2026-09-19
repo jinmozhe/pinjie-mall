@@ -153,7 +153,7 @@ uv 自动完成：
 
 ```powershell
 # 启动开发服务器
-uv run uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 18168
 
 # 执行数据库迁移
 uv run alembic upgrade head
@@ -283,7 +283,7 @@ CI 必须显式安装 `pyproject.toml` 要求的 uv `0.11.32` 和标准 CPython 
 | 操作 | 命令 | 执行目录 |
 | --- | --- | --- |
 | 初始化环境 | `uv sync` | `apps/backend/` |
-| 启动开发服务器 | `uv run uvicorn app.main:app --reload --port 8000` | `apps/backend/` |
+| 启动开发服务器 | `uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 18168` | `apps/backend/` |
 | 数据库迁移 | `uv run alembic upgrade head` | `apps/backend/` |
 | 生成迁移文件 | `uv run alembic revision --autogenerate -m "描述"` | `apps/backend/` |
 | 运行测试（需用户明确授权） | `uv run pytest` | `apps/backend/` |

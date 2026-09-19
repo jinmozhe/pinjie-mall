@@ -6,7 +6,7 @@ services:
   backend:
     image: ${BACKEND_IMAGE}
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:18168:18168"
     env_file:
       - apps/backend/.env
     environment:
@@ -25,7 +25,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2)",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18168/health/ready', timeout=2)",
         ]
       interval: 10s
       timeout: 3s
