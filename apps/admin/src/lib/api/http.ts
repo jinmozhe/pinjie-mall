@@ -18,6 +18,7 @@ export class ApiError extends Error {
     message: string,
     public readonly requestId?: string,
     public readonly retryAfter?: string,
+    public readonly source: "request" | "refresh" = "request",
   ) {
     super(message);
     this.name = "ApiError";
@@ -57,7 +58,7 @@ function readCookie(name: string): string | undefined {
   return item ? decodeURIComponent(item.slice(prefix.length)) : undefined;
 }
 
-async function parseError(response: Response): Promise<ApiError> {
+async function parseError(response: Response, source: ApiError["source"] = "request"): Promise<ApiError> {
   let body: ApiErrorBody = {};
   try {
     body = (await response.json()) as ApiErrorBody;
@@ -70,6 +71,7 @@ async function parseError(response: Response): Promise<ApiError> {
     body.message ?? "请求未完成，请稍后重试",
     body.request_id,
     response.headers.get("retry-after") ?? undefined,
+    source,
   );
 }
 
@@ -82,7 +84,7 @@ async function refreshSession(): Promise<void> {
         credentials: "include",
         headers: csrf ? { "X-CSRF-Token": csrf } : undefined,
       });
-      if (!response.ok) throw await parseError(response);
+      if (!response.ok) throw await parseError(response, "refresh");
     })().finally(() => {
       refreshPromise = null;
     });
