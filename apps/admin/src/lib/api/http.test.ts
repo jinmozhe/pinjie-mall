@@ -73,7 +73,7 @@ describe("admin HTTP authentication boundary", () => {
     );
 
     await expect(apiRequest("/api/v1/admin/auth/me")).rejects.toEqual(
-      new ApiError(401, "AUTH_SESSION_REVOKED", "会话已撤销", "refresh-request"),
+      new ApiError(401, "AUTH_SESSION_REVOKED", "会话已撤销", "refresh-request", undefined, "refresh"),
     );
   });
 
@@ -111,7 +111,7 @@ describe("admin HTTP authentication boundary", () => {
         HttpResponse.json({ code, message: "稍后重试", request_id: "refresh-request" }, { status, headers: { "Retry-After": "5" } }),
       ),
     );
-    await expect(apiRequest("/api/v1/admin/auth/me")).rejects.toMatchObject({ status, code, requestId: "refresh-request", retryAfter: "5" });
+    await expect(apiRequest("/api/v1/admin/auth/me")).rejects.toMatchObject({ status, code, requestId: "refresh-request", retryAfter: "5", source: "refresh" });
     expect(protectedCalls).toBe(1);
     expect(expired).not.toHaveBeenCalled();
   });
@@ -147,6 +147,7 @@ describe("admin HTTP authentication boundary", () => {
     await expect(apiRequest("/api/v1/admin/permissions", {}, { retryAuth: false })).rejects.toMatchObject({
       status: 503,
       code: "REQUEST_FAILED",
+      source: "request",
       message: "请求未完成，请稍后重试",
       retryAfter: "5",
     });

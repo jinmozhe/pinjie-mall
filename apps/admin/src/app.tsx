@@ -22,7 +22,7 @@ import defaultSettings from "../config/defaultSettings";
 import { AdminAvatar } from "./components/AdminAvatar";
 import { AdminContext } from "./features/auth/auth-context";
 import { adminApi } from "./lib/api/admin";
-import { errorMessage, isSessionError, setSessionExpiredHandler } from "./lib/api/http";
+import { ApiError, errorMessage, isSessionError, setSessionExpiredHandler } from "./lib/api/http";
 import logoSvg from "./assets/logo.svg";
 import "./styles.css";
 
@@ -60,6 +60,14 @@ export async function getInitialState(): Promise<AdminInitialState> {
     authenticated = true;
     return { currentAdmin, settings };
   } catch (error) {
+    if (error instanceof ApiError && error.source === "refresh"
+      && error.status === 503 && error.code === "SERVICE_UNAVAILABLE") {
+      const { pathname, search, hash } = history.location;
+      history.replace(`/login?redirect=${encodeURIComponent(pathname + search + hash)}`, {
+        authRecoveryError: { message: error.message, requestId: error.requestId },
+      });
+      return { settings };
+    }
     if (isSessionError(error)) {
       const { pathname, search, hash } = history.location;
       history.replace(

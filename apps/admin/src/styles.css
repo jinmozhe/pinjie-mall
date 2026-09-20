@@ -528,6 +528,7 @@ textarea {
 
 .login-alert {
   margin-bottom: 20px;
+  overflow-wrap: anywhere;
 }
 
 .login-main .ant-form-item {

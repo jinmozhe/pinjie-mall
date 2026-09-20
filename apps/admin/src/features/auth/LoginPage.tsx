@@ -13,6 +13,16 @@ import { errorMessage } from "@/lib/api/http";
 
 type LoginValues = { username: string; password: string };
 
+function getRecoveryError(state: unknown): { message: string; requestId?: string } | undefined {
+  if (!state || typeof state !== "object" || !("authRecoveryError" in state)) return;
+  const error = state.authRecoveryError;
+  if (!error || typeof error !== "object" || !("message" in error) || typeof error.message !== "string") return;
+  return {
+    message: error.message,
+    requestId: "requestId" in error && typeof error.requestId === "string" ? error.requestId : undefined,
+  };
+}
+
 function getSafeRedirectTarget(): string {
   if (typeof window === "undefined") return "/welcome";
   const params = new URLSearchParams(window.location.search);
@@ -31,6 +41,7 @@ export function LoginPage({
   authenticated?: boolean;
 }) {
   const queryClient = useQueryClient();
+  const recoveryError = getRecoveryError(history.location.state);
 
   useEffect(() => {
     if (authenticated) {
@@ -68,6 +79,24 @@ export function LoginPage({
           </header>
 
           <div className="login-main">
+            {recoveryError && !login.isError && (
+              <Alert
+                className="login-alert"
+                title="登录状态恢复失败，请稍后重试"
+                description={
+                  <>
+                    <div>{recoveryError.message}</div>
+                    <div>错误：503 / SERVICE_UNAVAILABLE</div>
+                    {recoveryError.requestId && <div>请求编号：{recoveryError.requestId}</div>}
+                    {process.env.NODE_ENV === "development" && (
+                      <div>本地开发请检查 Redis 是否启动；服务恢复后可重新登录。</div>
+                    )}
+                  </>
+                }
+                showIcon
+                type="warning"
+              />
+            )}
             {login.isError && (
               <Alert
                 className="login-alert"
