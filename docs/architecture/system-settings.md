@@ -4,6 +4,8 @@
 
 系统设置提供跨业务可复用的运行时配置。第一阶段包含：
 
+本页描述现行实现。目标新增 miniapp_registration、order_shipping 与 commission_control 固定分组，字段、初始化及失败语义见[全域数据库字典](database-schema-guide.md)。当前尚无这些分组的迁移/接口；不得由运行时自动补行。下述 Web 消费机制仅保留历史说明，Web 已永久冻结，不得恢复运行。
+
 - `site`：Web 站点名称、LOGO、标题、关键词和描述。
 - `registration`：Web 是否允许公开注册。
 
