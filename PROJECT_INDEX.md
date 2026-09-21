@@ -19,6 +19,7 @@
 | 项目身份与阶段导航 | [PROJECT_INDEX.md](PROJECT_INDEX.md) | 项目身份、当前阶段、活动计划和权威入口 |
 | 详细实现状态 | 实际源码、配置、迁移、生成契约与对应架构文档 | 判断具体能力、接口和运行机制是否已经实现 |
 | 产品需求基线 | [docs/PROJECT_REQUIREMENTS.md](docs/PROJECT_REQUIREMENTS.md) | 商城目标用户、能力、非目标和验收边界 |
+| 全域目标数据库字典 | [docs/architecture/database-schema-guide.md](docs/architecture/database-schema-guide.md) | 长期目标物理模型、字段约束、配置、事务与迁移差异；现有代码尚未迁移 |
 | 小程序详细需求 | [docs/MINIAPP_PRD.md](docs/MINIAPP_PRD.md) | 小程序用户流程、交付分组与专项验收；不代表工程已启动 |
 | 小程序工程设计 | [docs/architecture/miniapp-architecture.md](docs/architecture/miniapp-architecture.md) | 待实施的目录、分层、调用链与状态归属 |
 | 计划规则 | [plans/README.md](plans/README.md) | 计划创建、格式、状态、完成和保护规则 |
@@ -33,4 +34,4 @@
 
 ## 活动计划
 
-当前没有活动实施计划；最近完成的 [Admin 启动认证故障跳转计划](plans/2026-09-20_Admin启动认证故障跳转计划.md) 已实现仅启动恢复的 Refresh 服务不可用时跳登录及安全诊断提示，Admin 轻量门禁通过，动态验证未执行。小程序工程留待后续专项实施，已结束计划继续保留在[计划永久登记](plans/INDEX.md)。
+当前没有活动实施计划；最近完成的[全域数据库字典整合计划](plans/2026-09-21_全域数据库字典整合计划.md)已建立 67 表长期目标字典并同步需求，当前源码与数据库尚未迁移。小程序工程留待后续专项实施，已结束计划继续保留在[计划永久登记](plans/INDEX.md)。

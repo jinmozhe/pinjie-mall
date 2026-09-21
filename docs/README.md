@@ -59,6 +59,8 @@
 | [file-asset-storage.md](architecture/file-asset-storage.md)                     | 统一文件资产的存储端口、上传安全、双域鉴权、去重、删除补偿和生产卷边界                   |
 | [system-settings.md](architecture/system-settings.md)                           | 系统设置的数据模型、强类型接口、注册 Fail Closed、配置媒体恢复及三端消费边界             |
 | [全栈Monorepo架构规划原始方案.md](architecture/全栈Monorepo架构规划原始方案.md) | 从 pinjie-standard 迁移的完整原始规划方案，包含技术选型对比、电商领域设计、1Panel 部署规范 |
+| [database-schema-guide.md](architecture/database-schema-guide.md) | 长期全域目标数据库字典：15 个文档分组、67 张表设计及固定配置分组，含字段约束、预算分佣、事务恢复、验收与现行 44 表迁移差异 |
+| [pinjie_mall_database_dictionary_v3.0.html](architecture/pinjie_mall_database_dictionary_v3.0.html) | 既有 v3.0 交互参考快照，尚未同步本次新目标及预算政策；开发以 database-schema-guide.md 为准 |
 
 ---
 
