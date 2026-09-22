@@ -22,6 +22,8 @@ from app.db.models import (
     OrderEvent,
     OrderItem,
     Product,
+    ProductPurchaseLimit,
+    ProductPurchaseRecord,
     ProductSku,
     User,
     WalletAccount,
@@ -75,8 +77,11 @@ async def commerce_database():
                     id=sku_id,
                     product_id=product_id,
                     code=f"BOUNDARY-{sku_id.hex}",
+                    sku_no=0,
+                    specification_key="default",
                     specifications={},
                     price=Decimal("1.00"),
+                    wholesale_prices=[],
                     weight_grams=0,
                     is_active=True,
                 )
@@ -97,6 +102,10 @@ async def commerce_database():
                 await session.execute(delete(InventoryReservation).where(InventoryReservation.order_id.in_(order_ids)))
                 await session.execute(delete(OrderEvent).where(OrderEvent.order_id.in_(order_ids)))
                 await session.execute(delete(OrderItem).where(OrderItem.order_id.in_(order_ids)))
+                await session.execute(
+                    delete(ProductPurchaseRecord).where(ProductPurchaseRecord.order_id.in_(order_ids))
+                )
+                await session.execute(delete(ProductPurchaseLimit).where(ProductPurchaseLimit.product_id == product_id))
                 await session.execute(delete(Order).where(Order.user_id.in_(users)))
                 await session.execute(delete(WalletAccount).where(WalletAccount.user_id.in_(users)))
                 await session.execute(delete(MemberProfile).where(MemberProfile.user_id.in_(users)))

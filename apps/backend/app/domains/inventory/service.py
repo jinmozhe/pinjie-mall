@@ -1,6 +1,10 @@
+import hashlib
+import json
 from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
@@ -17,6 +21,10 @@ class InventoryService:
     def __init__(self, repository: InventoryRepository) -> None:
         self.repository = repository
 
+    @classmethod
+    def for_session(cls, session: AsyncSession) -> "InventoryService":
+        return cls(InventoryRepository(session))
+
     async def initialize(self, sku_id: UUID) -> None:
         await self.repository.save(InventoryAccount(sku_id=sku_id, available=0, reserved=0, revision=1))
 
@@ -31,13 +39,13 @@ class InventoryService:
         if account is None:
             raise AppException(status_code=404, code=ErrorCode.INVENTORY_NOT_FOUND, message="库存账户不存在")
         previous = await self.repository.movement(sku_id, data.request_id)
+        request_hash = hashlib.sha256(
+            json.dumps(
+                {**data.model_dump(mode="json"), "actor_id": str(actor_id)}, sort_keys=True, separators=(",", ":")
+            ).encode()
+        ).hexdigest()
         if previous is not None:
-            if (previous.quantity_delta, previous.expected_revision, previous.reason, previous.actor_id) != (
-                data.quantity_delta,
-                data.revision,
-                data.reason,
-                actor_id,
-            ):
+            if previous.request_hash != request_hash or previous.source_type != "manual_adjustment":
                 raise AppException(
                     status_code=409, code=ErrorCode.INVENTORY_IDEMPOTENCY_CONFLICT, message="请求号已用于其他调整"
                 )
@@ -55,6 +63,10 @@ class InventoryService:
             sku_id=sku_id,
             request_id=data.request_id,
             actor_id=actor_id,
+            actor_type="admin",
+            source_type="manual_adjustment",
+            source_id=None,
+            request_hash=request_hash,
             quantity_delta=data.quantity_delta,
             before_available=account.available,
             after_available=after,
@@ -111,7 +123,12 @@ class InventoryService:
                 )
 
     async def transition_reservations(
-        self, order_id: UUID, quantities: dict[UUID, int], status: Literal["confirmed", "released"]
+        self,
+        order_id: UUID,
+        quantities: dict[UUID, int],
+        status: Literal["confirmed", "released"],
+        *,
+        archived_sku_ids: set[UUID],
     ) -> None:
         reservations = await self.repository.reservations(order_id)
         if not quantities or {item.sku_id: item.quantity for item in reservations} != quantities:
@@ -138,6 +155,91 @@ class InventoryService:
             reservation.revision += 1
             await self.repository.save(reservation)
             await self._reservation_event(reservation, account, before_available, before_reserved)
+            if status == "released" and account.sku_id in archived_sku_ids:
+                await self.archive_available(account.sku_id, reservation.id)
+
+    async def archive_available(self, sku_id: UUID, source_id: UUID) -> None:
+        account = await self.repository.get(sku_id, lock=True)
+        if account is None:
+            raise AppException(status_code=409, code=ErrorCode.INVENTORY_NOT_FOUND, message="归档 SKU 缺少库存账户")
+        if account.available == 0:
+            return
+        quantity = account.available
+        digest = hashlib.sha256(f"sku_archive:{sku_id}:{source_id}:{account.revision}:{quantity}".encode()).hexdigest()
+        movement = InventoryMovement(
+            sku_id=sku_id,
+            request_id=new_uuid7(),
+            actor_type="system",
+            actor_id=None,
+            source_type="sku_archive",
+            source_id=source_id,
+            request_hash=digest,
+            quantity_delta=-quantity,
+            before_available=quantity,
+            after_available=0,
+            expected_revision=account.revision,
+            resulting_revision=account.revision + 1,
+            reason="归档货品可用库存清退",
+        )
+        account.available = 0
+        account.revision += 1
+        await self.repository.save(movement)
+
+    async def restock_from_refund_in_open_transaction(
+        self, lines: list[tuple[UUID, UUID, int]], *, archived_sku_ids: set[UUID]
+    ) -> None:
+        """Return each whole-order refund line to its original SKU exactly once."""
+        if not lines:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款缺少原订单明细")
+        if len({refund_item_id for refund_item_id, _, _ in lines}) != len(lines):
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款库存回补来源重复")
+        accounts = {
+            row.sku_id: row for row in await self.repository.accounts(sorted({sku_id for _, sku_id, _ in lines}))
+        }
+        if len(accounts) != len({sku_id for _, sku_id, _ in lines}):
+            raise AppException(status_code=409, code=ErrorCode.INVENTORY_NOT_FOUND, message="原 SKU 库存账户不存在")
+        for refund_item_id, sku_id, quantity in sorted(lines, key=lambda item: item[1].hex):
+            if not 1 <= quantity <= 999:
+                raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款库存回补数量异常")
+            account = accounts[sku_id]
+            existing = await self.repository.movement(sku_id, refund_item_id)
+            request_hash = hashlib.sha256(f"refund-restock:{refund_item_id}:{sku_id}:{quantity}".encode()).hexdigest()
+            if existing is not None:
+                if (
+                    existing.source_type != "refund_unshipped"
+                    or existing.source_id != refund_item_id
+                    or existing.quantity_delta != quantity
+                    or existing.request_hash != request_hash
+                ):
+                    raise AppException(
+                        status_code=409,
+                        code=ErrorCode.INVENTORY_IDEMPOTENCY_CONFLICT,
+                        message="退款库存回补幂等来源冲突",
+                    )
+                continue
+            before_available = account.available
+            account.available += quantity
+            account.revision += 1
+            await self.repository.save(
+                InventoryMovement(
+                    id=new_uuid7(),
+                    sku_id=sku_id,
+                    request_id=refund_item_id,
+                    actor_id=None,
+                    actor_type="system",
+                    source_type="refund_unshipped",
+                    source_id=refund_item_id,
+                    request_hash=request_hash,
+                    quantity_delta=quantity,
+                    before_available=before_available,
+                    after_available=account.available,
+                    expected_revision=account.revision - 1,
+                    resulting_revision=account.revision,
+                    reason="未发货或未交付整单退款库存回补",
+                )
+            )
+            if sku_id in archived_sku_ids:
+                await self.archive_available(sku_id, refund_item_id)
 
     async def _reservation_event(
         self, reservation: InventoryReservation, account: InventoryAccount, before_available: int, before_reserved: int

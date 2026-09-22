@@ -93,7 +93,9 @@ class UserAccountService:
         login_session: UserSession,
         payload: PasswordChangeIn,
     ) -> SessionArtifacts:
-        if not await self.password_manager.verify(payload.current_password, user.password_hash):
+        if user.password_hash is None or not await self.password_manager.verify(
+            payload.current_password, user.password_hash
+        ):
             raise AppException(
                 status_code=401,
                 code=ErrorCode.AUTH_INVALID_CREDENTIALS,
@@ -112,7 +114,9 @@ class UserAccountService:
                     code=ErrorCode.AUTH_SESSION_REVOKED,
                     message="身份认证会话已失效",
                 )
-            if not await self.password_manager.verify(payload.current_password, locked.password_hash):
+            if locked.password_hash is None or not await self.password_manager.verify(
+                payload.current_password, locked.password_hash
+            ):
                 raise AppException(
                     status_code=401,
                     code=ErrorCode.AUTH_INVALID_CREDENTIALS,
@@ -187,7 +191,9 @@ class UserAccountService:
             await self.sessions.revoke_web_for_user(user_id, reason="user_revoked_others", except_id=current_session_id)
 
     async def delete_account(self, *, user: User, payload: AccountDeleteIn) -> None:
-        if not await self.password_manager.verify(payload.current_password, user.password_hash):
+        if user.password_hash is None or not await self.password_manager.verify(
+            payload.current_password, user.password_hash
+        ):
             raise AppException(
                 status_code=401,
                 code=ErrorCode.AUTH_INVALID_CREDENTIALS,

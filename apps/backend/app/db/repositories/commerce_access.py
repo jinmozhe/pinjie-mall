@@ -4,7 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.asset import Asset
-from app.db.models.identity import Admin, User
+from app.db.models.catalog import Brand
+from app.db.models.identity import Admin, AdminSession, User
 from app.db.models.product import ProductImage
 from app.db.repositories.identity import AdminRepository
 
@@ -15,6 +16,16 @@ class CommerceAccessRepository:
 
     async def get_admin_for_update(self, actor_id: UUID) -> Admin | None:
         return await AdminRepository(self.session).get(actor_id, for_update=True)
+
+    async def get_admin_session_for_update(self, session_id: UUID) -> AdminSession | None:
+        return (
+            await self.session.scalars(
+                select(AdminSession)
+                .where(AdminSession.id == session_id)
+                .with_for_update()
+                .execution_options(populate_existing=True)
+            )
+        ).one_or_none()
 
     async def get_user_for_update(self, user_id: UUID) -> User | None:
         return (
@@ -45,3 +56,6 @@ class CommerceAccessRepository:
             await self.session.scalar(select(ProductImage.product_id).where(ProductImage.asset_id == asset_id).limit(1))
             is not None
         )
+
+    async def asset_is_brand_logo(self, asset_id: UUID) -> bool:
+        return await self.session.scalar(select(Brand.id).where(Brand.logo_asset_id == asset_id).limit(1)) is not None

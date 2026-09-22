@@ -7,8 +7,10 @@ from sqlalchemy.orm import aliased
 from app.db.models.asset import Asset
 from app.db.models.product import Category, Product, ProductImage, ProductSku
 
+from .catalog_repository import CatalogRepository
 
-class ProductRepository:
+
+class ProductRepository(CatalogRepository):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 

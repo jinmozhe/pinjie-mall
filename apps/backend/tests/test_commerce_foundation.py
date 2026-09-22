@@ -12,11 +12,20 @@ from app.core.exceptions import AppException
 from app.db.models.address import UserAddress
 from app.db.models.identity import Admin, Permission, Role
 from app.db.models.inventory import InventoryAccount, InventoryMovement
+from app.db.models.reservation import InventoryReservation
 from app.domains.addresses.schemas import AddressInput, AddressUpdate
 from app.domains.addresses.service import AddressService
 from app.domains.inventory.schemas import InventoryAdjustment, adjusted_available
 from app.domains.inventory.service import InventoryService
-from app.domains.products.schemas import CategoryInput, ProductCreate, SkuInput, validate_category_tree
+from app.domains.products.catalog_schemas import (
+    AdoptionInput,
+    AttributeValidation,
+    CandidateInput,
+    NewSkuInput,
+    SpecificationSet,
+    WholesalePrice,
+)
+from app.domains.products.schemas import CategoryInput, ProductCreate, PublicSkuRead, validate_category_tree
 from app.domains.shipping.schemas import FreightQuoteInput, ShippingRegion, ShippingTemplateInput, calculate_freight
 from app.services.commerce import CommerceService
 
@@ -89,15 +98,54 @@ def test_category_move_checks_descendants_and_cycles() -> None:
         validate_category_tree({child: root})
 
 
-def test_duplicate_sku_specs_cannot_create_two_default_variants() -> None:
-    first = SkuInput(code="DEFAULT-1", price=Decimal("1.00"), weight_grams=100)
+def test_default_sku_set_rejects_duplicate_default() -> None:
+    first = NewSkuInput(code="DEFAULT-1", price=Decimal("1.00"), weight_grams=100)
     with pytest.raises(ValidationError, match="规格组合"):
+        SpecificationSet(
+            category_revision=1,
+            skus=[first, first.model_copy(update={"code": "DEFAULT-2"})],
+        )
+
+
+def test_sku_combination_uses_candidate_identity_and_rejects_duplicates() -> None:
+    color = AdoptionInput(
+        key="color",
+        name="颜色",
+        value_type="select",
+        validation=AttributeValidation(),
+        is_variant=True,
+        candidates=[CandidateInput(key="red", display_value="红色")],
+    )
+    sku = NewSkuInput(code="RED-1", price=Decimal("1.00"), selections={"color": "red"})
+    with pytest.raises(ValidationError, match="规格组合"):
+        SpecificationSet(category_revision=1, attributes=[color], skus=[sku, sku.model_copy(update={"code": "RED-2"})])
+
+
+def test_product_rejects_legacy_shipping_template_and_public_sku_hides_cost() -> None:
+    sku = NewSkuInput(code="DEFAULT-1", price=Decimal("10.00"), cost_price=Decimal("2.00"))
+    with pytest.raises(ValidationError):
         ProductCreate(
             name="商品",
             product_type="physical",
             category_id=uuid7(),
-            skus=[first, first.model_copy(update={"code": "DEFAULT-2"})],
+            category_revision=1,
+            skus=[sku],
+            shipping_template_id=uuid7(),
         )
+    public = PublicSkuRead.model_validate(
+        {
+            "id": uuid7(),
+            "code": sku.code,
+            "sku_no": 0,
+            "specifications": {},
+            "price": sku.price,
+            "market_price": sku.market_price,
+            "wholesale_prices": [WholesalePrice(min_quantity=2, unit_price=Decimal("9.00"))],
+            "weight_grams": None,
+            "is_active": True,
+        }
+    )
+    assert "cost_price" not in public.model_dump()
 
 
 @pytest.mark.parametrize(("available", "delta"), [(0, -1), (10, -11), (2147483647, 1)])
@@ -124,6 +172,23 @@ class MemoryInventory:
             value.id = uuid7()
             value.created_at = datetime.now(UTC)
             self.movements[value.request_id] = value
+
+
+class ArchiveInventory(MemoryInventory):
+    def __init__(self) -> None:
+        super().__init__()
+        self.account.available, self.account.reserved = 90, 10
+        self.reservation = InventoryReservation(
+            id=uuid7(), order_id=uuid7(), sku_id=self.sku_id, quantity=10, status="reserved", revision=1
+        )
+
+    async def reservations(self, order_id: UUID) -> list[InventoryReservation]:
+        assert order_id == self.reservation.order_id
+        return [self.reservation]
+
+    async def accounts(self, sku_ids: list[UUID]) -> list[InventoryAccount]:
+        assert sku_ids == [self.sku_id]
+        return [self.account]
 
 
 @pytest.mark.asyncio
@@ -158,6 +223,23 @@ async def test_stock_rejects_stale_revision_and_insufficient_quantity_before_mut
     assert insufficient.value.code == "INVENTORY_QUANTITY_REJECTED"
     assert repository.account.available == 10
     assert not repository.movements
+
+
+@pytest.mark.asyncio
+async def test_archived_sku_clears_available_then_released_reservation() -> None:
+    repository = ArchiveInventory()
+    service = InventoryService(repository)
+    await service.archive_available(repository.sku_id, repository.reservation.id)
+    assert (repository.account.available, repository.account.reserved) == (0, 10)
+    await service.transition_reservations(
+        repository.reservation.order_id,
+        {repository.sku_id: 10},
+        "released",
+        archived_sku_ids={repository.sku_id},
+    )
+    assert (repository.account.available, repository.account.reserved) == (0, 0)
+    assert repository.reservation.status == "released"
+    assert len(repository.movements) == 2
 
 
 def test_freight_overflow_is_rejected_before_response_serialization() -> None:

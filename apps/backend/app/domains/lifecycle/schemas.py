@@ -48,7 +48,7 @@ class VerifiedRefundConfirmation(BaseModel):
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    refund_request_id: UUID
+    refund_attempt_id: UUID
     channel: PaymentChannel
     payment_transaction_id: str = Field(min_length=1, max_length=160)
     amount: Decimal = Field(gt=0, max_digits=15, decimal_places=2)
@@ -95,18 +95,10 @@ class ReceiptConfirm(BaseModel):
     revision: int = Field(gt=0)
 
 
-class RefundLine(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    order_item_id: UUID
-    quantity: int = Field(ge=1, le=999)
-
-
 class RefundRequestCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     request_id: UUID
-    items: list[RefundLine] = Field(min_length=1, max_length=50)
     reason: str = Field(min_length=1, max_length=300)
 
 
@@ -116,14 +108,32 @@ class RefundRequestRead(BaseModel):
     id: UUID
     order_id: UUID
     status: str
+    review_mode: str
+    items_amount: Decimal
+    freight_amount: Decimal
     amount: Decimal
     currency: str
     reason: str
     review_note: str | None
     created_at: datetime
     reviewed_at: datetime | None
-    confirmed_at: datetime | None
+    completed_at: datetime | None
     revision: int
+
+
+class RefundAttemptRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    refund_request_id: UUID | None
+    merchant_refund_reference: str
+    channel: PaymentChannel
+    amount: Decimal
+    currency: str
+    status: str
+    channel_refund_id: str | None
+    confirmed_at: datetime | None
+    created_at: datetime
 
 
 class RefundReview(BaseModel):
@@ -154,6 +164,7 @@ class ReconciliationRecordCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     channel: PaymentChannel
+    record_type: Literal["payment", "refund", "withdrawal"]
     channel_transaction_id: str = Field(min_length=1, max_length=160)
     source_reference: str = Field(min_length=1, max_length=160)
     source_hash: str = Field(min_length=64, max_length=64)
@@ -174,4 +185,7 @@ class ReconciliationRecordRead(BaseModel):
     occurred_at: datetime
     status: str
     payment_attempt_id: UUID | None
+    refund_attempt_id: UUID | None
+    withdrawal_request_id: UUID | None
+    resolution_status: str
     note: str | None

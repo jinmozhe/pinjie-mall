@@ -1,6 +1,6 @@
 # Pinjie Mall 终极全域数据库字典
 
-> 文档状态：长期目标设计基线，现有实现待迁移；更新日期：2026-09-21。
+> 文档状态：长期目标设计基线，后端目标模型已迁移并完成本机动态验证；更新日期：2026-09-23。
 >
 > 适用范围：15 个文档业务分组，67 张具名物理表设计，包含共用配置表、存量运费表和后续规划表。
 >
@@ -13,10 +13,10 @@
 | 覆盖层级 | 本次核对结论 | 可以据此作出的判断 |
 | --- | --- | --- |
 | 两份原稿表名 | 第 4 章各有 65 张实体，共用 `system_settings` 另计，合计 66 张 | 原“50 张”统计错误；模块 06 实为 7 张、模块 15 实为 11 张；配置行不可重复计表 |
-| 本版目标表名 | 原有 66 张全部保留，补齐小程序身份映射 `user_external_identities`，合计 67 张 | 61 张目标运行表、1 张存量运费表、5 张后续资格/积分规划表 |
-| 当前仓库表名 | ORM 共 44 张，本版均有字典条目 | 当前 ORM 表名登记覆盖 44/44；仅证明无表名遗漏 |
-| 字段与约束 | 第 4 章补齐目标字段；现行差异见第 13 章 | 当前模型、目标模型不同，不能宣称现行物理结构 100% 一致 |
-| 运行数据库 | 本次未连接实例、未执行迁移和 schema diff | 不能宣称运行数据库 100% 物理覆盖或迁移通过 |
+| 本版目标表名 | 原有 66 张全部保留，补齐小程序身份映射 `user_external_identities`，合计 67 张 | 66 张目标运行表与 1 张存量运费表 |
+| 当前仓库表名 | ORM 共 67 张，本版均有字典条目 | 23 张目标新增运行表均已进入源码与 `20260922_01` 至 `20260922_06` 的 Alembic 图 |
+| 字段与约束 | 23 张目标新增表及相应既有表改造已有 Model 和迁移；其余现行差异见第 13 章 | 静态清单与迁移图不代表实际数据库结构、并发行为或完整业务验收已经一致 |
+| 运行数据库 | 本机 `pinjie_mall_dev` 和隔离 `_test` 数据库均已升级至 `20260922_07` | 已完成空库、重复升级、恢复演练、`alembic check` 与目标表核对；不代表生产环境或真实外部渠道已经验证 |
 | 项目闭环 | 数据设计覆盖主要正向、逆向与恢复路径，目标源码、渠道、小程序尚未交付 | 整个项目尚未实现端到端闭环，数据字典本身不能代替验收证据 |
 
 15 个分组用于查阅，不等同于 15 个已实现的后端领域。新增领域继续遵守[模块边界](module-boundaries.md)。每张表的实现标记区分“现有表”“目标新增”“后续规划”；“现有表”不代表字段与本版完全一致。
@@ -105,7 +105,7 @@ erDiagram
     USERS ||--o{ USER_ADDRESSES : "地址簿"
     USERS ||--o| MEMBER_PROFILES : "会员及推荐关系"
     USERS ||--o{ MEMBER_PROFILES : "直接推荐人"
-    SPEC_ATTRIBUTES ||--o{ PRODUCT_SPEC_ATTRIBUTES : "版本采用"
+    SPEC_ATTRIBUTES |o--o{ PRODUCT_SPEC_ATTRIBUTES : "公用属性采用(商品独有属性可空)"
     PRODUCT_SPEC_VALUES ||--o{ PRODUCT_SKU_SPEC_VALUES : "组合取值"
     PRODUCT_SPEC_ATTRIBUTES ||--o| PRODUCT_ATTRIBUTE_VALUES : "非变体描述"
     INVENTORY_RESERVATIONS ||--o{ INVENTORY_RESERVATION_EVENTS : "占用事件"
@@ -142,10 +142,10 @@ erDiagram
 | 03 | 审计事件与链路日志 | 3 | `security_login_events`, `audit_events`, `request_logs` | 运行基座 |
 | 04 | 统一文件与媒体资产 | 2 | `assets`, `product_images` | 运行基座 |
 | 05 | 商品、品牌与基础分类 | 4 | `product_categories`, `brands`, `products`, `product_skus` | 核心业务 |
-| 06 | 规格属性库与分类模板 | 7 | `spec_attributes`, `spec_attribute_values`, `category_spec_attributes`, `product_spec_attributes`, `product_spec_values`, `product_sku_spec_values`, `product_attribute_values` | 目标新增 |
+| 06 | 规格属性库与分类模板 | 7 | `spec_attributes`, `spec_attribute_values`, `category_spec_attributes`, `product_spec_attributes`, `product_spec_values`, `product_sku_spec_values`, `product_attribute_values` | 商品首期已实现 |
 | 07 | 全局系统设置与平台运费 | 1 | `system_settings`（复用固定分组） | 现有物理表，新增目标分组 |
 | 08 | 会员等级与统一会员价格 | 3 | `member_levels`, `member_profiles`, `member_price_rules` | 核心业务 |
-| 09 | 分销政策与多级分佣矩阵 | 3 | `commission_policies`, `commission_amount_rules`, `commission_distribution_rules`；复用 07 的 `commission_control` 分组 | 目标新增 |
+| 09 | 分销政策与多级分佣矩阵 | 3 | `commission_policies`, `commission_amount_rules`, `commission_distribution_rules`；复用 07 的 `commission_control` 分组 | 阶段 3 后端已实现 |
 | 10 | 独立库存与购物车 | 5 | `inventory_accounts`, `inventory_movements`, `inventory_reservations`, `inventory_reservation_events`, `cart_items` | 核心业务 |
 | 11 | 收货地址与交易订单 | 4 | `user_addresses`, `orders`, `order_items`, `order_events` | 核心业务 |
 | 12 | 支付确认与履约交付 | 4 | `payment_attempts`, `payment_events`, `fulfillments`, `fulfillment_events` | 核心业务 |
@@ -233,7 +233,7 @@ erDiagram
 
 #### 4.01.4 小程序外部身份映射表 `user_external_identities`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：阶段 2 已定义 Model 与 Alembic revision `20260922_02`，已完成本机开发与隔离测试库升级；小程序渠道接入尚未实施。
 
 用途：将微信可信返回的 OpenID 绑定到既有 `users.id`，补齐 MP-AUTH-001 的物理身份入口。此表目标新增，不表示小程序登录已实现。
 
@@ -512,7 +512,7 @@ erDiagram
 
 #### 4.05.2 品牌表 `brands`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：商品首期已实现，见 `catalog.py` 与 revision `20260922_01`。
 
 用途：独立品牌资料实体，供商品按需关联。
 
@@ -583,7 +583,7 @@ erDiagram
 
 #### 4.06.1 规格/描述属性定义表 `spec_attributes`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：商品首期已实现，见 `catalog.py` 与 revision `20260922_01`。
 
 用途：全平台公共属性定义池，同时承载销售变体规格与展示描述参数。
 
@@ -603,7 +603,7 @@ erDiagram
 
 #### 4.06.2 属性标准值字典表 `spec_attribute_values`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：商品首期已实现，见 `catalog.py` 与 revision `20260922_01`。
 
 用途：枚举型属性的标准候选值库。
 
@@ -621,7 +621,7 @@ erDiagram
 
 #### 4.06.3 分类属性模板绑定表 `category_spec_attributes`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：商品首期已实现，见 `catalog.py` 与 revision `20260922_01`。
 
 用途：建立分类推荐属性模板，区分变体属性与展示属性。
 
@@ -638,66 +638,75 @@ erDiagram
 
 #### 4.06.4 商品采用属性版本表 `product_spec_attributes`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：商品首期已实现，见 `catalog.py` 与 revision `20260922_01`。
 
-用途：商品冻结采用属性定义，防止平台属性字典更名破坏历史商品资料。
+用途：商品冻结采用属性定义，防止平台属性字典更名破坏历史商品资料；同时支持商品自建独有规格属性，无需预先录入平台公共字典。
 
 | 字段名 | 数据类型 | 可空 | 默认值/生成方式 | 业务含义与约束规则 |
 | --- | --- | --- | --- | --- |
 | `id` | UUID | 否 | 应用生成 UUID v7 | 采用记录主键 |
 | `product_id` | UUID | 否 | 所属商品 | 外键，关联 `products.id` |
-| `attribute_id` | UUID | 否 | 采用属性 | 外键，关联 `spec_attributes.id` |
+| `attribute_id` | UUID | 是 | 采用公用属性或 NULL | 外键，关联 `spec_attributes.id`；商品自建独有规格属性时为 NULL |
 | `adoption_version` | INTEGER | 否 | 1 | 商品采用版本号 |
-| `name_snapshot` | VARCHAR(100) | 否 | 冻结复制 | 采用时的属性名称快照 |
-| `value_type_snapshot` | VARCHAR(16) | 否 | 冻结复制 | 采用时的 text/number/select/multi_select 类型 |
+| `name_snapshot` | VARCHAR(100) | 否 | 冻结复制或自建输入 | 采用时的属性名称快照；自建独有属性时为运营输入的规格属性名 |
+| `value_type_snapshot` | VARCHAR(16) | 否 | 冻结复制或指定 | 采用时的 text/number/select/multi_select 类型；变体规格默认为 select |
 | `unit_snapshot` | VARCHAR(32) | 是 | 冻结复制或 NULL | 采用时的计量单位 |
-| `validation_snapshot` | JSONB | 否 | 冻结复制 | 采用时类型验证对象 |
-| `source_category_id` | UUID | 否 | 采用来源 | 外键 `product_categories.id`，RESTRICT |
-| `source_category_revision` | INTEGER | 否 | 冻结复制 | 来源分类及模板版本 |
-| `source_attribute_revision` | INTEGER | 否 | 冻结复制 | 来源公共属性版本 |
-| `is_required` | BOOLEAN | 否 | 冻结复制 | 该版本必填规则 |
-| `allow_custom_value` | BOOLEAN | 否 | 冻结复制 | 销售规格是否允许局部候选值；描述枚举禁止局部自定义 |
-| `is_variant` | BOOLEAN | 否 | 复制模板配置 | 是否作为变体规格 |
+| `validation_snapshot` | JSONB | 否 | 冻结复制或默认 | 采用时类型验证对象 |
+| `source_category_id` | UUID | 是 | 采用来源或 NULL | 外键 `product_categories.id`，RESTRICT；自建属性或未绑定分类时为 NULL |
+| `source_category_revision` | INTEGER | 是 | NULL | 来源分类及模板版本；自建属性为 NULL |
+| `source_attribute_revision` | INTEGER | 是 | NULL | 来源公共属性版本；自建属性为 NULL |
+| `is_required` | BOOLEAN | 否 | 复制或默认 | 该版本必填规则 |
+| `allow_custom_value` | BOOLEAN | 否 | 复制或 true | 销售规格是否允许局部候选值；自建属性默认允许自由录入候选值 |
+| `is_variant` | BOOLEAN | 否 | 复制模板或指定 | 是否作为变体规格 |
 | `is_current` | BOOLEAN | 否 | true | 是否为当前生效采用记录 |
 | `created_at` | TIMESTAMPTZ | 否 | 应用当前 UTC 时间 | 采用时间，内容写后冻结 |
 
+- 约束：
+  - 检查约束保证属性来源明确：`attribute_id IS NOT NULL OR (source_category_id IS NULL AND name_snapshot IS NOT NULL)`。
+  - 部分唯一约束：`UNIQUE(product_id, attribute_id) WHERE is_current AND attribute_id IS NOT NULL` 保证同商品下当前公用属性唯一。
+  - 部分唯一约束：`UNIQUE(product_id, name_snapshot) WHERE is_current` 保证同商品下生效属性展示名称全局唯一，避免重名歧义。
+
 #### 4.06.5 商品规格候选值表 `product_spec_values`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：商品首期已实现，见 `catalog.py` 与 revision `20260922_01`。
 
-用途：记录商品在某个采用属性下选中的候选值集合。
+用途：记录商品在某个采用属性下选中的候选值集合（支持公用标准值与商品独有自定义值）。
 
 | 字段名 | 数据类型 | 可空 | 默认值/生成方式 | 业务含义与约束规则 |
 | --- | --- | --- | --- | --- |
 | `id` | UUID | 否 | 应用生成 UUID v7 | 主键 |
 | `adoption_id` | UUID | 否 | 对应采用记录 | 外键，关联 `product_spec_attributes.id` |
 | `product_id` | UUID | 否 | 所属商品 | 外键，关联 `products.id` |
-| `attribute_id` | UUID | 否 | 对应属性 | 外键，关联 `spec_attributes.id` |
-| `value_id` | UUID | 是 | 枚举关联 | 关联标准值 `spec_attribute_values.id`，自定义录入时为 NULL |
-| `display_value` | VARCHAR(100) | 否 | 复制或手填 | 候选值展示文本快照 |
-| `normalized_value` | VARCHAR(100) | 否 | 服务端 NFC 及去首尾空白 | 同采用下局部自定义值的去重键，标准值也生成用于展示校验 |
+| `attribute_id` | UUID | 是 | NULL | 对应平台公用属性，自建独有属性时为 NULL；外键关联 `spec_attributes.id` |
+| `value_id` | UUID | 是 | 枚举关联或 NULL | 关联标准值 `spec_attribute_values.id`；商品自建独有值或独有属性时为 NULL |
+| `display_value` | VARCHAR(100) | 否 | 复制或手填 | 候选值展示文本快照（如“红色”、“特大号”、“自选刻字”） |
+| `normalized_value` | VARCHAR(100) | 否 | 服务端 NFC 及去首尾空白 | 同采用下候选值去重键，防止同属性下录入重复候选值 |
 | `is_current` | BOOLEAN | 否 | true | 是否为当前在用候选值 |
 | `created_at` | TIMESTAMPTZ | 否 | 应用当前 UTC 时间 | 候选值创建时间 |
 
+- 约束：
+  - 部分唯一约束：`UNIQUE(adoption_id, value_id) WHERE is_current AND value_id IS NOT NULL`。
+  - 部分唯一约束：`UNIQUE(adoption_id, normalized_value) WHERE is_current AND value_id IS NULL`。
+
 #### 4.06.6 SKU 规格组合身份表 `product_sku_spec_values`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：商品首期已实现，见 `catalog.py` 与 revision `20260922_01`。
 
-用途：多对多映射关系，记录每个实际 SKU 是由哪些具体的属性值组合而成。
+用途：多对多映射关系，记录每个实际 SKU 是由哪些具体的属性值组合而成（支持公用属性与商品独有属性）。
 
 | 字段名 | 数据类型 | 可空 | 默认值/生成方式 | 业务含义与约束规则 |
 | --- | --- | --- | --- | --- |
 | `product_id` | UUID | 否 | 所属商品 | 外键，关联 `products.id` |
 | `sku_id` | UUID | 否 | 对应 SKU | 外键，关联 `product_skus.id` |
-| `adoption_id` | UUID | 否 | 采用版本 | 外键，关联 `product_spec_attributes.id` |
-| `attribute_id` | UUID | 否 | 规格维度 | 外键，关联 `spec_attributes.id` |
+| `adoption_id` | UUID | 否 | 采用版本 | 属性维度标识，外键关联 `product_spec_attributes.id` |
+| `attribute_id` | UUID | 是 | NULL | 冗余公用属性 ID，自建独有属性为 NULL；外键关联 `spec_attributes.id` |
 | `spec_value_id` | UUID | 否 | 所选候选值 | 外键，关联 `product_spec_values.id` |
 
-- 约束：复合主键 `(sku_id, attribute_id)`。
+- 约束：复合主键 `(sku_id, adoption_id)`。每个实际 SKU 在每个生效的采用属性维度（无论是公用属性还是商品独有属性）下必须且只能对应一个候选值。
 
 #### 4.06.7 商品描述参数值表 `product_attribute_values`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：商品首期已实现，见 `catalog.py` 与 revision `20260922_01`。
 
 用途：存放商品的非变体描述参数（产地、面料、风格等），不参与 SKU 笛卡尔积生成。
 
@@ -705,14 +714,14 @@ erDiagram
 | --- | --- | --- | --- | --- |
 | `adoption_id` | UUID | 否 | 采用版本 | 主键，外键 `product_spec_attributes.id`，每采用版本一份描述值 |
 | `product_id` | UUID | 否 | 所属商品 | 外键，关联 `products.id` |
-| `attribute_id` | UUID | 否 | 对应属性 | 外键，关联 `spec_attributes.id` |
+| `attribute_id` | UUID | 是 | NULL | 对应平台公用属性，商品独有描述属性为 NULL；外键关联 `spec_attributes.id` |
 | `value` | JSONB | 否 | 格式化存入 | 根据类型分别存放纯文本字符串、数值、或单选项/多选项 ID 数组 |
 | `schema_version` | INTEGER | 否 | 1 | value/display_snapshot 编码版本，当前为 1；与采用版本分别管理 |
 | `display_snapshot` | JSONB | 否 | 服务端生成 | 枚举值的文本快照，用于商品详情前台直接展示 |
 | `created_at` | TIMESTAMPTZ | 否 | 应用当前 UTC 时间 | 创建时间 |
 | `updated_at` | TIMESTAMPTZ | 否 | 系统写入 | 最近更新时间 |
 
-- 约束：主键 `adoption_id`；复合外键 `(adoption_id, product_id, attribute_id)` 指向同一采用记录。仅非变体采用允许描述值，历史值随采用版本保留。
+- 约束：主键 `adoption_id`；复合外键 `(adoption_id, product_id)` 指向同一采用记录。仅非变体采用允许描述值，历史值随采用版本保留。
 
 ---
 
@@ -763,7 +772,7 @@ erDiagram
 
 #### 4.08.1 会员等级表 `member_levels`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：阶段 2 已定义 Model 与 Alembic revision `20260922_02`，已完成本机开发与隔离测试库升级。
 
 用途：定义会员身份等级。支持等级空表，未配置等级不阻碍系统正常运行。
 
@@ -801,7 +810,7 @@ erDiagram
 
 #### 4.08.3 统一会员价格规则表 `member_price_rules`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：阶段 2 已定义 Model 与 Alembic revision `20260922_02`，已完成本机开发与隔离测试库升级。
 
 用途：单表统一维护 SKU 级、商品级、分类级的会员一口价与会员折扣，消除多头配置。
 
@@ -837,7 +846,7 @@ erDiagram
 
 #### 4.09.2 平台佣金政策主表 `commission_policies`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：阶段 3 已定义 Model 与 Alembic revision `20260922_03`，已完成本机开发与隔离测试库升级。
 
 用途：分销政策版本头表。政策发布后内容不可变，新订单引用当前 `active` 政策，历史订单保留旧版本引用。
 
@@ -862,7 +871,7 @@ erDiagram
 
 #### 4.09.3 商品/SKU 佣金来源规则表 `commission_amount_rules`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：阶段 3 已定义 Model 与 Alembic revision `20260922_03`，已完成本机开发与隔离测试库升级。
 
 用途：定义单件商品或特定 SKU 的佣金计算来源基数 S。
 
@@ -880,7 +889,7 @@ erDiagram
 
 #### 4.09.4 精确会员分佣矩阵表 `commission_distribution_rules`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：阶段 3 已定义 Model 与 Alembic revision `20260922_03`，已完成本机开发与隔离测试库升级。
 
 用途：三级分销核心分配矩阵，同时精准匹配买家等级、上级距离与受益人等级。
 
@@ -1273,7 +1282,7 @@ erDiagram
 
 #### 4.13.3 退款资金执行表 `refund_attempts`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：阶段 5 已定义 Model 与 Alembic revision `20260922_05`，已完成本机开发与隔离测试库升级。
 
 用途：跟踪调用微信/支付宝官方退款接口的资金执行进度。
 
@@ -1434,16 +1443,16 @@ erDiagram
 | `request_hash` | VARCHAR(64) | 否 | 规范化请求摘要 | 包含收款目标与金额，同键不同内容冲突 |
 | `currency` | VARCHAR(3) | 否 | `CNY` | 提现币种 |
 | `merchant_reference` | VARCHAR(80) | 否 | 服务端生成 | 唯一商户打款号，网络重试和查单均复用 |
-| `channel` | VARCHAR(16) | 否 | 请求时固定 | 受控提现适配器代码，未接入时不可开放申请 |
-| `channel_context` | JSONB | 否 | 固化非秘密配置 | 商户/应用身份及配置版本，不含私钥、账户密码 |
+| `channel` | VARCHAR(16) | 否 | 请求时固定 | 当前固定为 `manual` 人工流程；未来受控提现适配器代码另行接入 |
+| `channel_context` | JSONB | 否 | 固化非秘密配置 | 人工流程写无外部商户身份的版本化空上下文；未来渠道固化商户/应用身份及配置版本，不含私钥、账户密码 |
 | `amount` | NUMERIC(15,2) | 否 | 用户填写 | 提现申请金额（大于 0） |
 | `status` | VARCHAR(16) | 否 | `requested` | 状态：`requested`, `approved`, `rejected`, `processing`, `unknown`, `succeeded`；unknown 保持冻结 |
 | `destination_reference`| VARCHAR(180)| 否 | 用户提交 | 脱敏的提现收款卡号/账号引用，不存明文密码 |
 | `reviewed_by_id` | UUID | 是 | NULL | 审核管理员 ID |
 | `reviewed_at` | TIMESTAMPTZ | 是 | NULL | 审核操作时间点 |
 | `review_note` | VARCHAR(300) | 是 | NULL | 审核或终止原因，拒绝必填 |
-| `channel_reference` | VARCHAR(160) | 是 | NULL | 真实外部转账凭证号，按 channel 唯一，不能由管理员伪造资金成功 |
-| `confirmed_at` | TIMESTAMPTZ | 是 | NULL | 本地可信确认到账时间 |
+| `channel_reference` | VARCHAR(160) | 是 | NULL | 当前为管理员确认线下转账时填写的凭证或流水引用；未来外部渠道为真实转账凭证号，按 channel 唯一 |
+| `confirmed_at` | TIMESTAMPTZ | 是 | NULL | 管理员线下确认或未来可信渠道确认到账时间 |
 | `channel_paid_at` | TIMESTAMPTZ | 是 | NULL | 渠道实际打款成功时间 |
 | `payload_hash` | VARCHAR(64) | 是 | NULL | 最近可信资金确认的载荷摘要 |
 | `revision` | INTEGER | 否 | 1 | 版本号 |
@@ -1456,7 +1465,7 @@ erDiagram
 
 #### 4.15.1 用户商品累计限购表 `product_purchase_limits`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：阶段 4 已定义 Model 与 Alembic revision `20260922_04`，已完成本机开发与隔离测试库升级。
 
 用途：实现每用户对同一商品累计购买总件数的防超限控制（跨 SKU 合并计算）。
 
@@ -1499,7 +1508,7 @@ erDiagram
 
 #### 4.15.3 可靠持久化任务表 `durable_tasks`
 
-实现标记：目标新增，当前 Model/迁移尚未定义。
+实现标记：阶段 3 已定义 Model 与 Alembic revision `20260922_03`，已完成本机开发与隔离测试库升级。
 
 用途：在同一个数据库事务中沉淀异步事件，支持中断恢复与有限重试。
 
@@ -1596,9 +1605,9 @@ erDiagram
 | `created_at` | TIMESTAMPTZ | 否 | 应用当前 UTC 时间 | 创建时间 |
 | `updated_at` | TIMESTAMPTZ | 否 | 系统写入 | 最近更新时间 |
 
-#### 4.15.7 后续规划：会员等级条件表 `member_level_conditions`
+#### 4.15.7 会员等级条件表 `member_level_conditions`
 
-实现标记：后续规划，未有当前 Model/迁移，不纳入本期运行闭环。
+实现标记：目标新增，`20260922_06` 已有 Model 和迁移，并已完成本机开发与隔离测试库升级及动态验证。
 
 用途：后续专项规划，定义会员自动升级的消费门槛、邀请人数门槛等。
 
@@ -1619,9 +1628,9 @@ erDiagram
 
 - 约束：`UNIQUE(level_id, metric, aggregation)`。
 
-#### 4.15.8 后续规划：会员资格贡献事件表 `membership_qualification_events`
+#### 4.15.8 会员资格贡献事件表 `membership_qualification_events`
 
-实现标记：后续规划，未有当前 Model/迁移，不纳入本期运行闭环。
+实现标记：目标新增，`20260922_06` 已有 Model 和迁移，并已完成本机开发与隔离测试库升级及动态验证。
 
 用途：后续专项规划，按单笔消费或邀请行为记录可撤销的资格事实。
 
@@ -1643,9 +1652,9 @@ erDiagram
 
 - 约束：`UNIQUE(user_id, source_type, source_id, metric)`。
 
-#### 4.15.9 后续规划：会员等级变更历史表 `member_level_events`
+#### 4.15.9 会员等级变更历史表 `member_level_events`
 
-实现标记：后续规划，未有当前 Model/迁移，不纳入本期运行闭环。
+实现标记：目标新增，`20260922_06` 已有 Model 和迁移，并已完成本机开发与隔离测试库升级及动态验证。
 
 用途：后续专项规划，记录用户每次升降级的具体原因与条件快照。
 
@@ -1664,9 +1673,9 @@ erDiagram
 | `created_at` | TIMESTAMPTZ | 否 | 应用当前 UTC 时间 | 创建时间 |
 | `updated_at` | TIMESTAMPTZ | 否 | 系统写入 | 最近更新时间 |
 
-#### 4.15.10 后续规划：积分账户表 `points_accounts`
+#### 4.15.10 积分账户表 `points_accounts`
 
-实现标记：后续规划，未有当前 Model/迁移，不纳入本期运行闭环。
+实现标记：目标新增，`20260922_06` 已有 Model 和迁移，并已完成本机开发与隔离测试库升级及动态验证。
 
 用途：后续专项规划，管理用户积分余额。
 
@@ -1683,9 +1692,9 @@ erDiagram
 
 - 约束：`UNIQUE(user_id)`。
 
-#### 4.15.11 后续规划：积分变动流水表 `points_ledgers`
+#### 4.15.11 积分变动流水表 `points_ledgers`
 
-实现标记：后续规划，未有当前 Model/迁移，不纳入本期运行闭环。
+实现标记：目标新增，`20260922_06` 已有 Model 和迁移，并已完成本机开发与隔离测试库升级及动态验证。
 
 用途：后续专项规划，不可变的积分收支与冲销流水明细。
 
@@ -1731,10 +1740,10 @@ erDiagram
 | spec_attributes | U(code)；value_type 枚举；revision > 0；validation 对象；unit 仅 number 可非空 | (is_active,sort_order,id)；类型变更产生新采用版本 |
 | spec_attribute_values | U(attribute_id,code)、U(id,attribute_id)；FK 属性 RESTRICT；revision > 0 | (attribute_id,sort_order,id)；公共值停用影响新购买，历史快照不改 |
 | category_spec_attributes | PK(category_id,attribute_id)，双 FK RESTRICT | attribute_id；变体只允许 select 或经授权的局部候选；编辑递增分类 revision |
-| product_spec_attributes | U(product_id,attribute_id,adoption_version)、U(id,product_id,attribute_id)；部分 U(product_id,attribute_id) WHERE is_current | 来源分类/属性 FK RESTRICT；adoption_version > 0；冻结定义只切换 is_current |
-| product_spec_values | U(id,adoption_id,product_id,attribute_id)；复合 FK 到采用归属；(value_id,attribute_id) 到标准值归属；部分 U(adoption_id,value_id) WHERE value_id IS NOT NULL；部分 U(adoption_id,normalized_value) WHERE value_id IS NULL | adoption_id；标准值/自定义路径互斥，自定义须采用授权；父采用必须为变体 |
-| product_sku_spec_values | PK(sku_id,attribute_id)；(sku_id,product_id) 到 SKU 完整唯一键；四列 FK 到商品候选值完整唯一键 | spec_value_id、adoption_id；写入校验当前采用、每维恰一值、维度齐全 |
-| product_attribute_values | PK(adoption_id)；三列 FK 到采用完整唯一键；schema_version=1，value 按冻结类型验证 | (product_id,attribute_id)；每采用版本一份历史，禁止用旧复合主键覆盖多版本值 |
+| product_spec_attributes | 部分 U(product_id,attribute_id,adoption_version) WHERE attribute_id IS NOT NULL；部分 U(product_id,attribute_id) WHERE is_current AND attribute_id IS NOT NULL；部分 U(product_id,name_snapshot) WHERE is_current；CK 来源或自建名非空 | 来源分类/属性 FK RESTRICT（自建为 NULL）；adoption_version > 0；冻结定义只切换 is_current |
+| product_spec_values | U(id,adoption_id)；部分 U(adoption_id,value_id) WHERE value_id IS NOT NULL；部分 U(adoption_id,normalized_value) WHERE value_id IS NULL | adoption_id；标准值关联/商品独有输入，自建属性直接记录候选值；父采用必须为变体 |
+| product_sku_spec_values | PK(sku_id,adoption_id)；(sku_id,product_id) 到 SKU 完整唯一键；FK 到商品候选值；冗余 attribute_id 支持自建为 NULL | spec_value_id、adoption_id；写入校验当前采用、每维恰一值、维度齐全 |
+| product_attribute_values | PK(adoption_id)；FK 到采用记录；schema_version=1，value 按冻结类型验证；attribute_id 支持自建为 NULL | (product_id,attribute_id)；每采用版本一份历史，禁止用旧复合主键覆盖多版本值 |
 | system_settings | U(setting_group)、revision > 0、JSON object；updated_by FK SET NULL | 固定分组精确查找；不另造通用 key/value 或密钥表 |
 | member_levels | U(code)、U(level_rank)；rank > 0；discount_factor 0 至 1；revision > 0 | (is_active,sort_order,id)；允许空表，无虚构 standard 等级 |
 | member_profiles | U(user_id)、U(invitation_code)；FK user/level/inviter RESTRICT；禁止自邀；inviter_id 与 bound_at 同空同有 | (inviter_id,id)、level_id；图锁防并发环，绑定后不可重绑 |
@@ -1770,10 +1779,10 @@ erDiagram
 | product_reviews | U(user_id,order_item_id)；FK user/明细 RESTRICT；目标 (order_item_id,product_id) 复合 FK；rating 1 至 5 | (product_id,is_published,id)；已购且已交付，客户端不能决定 owner |
 | reconciliation_records | U(channel,record_type,channel_transaction_id)；原始金额正数、CNY；类型与匹配目标互斥；resolved 有操作者、意见及时间 | (occurred_at,id)、(resolution_status,id)；账单导入按完整摘要防重，处置仅加审计不伪造渠道成功 |
 | shipping_templates | 现有主键、类型、JSON 和 revision 约束保留 | 存量入口停止后只读，不作为目标新单来源，不自动 DROP |
-| member_level_conditions | U(level_id,metric,aggregation)；FK 等级；阈值随 consumption 或 invite_count/points 严格互斥 | (level_id,is_active,id)；后续规划，不启用自动资格 |
+| member_level_conditions | U(level_id,metric,aggregation)；FK 等级；阈值随 consumption 或 invite_count/points 严格互斥 | (level_id,is_active,id)；资格事件触发自动评估，条件修改不回写历史事件 |
 | membership_qualification_events | U(idempotency_key)、U(user_id,source_type,source_id,metric)；FK user/order/原冲销事件；金额或计数增量恰一非空且非零 | (user_id,metric,id)；只能冲销本人同指标原事件，累计不能超原额 |
 | member_level_events | U(idempotency_key)、U(user_id,profile_revision)；FK 用户、前后等级及人工操作者 | (user_id,id)；与档案 revision 同事务；条件快照不可变 |
-| points_accounts | U(user_id)、FK 用户；三项积分非负，revision > 0 | user_id；后续规划，积分不是人民币钱包 |
+| points_accounts | U(user_id)、FK 用户；三项积分非负，revision > 0 | user_id；积分不是人民币钱包 |
 | points_ledgers | U(idempotency_key)；FK 账户及原冲销流水；至少一个增量非零；冲销不得跨账户或超过原可冲销额 | (account_id,id)；只追加；到期批次、兑换及积分入金政策未启用，不用此表假装已有完整积分系统 |
 
 通用实施要求：
@@ -1848,7 +1857,7 @@ erDiagram
 | registration | 现有 | enabled | 严格布尔，原始密码注册开关；不自动作为小程序首次建号许可 |
 | miniapp_registration | 目标新增 | schema_version、enabled | schema_version=1，enabled=false；只控制首次建号，已绑定用户正常登录不被关停 |
 | order_shipping | 目标新增 | schema_version、region_level、default_rule、region_rules | 版本 1、省级；迁移显式配置，不能在缺行时默认包邮 |
-| commission_control | 目标新增 | schema_version、commissions_enabled | 版本 1，初始化 false；缺失/损坏拒绝完成新分佣决策，不默默跳过 |
+| commission_control | 阶段 3 后端已实现 | schema_version、commissions_enabled | 版本 1，初始化 false；缺失/损坏拒绝完成新分佣决策，不默默跳过 |
 
 site 的 name 为去空白后 1 至 100 字符，title 为 1 至 150，description 不超过 500；keywords 最多 20 个去空、NFC 归一且去重的字符串，每项不超过 64。logo 可为 JSON null；非空时完整包含 path、mime_type、file_size、sha256，沿用 [系统设置架构](system-settings.md) 的固定路径、2 MiB 与媒体校验。site/registration 现行 JSON 无 schema_version，本次保留，不能强套新版包装导致已有配置读取失败。
 
@@ -2100,9 +2109,9 @@ duplicate_payment/late_payment 的执行没有售后申请，只退相应异常�
 
 钱包账户从可追溯零余额或经审查迁移期初开始，所有变化递增 revision 并写唯一 ledger 和 balance_after。冻结佣金留在 commission_records，wallet_accounts.frozen_amount 仅表示提现占用。
 
-提现请求检查本人佣金钱包、正金额、余额与无欠款，available 减 q、frozen 加 q，与请求和审计同事务。requested → approved → processing/unknown → succeeded；requested 可 rejected，执行尚未发出且无欠款风险的 approved 可以受控撤销，写明确原因并解冻。未知或成功转账严禁直接释放；查询证实未支付且已可靠终止后，才可经审计拒绝并释放。
+提现请求检查本人佣金钱包、正金额、余额与无欠款，available 减 q、frozen 加 q，与请求和审计同事务。当前人工流程为 requested → approved → succeeded，requested 可 rejected；`approved` 只代表审核通过，管理员必须持有独立权限并填写线下付款凭证引用和说明，才能确认私下转账完成。未来渠道适配可扩展 approved → processing/unknown → succeeded；未知或成功转账严禁直接释放，查询证实未支付且已可靠终止后才可经审计拒绝并释放。
 
-释放先抵债：释放 q、当前 debt 为 d，则 frozen 减 q、debt 减 min(q,d)、available 增 q-min(q,d)。批准和开始执行均再查欠款；已有在途付款不能被当作未支付撤回。可信打款成功仅 frozen 减 q，不再扣一次 available。状态、支付凭证、账本与 audit_events 同事务保存；未接入真实打款渠道时不开放伪造成功操作。
+释放先抵债：释放 q、当前 debt 为 d，则 frozen 减 q、debt 减 min(q,d)、available 增 q-min(q,d)。批准和开始执行均再查欠款；已有在途付款不能被当作未支付撤回。人工确认线下付款或未来可信打款成功仅 frozen 减 q，不再扣一次 available。状态、付款凭证、账本与管理审计同事务保存；人工入口只接受 approved 状态且不能重复确认，不得直接修改钱包余额或表示第三方渠道回调。
 
 reconciliation_records 分收款、退款、提现三类，按各自渠道流水匹配金额、币种、业务身份与状态。人工只能记录处理原因、证据和责任人；resolved 与 matched 含义不同。发现真实资金差异，经可信确认入口修复业务事实，不改原账单或原流水“对平”。
 
@@ -2347,24 +2356,26 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 
 ### 13.1 当前源码及迁移盘点
 
-盘点基于 app/db/models 的显式列及继承字段，并检查 Alembic upgrade 中 op.create_table 和冻结 CREATE TABLE SQL；现行共 44 张，建表集合一致。此处为静态读取，不运行应用、不连接数据库，不证明所有后继 ALTER 与线上结构完全一致。Alembic 自身版本表 alembic_version 属于迁移工具元数据，不计入业务实体数。
+盘点基于 `app/db/models` 的显式列及继承字段，并检查 Alembic upgrade 中 `op.create_table` 和冻结 CREATE TABLE SQL；当前源码共 67 张。本机开发库 `pinjie_mall_dev` 和隔离 `_test` 库均已升级至 `20260922_07`，确认 23 张目标新增运行表存在，并完成空库、重复升级、恢复演练、`alembic check` 及动态业务测试。该事实不等价于生产环境或真实外部渠道已经验证。Alembic 自身版本表 `alembic_version` 属于迁移工具元数据，不计入业务实体数。
 
 | Model 源文件 | 表数 | 当前登记表 |
 | --- | --- | --- |
 | [address.py](../../apps/backend/app/db/models/address.py) | 1 | `user_addresses` |
 | [asset.py](../../apps/backend/app/db/models/asset.py) | 1 | `assets` |
 | [cart.py](../../apps/backend/app/db/models/cart.py) | 1 | `cart_items` |
-| [commerce_lifecycle.py](../../apps/backend/app/db/models/commerce_lifecycle.py) | 9 | `fulfillment_events`、`fulfillments`、`payment_attempts`、`payment_events`、`product_reviews`、`reconciliation_records`、`refund_events`、`refund_items`、`refund_requests` |
-| [distribution.py](../../apps/backend/app/db/models/distribution.py) | 6 | `commission_records`、`commission_recoveries`、`member_profiles`、`wallet_accounts`、`wallet_ledgers`、`withdrawal_requests` |
-| [identity.py](../../apps/backend/app/db/models/identity.py) | 13 | `admin_refresh_tokens`、`admin_roles`、`admin_sessions`、`admins`、`audit_events`、`permissions`、`request_logs`、`role_permissions`、`roles`、`security_login_events`、`user_refresh_tokens`、`user_sessions`、`users` |
+| [catalog.py](../../apps/backend/app/db/models/catalog.py) | 8 | `brands`、`category_spec_attributes`、`product_attribute_values`、`product_sku_spec_values`、`product_spec_attributes`、`product_spec_values`、`spec_attribute_values`、`spec_attributes` |
+| [commerce_lifecycle.py](../../apps/backend/app/db/models/commerce_lifecycle.py) | 10 | `fulfillment_events`、`fulfillments`、`payment_attempts`、`payment_events`、`product_reviews`、`reconciliation_records`、`refund_attempts`、`refund_events`、`refund_items`、`refund_requests` |
+| [distribution.py](../../apps/backend/app/db/models/distribution.py) | 17 | `commission_amount_rules`、`commission_distribution_rules`、`commission_policies`、`commission_records`、`commission_recoveries`、`durable_tasks`、`member_level_conditions`、`member_level_events`、`member_levels`、`member_price_rules`、`member_profiles`、`membership_qualification_events`、`points_accounts`、`points_ledgers`、`wallet_accounts`、`wallet_ledgers`、`withdrawal_requests` |
+| [identity.py](../../apps/backend/app/db/models/identity.py) | 14 | `admin_refresh_tokens`、`admin_roles`、`admin_sessions`、`admins`、`audit_events`、`permissions`、`request_logs`、`role_permissions`、`roles`、`security_login_events`、`user_external_identities`、`user_refresh_tokens`、`user_sessions`、`users` |
 | [inventory.py](../../apps/backend/app/db/models/inventory.py) | 2 | `inventory_accounts`、`inventory_movements` |
 | [order.py](../../apps/backend/app/db/models/order.py) | 3 | `order_events`、`order_items`、`orders` |
 | [product.py](../../apps/backend/app/db/models/product.py) | 4 | `product_categories`、`product_images`、`product_skus`、`products` |
+| [purchase.py](../../apps/backend/app/db/models/purchase.py) | 2 | `product_purchase_limits`、`product_purchase_records` |
 | [reservation.py](../../apps/backend/app/db/models/reservation.py) | 2 | `inventory_reservation_events`、`inventory_reservations` |
 | [shipping.py](../../apps/backend/app/db/models/shipping.py) | 1 | `shipping_templates` |
 | [system_setting.py](../../apps/backend/app/db/models/system_setting.py) | 1 | `system_settings` |
 
-目标新增运行表共 18 张：`brands`、`category_spec_attributes`、`commission_amount_rules`、`commission_distribution_rules`、`commission_policies`、`durable_tasks`、`member_levels`、`member_price_rules`、`product_attribute_values`、`product_purchase_limits`、`product_purchase_records`、`product_sku_spec_values`、`product_spec_attributes`、`product_spec_values`、`refund_attempts`、`spec_attribute_values`、`spec_attributes`、`user_external_identities`。后续规划 5 张：`member_level_conditions`、`membership_qualification_events`、`member_level_events`、`points_accounts`、`points_ledgers`。当前 44 张中 `shipping_templates` 单独列为存量，故目标运行范围为 44 − 1 + 18 = 61 张，总登记 61 + 1 + 5 = 67 张。
+目标新增运行表现为 23 张，均已有源码和迁移：此前 18 张，以及 `member_level_conditions`、`membership_qualification_events`、`member_level_events`、`points_accounts`、`points_ledgers`。当前 67 张中 `shipping_templates` 单独列为存量，故目标运行范围为 66 张，总登记为 67 张。
 
 ### 13.2 现行字段的保留、迁移与退役映射
 
@@ -2372,12 +2383,12 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 
 | 当前字段/机制 | 当前物理定义 | 目标处理 |
 | --- | --- | --- |
-| products.shipping_template_id | 可空 UUID FK shipping_templates.id，RESTRICT | 目标删除商品运费绑定；新单改读 order_shipping，存量模板及历史快照保留证据后受控退役 |
+| products.shipping_template_id | 本机开发库的 `20260922_01` 已删除该列 | 商品不再绑定运费模板；新订单使用平台统一运费配置，旧运费模板试算入口继续返回 `503 / COMMERCE_UPGRADE_REQUIRED` |
 | member_profiles.level_code | VARCHAR(32)，非空，standard | 新增可空 level_id 及等级快照；旧 standard 没有折扣权益，不伪造有效付费等级 |
 | orders.payment_reference | 可空 VARCHAR(167)，唯一，当前 paid 必填 | 改为 accepted_payment_attempt_id/zero_confirmation_id；只按唯一可信支付映射，歧义终止，不猜关联 |
 | orders.shipping_snapshot | JSONB 数组且 CHECK array | 新单用带 schema_version 的对象；旧快照按真实旧算法转为明确历史结构或受控归档，不能直接覆写金额 |
-| refunds 资金字段仍合在申请 | refund_requests.channel VARCHAR(16)、channel_refund_id VARCHAR(160)、confirmed_at TIMESTAMPTZ，均可空 | 迁到 refund_attempts 资金事实；申请只表达审核及整单完成，保留可信原流水 |
-| refund_requests.status/amount | VARCHAR(16)，含 processing/succeeded/unknown；amount > 0 | 新申请 VARCHAR(24) 审核状态，零额可用；渠道状态迁执行表，历史部分退不伪装整单 |
+| refunds 资金字段 | `20260922_05` 将退款渠道、渠道退款号及可信确认从申请迁至 `refund_attempts` | 申请只表达审核及整单完成；迁移检测到旧退款或对账事实时明确失败，要求经授权的历史方案或本地开发库重置 |
+| refund_requests.status/amount | `20260922_05` 使用 requested/approved/rejected/completed、商品金额、运费和整单金额 | 零额整单售后内部完成，正额渠道状态仅由执行表表达 |
 | users.password_hash 与 C 端会话 | 密码非空；browser_cookie/pinjie-web；csrf_digest 非空 | 新身份与可空密码、独立 miniapp_bearer；旧会话明确撤销/退役，不把 Cookie 当 Bearer |
 | commission_records 粒度 | U(order_id,level)，仅 1/2 级，base_amount 为整单基数，rate NUMERIC(5,4) | 新权益按明细/层级、政策和 S 预算；历史整单佣金不能无依据拆成多行 |
 | order_items.product_id/sku_id | UUID 快照引用，当前无实体 FK | 目标复合归属 FK；先核验存量可关联性，不能因为同名列写了“外键”就声称已生效 |
@@ -2385,9 +2396,9 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 | asset 系统主体去重 | 可空 uploader_id 的普通唯一约束 | 目标补系统主体部分唯一，先核验已有重复，不自动删资产 |
 | audit_events | 现行管理审计，无 actor_type/target_revision，调用协调器绑定管理员 | 补主体类型与业务版本，提现状态采用固定审计契约及唯一版本；历史空主体需依据事件来源核验，不伪造管理员；扩展用户/系统/渠道入口及事务审计 |
 | wallet_ledgers | 现有缺结果余额/账户版本，类型不含 withdrawal_paid | 补版本账链、结果快照和真实打款类型；历史期初不捏造完整账链 |
-| reconciliation_records | 当前仅支付匹配，U(channel,channel_transaction_id) | 扩展 record_type、退款/提现匹配及处置记录，先迁旧记录为 payment |
+| reconciliation_records | `20260922_05` 使用 channel、record_type、渠道流水复合唯一键，并关联支付、退款或提现对象 | 记录 payment/refund/withdrawal 三类匹配；迁移不伪造旧账单类型，旧事实存在时明确失败 |
 | 多表默认值/时间 | 多数由 ORM 生成，无数据库 server_default | 字典明确生成来源；SQL 迁移显式提供必填列，不能把文档初值当现行 DEFAULT |
-| 定时扫描 | 当前独立 dry-run/apply 命令，无完整任务 Worker | 目标增加 durable_tasks、调度器、租约、恢复、告警和部署证据 |
+| 定时扫描 | `scripts.run_durable_tasks` 已提供有界单轮 Worker，处理订单过期、自动确认履约和佣金结算；渠道任务明确重试或 attention | 常驻调度、告警、渠道适配器和部署证据仍待专项完成 |
 
 字段审计还补回原稿漏记的 users.deletion_reason、购物车/库存/订单/退款 revision、下单/退款/提现 request_hash、库存原/结果版本、订单取消字段、明细重量/版本、退款事件 payload_hash 和提现确认时间。字段已在对应表定义，避免另一份可独立编辑的字段字典。
 
@@ -2395,16 +2406,16 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 
 | 能力 | 目标数据链 | 当前事实 | 完成所需证据 |
 | --- | --- | --- | --- |
-| 身份到消费主体 | 外部身份 → 用户 → 独立会话/轮换 | 通用用户/浏览器认证存在，小程序身份未实施 | 微信身份安全专项、真实平台恢复及退出 |
-| 商品到确定报价 | 分类/品牌/属性 → SKU → 会员/批发 → 统一运费 | 基础商品、库存、旧模板存在，新价格与规格未迁移 | 后端/Admin 新契约及真实报价一致性 |
-| 下单与成交 | 快照 → 库存/限购预占 → 真实收款或零额 → 履约 | 现有交易仅正额，限购/零额/独立确认恢复未完成 | 并发、幂等、迟到与重复支付验证 |
-| 售后与资金退出 | 未发货/未交付 → 全量申请 → 审核 → 执行 → 跟进补偿 | 当前按已交付明细部分退，与新资格冲突；无新退款执行表及真实渠道 | 真实退款、库存、预算、追佣与恢复证据 |
-| 分佣与提现 | 政策预算 → 行权益 → 钱包 → 审核/打款 → 对账 | 现有固定两级，提现仅申请/审核，真实打款未接通 | 三级预算、账本、真实渠道未知恢复 |
+| 身份到消费主体 | 外部身份 → 用户 → 独立会话/轮换 | 外部身份映射表、无密码账户边界和不可用渠道适配接口已有源码与迁移；小程序 Bearer 会话和微信可信交换未实施 | 微信身份安全专项、真实平台恢复及退出 |
+| 商品到确定报价 | 分类/品牌/属性 → SKU → 会员/批发 → 统一运费 | 后端已有会员等级、统一价格规则、平台运费、结算预览与报价指纹；Admin 消费者页面尚未适配 | PostgreSQL 并发、幂等和消费者适配 |
+| 下单与成交 | 快照 → 库存/限购预占 → 真实收款或零额 → 履约 | 购物车、订单快照、库存及限购预占、取消或到期释放、零元内部确认、可信成交、履约创建与佣金冻结已有源码及 revision `20260922_04`；隔离 PostgreSQL 与 Redis 的迁移、并发、幂等、迟到和重复支付验证已完成，显式单轮 Worker 可执行内部到期、履约和佣金任务 | 外部支付渠道、常驻调度和 Worker 联调 |
+| 售后与资金退出 | 未发货/未交付 → 全量申请 → 审核 → 执行 → 跟进补偿 | 后端已实现整单申请、独立退款执行、库存回补、限购标记、追回和三类对账匹配，并完成动态测试 | 真实退款渠道、渠道任务处理和恢复演练 |
+| 分佣与提现 | 政策预算 → 行权益 → 钱包 → 审核/打款 → 对账 | 三级预算、冻结权益、结算、追回和版本账链已有后端实现；人工提现申请、审核和线下付款确认已实现，第三方打款、可信回调和未知恢复未接通 | 第三方提现渠道、可信确认和未知恢复专项 |
 | 自动化可靠性 | 持久任务 → 租约执行 → 对账/告警 → 受控恢复 | 现有扫描脚本不能证明持续运行 | Worker 部署、监控与故障恢复演练 |
 | 消费者和运营闭环 | Admin、Backend、生成契约、小程序 | Admin 已有 A0 至 A4 本地实现，尚未消费新模型；小程序未建 | 两端业务验收、真实依赖与上线证据 |
-| 后续能力 | 资格/积分五表，消费钱包扩展 | 仅规划或保留账户形态 | 各自专项先定义政策和补全实体，不能冒称已闭环 |
+| 后续能力 | 积分兑换、到期、消费抵扣和消费钱包扩展 | 未启用业务政策 | 各自专项先定义政策和补全实体，不能冒称已闭环 |
 
-因此，目标核心设计已具备明确的数据职责、正逆向流程和恢复约束，当前整个项目仍未达到最终目标闭环。五张规划表只登记已有长期规划，不承诺积分过期、兑换、会员自动资格或消费钱包支付已经完整设计或可以直接上线；后续实体增补不受“必须50张/67张”限制。
+因此，目标核心设计已具备明确的数据职责、正逆向流程和恢复约束，当前整个项目仍未达到最终目标闭环。会员资格和积分五表已落地，但积分过期、兑换、抵扣及消费钱包支付政策尚未设计或启用；后续实体增补不受“必须50张/67张”限制。
 
 ### 13.4 实施依赖与切换条件
 

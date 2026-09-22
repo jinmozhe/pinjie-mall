@@ -50,6 +50,7 @@ def get_admin_commerce(
             metadata=request_metadata(request),
         ),
         actor_id=current.admin.id,
+        actor_session_id=current.login_session.id,
     )
 
 

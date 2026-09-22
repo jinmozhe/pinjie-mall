@@ -12,7 +12,9 @@ class MemberProfileRead(BaseModel):
 
     user_id: UUID
     invitation_code: str
-    level_code: str
+    level_id: UUID | None
+    level_changed_at: datetime
+    revision: int
     inviter_id: UUID | None
     bound_at: datetime | None
     created_at: datetime
@@ -45,11 +47,13 @@ class CommissionRead(BaseModel):
 
     id: UUID
     order_id: UUID
+    order_item_id: UUID
     source_user_id: UUID
     beneficiary_user_id: UUID
     level: int
     base_amount: Decimal
-    rate: Decimal
+    policy_id: UUID
+    rate: Decimal | None
     amount: Decimal
     recovered_amount: Decimal
     status: str
@@ -57,6 +61,8 @@ class CommissionRead(BaseModel):
     settle_after: datetime | None
     settled_at: datetime | None
     recovered_at: datetime | None
+    revision: int
+    rule_snapshot: dict[str, object]
 
 
 class WithdrawalCreate(BaseModel):
@@ -77,6 +83,21 @@ class WithdrawalReview(BaseModel):
 
     revision: int = Field(ge=1)
     note: str = Field(min_length=1, max_length=300)
+
+
+class WithdrawalManualCompletion(BaseModel):
+    """管理员确认线下转账已完成的不可逆命令。"""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    revision: int = Field(ge=1)
+    note: str = Field(min_length=1, max_length=300)
+    payment_reference: str = Field(min_length=1, max_length=160, description="线下转账凭证或流水号")
+
+    @field_validator("payment_reference")
+    @classmethod
+    def normalize_payment_reference(cls, value: str) -> str:
+        return value.strip()
 
 
 class WithdrawalRead(BaseModel):
@@ -109,6 +130,7 @@ __all__ = [
     "ReferralBindIn",
     "WalletAccountRead",
     "WithdrawalCreate",
+    "WithdrawalManualCompletion",
     "WithdrawalPage",
     "WithdrawalRead",
     "WithdrawalReview",

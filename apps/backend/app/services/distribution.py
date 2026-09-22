@@ -6,7 +6,7 @@ from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.db.repositories.commerce_access import CommerceAccessRepository
 from app.domains.admin.permissions import PermissionCode
-from app.domains.distribution import DistributionService, WithdrawalRead, WithdrawalReview
+from app.domains.distribution import DistributionService, WithdrawalManualCompletion, WithdrawalRead, WithdrawalReview
 from app.services.security_events import AuditCoordinator
 
 T = TypeVar("T")
@@ -41,7 +41,7 @@ class AdminDistributionApplicationService:
 
         return await self.audit.execute(
             action=permission.value,
-            target_type="withdrawal",
+            target_type="withdrawal_request",
             target_id=target_id,
             changed_fields={"operation": permission.value},
             operation=authorized,
@@ -59,4 +59,15 @@ class AdminDistributionApplicationService:
             PermissionCode.WITHDRAWALS_REVIEW,
             withdrawal_id,
             lambda: self.distribution.reject_withdrawal_in_open_transaction(withdrawal_id, data, self.actor_id),
+        )
+
+    async def complete_withdrawal_manually(
+        self, withdrawal_id: UUID, data: WithdrawalManualCompletion
+    ) -> WithdrawalRead:
+        return await self._write(
+            PermissionCode.WITHDRAWALS_COMPLETE_MANUAL,
+            withdrawal_id,
+            lambda: self.distribution.complete_withdrawal_manually_in_open_transaction(
+                withdrawal_id, data, self.actor_id
+            ),
         )

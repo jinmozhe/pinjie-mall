@@ -35,6 +35,7 @@ class CartService:
         return (await self.inventory.read(sku_id)).available
 
     async def list(self, user_id: UUID) -> list[CartItemRead]:
+        await self.access.require_active_user(user_id)
         return [CartItemRead.model_validate(row) for row in await self.repository.list_for_user(user_id)]
 
     async def add(self, user_id: UUID, data: CartItemInput) -> CartItemRead:

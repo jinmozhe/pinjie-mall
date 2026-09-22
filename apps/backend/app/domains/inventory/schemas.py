@@ -35,7 +35,11 @@ class InventoryMovementRead(BaseModel):
     id: UUID = Field(description="流水 ID")
     sku_id: UUID = Field(description="SKU 标识")
     request_id: UUID = Field(description="幂等请求 ID")
-    actor_id: UUID = Field(description="操作管理员 ID")
+    actor_id: UUID | None = Field(description="操作管理员 ID，系统为空")
+    actor_type: str
+    source_type: str
+    source_id: UUID | None
+    request_hash: str
     quantity_delta: int = Field(description="调整数量")
     before_available: int = Field(description="调整前可售库存")
     after_available: int = Field(description="调整后可售库存")

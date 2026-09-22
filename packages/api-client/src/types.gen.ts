@@ -455,6 +455,12 @@ export type AdminOrderSummary = {
      */
     items_amount: string;
     /**
+     * Freight Amount
+     *
+     * 订单运费，单位人民币元
+     */
+    freight_amount: string;
+    /**
      * Total Amount
      *
      * 订单应付总金额，单位人民币元
@@ -479,11 +485,23 @@ export type AdminOrderSummary = {
      */
     paid_at: string | null;
     /**
-     * Payment Reference
+     * Accepted Payment Attempt Id
      *
-     * 已确认支付参考号
+     * 当前业务字段，具体语义由所属请求或响应模型定义
      */
-    payment_reference: string | null;
+    accepted_payment_attempt_id: string | null;
+    /**
+     * Settlement Kind
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    settlement_kind: string | null;
+    /**
+     * Acceptance Status
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    acceptance_status: string;
 };
 
 /**
@@ -883,6 +901,188 @@ export type AdminWalletRead = {
 };
 
 /**
+ * AdoptionInput
+ */
+export type AdoptionInput = {
+    /**
+     * Key
+     *
+     * 本次请求内属性引用键
+     */
+    key: string;
+    /**
+     * Attribute Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    attribute_id?: string | null;
+    /**
+     * Source Attribute Revision
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    source_attribute_revision?: number | null;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name?: string | null;
+    /**
+     * Value Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    value_type?: 'text' | 'number' | 'select' | 'multi_select' | null;
+    /**
+     * Unit
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    unit?: string | null;
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    validation?: AttributeValidationInput | null;
+    /**
+     * Is Variant
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    is_variant?: boolean;
+    /**
+     * Is Required
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    is_required?: boolean;
+    /**
+     * Candidates
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    candidates?: Array<CandidateInput>;
+    /**
+     * Value
+     *
+     * 描述值；数值为十进制字符串，单选为标准值 UUID 字符串
+     */
+    value?: string | Array<string> | null;
+};
+
+/**
+ * AdoptionRead
+ */
+export type AdoptionRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Attribute Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    attribute_id: string | null;
+    /**
+     * Adoption Version
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    adoption_version: number;
+    /**
+     * Name Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    name_snapshot: string;
+    /**
+     * Value Type Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    value_type_snapshot: string;
+    /**
+     * Unit Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    unit_snapshot: string | null;
+    /**
+     * Validation Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    validation_snapshot: {
+        [key: string]: unknown;
+    };
+    /**
+     * Source Category Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    source_category_id: string | null;
+    /**
+     * Source Category Revision
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    source_category_revision: number | null;
+    /**
+     * Source Attribute Revision
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    source_attribute_revision: number | null;
+    /**
+     * Is Variant
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    is_variant: boolean;
+    /**
+     * Is Required
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    is_required: boolean;
+    /**
+     * Allow Custom Value
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    allow_custom_value: boolean;
+    /**
+     * Is Current
+     *
+     * 是否为当前登录会话
+     */
+    is_current: boolean;
+    /**
+     * Candidates
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    candidates?: Array<CandidateRead>;
+    /**
+     * Value
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    value?: string | Array<string> | null;
+    /**
+     * Display Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    display_snapshot?: {
+        [key: string]: string;
+    };
+};
+
+/**
  * AssetBulkDeleteIn
  */
 export type AssetBulkDeleteIn = {
@@ -990,6 +1190,246 @@ export type AssetRead = {
      * 最近更新时间
      */
     updated_at: string;
+};
+
+/**
+ * AttributeInput
+ */
+export type AttributeInput = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Value Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    value_type: 'text' | 'number' | 'select' | 'multi_select';
+    /**
+     * Unit
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    unit?: string | null;
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    validation: AttributeValidationInput;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+};
+
+/**
+ * AttributeRead
+ */
+export type AttributeRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Value Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    value_type: 'text' | 'number' | 'select' | 'multi_select';
+    /**
+     * Unit
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    unit?: string | null;
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    validation: AttributeValidationOutput;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+};
+
+/**
+ * AttributeUpdate
+ */
+export type AttributeUpdate = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Value Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    value_type: 'text' | 'number' | 'select' | 'multi_select';
+    /**
+     * Unit
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    unit?: string | null;
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    validation: AttributeValidationInput;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+};
+
+/**
+ * AttributeValidation
+ */
+export type AttributeValidationInput = {
+    /**
+     * Schema Version
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    schema_version?: 1;
+    /**
+     * Max Length
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    max_length?: number | null;
+    /**
+     * Decimal Places
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    decimal_places?: number | null;
+    /**
+     * Min
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    min?: number | string | null;
+    /**
+     * Max
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    max?: number | string | null;
+    /**
+     * Max Selected
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    max_selected?: number | null;
+};
+
+/**
+ * AttributeValidation
+ */
+export type AttributeValidationOutput = {
+    /**
+     * Schema Version
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    schema_version?: 1;
+    /**
+     * Max Length
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    max_length?: number | null;
+    /**
+     * Decimal Places
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    decimal_places?: number | null;
+    /**
+     * Min
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    min?: string | null;
+    /**
+     * Max
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    max?: string | null;
+    /**
+     * Max Selected
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    max_selected?: number | null;
 };
 
 /**
@@ -1122,6 +1562,192 @@ export type BodyUploadAssetApiV1AssetsUploadPost = {
      * 受控的文件使用场景
      */
     scene: UploadScene;
+};
+
+/**
+ * BrandInput
+ */
+export type BrandInput = {
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Logo Asset Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    logo_asset_id?: string | null;
+    /**
+     * Description
+     *
+     * 资源说明文本
+     */
+    description?: string;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+};
+
+/**
+ * BrandRead
+ */
+export type BrandRead = {
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Logo Asset Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    logo_asset_id?: string | null;
+    /**
+     * Description
+     *
+     * 资源说明文本
+     */
+    description?: string;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+};
+
+/**
+ * BrandUpdate
+ */
+export type BrandUpdate = {
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Logo Asset Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    logo_asset_id?: string | null;
+    /**
+     * Description
+     *
+     * 资源说明文本
+     */
+    description?: string;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+};
+
+/**
+ * CandidateInput
+ */
+export type CandidateInput = {
+    /**
+     * Key
+     *
+     * 本次请求内候选值引用键，不是数据库 ID
+     */
+    key: string;
+    /**
+     * Value Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    value_id?: string | null;
+    /**
+     * Display Value
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    display_value?: string | null;
+};
+
+/**
+ * CandidateRead
+ */
+export type CandidateRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Adoption Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    adoption_id: string;
+    /**
+     * Value Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    value_id: string | null;
+    /**
+     * Display Value
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    display_value: string;
+    /**
+     * Is Current
+     *
+     * 是否为当前登录会话
+     */
+    is_current: boolean;
 };
 
 /**
@@ -1339,11 +1965,13 @@ export type CheckoutQuote = {
      */
     items: Array<QuoteLine>;
     /**
-     * Shipping
+     * Shipping Snapshot
      *
-     * 按运费模板分组的报价明细
+     * 当前业务字段，具体语义由所属请求或响应模型定义
      */
-    shipping: Array<ShippingQuoteGroup>;
+    shipping_snapshot: {
+        [key: string]: unknown;
+    };
     /**
      * Product Type
      *
@@ -1382,6 +2010,20 @@ export type CheckoutQuote = {
     address_snapshot: {
         [key: string]: unknown;
     } | null;
+    /**
+     * Buyer Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_level_id: string | null;
+    /**
+     * Buyer Level Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_level_snapshot: {
+        [key: string]: unknown;
+    };
     /**
      * Fingerprint
      *
@@ -1445,6 +2087,558 @@ export type CommerceExportRead = {
 };
 
 /**
+ * CommerceQuoteRead
+ */
+export type CommerceQuoteRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<QuoteLineRead>;
+    /**
+     * Items Amount
+     *
+     * 商品合计金额，单位人民币元
+     */
+    items_amount: string;
+    /**
+     * Freight Amount
+     *
+     * 订单运费，单位人民币元
+     */
+    freight_amount: string;
+    /**
+     * Total Amount
+     *
+     * 订单应付总金额，单位人民币元
+     */
+    total_amount: string;
+    /**
+     * Buyer Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_level_id: string | null;
+    /**
+     * Buyer Level State
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_level_state: 'none' | 'active' | 'disabled';
+    /**
+     * Shipping Rule Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    shipping_rule_id: string | null;
+    /**
+     * Fingerprint
+     *
+     * 服务端报价指纹
+     */
+    fingerprint: string;
+};
+
+/**
+ * CommerceQuoteRequest
+ */
+export type CommerceQuoteRequest = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<QuoteItemInput>;
+    /**
+     * Province Code
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    province_code?: string | null;
+};
+
+/**
+ * CommissionAmountRuleCreate
+ */
+export type CommissionAmountRuleCreate = {
+    /**
+     * Buyer Scope
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_scope?: 'any' | 'level';
+    /**
+     * Buyer Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_level_id?: string | null;
+    /**
+     * Product Id
+     *
+     * 商品标识
+     */
+    product_id?: string | null;
+    /**
+     * Sku Id
+     *
+     * 商品变体标识
+     */
+    sku_id?: string | null;
+    /**
+     * Rule Mode
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    rule_mode: 'fixed_amount' | 'percentage' | 'disabled';
+    /**
+     * Amount Per Unit
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    amount_per_unit?: number | string | null;
+    /**
+     * Percentage Rate
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    percentage_rate?: number | string | null;
+};
+
+/**
+ * CommissionAmountRuleRead
+ */
+export type CommissionAmountRuleRead = {
+    /**
+     * Buyer Scope
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_scope?: 'any' | 'level';
+    /**
+     * Buyer Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_level_id?: string | null;
+    /**
+     * Product Id
+     *
+     * 商品标识
+     */
+    product_id?: string | null;
+    /**
+     * Sku Id
+     *
+     * 商品变体标识
+     */
+    sku_id?: string | null;
+    /**
+     * Rule Mode
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    rule_mode: 'fixed_amount' | 'percentage' | 'disabled';
+    /**
+     * Amount Per Unit
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    amount_per_unit?: string | null;
+    /**
+     * Percentage Rate
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    percentage_rate?: string | null;
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Policy Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    policy_id: string;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * CommissionControlRead
+ */
+export type CommissionControlRead = {
+    /**
+     * Schema Version
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    schema_version?: 1;
+    /**
+     * Commissions Enabled
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    commissions_enabled: boolean;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+    /**
+     * Updated By Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    updated_by_id: string | null;
+};
+
+/**
+ * CommissionControlUpdate
+ */
+export type CommissionControlUpdate = {
+    /**
+     * Schema Version
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    schema_version?: 1;
+    /**
+     * Commissions Enabled
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    commissions_enabled: boolean;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+};
+
+/**
+ * CommissionDistributionRuleCreate
+ */
+export type CommissionDistributionRuleCreate = {
+    /**
+     * Buyer Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_level_id: string;
+    /**
+     * Ancestor Depth
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    ancestor_depth: number;
+    /**
+     * Beneficiary Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    beneficiary_level_id: string;
+    /**
+     * Allocation Mode
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    allocation_mode: 'fixed_amount' | 'percentage';
+    /**
+     * Rate
+     *
+     * 佣金比例快照
+     */
+    rate?: number | string | null;
+    /**
+     * Amount Per Unit
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    amount_per_unit?: number | string | null;
+};
+
+/**
+ * CommissionDistributionRuleRead
+ */
+export type CommissionDistributionRuleRead = {
+    /**
+     * Buyer Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_level_id: string;
+    /**
+     * Ancestor Depth
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    ancestor_depth: number;
+    /**
+     * Beneficiary Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    beneficiary_level_id: string;
+    /**
+     * Allocation Mode
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    allocation_mode: 'fixed_amount' | 'percentage';
+    /**
+     * Rate
+     *
+     * 佣金比例快照
+     */
+    rate?: string | null;
+    /**
+     * Amount Per Unit
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    amount_per_unit?: string | null;
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Policy Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    policy_id: string;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * CommissionPolicyCreate
+ */
+export type CommissionPolicyCreate = {
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Default Mode
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    default_mode?: 'fixed_amount' | 'percentage' | 'disabled' | null;
+    /**
+     * Default Amount Per Unit
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    default_amount_per_unit?: number | string | null;
+    /**
+     * Default Percentage Rate
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    default_percentage_rate?: number | string | null;
+    /**
+     * Max Depth
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    max_depth?: number;
+    /**
+     * Settle Delay Days
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    settle_delay_days?: number;
+};
+
+/**
+ * CommissionPolicyPublish
+ */
+export type CommissionPolicyPublish = {
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+};
+
+/**
+ * CommissionPolicyRead
+ */
+export type CommissionPolicyRead = {
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Default Mode
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    default_mode?: 'fixed_amount' | 'percentage' | 'disabled' | null;
+    /**
+     * Default Amount Per Unit
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    default_amount_per_unit?: string | null;
+    /**
+     * Default Percentage Rate
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    default_percentage_rate?: string | null;
+    /**
+     * Max Depth
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    max_depth?: number;
+    /**
+     * Settle Delay Days
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    settle_delay_days?: number;
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: 'draft' | 'active' | 'retired';
+    /**
+     * Activated At
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    activated_at: string | null;
+    /**
+     * Content Version
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    content_version: number;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Updated By Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    updated_by_id: string | null;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * CommissionPolicyUpdate
+ */
+export type CommissionPolicyUpdate = {
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Default Mode
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    default_mode?: 'fixed_amount' | 'percentage' | 'disabled' | null;
+    /**
+     * Default Amount Per Unit
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    default_amount_per_unit?: number | string | null;
+    /**
+     * Default Percentage Rate
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    default_percentage_rate?: number | string | null;
+    /**
+     * Max Depth
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    max_depth?: number;
+    /**
+     * Settle Delay Days
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    settle_delay_days?: number;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+};
+
+/**
  * CommissionRead
  */
 export type CommissionRead = {
@@ -1460,6 +2654,12 @@ export type CommissionRead = {
      * 订单标识
      */
     order_id: string;
+    /**
+     * Order Item Id
+     *
+     * 订单明细标识
+     */
+    order_item_id: string;
     /**
      * Source User Id
      *
@@ -1485,11 +2685,17 @@ export type CommissionRead = {
      */
     base_amount: string;
     /**
+     * Policy Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    policy_id: string;
+    /**
      * Rate
      *
      * 佣金比例快照
      */
-    rate: string;
+    rate: string | null;
     /**
      * Amount
      *
@@ -1532,6 +2738,20 @@ export type CommissionRead = {
      * 最近佣金追回时间
      */
     recovered_at: string | null;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Rule Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    rule_snapshot: {
+        [key: string]: unknown;
+    };
 };
 
 /**
@@ -1561,6 +2781,24 @@ export type DatabaseHealthRead = {
      * 诊断详情，如 migration_heads_matched 或错误原因
      */
     details: string;
+};
+
+/**
+ * DescriptionUpdate
+ */
+export type DescriptionUpdate = {
+    /**
+     * Revision
+     *
+     * 商品当前版本
+     */
+    revision: number;
+    /**
+     * Value
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    value: string | Array<string>;
 };
 
 /**
@@ -1784,9 +3022,33 @@ export type InventoryMovementRead = {
     /**
      * Actor Id
      *
-     * 操作管理员 ID
+     * 操作管理员 ID，系统为空
      */
-    actor_id: string;
+    actor_id: string | null;
+    /**
+     * Actor Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    actor_type: string;
+    /**
+     * Source Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    source_type: string;
+    /**
+     * Source Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    source_id: string | null;
+    /**
+     * Request Hash
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    request_hash: string;
     /**
      * Quantity Delta
      *
@@ -1940,6 +3202,638 @@ export type LoginEventRead = {
 };
 
 /**
+ * MemberLevelConditionCreate
+ */
+export type MemberLevelConditionCreate = {
+    /**
+     * Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    level_id: string;
+    /**
+     * Metric
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    metric: 'consumption' | 'invite_count' | 'points';
+    /**
+     * Aggregation
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    aggregation: 'single' | 'cumulative';
+    /**
+     * Amount Threshold
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    amount_threshold?: number | string | null;
+    /**
+     * Count Threshold
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    count_threshold?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Effective At
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    effective_at: string;
+};
+
+/**
+ * MemberLevelConditionRead
+ */
+export type MemberLevelConditionRead = {
+    /**
+     * Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    level_id: string;
+    /**
+     * Metric
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    metric: 'consumption' | 'invite_count' | 'points';
+    /**
+     * Aggregation
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    aggregation: 'single' | 'cumulative';
+    /**
+     * Amount Threshold
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    amount_threshold?: string | null;
+    /**
+     * Count Threshold
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    count_threshold?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Effective At
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    effective_at: string;
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Updated By Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    updated_by_id: string | null;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * MemberLevelConditionUpdate
+ */
+export type MemberLevelConditionUpdate = {
+    /**
+     * Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    level_id: string;
+    /**
+     * Metric
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    metric: 'consumption' | 'invite_count' | 'points';
+    /**
+     * Aggregation
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    aggregation: 'single' | 'cumulative';
+    /**
+     * Amount Threshold
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    amount_threshold?: number | string | null;
+    /**
+     * Count Threshold
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    count_threshold?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Effective At
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    effective_at: string;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+};
+
+/**
+ * MemberLevelCreate
+ */
+export type MemberLevelCreate = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Discount Factor
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    discount_factor?: number | string;
+    /**
+     * Level Rank
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    level_rank: number;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+};
+
+/**
+ * MemberLevelEventRead
+ */
+export type MemberLevelEventRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * User Id
+     *
+     * 用户标识
+     */
+    user_id: string;
+    /**
+     * From Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    from_level_id: string | null;
+    /**
+     * To Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    to_level_id: string | null;
+    /**
+     * Trigger Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    trigger_type: string;
+    /**
+     * Trigger Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    trigger_id: string | null;
+    /**
+     * Qualification Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    qualification_snapshot: {
+        [key: string]: unknown;
+    };
+    /**
+     * Profile Revision
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    profile_revision: number;
+    /**
+     * Operator Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    operator_id: string | null;
+    /**
+     * Idempotency Key
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    idempotency_key: string;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * MemberLevelRead
+ */
+export type MemberLevelRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Discount Factor
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    discount_factor?: string;
+    /**
+     * Level Rank
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    level_rank: number;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * MemberLevelUpdate
+ */
+export type MemberLevelUpdate = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Discount Factor
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    discount_factor?: number | string;
+    /**
+     * Level Rank
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    level_rank: number;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+};
+
+/**
+ * MemberPriceRuleCreate
+ */
+export type MemberPriceRuleCreate = {
+    /**
+     * Member Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    member_level_id: string;
+    /**
+     * Scope Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    scope_type: 'sku' | 'product' | 'category';
+    /**
+     * Sku Id
+     *
+     * 商品变体标识
+     */
+    sku_id?: string | null;
+    /**
+     * Product Id
+     *
+     * 商品标识
+     */
+    product_id?: string | null;
+    /**
+     * Category Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    category_id?: string | null;
+    /**
+     * Price Mode
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    price_mode: 'fixed' | 'discount' | 'exclude';
+    /**
+     * Fixed Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    fixed_price?: number | string | null;
+    /**
+     * Discount Factor
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    discount_factor?: number | string | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+};
+
+/**
+ * MemberPriceRuleRead
+ */
+export type MemberPriceRuleRead = {
+    /**
+     * Member Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    member_level_id: string;
+    /**
+     * Scope Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    scope_type: 'sku' | 'product' | 'category';
+    /**
+     * Sku Id
+     *
+     * 商品变体标识
+     */
+    sku_id?: string | null;
+    /**
+     * Product Id
+     *
+     * 商品标识
+     */
+    product_id?: string | null;
+    /**
+     * Category Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    category_id?: string | null;
+    /**
+     * Price Mode
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    price_mode: 'fixed' | 'discount' | 'exclude';
+    /**
+     * Fixed Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    fixed_price?: string | null;
+    /**
+     * Discount Factor
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    discount_factor?: string | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Updated By Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    updated_by_id: string | null;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * MemberPriceRuleUpdate
+ */
+export type MemberPriceRuleUpdate = {
+    /**
+     * Member Level Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    member_level_id: string;
+    /**
+     * Scope Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    scope_type: 'sku' | 'product' | 'category';
+    /**
+     * Sku Id
+     *
+     * 商品变体标识
+     */
+    sku_id?: string | null;
+    /**
+     * Product Id
+     *
+     * 商品标识
+     */
+    product_id?: string | null;
+    /**
+     * Category Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    category_id?: string | null;
+    /**
+     * Price Mode
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    price_mode: 'fixed' | 'discount' | 'exclude';
+    /**
+     * Fixed Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    fixed_price?: number | string | null;
+    /**
+     * Discount Factor
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    discount_factor?: number | string | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+};
+
+/**
  * MemberProfileRead
  */
 export type MemberProfileRead = {
@@ -1956,11 +3850,23 @@ export type MemberProfileRead = {
      */
     invitation_code: string;
     /**
-     * Level Code
+     * Level Id
      *
-     * 会员等级代码
+     * 当前业务字段，具体语义由所属请求或响应模型定义
      */
-    level_code: string;
+    level_id: string | null;
+    /**
+     * Level Changed At
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    level_changed_at: string;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
     /**
      * Inviter Id
      *
@@ -1979,6 +3885,152 @@ export type MemberProfileRead = {
      * 创建时间
      */
     created_at: string;
+};
+
+/**
+ * MembershipQualificationEventRead
+ */
+export type MembershipQualificationEventRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * User Id
+     *
+     * 用户标识
+     */
+    user_id: string;
+    /**
+     * Metric
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    metric: 'consumption' | 'invite_count' | 'points';
+    /**
+     * Source Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    source_type: string;
+    /**
+     * Source Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    source_id: string;
+    /**
+     * Order Id
+     *
+     * 订单标识
+     */
+    order_id: string | null;
+    /**
+     * Amount Delta
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    amount_delta: string | null;
+    /**
+     * Count Delta
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    count_delta: number | null;
+    /**
+     * Reverses Event Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    reverses_event_id: string | null;
+    /**
+     * Occurred At
+     *
+     * 事件发生时间
+     */
+    occurred_at: string;
+    /**
+     * Idempotency Key
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    idempotency_key: string;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * NewSkuInput
+ */
+export type NewSkuInput = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    price: number | string;
+    /**
+     * Cost Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    cost_price?: number | string | null;
+    /**
+     * Market Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    market_price?: number | string | null;
+    /**
+     * Wholesale Prices
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    wholesale_prices?: Array<WholesalePriceInput>;
+    /**
+     * Weight Grams
+     *
+     * 计费重量，单位克
+     */
+    weight_grams?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Selections
+     *
+     * 属性请求键到候选请求键的完整组合
+     */
+    selections?: {
+        [key: string]: string;
+    };
+    /**
+     * Initial Quantity
+     *
+     * 本次明确盘点的初始库存
+     */
+    initial_quantity?: number;
 };
 
 /**
@@ -2035,6 +4087,14 @@ export type OrderItemRead = {
      * 订单明细金额，单位人民币元
      */
     line_amount: string;
+    /**
+     * Price Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    price_snapshot: {
+        [key: string]: unknown;
+    };
 };
 
 /**
@@ -2086,6 +4146,28 @@ export type OrderRead = {
         [key: string]: unknown;
     } | null;
     /**
+     * Shipping Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    shipping_snapshot: {
+        [key: string]: unknown;
+    };
+    /**
+     * Buyer Level Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_level_snapshot: {
+        [key: string]: unknown;
+    };
+    /**
+     * Settlement Kind
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    settlement_kind: string | null;
+    /**
      * Expires At
      *
      * 凭据过期时间
@@ -2109,6 +4191,86 @@ export type OrderRead = {
      * 当前分页中的资源列表
      */
     items: Array<OrderItemRead>;
+};
+
+/**
+ * OrderShippingSettingRead
+ */
+export type OrderShippingSettingRead = {
+    /**
+     * Schema Version
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    schema_version?: 1;
+    /**
+     * Region Level
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    region_level?: 'province';
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    default_rule: ShippingRuleValueOutput;
+    /**
+     * Region Rules
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    region_rules?: Array<ShippingRegionRuleOutput>;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+    /**
+     * Updated By Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    updated_by_id: string | null;
+};
+
+/**
+ * OrderShippingSettingUpdate
+ */
+export type OrderShippingSettingUpdate = {
+    /**
+     * Schema Version
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    schema_version?: 1;
+    /**
+     * Region Level
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    region_level?: 'province';
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    default_rule: ShippingRuleValueInput;
+    /**
+     * Region Rules
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    region_rules?: Array<ShippingRegionRuleInput>;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
 };
 
 /**
@@ -2292,6 +4454,42 @@ export type PageResultAssetRead = {
 };
 
 /**
+ * PageResult[AttributeRead]
+ */
+export type PageResultAttributeRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<AttributeRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
  * PageResult[AuditEventRead]
  */
 export type PageResultAuditEventRead = {
@@ -2301,6 +4499,78 @@ export type PageResultAuditEventRead = {
      * 当前分页中的资源列表
      */
     items: Array<AuditEventRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[BrandRead]
+ */
+export type PageResultBrandRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<BrandRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[CommissionPolicyRead]
+ */
+export type PageResultCommissionPolicyRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<CommissionPolicyRead>;
     /**
      * Page
      *
@@ -2436,6 +4706,150 @@ export type PageResultLoginEventRead = {
 };
 
 /**
+ * PageResult[MemberLevelConditionRead]
+ */
+export type PageResultMemberLevelConditionRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MemberLevelConditionRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[MemberLevelEventRead]
+ */
+export type PageResultMemberLevelEventRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MemberLevelEventRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[MemberLevelRead]
+ */
+export type PageResultMemberLevelRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MemberLevelRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[MemberPriceRuleRead]
+ */
+export type PageResultMemberPriceRuleRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MemberPriceRuleRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
  * PageResult[MemberProfileRead]
  */
 export type PageResultMemberProfileRead = {
@@ -2472,6 +4886,42 @@ export type PageResultMemberProfileRead = {
 };
 
 /**
+ * PageResult[MembershipQualificationEventRead]
+ */
+export type PageResultMembershipQualificationEventRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MembershipQualificationEventRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
  * PageResult[PaymentAttemptRead]
  */
 export type PageResultPaymentAttemptRead = {
@@ -2481,6 +4931,78 @@ export type PageResultPaymentAttemptRead = {
      * 当前分页中的资源列表
      */
     items: Array<PaymentAttemptRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[PointsAccountRead]
+ */
+export type PageResultPointsAccountRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<PointsAccountRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[PointsLedgerRead]
+ */
+export type PageResultPointsLedgerRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<PointsLedgerRead>;
     /**
      * Page
      *
@@ -3060,9 +5582,207 @@ export type PermissionRead = {
 };
 
 /**
+ * PointsAccountRead
+ */
+export type PointsAccountRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * User Id
+     *
+     * 用户标识
+     */
+    user_id: string;
+    /**
+     * Available Points
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    available_points: number;
+    /**
+     * Frozen Points
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    frozen_points: number;
+    /**
+     * Debt Points
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    debt_points: number;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * PointsLedgerRead
+ */
+export type PointsLedgerRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Account Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    account_id: string;
+    /**
+     * Entry Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    entry_type: string;
+    /**
+     * Available Delta
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    available_delta: number;
+    /**
+     * Frozen Delta
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    frozen_delta: number;
+    /**
+     * Debt Delta
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    debt_delta: number;
+    /**
+     * Source Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    source_type: string;
+    /**
+     * Source Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    source_id: string;
+    /**
+     * Reverses Ledger Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    reverses_ledger_id: string | null;
+    /**
+     * Idempotency Key
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    idempotency_key: string;
+    /**
+     * Note
+     *
+     * 操作说明或核对备注
+     */
+    note: string | null;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * PointsManualAdjustment
+ */
+export type PointsManualAdjustment = {
+    /**
+     * User Id
+     *
+     * 用户标识
+     */
+    user_id: string;
+    /**
+     * Points
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    points: number;
+    /**
+     * Operation
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    operation: 'grant' | 'reverse';
+    /**
+     * Idempotency Key
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    idempotency_key: string;
+    /**
+     * Reverses Ledger Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    reverses_ledger_id?: string | null;
+    /**
+     * Note
+     *
+     * 操作说明或核对备注
+     */
+    note?: string | null;
+};
+
+/**
  * ProductCreate
  */
 export type ProductCreate = {
+    /**
+     * Attributes
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    attributes?: Array<AdoptionInput>;
+    /**
+     * Skus
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    skus: Array<NewSkuInput>;
+    /**
+     * Category Revision
+     *
+     * 采用时所属分类及模板版本
+     */
+    category_revision: number;
     /**
      * Name
      *
@@ -3088,23 +5808,23 @@ export type ProductCreate = {
      */
     category_id: string;
     /**
-     * Shipping Template Id
+     * Brand Id
      *
-     * 实物运费模板，虚拟商品为空
+     * 可选品牌
      */
-    shipping_template_id?: string | null;
+    brand_id?: string | null;
+    /**
+     * Purchase Limit Quantity
+     *
+     * 每用户累计限购配置，交易阶段实施计数
+     */
+    purchase_limit_quantity?: number;
     /**
      * Image Asset Ids
      *
      * 有序图片资产 ID，首张为主图
      */
     image_asset_ids?: Array<string>;
-    /**
-     * Skus
-     *
-     * 初始 SKU，无规格也需默认 SKU
-     */
-    skus: Array<SkuInput>;
 };
 
 /**
@@ -3136,11 +5856,17 @@ export type ProductRead = {
      */
     category_id: string;
     /**
-     * Shipping Template Id
+     * Brand Id
      *
-     * 实物运费模板，虚拟商品为空
+     * 可选品牌
      */
-    shipping_template_id?: string | null;
+    brand_id?: string | null;
+    /**
+     * Purchase Limit Quantity
+     *
+     * 每用户累计限购配置，交易阶段实施计数
+     */
+    purchase_limit_quantity?: number;
     /**
      * Image Asset Ids
      *
@@ -3171,6 +5897,12 @@ export type ProductRead = {
      * 商品全部 SKU
      */
     skus: Array<SkuRead>;
+    /**
+     * Attributes
+     *
+     * 当前及历史属性采用
+     */
+    attributes: Array<AdoptionRead>;
 };
 
 /**
@@ -3292,11 +6024,17 @@ export type ProductUpdate = {
      */
     category_id: string;
     /**
-     * Shipping Template Id
+     * Brand Id
      *
-     * 实物运费模板，虚拟商品为空
+     * 可选品牌
      */
-    shipping_template_id?: string | null;
+    brand_id?: string | null;
+    /**
+     * Purchase Limit Quantity
+     *
+     * 每用户累计限购配置，交易阶段实施计数
+     */
+    purchase_limit_quantity?: number;
     /**
      * Image Asset Ids
      *
@@ -3346,6 +6084,12 @@ export type PublicProductRead = {
      */
     category_id: string;
     /**
+     * Brand Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    brand_id: string | null;
+    /**
      * Images
      *
      * 图片公开地址
@@ -3354,9 +6098,95 @@ export type PublicProductRead = {
     /**
      * Skus
      *
-     * 启用中的商品变体
+     * 启用且未归档的商品变体，无成本字段
      */
-    skus: Array<SkuRead>;
+    skus: Array<PublicSkuRead>;
+    /**
+     * Attributes
+     *
+     * 当前采用定义及描述值
+     */
+    attributes: Array<AdoptionRead>;
+};
+
+/**
+ * PublicSkuRead
+ */
+export type PublicSkuRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Sku No
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sku_no: number;
+    /**
+     * Specifications
+     *
+     * 商品规格名称与取值
+     */
+    specifications: {
+        [key: string]: string;
+    };
+    /**
+     * Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    price: string;
+    /**
+     * Market Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    market_price: string | null;
+    /**
+     * Wholesale Prices
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    wholesale_prices: Array<WholesalePriceOutput>;
+    /**
+     * Weight Grams
+     *
+     * 计费重量，单位克
+     */
+    weight_grams: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active: boolean;
+};
+
+/**
+ * QuoteItemInput
+ */
+export type QuoteItemInput = {
+    /**
+     * Sku Id
+     *
+     * 商品变体标识
+     */
+    sku_id: string;
+    /**
+     * Quantity
+     *
+     * 商品数量
+     */
+    quantity: number;
 };
 
 /**
@@ -3414,12 +6244,6 @@ export type QuoteLine = {
      */
     line_amount: string;
     /**
-     * Weight Grams
-     *
-     * 计费重量，单位克
-     */
-    weight_grams: number;
-    /**
      * Product Revision
      *
      * 报价时商品版本
@@ -3432,11 +6256,103 @@ export type QuoteLine = {
      */
     product_type: string;
     /**
-     * Shipping Template Id
+     * Price Snapshot
      *
-     * 运费模板标识
+     * 当前业务字段，具体语义由所属请求或响应模型定义
      */
-    shipping_template_id: string | null;
+    price_snapshot: {
+        [key: string]: unknown;
+    };
+    /**
+     * Category Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    category_snapshot: {
+        [key: string]: unknown;
+    };
+    /**
+     * Brand Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    brand_snapshot: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Commission Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    commission_snapshot: {
+        [key: string]: unknown;
+    };
+    /**
+     * Purchase Limit Quantity
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    purchase_limit_quantity: number;
+    /**
+     * Weight Grams
+     *
+     * 计费重量，单位克
+     */
+    weight_grams: number | null;
+};
+
+/**
+ * QuoteLineRead
+ */
+export type QuoteLineRead = {
+    /**
+     * Sku Id
+     *
+     * 商品变体标识
+     */
+    sku_id: string;
+    /**
+     * Product Id
+     *
+     * 商品标识
+     */
+    product_id: string;
+    /**
+     * Product Name
+     *
+     * 商品名称快照
+     */
+    product_name: string;
+    /**
+     * Quantity
+     *
+     * 商品数量
+     */
+    quantity: number;
+    /**
+     * Base Unit Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    base_unit_price: string;
+    /**
+     * Unit Price
+     *
+     * 成交单价，单位人民币元
+     */
+    unit_price: string;
+    /**
+     * Line Amount
+     *
+     * 订单明细金额，单位人民币元
+     */
+    line_amount: string;
+    /**
+     * Price Source
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    price_source: string;
 };
 
 /**
@@ -3481,6 +6397,12 @@ export type ReconciliationRecordCreate = {
      * 支付渠道代码
      */
     channel: 'wechat' | 'alipay';
+    /**
+     * Record Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    record_type: 'payment' | 'refund' | 'withdrawal';
     /**
      * Channel Transaction Id
      *
@@ -3578,6 +6500,24 @@ export type ReconciliationRecordRead = {
      */
     payment_attempt_id: string | null;
     /**
+     * Refund Attempt Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    refund_attempt_id: string | null;
+    /**
+     * Withdrawal Request Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    withdrawal_request_id: string | null;
+    /**
+     * Resolution Status
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    resolution_status: string;
+    /**
      * Note
      *
      * 操作说明或核对备注
@@ -3652,24 +6592,6 @@ export type RefreshSessionOut = {
 };
 
 /**
- * RefundLine
- */
-export type RefundLine = {
-    /**
-     * Order Item Id
-     *
-     * 订单明细标识
-     */
-    order_item_id: string;
-    /**
-     * Quantity
-     *
-     * 商品数量
-     */
-    quantity: number;
-};
-
-/**
  * RefundRequestCreate
  */
 export type RefundRequestCreate = {
@@ -3679,12 +6601,6 @@ export type RefundRequestCreate = {
      * 用于定位本次请求的唯一标识
      */
     request_id: string;
-    /**
-     * Items
-     *
-     * 当前分页中的资源列表
-     */
-    items: Array<RefundLine>;
     /**
      * Reason
      *
@@ -3715,6 +6631,24 @@ export type RefundRequestRead = {
      * 当前状态代码
      */
     status: string;
+    /**
+     * Review Mode
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    review_mode: string;
+    /**
+     * Items Amount
+     *
+     * 商品合计金额，单位人民币元
+     */
+    items_amount: string;
+    /**
+     * Freight Amount
+     *
+     * 订单运费，单位人民币元
+     */
+    freight_amount: string;
     /**
      * Amount
      *
@@ -3752,11 +6686,11 @@ export type RefundRequestRead = {
      */
     reviewed_at: string | null;
     /**
-     * Confirmed At
+     * Completed At
      *
-     * 权威渠道确认时间
+     * 操作完成时间
      */
-    confirmed_at: string | null;
+    completed_at: string | null;
     /**
      * Revision
      *
@@ -4154,6 +7088,34 @@ export type ResponseModelAssetRead = {
 };
 
 /**
+ * ResponseModel[AttributeRead]
+ */
+export type ResponseModelAttributeRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: AttributeRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[BatchActionResult]
  */
 export type ResponseModelBatchActionResult = {
@@ -4201,6 +7163,34 @@ export type ResponseModelBatchCompleted = {
      * 响应业务数据
      */
     data: BatchCompleted;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[BrandRead]
+ */
+export type ResponseModelBrandRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: BrandRead;
     /**
      * Request Id
      *
@@ -4322,6 +7312,146 @@ export type ResponseModelCommerceExportRead = {
 };
 
 /**
+ * ResponseModel[CommerceQuoteRead]
+ */
+export type ResponseModelCommerceQuoteRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: CommerceQuoteRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[CommissionAmountRuleRead]
+ */
+export type ResponseModelCommissionAmountRuleRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: CommissionAmountRuleRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[CommissionControlRead]
+ */
+export type ResponseModelCommissionControlRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: CommissionControlRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[CommissionDistributionRuleRead]
+ */
+export type ResponseModelCommissionDistributionRuleRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: CommissionDistributionRuleRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[CommissionPolicyRead]
+ */
+export type ResponseModelCommissionPolicyRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: CommissionPolicyRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[FreightQuote]
  */
 export type ResponseModelFreightQuote = {
@@ -4434,6 +7564,90 @@ export type ResponseModelInventoryRead = {
 };
 
 /**
+ * ResponseModel[MemberLevelConditionRead]
+ */
+export type ResponseModelMemberLevelConditionRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MemberLevelConditionRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MemberLevelRead]
+ */
+export type ResponseModelMemberLevelRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MemberLevelRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MemberPriceRuleRead]
+ */
+export type ResponseModelMemberPriceRuleRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MemberPriceRuleRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[MemberProfileRead]
  */
 export type ResponseModelMemberProfileRead = {
@@ -4511,6 +7725,34 @@ export type ResponseModelOrderRead = {
      * 响应业务数据
      */
     data: OrderRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[OrderShippingSettingRead]
+ */
+export type ResponseModelOrderShippingSettingRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: OrderShippingSettingRead;
     /**
      * Request Id
      *
@@ -4660,6 +7902,34 @@ export type ResponseModelPageResultAssetRead = {
 };
 
 /**
+ * ResponseModel[PageResult[AttributeRead]]
+ */
+export type ResponseModelPageResultAttributeRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultAttributeRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[PageResult[AuditEventRead]]
  */
 export type ResponseModelPageResultAuditEventRead = {
@@ -4679,6 +7949,62 @@ export type ResponseModelPageResultAuditEventRead = {
      * 响应业务数据
      */
     data: PageResultAuditEventRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[BrandRead]]
+ */
+export type ResponseModelPageResultBrandRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultBrandRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[CommissionPolicyRead]]
+ */
+export type ResponseModelPageResultCommissionPolicyRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultCommissionPolicyRead;
     /**
      * Request Id
      *
@@ -4772,6 +8098,118 @@ export type ResponseModelPageResultLoginEventRead = {
 };
 
 /**
+ * ResponseModel[PageResult[MemberLevelConditionRead]]
+ */
+export type ResponseModelPageResultMemberLevelConditionRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultMemberLevelConditionRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[MemberLevelEventRead]]
+ */
+export type ResponseModelPageResultMemberLevelEventRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultMemberLevelEventRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[MemberLevelRead]]
+ */
+export type ResponseModelPageResultMemberLevelRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultMemberLevelRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[MemberPriceRuleRead]]
+ */
+export type ResponseModelPageResultMemberPriceRuleRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultMemberPriceRuleRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[PageResult[MemberProfileRead]]
  */
 export type ResponseModelPageResultMemberProfileRead = {
@@ -4800,6 +8238,34 @@ export type ResponseModelPageResultMemberProfileRead = {
 };
 
 /**
+ * ResponseModel[PageResult[MembershipQualificationEventRead]]
+ */
+export type ResponseModelPageResultMembershipQualificationEventRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultMembershipQualificationEventRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[PageResult[PaymentAttemptRead]]
  */
 export type ResponseModelPageResultPaymentAttemptRead = {
@@ -4819,6 +8285,62 @@ export type ResponseModelPageResultPaymentAttemptRead = {
      * 响应业务数据
      */
     data: PageResultPaymentAttemptRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[PointsAccountRead]]
+ */
+export type ResponseModelPageResultPointsAccountRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultPointsAccountRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[PointsLedgerRead]]
+ */
+export type ResponseModelPageResultPointsLedgerRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultPointsLedgerRead;
     /**
      * Request Id
      *
@@ -5164,6 +8686,34 @@ export type ResponseModelPaymentAttemptRead = {
 };
 
 /**
+ * ResponseModel[PointsAccountRead]
+ */
+export type ResponseModelPointsAccountRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PointsAccountRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[ProductRead]
  */
 export type ResponseModelProductRead = {
@@ -5416,6 +8966,34 @@ export type ResponseModelSiteProfileRead = {
 };
 
 /**
+ * ResponseModel[StandardValueRead]
+ */
+export type ResponseModelStandardValueRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: StandardValueRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[SystemCapabilitiesRead]
  */
 export type ResponseModelSystemCapabilitiesRead = {
@@ -5491,6 +9069,34 @@ export type ResponseModelSystemStatus = {
      * 响应业务数据
      */
     data: SystemStatus;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[TemplateRead]
+ */
+export type ResponseModelTemplateRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: TemplateRead;
     /**
      * Request Id
      *
@@ -5734,6 +9340,66 @@ export type ResponseModelListCategoryRead = {
 };
 
 /**
+ * ResponseModel[list[CommissionAmountRuleRead]]
+ */
+export type ResponseModelListCommissionAmountRuleRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * Data
+     *
+     * 响应业务数据
+     */
+    data: Array<CommissionAmountRuleRead>;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[list[CommissionDistributionRuleRead]]
+ */
+export type ResponseModelListCommissionDistributionRuleRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * Data
+     *
+     * 响应业务数据
+     */
+    data: Array<CommissionDistributionRuleRead>;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[list[PermissionRead]]
  */
 export type ResponseModelListPermissionRead = {
@@ -5785,6 +9451,36 @@ export type ResponseModelListRefundRequestRead = {
      * 响应业务数据
      */
     data: Array<RefundRequestRead>;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[list[StandardValueRead]]
+ */
+export type ResponseModelListStandardValueRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * Data
+     *
+     * 响应业务数据
+     */
+    data: Array<StandardValueRead>;
     /**
      * Request Id
      *
@@ -6124,54 +9820,6 @@ export type ShipmentCreate = {
 };
 
 /**
- * ShippingQuoteGroup
- */
-export type ShippingQuoteGroup = {
-    /**
-     * Template Id
-     *
-     * 运费模板标识
-     */
-    template_id: string | null;
-    /**
-     * Revision
-     *
-     * 资源并发控制版本
-     */
-    revision: number | null;
-    /**
-     * Product Type
-     *
-     * 实物或虚拟商品类型
-     */
-    product_type: string;
-    /**
-     * Pieces
-     *
-     * 计费件数
-     */
-    pieces: number;
-    /**
-     * Weight Grams
-     *
-     * 计费重量，单位克
-     */
-    weight_grams: number;
-    /**
-     * Items Amount
-     *
-     * 商品合计金额，单位人民币元
-     */
-    items_amount: string;
-    /**
-     * Freight
-     *
-     * 本组运费，单位人民币元
-     */
-    freight: string;
-};
-
-/**
  * ShippingRegion
  */
 export type ShippingRegionInput = {
@@ -6241,6 +9889,114 @@ export type ShippingRegionOutput = {
      * 每续单位费用，人民币元
      */
     additional_price: string;
+};
+
+/**
+ * ShippingRegionRule
+ */
+export type ShippingRegionRuleInput = {
+    /**
+     * Free Shipping Threshold
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    free_shipping_threshold?: number | string | null;
+    /**
+     * Fixed Fee
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    fixed_fee: number | string;
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Province Codes
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    province_codes: Array<string>;
+};
+
+/**
+ * ShippingRegionRule
+ */
+export type ShippingRegionRuleOutput = {
+    /**
+     * Free Shipping Threshold
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    free_shipping_threshold?: string | null;
+    /**
+     * Fixed Fee
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    fixed_fee: string;
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Province Codes
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    province_codes: Array<string>;
+};
+
+/**
+ * ShippingRuleValue
+ */
+export type ShippingRuleValueInput = {
+    /**
+     * Free Shipping Threshold
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    free_shipping_threshold?: number | string | null;
+    /**
+     * Fixed Fee
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    fixed_fee: number | string;
+};
+
+/**
+ * ShippingRuleValue
+ */
+export type ShippingRuleValueOutput = {
+    /**
+     * Free Shipping Threshold
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    free_shipping_threshold?: string | null;
+    /**
+     * Fixed Fee
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    fixed_fee: string;
 };
 
 /**
@@ -6484,85 +10240,89 @@ export type SiteSettingPatchIn = {
 };
 
 /**
- * SkuInput
- */
-export type SkuInput = {
-    /**
-     * Code
-     *
-     * 全局唯一 SKU 编码
-     */
-    code: string;
-    /**
-     * Specifications
-     *
-     * 规格组合，无规格为默认 SKU
-     */
-    specifications?: {
-        [key: string]: string;
-    };
-    /**
-     * Price
-     *
-     * 基础售价人民币元
-     */
-    price: number | string;
-    /**
-     * Weight Grams
-     *
-     * 重量克数，虚拟商品为零
-     */
-    weight_grams: number;
-    /**
-     * Is Active
-     *
-     * 是否启用 SKU
-     */
-    is_active?: boolean;
-};
-
-/**
  * SkuRead
  */
 export type SkuRead = {
     /**
      * Code
      *
-     * 全局唯一 SKU 编码
+     * 稳定程序代码
      */
     code: string;
     /**
-     * Specifications
-     *
-     * 规格组合，无规格为默认 SKU
-     */
-    specifications?: {
-        [key: string]: string;
-    };
-    /**
      * Price
      *
-     * 基础售价人民币元
+     * 当前业务字段，具体语义由所属请求或响应模型定义
      */
     price: string;
     /**
+     * Cost Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    cost_price?: string | null;
+    /**
+     * Market Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    market_price?: string | null;
+    /**
+     * Wholesale Prices
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    wholesale_prices?: Array<WholesalePriceOutput>;
+    /**
      * Weight Grams
      *
-     * 重量克数，虚拟商品为零
+     * 计费重量，单位克
      */
-    weight_grams: number;
+    weight_grams?: number | null;
     /**
      * Is Active
      *
-     * 是否启用 SKU
+     * 资源当前是否启用
      */
     is_active?: boolean;
+    /**
+     * Spec Value Ids
+     *
+     * 当前商品采用版本的候选值 ID，无规格为空
+     */
+    spec_value_ids?: Array<string>;
     /**
      * Id
      *
      * 稳定 SKU ID
      */
     id: string;
+    /**
+     * Sku No
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sku_no: number;
+    /**
+     * Specifications
+     *
+     * 商品规格名称与取值
+     */
+    specifications: {
+        [key: string]: string;
+    };
+    /**
+     * Specification Key
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    specification_key: string;
+    /**
+     * Archived At
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    archived_at: string | null;
 };
 
 /**
@@ -6596,39 +10356,211 @@ export type SkuUpdate = {
     /**
      * Code
      *
-     * 全局唯一 SKU 编码
+     * 稳定程序代码
      */
     code: string;
     /**
-     * Specifications
-     *
-     * 规格组合，无规格为默认 SKU
-     */
-    specifications?: {
-        [key: string]: string;
-    };
-    /**
      * Price
      *
-     * 基础售价人民币元
+     * 当前业务字段，具体语义由所属请求或响应模型定义
      */
     price: number | string;
     /**
+     * Cost Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    cost_price?: number | string | null;
+    /**
+     * Market Price
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    market_price?: number | string | null;
+    /**
+     * Wholesale Prices
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    wholesale_prices?: Array<WholesalePriceInput>;
+    /**
      * Weight Grams
      *
-     * 重量克数，虚拟商品为零
+     * 计费重量，单位克
      */
-    weight_grams: number;
+    weight_grams?: number | null;
     /**
      * Is Active
      *
-     * 是否启用 SKU
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+    /**
+     * Spec Value Ids
+     *
+     * 当前商品采用版本的候选值 ID，无规格为空
+     */
+    spec_value_ids?: Array<string>;
+    /**
+     * Revision
+     *
+     * 商品当前版本，变体编辑共用商品版本
+     */
+    revision: number;
+};
+
+/**
+ * SpecificationConversion
+ */
+export type SpecificationConversion = {
+    /**
+     * Attributes
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    attributes?: Array<AdoptionInput>;
+    /**
+     * Skus
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    skus: Array<NewSkuInput>;
+    /**
+     * Category Revision
+     *
+     * 采用时所属分类及模板版本
+     */
+    category_revision: number;
+    /**
+     * Revision
+     *
+     * 商品当前版本，转换整体原子提交
+     */
+    revision: number;
+};
+
+/**
+ * StandardValueInput
+ */
+export type StandardValueInput = {
+    /**
+     * Attribute Revision
+     *
+     * 所属公共属性当前版本
+     */
+    attribute_revision: number;
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active?: boolean;
+};
+
+/**
+ * StandardValueRead
+ */
+export type StandardValueRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Attribute Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    attribute_id: string;
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
+     */
+    is_active: boolean;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+};
+
+/**
+ * StandardValueUpdate
+ */
+export type StandardValueUpdate = {
+    /**
+     * Attribute Revision
+     *
+     * 所属公共属性当前版本
+     */
+    attribute_revision: number;
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Name
+     *
+     * 资源名称
+     */
+    name: string;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order?: number | null;
+    /**
+     * Is Active
+     *
+     * 资源当前是否启用
      */
     is_active?: boolean;
     /**
      * Revision
      *
-     * 商品当前版本，变体编辑共用商品版本
+     * 资源并发控制版本
      */
     revision: number;
 };
@@ -6813,6 +10745,84 @@ export type SystemTelemetryRead = {
      * 统计数据是否命中 Redis 缓存
      */
     cached?: boolean;
+};
+
+/**
+ * TemplateItem
+ */
+export type TemplateItem = {
+    /**
+     * Attribute Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    attribute_id: string;
+    /**
+     * Is Variant
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    is_variant?: boolean;
+    /**
+     * Is Required
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    is_required?: boolean;
+    /**
+     * Sort Order
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sort_order?: number | null;
+    /**
+     * Allow Custom Value
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    allow_custom_value?: boolean;
+};
+
+/**
+ * TemplateRead
+ */
+export type TemplateRead = {
+    /**
+     * Category Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    category_id: string;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Attributes
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    attributes: Array<TemplateItem>;
+};
+
+/**
+ * TemplateUpdate
+ */
+export type TemplateUpdate = {
+    /**
+     * Revision
+     *
+     * 分类当前版本
+     */
+    revision: number;
+    /**
+     * Attributes
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    attributes: Array<TemplateItem>;
 };
 
 /**
@@ -7208,11 +11218,61 @@ export type WalletLedgerRead = {
      */
     reference_id: string;
     /**
+     * Wallet Revision
+     *
+     * 变动后钱包版本
+     */
+    wallet_revision: number;
+    /**
+     * Balance After
+     *
+     * 变动后余额快照
+     */
+    balance_after: {
+        [key: string]: unknown;
+    };
+    /**
      * Created At
      *
      * 入账时间
      */
     created_at: string;
+};
+
+/**
+ * WholesalePrice
+ */
+export type WholesalePriceInput = {
+    /**
+     * Min Quantity
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    min_quantity: number;
+    /**
+     * Unit Price
+     *
+     * 成交单价，单位人民币元
+     */
+    unit_price: number | string;
+};
+
+/**
+ * WholesalePrice
+ */
+export type WholesalePriceOutput = {
+    /**
+     * Min Quantity
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    min_quantity: number;
+    /**
+     * Unit Price
+     *
+     * 成交单价，单位人民币元
+     */
+    unit_price: string;
 };
 
 /**
@@ -7237,6 +11297,32 @@ export type WithdrawalCreate = {
      * 脱敏收款目标引用
      */
     destination_reference: string;
+};
+
+/**
+ * WithdrawalManualCompletion
+ *
+ * 管理员确认线下转账已完成的不可逆命令。
+ */
+export type WithdrawalManualCompletion = {
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Note
+     *
+     * 操作说明或核对备注
+     */
+    note: string;
+    /**
+     * Payment Reference
+     *
+     * 线下转账凭证或流水号
+     */
+    payment_reference: string;
 };
 
 /**
@@ -7346,6 +11432,470 @@ export type WithdrawalReview = {
      */
     note: string;
 };
+
+export type BrandsApiV1AdminBrandsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/brands';
+};
+
+export type BrandsApiV1AdminBrandsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type BrandsApiV1AdminBrandsGetError = BrandsApiV1AdminBrandsGetErrors[keyof BrandsApiV1AdminBrandsGetErrors];
+
+export type BrandsApiV1AdminBrandsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultBrandRead;
+};
+
+export type BrandsApiV1AdminBrandsGetResponse = BrandsApiV1AdminBrandsGetResponses[keyof BrandsApiV1AdminBrandsGetResponses];
+
+export type CreateBrandApiV1AdminBrandsPostData = {
+    body: BrandInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/brands';
+};
+
+export type CreateBrandApiV1AdminBrandsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CreateBrandApiV1AdminBrandsPostError = CreateBrandApiV1AdminBrandsPostErrors[keyof CreateBrandApiV1AdminBrandsPostErrors];
+
+export type CreateBrandApiV1AdminBrandsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelBrandRead;
+};
+
+export type CreateBrandApiV1AdminBrandsPostResponse = CreateBrandApiV1AdminBrandsPostResponses[keyof CreateBrandApiV1AdminBrandsPostResponses];
+
+export type BrandApiV1AdminBrandsBrandIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Brand Id
+         */
+        brand_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/brands/{brand_id}';
+};
+
+export type BrandApiV1AdminBrandsBrandIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type BrandApiV1AdminBrandsBrandIdGetError = BrandApiV1AdminBrandsBrandIdGetErrors[keyof BrandApiV1AdminBrandsBrandIdGetErrors];
+
+export type BrandApiV1AdminBrandsBrandIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelBrandRead;
+};
+
+export type BrandApiV1AdminBrandsBrandIdGetResponse = BrandApiV1AdminBrandsBrandIdGetResponses[keyof BrandApiV1AdminBrandsBrandIdGetResponses];
+
+export type UpdateBrandApiV1AdminBrandsBrandIdPutData = {
+    body: BrandUpdate;
+    path: {
+        /**
+         * Brand Id
+         */
+        brand_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/brands/{brand_id}';
+};
+
+export type UpdateBrandApiV1AdminBrandsBrandIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateBrandApiV1AdminBrandsBrandIdPutError = UpdateBrandApiV1AdminBrandsBrandIdPutErrors[keyof UpdateBrandApiV1AdminBrandsBrandIdPutErrors];
+
+export type UpdateBrandApiV1AdminBrandsBrandIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelBrandRead;
+};
+
+export type UpdateBrandApiV1AdminBrandsBrandIdPutResponse = UpdateBrandApiV1AdminBrandsBrandIdPutResponses[keyof UpdateBrandApiV1AdminBrandsBrandIdPutResponses];
+
+export type AttributesApiV1AdminSpecAttributesGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/spec-attributes';
+};
+
+export type AttributesApiV1AdminSpecAttributesGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AttributesApiV1AdminSpecAttributesGetError = AttributesApiV1AdminSpecAttributesGetErrors[keyof AttributesApiV1AdminSpecAttributesGetErrors];
+
+export type AttributesApiV1AdminSpecAttributesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultAttributeRead;
+};
+
+export type AttributesApiV1AdminSpecAttributesGetResponse = AttributesApiV1AdminSpecAttributesGetResponses[keyof AttributesApiV1AdminSpecAttributesGetResponses];
+
+export type CreateAttributeApiV1AdminSpecAttributesPostData = {
+    body: AttributeInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/spec-attributes';
+};
+
+export type CreateAttributeApiV1AdminSpecAttributesPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CreateAttributeApiV1AdminSpecAttributesPostError = CreateAttributeApiV1AdminSpecAttributesPostErrors[keyof CreateAttributeApiV1AdminSpecAttributesPostErrors];
+
+export type CreateAttributeApiV1AdminSpecAttributesPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelAttributeRead;
+};
+
+export type CreateAttributeApiV1AdminSpecAttributesPostResponse = CreateAttributeApiV1AdminSpecAttributesPostResponses[keyof CreateAttributeApiV1AdminSpecAttributesPostResponses];
+
+export type AttributeApiV1AdminSpecAttributesAttributeIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Attribute Id
+         */
+        attribute_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/spec-attributes/{attribute_id}';
+};
+
+export type AttributeApiV1AdminSpecAttributesAttributeIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AttributeApiV1AdminSpecAttributesAttributeIdGetError = AttributeApiV1AdminSpecAttributesAttributeIdGetErrors[keyof AttributeApiV1AdminSpecAttributesAttributeIdGetErrors];
+
+export type AttributeApiV1AdminSpecAttributesAttributeIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelAttributeRead;
+};
+
+export type AttributeApiV1AdminSpecAttributesAttributeIdGetResponse = AttributeApiV1AdminSpecAttributesAttributeIdGetResponses[keyof AttributeApiV1AdminSpecAttributesAttributeIdGetResponses];
+
+export type UpdateAttributeApiV1AdminSpecAttributesAttributeIdPutData = {
+    body: AttributeUpdate;
+    path: {
+        /**
+         * Attribute Id
+         */
+        attribute_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/spec-attributes/{attribute_id}';
+};
+
+export type UpdateAttributeApiV1AdminSpecAttributesAttributeIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateAttributeApiV1AdminSpecAttributesAttributeIdPutError = UpdateAttributeApiV1AdminSpecAttributesAttributeIdPutErrors[keyof UpdateAttributeApiV1AdminSpecAttributesAttributeIdPutErrors];
+
+export type UpdateAttributeApiV1AdminSpecAttributesAttributeIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelAttributeRead;
+};
+
+export type UpdateAttributeApiV1AdminSpecAttributesAttributeIdPutResponse = UpdateAttributeApiV1AdminSpecAttributesAttributeIdPutResponses[keyof UpdateAttributeApiV1AdminSpecAttributesAttributeIdPutResponses];
+
+export type ValuesApiV1AdminSpecAttributesAttributeIdValuesGetData = {
+    body?: never;
+    path: {
+        /**
+         * Attribute Id
+         */
+        attribute_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/spec-attributes/{attribute_id}/values';
+};
+
+export type ValuesApiV1AdminSpecAttributesAttributeIdValuesGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ValuesApiV1AdminSpecAttributesAttributeIdValuesGetError = ValuesApiV1AdminSpecAttributesAttributeIdValuesGetErrors[keyof ValuesApiV1AdminSpecAttributesAttributeIdValuesGetErrors];
+
+export type ValuesApiV1AdminSpecAttributesAttributeIdValuesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListStandardValueRead;
+};
+
+export type ValuesApiV1AdminSpecAttributesAttributeIdValuesGetResponse = ValuesApiV1AdminSpecAttributesAttributeIdValuesGetResponses[keyof ValuesApiV1AdminSpecAttributesAttributeIdValuesGetResponses];
+
+export type CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostData = {
+    body: StandardValueInput;
+    path: {
+        /**
+         * Attribute Id
+         */
+        attribute_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/spec-attributes/{attribute_id}/values';
+};
+
+export type CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostError = CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostErrors[keyof CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostErrors];
+
+export type CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelStandardValueRead;
+};
+
+export type CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostResponse = CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostResponses[keyof CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostResponses];
+
+export type UpdateValueApiV1AdminSpecAttributesAttributeIdValuesValueIdPutData = {
+    body: StandardValueUpdate;
+    path: {
+        /**
+         * Attribute Id
+         */
+        attribute_id: string;
+        /**
+         * Value Id
+         */
+        value_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/spec-attributes/{attribute_id}/values/{value_id}';
+};
+
+export type UpdateValueApiV1AdminSpecAttributesAttributeIdValuesValueIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateValueApiV1AdminSpecAttributesAttributeIdValuesValueIdPutError = UpdateValueApiV1AdminSpecAttributesAttributeIdValuesValueIdPutErrors[keyof UpdateValueApiV1AdminSpecAttributesAttributeIdValuesValueIdPutErrors];
+
+export type UpdateValueApiV1AdminSpecAttributesAttributeIdValuesValueIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelStandardValueRead;
+};
+
+export type UpdateValueApiV1AdminSpecAttributesAttributeIdValuesValueIdPutResponse = UpdateValueApiV1AdminSpecAttributesAttributeIdValuesValueIdPutResponses[keyof UpdateValueApiV1AdminSpecAttributesAttributeIdValuesValueIdPutResponses];
+
+export type TemplateApiV1AdminProductCategoriesCategoryIdAttributesGetData = {
+    body?: never;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/product-categories/{category_id}/attributes';
+};
+
+export type TemplateApiV1AdminProductCategoriesCategoryIdAttributesGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type TemplateApiV1AdminProductCategoriesCategoryIdAttributesGetError = TemplateApiV1AdminProductCategoriesCategoryIdAttributesGetErrors[keyof TemplateApiV1AdminProductCategoriesCategoryIdAttributesGetErrors];
+
+export type TemplateApiV1AdminProductCategoriesCategoryIdAttributesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelTemplateRead;
+};
+
+export type TemplateApiV1AdminProductCategoriesCategoryIdAttributesGetResponse = TemplateApiV1AdminProductCategoriesCategoryIdAttributesGetResponses[keyof TemplateApiV1AdminProductCategoriesCategoryIdAttributesGetResponses];
+
+export type UpdateTemplateApiV1AdminProductCategoriesCategoryIdAttributesPutData = {
+    body: TemplateUpdate;
+    path: {
+        /**
+         * Category Id
+         */
+        category_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/product-categories/{category_id}/attributes';
+};
+
+export type UpdateTemplateApiV1AdminProductCategoriesCategoryIdAttributesPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateTemplateApiV1AdminProductCategoriesCategoryIdAttributesPutError = UpdateTemplateApiV1AdminProductCategoriesCategoryIdAttributesPutErrors[keyof UpdateTemplateApiV1AdminProductCategoriesCategoryIdAttributesPutErrors];
+
+export type UpdateTemplateApiV1AdminProductCategoriesCategoryIdAttributesPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelTemplateRead;
+};
+
+export type UpdateTemplateApiV1AdminProductCategoriesCategoryIdAttributesPutResponse = UpdateTemplateApiV1AdminProductCategoriesCategoryIdAttributesPutResponses[keyof UpdateTemplateApiV1AdminProductCategoriesCategoryIdAttributesPutResponses];
+
+export type ConvertSpecificationsApiV1AdminProductsProductIdSpecificationConversionsPostData = {
+    body: SpecificationConversion;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/products/{product_id}/specification-conversions';
+};
+
+export type ConvertSpecificationsApiV1AdminProductsProductIdSpecificationConversionsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ConvertSpecificationsApiV1AdminProductsProductIdSpecificationConversionsPostError = ConvertSpecificationsApiV1AdminProductsProductIdSpecificationConversionsPostErrors[keyof ConvertSpecificationsApiV1AdminProductsProductIdSpecificationConversionsPostErrors];
+
+export type ConvertSpecificationsApiV1AdminProductsProductIdSpecificationConversionsPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelProductRead;
+};
+
+export type ConvertSpecificationsApiV1AdminProductsProductIdSpecificationConversionsPostResponse = ConvertSpecificationsApiV1AdminProductsProductIdSpecificationConversionsPostResponses[keyof ConvertSpecificationsApiV1AdminProductsProductIdSpecificationConversionsPostResponses];
+
+export type UpdateDescriptionApiV1AdminProductsProductIdAttributeValuesAdoptionIdPutData = {
+    body: DescriptionUpdate;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+        /**
+         * Adoption Id
+         */
+        adoption_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/products/{product_id}/attribute-values/{adoption_id}';
+};
+
+export type UpdateDescriptionApiV1AdminProductsProductIdAttributeValuesAdoptionIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateDescriptionApiV1AdminProductsProductIdAttributeValuesAdoptionIdPutError = UpdateDescriptionApiV1AdminProductsProductIdAttributeValuesAdoptionIdPutErrors[keyof UpdateDescriptionApiV1AdminProductsProductIdAttributeValuesAdoptionIdPutErrors];
+
+export type UpdateDescriptionApiV1AdminProductsProductIdAttributeValuesAdoptionIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelProductRead;
+};
+
+export type UpdateDescriptionApiV1AdminProductsProductIdAttributeValuesAdoptionIdPutResponse = UpdateDescriptionApiV1AdminProductsProductIdAttributeValuesAdoptionIdPutResponses[keyof UpdateDescriptionApiV1AdminProductsProductIdAttributeValuesAdoptionIdPutResponses];
 
 export type OrdersPageApiV1AdminOrdersGetData = {
     body?: never;
@@ -9180,6 +13730,465 @@ export type AddressUpdateApiV1AddressesAddressIdPutResponses = {
 
 export type AddressUpdateApiV1AddressesAddressIdPutResponse = AddressUpdateApiV1AddressesAddressIdPutResponses[keyof AddressUpdateApiV1AddressesAddressIdPutResponses];
 
+export type CommissionControlApiV1AdminSettingsCommissionControlGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/settings/commission-control';
+};
+
+export type CommissionControlApiV1AdminSettingsCommissionControlGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CommissionControlApiV1AdminSettingsCommissionControlGetError = CommissionControlApiV1AdminSettingsCommissionControlGetErrors[keyof CommissionControlApiV1AdminSettingsCommissionControlGetErrors];
+
+export type CommissionControlApiV1AdminSettingsCommissionControlGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommissionControlRead;
+};
+
+export type CommissionControlApiV1AdminSettingsCommissionControlGetResponse = CommissionControlApiV1AdminSettingsCommissionControlGetResponses[keyof CommissionControlApiV1AdminSettingsCommissionControlGetResponses];
+
+export type UpdateCommissionControlApiV1AdminSettingsCommissionControlPutData = {
+    body: CommissionControlUpdate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/settings/commission-control';
+};
+
+export type UpdateCommissionControlApiV1AdminSettingsCommissionControlPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateCommissionControlApiV1AdminSettingsCommissionControlPutError = UpdateCommissionControlApiV1AdminSettingsCommissionControlPutErrors[keyof UpdateCommissionControlApiV1AdminSettingsCommissionControlPutErrors];
+
+export type UpdateCommissionControlApiV1AdminSettingsCommissionControlPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommissionControlRead;
+};
+
+export type UpdateCommissionControlApiV1AdminSettingsCommissionControlPutResponse = UpdateCommissionControlApiV1AdminSettingsCommissionControlPutResponses[keyof UpdateCommissionControlApiV1AdminSettingsCommissionControlPutResponses];
+
+export type PoliciesApiV1AdminCommissionPoliciesGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/commission-policies';
+};
+
+export type PoliciesApiV1AdminCommissionPoliciesGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PoliciesApiV1AdminCommissionPoliciesGetError = PoliciesApiV1AdminCommissionPoliciesGetErrors[keyof PoliciesApiV1AdminCommissionPoliciesGetErrors];
+
+export type PoliciesApiV1AdminCommissionPoliciesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultCommissionPolicyRead;
+};
+
+export type PoliciesApiV1AdminCommissionPoliciesGetResponse = PoliciesApiV1AdminCommissionPoliciesGetResponses[keyof PoliciesApiV1AdminCommissionPoliciesGetResponses];
+
+export type CreatePolicyApiV1AdminCommissionPoliciesPostData = {
+    body: CommissionPolicyCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/commission-policies';
+};
+
+export type CreatePolicyApiV1AdminCommissionPoliciesPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CreatePolicyApiV1AdminCommissionPoliciesPostError = CreatePolicyApiV1AdminCommissionPoliciesPostErrors[keyof CreatePolicyApiV1AdminCommissionPoliciesPostErrors];
+
+export type CreatePolicyApiV1AdminCommissionPoliciesPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelCommissionPolicyRead;
+};
+
+export type CreatePolicyApiV1AdminCommissionPoliciesPostResponse = CreatePolicyApiV1AdminCommissionPoliciesPostResponses[keyof CreatePolicyApiV1AdminCommissionPoliciesPostResponses];
+
+export type PolicyApiV1AdminCommissionPoliciesPolicyIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Policy Id
+         */
+        policy_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/commission-policies/{policy_id}';
+};
+
+export type PolicyApiV1AdminCommissionPoliciesPolicyIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PolicyApiV1AdminCommissionPoliciesPolicyIdGetError = PolicyApiV1AdminCommissionPoliciesPolicyIdGetErrors[keyof PolicyApiV1AdminCommissionPoliciesPolicyIdGetErrors];
+
+export type PolicyApiV1AdminCommissionPoliciesPolicyIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommissionPolicyRead;
+};
+
+export type PolicyApiV1AdminCommissionPoliciesPolicyIdGetResponse = PolicyApiV1AdminCommissionPoliciesPolicyIdGetResponses[keyof PolicyApiV1AdminCommissionPoliciesPolicyIdGetResponses];
+
+export type UpdatePolicyApiV1AdminCommissionPoliciesPolicyIdPutData = {
+    body: CommissionPolicyUpdate;
+    path: {
+        /**
+         * Policy Id
+         */
+        policy_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/commission-policies/{policy_id}';
+};
+
+export type UpdatePolicyApiV1AdminCommissionPoliciesPolicyIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdatePolicyApiV1AdminCommissionPoliciesPolicyIdPutError = UpdatePolicyApiV1AdminCommissionPoliciesPolicyIdPutErrors[keyof UpdatePolicyApiV1AdminCommissionPoliciesPolicyIdPutErrors];
+
+export type UpdatePolicyApiV1AdminCommissionPoliciesPolicyIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommissionPolicyRead;
+};
+
+export type UpdatePolicyApiV1AdminCommissionPoliciesPolicyIdPutResponse = UpdatePolicyApiV1AdminCommissionPoliciesPolicyIdPutResponses[keyof UpdatePolicyApiV1AdminCommissionPoliciesPolicyIdPutResponses];
+
+export type PublishPolicyApiV1AdminCommissionPoliciesPolicyIdPublishPostData = {
+    body: CommissionPolicyPublish;
+    path: {
+        /**
+         * Policy Id
+         */
+        policy_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/commission-policies/{policy_id}/publish';
+};
+
+export type PublishPolicyApiV1AdminCommissionPoliciesPolicyIdPublishPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PublishPolicyApiV1AdminCommissionPoliciesPolicyIdPublishPostError = PublishPolicyApiV1AdminCommissionPoliciesPolicyIdPublishPostErrors[keyof PublishPolicyApiV1AdminCommissionPoliciesPolicyIdPublishPostErrors];
+
+export type PublishPolicyApiV1AdminCommissionPoliciesPolicyIdPublishPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommissionPolicyRead;
+};
+
+export type PublishPolicyApiV1AdminCommissionPoliciesPolicyIdPublishPostResponse = PublishPolicyApiV1AdminCommissionPoliciesPolicyIdPublishPostResponses[keyof PublishPolicyApiV1AdminCommissionPoliciesPolicyIdPublishPostResponses];
+
+export type AmountRulesApiV1AdminCommissionPoliciesPolicyIdAmountRulesGetData = {
+    body?: never;
+    path: {
+        /**
+         * Policy Id
+         */
+        policy_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/commission-policies/{policy_id}/amount-rules';
+};
+
+export type AmountRulesApiV1AdminCommissionPoliciesPolicyIdAmountRulesGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AmountRulesApiV1AdminCommissionPoliciesPolicyIdAmountRulesGetError = AmountRulesApiV1AdminCommissionPoliciesPolicyIdAmountRulesGetErrors[keyof AmountRulesApiV1AdminCommissionPoliciesPolicyIdAmountRulesGetErrors];
+
+export type AmountRulesApiV1AdminCommissionPoliciesPolicyIdAmountRulesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListCommissionAmountRuleRead;
+};
+
+export type AmountRulesApiV1AdminCommissionPoliciesPolicyIdAmountRulesGetResponse = AmountRulesApiV1AdminCommissionPoliciesPolicyIdAmountRulesGetResponses[keyof AmountRulesApiV1AdminCommissionPoliciesPolicyIdAmountRulesGetResponses];
+
+export type AddAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesPostData = {
+    body: CommissionAmountRuleCreate;
+    path: {
+        /**
+         * Policy Id
+         */
+        policy_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/commission-policies/{policy_id}/amount-rules';
+};
+
+export type AddAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AddAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesPostError = AddAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesPostErrors[keyof AddAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesPostErrors];
+
+export type AddAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelCommissionAmountRuleRead;
+};
+
+export type AddAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesPostResponse = AddAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesPostResponses[keyof AddAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesPostResponses];
+
+export type DeleteAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Policy Id
+         */
+        policy_id: string;
+        /**
+         * Rule Id
+         */
+        rule_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/commission-policies/{policy_id}/amount-rules/{rule_id}';
+};
+
+export type DeleteAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdDeleteErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdDeleteError = DeleteAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdDeleteErrors[keyof DeleteAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdDeleteErrors];
+
+export type DeleteAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdDeleteResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelNoneType;
+};
+
+export type DeleteAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdDeleteResponse = DeleteAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdDeleteResponses[keyof DeleteAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdDeleteResponses];
+
+export type UpdateAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdPutData = {
+    body: CommissionAmountRuleCreate;
+    path: {
+        /**
+         * Policy Id
+         */
+        policy_id: string;
+        /**
+         * Rule Id
+         */
+        rule_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/commission-policies/{policy_id}/amount-rules/{rule_id}';
+};
+
+export type UpdateAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdPutError = UpdateAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdPutErrors[keyof UpdateAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdPutErrors];
+
+export type UpdateAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommissionAmountRuleRead;
+};
+
+export type UpdateAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdPutResponse = UpdateAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdPutResponses[keyof UpdateAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleIdPutResponses];
+
+export type DistributionRulesApiV1AdminCommissionPoliciesPolicyIdDistributionRulesGetData = {
+    body?: never;
+    path: {
+        /**
+         * Policy Id
+         */
+        policy_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/commission-policies/{policy_id}/distribution-rules';
+};
+
+export type DistributionRulesApiV1AdminCommissionPoliciesPolicyIdDistributionRulesGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type DistributionRulesApiV1AdminCommissionPoliciesPolicyIdDistributionRulesGetError = DistributionRulesApiV1AdminCommissionPoliciesPolicyIdDistributionRulesGetErrors[keyof DistributionRulesApiV1AdminCommissionPoliciesPolicyIdDistributionRulesGetErrors];
+
+export type DistributionRulesApiV1AdminCommissionPoliciesPolicyIdDistributionRulesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListCommissionDistributionRuleRead;
+};
+
+export type DistributionRulesApiV1AdminCommissionPoliciesPolicyIdDistributionRulesGetResponse = DistributionRulesApiV1AdminCommissionPoliciesPolicyIdDistributionRulesGetResponses[keyof DistributionRulesApiV1AdminCommissionPoliciesPolicyIdDistributionRulesGetResponses];
+
+export type AddDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesPostData = {
+    body: CommissionDistributionRuleCreate;
+    path: {
+        /**
+         * Policy Id
+         */
+        policy_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/commission-policies/{policy_id}/distribution-rules';
+};
+
+export type AddDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AddDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesPostError = AddDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesPostErrors[keyof AddDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesPostErrors];
+
+export type AddDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelCommissionDistributionRuleRead;
+};
+
+export type AddDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesPostResponse = AddDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesPostResponses[keyof AddDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesPostResponses];
+
+export type DeleteDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Policy Id
+         */
+        policy_id: string;
+        /**
+         * Rule Id
+         */
+        rule_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/commission-policies/{policy_id}/distribution-rules/{rule_id}';
+};
+
+export type DeleteDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdDeleteErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdDeleteError = DeleteDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdDeleteErrors[keyof DeleteDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdDeleteErrors];
+
+export type DeleteDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdDeleteResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelNoneType;
+};
+
+export type DeleteDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdDeleteResponse = DeleteDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdDeleteResponses[keyof DeleteDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdDeleteResponses];
+
+export type UpdateDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdPutData = {
+    body: CommissionDistributionRuleCreate;
+    path: {
+        /**
+         * Policy Id
+         */
+        policy_id: string;
+        /**
+         * Rule Id
+         */
+        rule_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/commission-policies/{policy_id}/distribution-rules/{rule_id}';
+};
+
+export type UpdateDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdPutError = UpdateDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdPutErrors[keyof UpdateDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdPutErrors];
+
+export type UpdateDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommissionDistributionRuleRead;
+};
+
+export type UpdateDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdPutResponse = UpdateDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdPutResponses[keyof UpdateDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributionRulesRuleIdPutResponses];
+
 export type ProfileReadApiV1DistributionMeProfileGetData = {
     body?: never;
     path?: never;
@@ -9440,6 +14449,36 @@ export type AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResp
 };
 
 export type AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponse = AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponses[keyof AdminRejectWithdrawalApiV1AdminWithdrawalsWithdrawalIdRejectPostResponses];
+
+export type AdminCompleteWithdrawalManuallyApiV1AdminWithdrawalsWithdrawalIdCompleteManuallyPostData = {
+    body: WithdrawalManualCompletion;
+    path: {
+        /**
+         * Withdrawal Id
+         */
+        withdrawal_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/withdrawals/{withdrawal_id}/complete-manually';
+};
+
+export type AdminCompleteWithdrawalManuallyApiV1AdminWithdrawalsWithdrawalIdCompleteManuallyPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminCompleteWithdrawalManuallyApiV1AdminWithdrawalsWithdrawalIdCompleteManuallyPostError = AdminCompleteWithdrawalManuallyApiV1AdminWithdrawalsWithdrawalIdCompleteManuallyPostErrors[keyof AdminCompleteWithdrawalManuallyApiV1AdminWithdrawalsWithdrawalIdCompleteManuallyPostErrors];
+
+export type AdminCompleteWithdrawalManuallyApiV1AdminWithdrawalsWithdrawalIdCompleteManuallyPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelWithdrawalRead;
+};
+
+export type AdminCompleteWithdrawalManuallyApiV1AdminWithdrawalsWithdrawalIdCompleteManuallyPostResponse = AdminCompleteWithdrawalManuallyApiV1AdminWithdrawalsWithdrawalIdCompleteManuallyPostResponses[keyof AdminCompleteWithdrawalManuallyApiV1AdminWithdrawalsWithdrawalIdCompleteManuallyPostResponses];
 
 export type AdminOrderReadApiV1AdminOrdersOrderIdGetData = {
     body?: never;
@@ -10063,6 +15102,552 @@ export type AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponses = {
 };
 
 export type AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponse = AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponses[keyof AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponses];
+
+export type MemberLevelsApiV1AdminMemberLevelsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/member-levels';
+};
+
+export type MemberLevelsApiV1AdminMemberLevelsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type MemberLevelsApiV1AdminMemberLevelsGetError = MemberLevelsApiV1AdminMemberLevelsGetErrors[keyof MemberLevelsApiV1AdminMemberLevelsGetErrors];
+
+export type MemberLevelsApiV1AdminMemberLevelsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultMemberLevelRead;
+};
+
+export type MemberLevelsApiV1AdminMemberLevelsGetResponse = MemberLevelsApiV1AdminMemberLevelsGetResponses[keyof MemberLevelsApiV1AdminMemberLevelsGetResponses];
+
+export type CreateMemberLevelApiV1AdminMemberLevelsPostData = {
+    body: MemberLevelCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/member-levels';
+};
+
+export type CreateMemberLevelApiV1AdminMemberLevelsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CreateMemberLevelApiV1AdminMemberLevelsPostError = CreateMemberLevelApiV1AdminMemberLevelsPostErrors[keyof CreateMemberLevelApiV1AdminMemberLevelsPostErrors];
+
+export type CreateMemberLevelApiV1AdminMemberLevelsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelMemberLevelRead;
+};
+
+export type CreateMemberLevelApiV1AdminMemberLevelsPostResponse = CreateMemberLevelApiV1AdminMemberLevelsPostResponses[keyof CreateMemberLevelApiV1AdminMemberLevelsPostResponses];
+
+export type UpdateMemberLevelApiV1AdminMemberLevelsLevelIdPutData = {
+    body: MemberLevelUpdate;
+    path: {
+        /**
+         * Level Id
+         */
+        level_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/member-levels/{level_id}';
+};
+
+export type UpdateMemberLevelApiV1AdminMemberLevelsLevelIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateMemberLevelApiV1AdminMemberLevelsLevelIdPutError = UpdateMemberLevelApiV1AdminMemberLevelsLevelIdPutErrors[keyof UpdateMemberLevelApiV1AdminMemberLevelsLevelIdPutErrors];
+
+export type UpdateMemberLevelApiV1AdminMemberLevelsLevelIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMemberLevelRead;
+};
+
+export type UpdateMemberLevelApiV1AdminMemberLevelsLevelIdPutResponse = UpdateMemberLevelApiV1AdminMemberLevelsLevelIdPutResponses[keyof UpdateMemberLevelApiV1AdminMemberLevelsLevelIdPutResponses];
+
+export type MemberLevelConditionsApiV1AdminMemberLevelConditionsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/member-level-conditions';
+};
+
+export type MemberLevelConditionsApiV1AdminMemberLevelConditionsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type MemberLevelConditionsApiV1AdminMemberLevelConditionsGetError = MemberLevelConditionsApiV1AdminMemberLevelConditionsGetErrors[keyof MemberLevelConditionsApiV1AdminMemberLevelConditionsGetErrors];
+
+export type MemberLevelConditionsApiV1AdminMemberLevelConditionsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultMemberLevelConditionRead;
+};
+
+export type MemberLevelConditionsApiV1AdminMemberLevelConditionsGetResponse = MemberLevelConditionsApiV1AdminMemberLevelConditionsGetResponses[keyof MemberLevelConditionsApiV1AdminMemberLevelConditionsGetResponses];
+
+export type CreateMemberLevelConditionApiV1AdminMemberLevelConditionsPostData = {
+    body: MemberLevelConditionCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/member-level-conditions';
+};
+
+export type CreateMemberLevelConditionApiV1AdminMemberLevelConditionsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CreateMemberLevelConditionApiV1AdminMemberLevelConditionsPostError = CreateMemberLevelConditionApiV1AdminMemberLevelConditionsPostErrors[keyof CreateMemberLevelConditionApiV1AdminMemberLevelConditionsPostErrors];
+
+export type CreateMemberLevelConditionApiV1AdminMemberLevelConditionsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelMemberLevelConditionRead;
+};
+
+export type CreateMemberLevelConditionApiV1AdminMemberLevelConditionsPostResponse = CreateMemberLevelConditionApiV1AdminMemberLevelConditionsPostResponses[keyof CreateMemberLevelConditionApiV1AdminMemberLevelConditionsPostResponses];
+
+export type UpdateMemberLevelConditionApiV1AdminMemberLevelConditionsConditionIdPutData = {
+    body: MemberLevelConditionUpdate;
+    path: {
+        /**
+         * Condition Id
+         */
+        condition_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/member-level-conditions/{condition_id}';
+};
+
+export type UpdateMemberLevelConditionApiV1AdminMemberLevelConditionsConditionIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateMemberLevelConditionApiV1AdminMemberLevelConditionsConditionIdPutError = UpdateMemberLevelConditionApiV1AdminMemberLevelConditionsConditionIdPutErrors[keyof UpdateMemberLevelConditionApiV1AdminMemberLevelConditionsConditionIdPutErrors];
+
+export type UpdateMemberLevelConditionApiV1AdminMemberLevelConditionsConditionIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMemberLevelConditionRead;
+};
+
+export type UpdateMemberLevelConditionApiV1AdminMemberLevelConditionsConditionIdPutResponse = UpdateMemberLevelConditionApiV1AdminMemberLevelConditionsConditionIdPutResponses[keyof UpdateMemberLevelConditionApiV1AdminMemberLevelConditionsConditionIdPutResponses];
+
+export type QualificationEventsApiV1AdminMembersUserIdQualificationEventsGetData = {
+    body?: never;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/members/{user_id}/qualification-events';
+};
+
+export type QualificationEventsApiV1AdminMembersUserIdQualificationEventsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type QualificationEventsApiV1AdminMembersUserIdQualificationEventsGetError = QualificationEventsApiV1AdminMembersUserIdQualificationEventsGetErrors[keyof QualificationEventsApiV1AdminMembersUserIdQualificationEventsGetErrors];
+
+export type QualificationEventsApiV1AdminMembersUserIdQualificationEventsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultMembershipQualificationEventRead;
+};
+
+export type QualificationEventsApiV1AdminMembersUserIdQualificationEventsGetResponse = QualificationEventsApiV1AdminMembersUserIdQualificationEventsGetResponses[keyof QualificationEventsApiV1AdminMembersUserIdQualificationEventsGetResponses];
+
+export type LevelEventsApiV1AdminMembersUserIdLevelEventsGetData = {
+    body?: never;
+    path: {
+        /**
+         * User Id
+         */
+        user_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/members/{user_id}/level-events';
+};
+
+export type LevelEventsApiV1AdminMembersUserIdLevelEventsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type LevelEventsApiV1AdminMembersUserIdLevelEventsGetError = LevelEventsApiV1AdminMembersUserIdLevelEventsGetErrors[keyof LevelEventsApiV1AdminMembersUserIdLevelEventsGetErrors];
+
+export type LevelEventsApiV1AdminMembersUserIdLevelEventsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultMemberLevelEventRead;
+};
+
+export type LevelEventsApiV1AdminMembersUserIdLevelEventsGetResponse = LevelEventsApiV1AdminMembersUserIdLevelEventsGetResponses[keyof LevelEventsApiV1AdminMembersUserIdLevelEventsGetResponses];
+
+export type PointsAccountsApiV1AdminPointsAccountsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/points-accounts';
+};
+
+export type PointsAccountsApiV1AdminPointsAccountsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PointsAccountsApiV1AdminPointsAccountsGetError = PointsAccountsApiV1AdminPointsAccountsGetErrors[keyof PointsAccountsApiV1AdminPointsAccountsGetErrors];
+
+export type PointsAccountsApiV1AdminPointsAccountsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultPointsAccountRead;
+};
+
+export type PointsAccountsApiV1AdminPointsAccountsGetResponse = PointsAccountsApiV1AdminPointsAccountsGetResponses[keyof PointsAccountsApiV1AdminPointsAccountsGetResponses];
+
+export type PointsLedgersApiV1AdminPointsAccountsAccountIdLedgersGetData = {
+    body?: never;
+    path: {
+        /**
+         * Account Id
+         */
+        account_id: string;
+    };
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/points-accounts/{account_id}/ledgers';
+};
+
+export type PointsLedgersApiV1AdminPointsAccountsAccountIdLedgersGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PointsLedgersApiV1AdminPointsAccountsAccountIdLedgersGetError = PointsLedgersApiV1AdminPointsAccountsAccountIdLedgersGetErrors[keyof PointsLedgersApiV1AdminPointsAccountsAccountIdLedgersGetErrors];
+
+export type PointsLedgersApiV1AdminPointsAccountsAccountIdLedgersGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultPointsLedgerRead;
+};
+
+export type PointsLedgersApiV1AdminPointsAccountsAccountIdLedgersGetResponse = PointsLedgersApiV1AdminPointsAccountsAccountIdLedgersGetResponses[keyof PointsLedgersApiV1AdminPointsAccountsAccountIdLedgersGetResponses];
+
+export type AdjustPointsApiV1AdminPointsAdjustmentsPostData = {
+    body: PointsManualAdjustment;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/points-adjustments';
+};
+
+export type AdjustPointsApiV1AdminPointsAdjustmentsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdjustPointsApiV1AdminPointsAdjustmentsPostError = AdjustPointsApiV1AdminPointsAdjustmentsPostErrors[keyof AdjustPointsApiV1AdminPointsAdjustmentsPostErrors];
+
+export type AdjustPointsApiV1AdminPointsAdjustmentsPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPointsAccountRead;
+};
+
+export type AdjustPointsApiV1AdminPointsAdjustmentsPostResponse = AdjustPointsApiV1AdminPointsAdjustmentsPostResponses[keyof AdjustPointsApiV1AdminPointsAdjustmentsPostResponses];
+
+export type MemberPriceRulesApiV1AdminMemberPriceRulesGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码，从一开始
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/admin/member-price-rules';
+};
+
+export type MemberPriceRulesApiV1AdminMemberPriceRulesGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type MemberPriceRulesApiV1AdminMemberPriceRulesGetError = MemberPriceRulesApiV1AdminMemberPriceRulesGetErrors[keyof MemberPriceRulesApiV1AdminMemberPriceRulesGetErrors];
+
+export type MemberPriceRulesApiV1AdminMemberPriceRulesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultMemberPriceRuleRead;
+};
+
+export type MemberPriceRulesApiV1AdminMemberPriceRulesGetResponse = MemberPriceRulesApiV1AdminMemberPriceRulesGetResponses[keyof MemberPriceRulesApiV1AdminMemberPriceRulesGetResponses];
+
+export type CreateMemberPriceRuleApiV1AdminMemberPriceRulesPostData = {
+    body: MemberPriceRuleCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/member-price-rules';
+};
+
+export type CreateMemberPriceRuleApiV1AdminMemberPriceRulesPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CreateMemberPriceRuleApiV1AdminMemberPriceRulesPostError = CreateMemberPriceRuleApiV1AdminMemberPriceRulesPostErrors[keyof CreateMemberPriceRuleApiV1AdminMemberPriceRulesPostErrors];
+
+export type CreateMemberPriceRuleApiV1AdminMemberPriceRulesPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelMemberPriceRuleRead;
+};
+
+export type CreateMemberPriceRuleApiV1AdminMemberPriceRulesPostResponse = CreateMemberPriceRuleApiV1AdminMemberPriceRulesPostResponses[keyof CreateMemberPriceRuleApiV1AdminMemberPriceRulesPostResponses];
+
+export type UpdateMemberPriceRuleApiV1AdminMemberPriceRulesRuleIdPutData = {
+    body: MemberPriceRuleUpdate;
+    path: {
+        /**
+         * Rule Id
+         */
+        rule_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/member-price-rules/{rule_id}';
+};
+
+export type UpdateMemberPriceRuleApiV1AdminMemberPriceRulesRuleIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateMemberPriceRuleApiV1AdminMemberPriceRulesRuleIdPutError = UpdateMemberPriceRuleApiV1AdminMemberPriceRulesRuleIdPutErrors[keyof UpdateMemberPriceRuleApiV1AdminMemberPriceRulesRuleIdPutErrors];
+
+export type UpdateMemberPriceRuleApiV1AdminMemberPriceRulesRuleIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMemberPriceRuleRead;
+};
+
+export type UpdateMemberPriceRuleApiV1AdminMemberPriceRulesRuleIdPutResponse = UpdateMemberPriceRuleApiV1AdminMemberPriceRulesRuleIdPutResponses[keyof UpdateMemberPriceRuleApiV1AdminMemberPriceRulesRuleIdPutResponses];
+
+export type GetOrderShippingApiV1AdminSettingsOrderShippingGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/settings/order-shipping';
+};
+
+export type GetOrderShippingApiV1AdminSettingsOrderShippingGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type GetOrderShippingApiV1AdminSettingsOrderShippingGetError = GetOrderShippingApiV1AdminSettingsOrderShippingGetErrors[keyof GetOrderShippingApiV1AdminSettingsOrderShippingGetErrors];
+
+export type GetOrderShippingApiV1AdminSettingsOrderShippingGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelOrderShippingSettingRead;
+};
+
+export type GetOrderShippingApiV1AdminSettingsOrderShippingGetResponse = GetOrderShippingApiV1AdminSettingsOrderShippingGetResponses[keyof GetOrderShippingApiV1AdminSettingsOrderShippingGetResponses];
+
+export type UpdateOrderShippingApiV1AdminSettingsOrderShippingPutData = {
+    body: OrderShippingSettingUpdate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/settings/order-shipping';
+};
+
+export type UpdateOrderShippingApiV1AdminSettingsOrderShippingPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateOrderShippingApiV1AdminSettingsOrderShippingPutError = UpdateOrderShippingApiV1AdminSettingsOrderShippingPutErrors[keyof UpdateOrderShippingApiV1AdminSettingsOrderShippingPutErrors];
+
+export type UpdateOrderShippingApiV1AdminSettingsOrderShippingPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelOrderShippingSettingRead;
+};
+
+export type UpdateOrderShippingApiV1AdminSettingsOrderShippingPutResponse = UpdateOrderShippingApiV1AdminSettingsOrderShippingPutResponses[keyof UpdateOrderShippingApiV1AdminSettingsOrderShippingPutResponses];
+
+export type QuoteApiV1CommerceQuotesPostData = {
+    body: CommerceQuoteRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/commerce/quotes';
+};
+
+export type QuoteApiV1CommerceQuotesPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type QuoteApiV1CommerceQuotesPostError = QuoteApiV1CommerceQuotesPostErrors[keyof QuoteApiV1CommerceQuotesPostErrors];
+
+export type QuoteApiV1CommerceQuotesPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommerceQuoteRead;
+};
+
+export type QuoteApiV1CommerceQuotesPostResponse = QuoteApiV1CommerceQuotesPostResponses[keyof QuoteApiV1CommerceQuotesPostResponses];
 
 export type RegisterApiV1AuthRegisterPostData = {
     body: UserRegisterIn;

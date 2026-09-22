@@ -17,12 +17,15 @@ from app.db.models.commerce_lifecycle import (
     PaymentEvent,
     ProductReview,
     ReconciliationRecord,
+    RefundAttempt,
     RefundEvent,
     RefundItem,
     RefundRequest,
 )
 from app.db.transaction import transaction_scope
 from app.domains.distribution import DistributionService
+from app.domains.durable_tasks import DurableTaskService
+from app.domains.inventory import InventoryService
 from app.domains.lifecycle.repository import LifecycleRepository
 from app.domains.lifecycle.schemas import (
     FulfillmentRead,
@@ -32,6 +35,7 @@ from app.domains.lifecycle.schemas import (
     ProductReviewRead,
     ReconciliationRecordCreate,
     ReconciliationRecordRead,
+    RefundAttemptRead,
     RefundRequestCreate,
     RefundRequestRead,
     RefundReview,
@@ -41,6 +45,8 @@ from app.domains.lifecycle.schemas import (
     VirtualDeliveryCreate,
 )
 from app.domains.orders import OrderQueryService
+from app.domains.products import ProductService
+from app.domains.purchases import PurchaseLimitService
 from app.domains.users import UserAccessService
 from app.services.orders import OrderService
 
@@ -53,12 +59,18 @@ class LifecycleService:
         *,
         orders: OrderQueryService | None = None,
         distribution: DistributionService | None = None,
+        inventory: InventoryService | None = None,
+        purchases: PurchaseLimitService | None = None,
+        products: ProductService | None = None,
         access: UserAccessService | None = None,
     ) -> None:
         self.session = session
         self.repository = repository or LifecycleRepository(session)
         self.orders = orders or OrderQueryService(session)
         self.distribution = distribution or DistributionService(session)
+        self.inventory = inventory or InventoryService.for_session(session)
+        self.purchases = purchases or PurchaseLimitService.for_session(session)
+        self.products = products or ProductService.for_session(session)
         self.access = access or UserAccessService(session)
 
     @staticmethod
@@ -84,6 +96,10 @@ class LifecycleService:
     @staticmethod
     def _refund_read(value: RefundRequest) -> RefundRequestRead:
         return RefundRequestRead.model_validate(value)
+
+    @staticmethod
+    def _refund_attempt_read(value: RefundAttempt) -> RefundAttemptRead:
+        return RefundAttemptRead.model_validate(value)
 
     async def initiate_payment(self, user_id: UUID, order_id: UUID, data: PaymentAttemptCreate) -> PaymentAttemptRead:
         request_hash = self._request_hash({"channel": data.channel})
@@ -119,6 +135,7 @@ class LifecycleService:
                 status="unavailable",
                 amount=order.total_amount,
                 currency=order.currency,
+                channel_context={"schema_version": 1, "merchant_id": None, "app_id": None, "config_version": None},
                 unavailable_reason="支付渠道尚未配置",
                 revision=1,
             )
@@ -174,11 +191,7 @@ class LifecycleService:
             )
         if order.total_amount != attempt.amount or order.currency != attempt.currency:
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="订单金额或币种不匹配")
-        await OrderService(self.session).confirm_payment_in_open_transaction(
-            order.id,
-            f"{attempt.channel}:{data.channel_transaction_id}",
-            confirmed_at,
-        )
+        await OrderService(self.session).confirm_payment_in_open_transaction(order.id, attempt.id, confirmed_at)
         fulfillment = await self.repository.fulfillment(order.id, lock=True)
         if fulfillment is None:
             initial_status = "awaiting_shipment" if order.product_type == "physical" else "awaiting_delivery"
@@ -204,6 +217,7 @@ class LifecycleService:
         previous_status = attempt.status
         attempt.status = "succeeded"
         attempt.channel_transaction_id = data.channel_transaction_id
+        attempt.channel_paid_at = confirmed_at
         attempt.unavailable_reason = None
         attempt.confirmed_at = confirmed_at
         attempt.revision += 1
@@ -278,6 +292,12 @@ class LifecycleService:
                 reason="管理员发货",
             )
         )
+        await DurableTaskService(self.session).enqueue_in_open_transaction(
+            task_type="auto_confirm_fulfillment",
+            business_key=f"auto-confirm-fulfillment:{fulfillment.id}",
+            payload={"schema_version": 1, "fulfillment_id": str(fulfillment.id)},
+            available_at=fulfillment.auto_confirm_at,
+        )
         return self._fulfillment_read(fulfillment)
 
     async def deliver_virtual_in_open_transaction(
@@ -346,6 +366,20 @@ class LifecycleService:
                 completed += 1
         return completed
 
+    async def auto_confirm_scheduled(self, fulfillment_id: UUID) -> bool:
+        async with transaction_scope(self.session):
+            fulfillment = await self.repository.fulfillment_by_id(fulfillment_id, lock=True)
+            if fulfillment is None:
+                raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="待自动确认履约不存在")
+            if (
+                fulfillment.status != "shipped"
+                or fulfillment.auto_confirm_at is None
+                or fulfillment.auto_confirm_at > datetime.now(UTC)
+            ):
+                return False
+            await self._deliver_physical(fulfillment, "system", None, "发货满七日自动确认")
+            return True
+
     async def _deliver_physical(
         self, fulfillment: Fulfillment, actor_type: str, actor_id: UUID | None, reason: str
     ) -> None:
@@ -368,14 +402,7 @@ class LifecycleService:
         await self.distribution.schedule_settlement_for_delivery_in_open_transaction(fulfillment.order_id, now)
 
     async def create_refund(self, user_id: UUID, order_id: UUID, data: RefundRequestCreate) -> RefundRequestRead:
-        normalized: dict[UUID, int] = {}
-        for line in data.items:
-            normalized[line.order_item_id] = normalized.get(line.order_item_id, 0) + line.quantity
-        request_lines = [
-            {"order_item_id": str(item_id), "quantity": quantity}
-            for item_id, quantity in sorted(normalized.items(), key=lambda item: item[0].hex)
-        ]
-        request_hash = self._request_hash({"items": request_lines, "reason": data.reason})
+        request_hash = self._request_hash({"reason": data.reason})
         async with transaction_scope(self.session):
             await self.access.require_active_user(user_id)
             order = await self.orders.user_order(user_id, order_id, lock=True)
@@ -389,43 +416,26 @@ class LifecycleService:
                     )
                 return self._refund_read(existing)
             fulfillment = await self.repository.fulfillment(order.id, lock=True)
-            if order.status != "paid" or fulfillment is None or fulfillment.status != "delivered":
+            allowed_status = "awaiting_shipment" if order.product_type == "physical" else "awaiting_delivery"
+            if order.status != "paid" or fulfillment is None or fulfillment.status != allowed_status:
                 raise AppException(
-                    status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="仅已交付订单可以申请退款"
+                    status_code=409,
+                    code=ErrorCode.ORDER_STATE_CONFLICT,
+                    message="当前订单不满足未发货或未交付整单退款条件",
                 )
             order_items = await self.orders.order_items(order.id)
-            item_by_id = {item.id: item for item in order_items}
-            if set(normalized) - set(item_by_id):
-                raise AppException(
-                    status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款明细不属于当前订单"
-                )
             refunds = await self.repository.refunds_for_order(order.id, lock=True)
-            active_statuses = {"requested", "approved", "processing", "unknown", "succeeded"}
-            active_refunds = [refund for refund in refunds if refund.status in active_statuses]
-            refund_items = await self.repository.refund_items([refund.id for refund in active_refunds], lock=True)
-            reserved_quantity: dict[UUID, int] = {}
-            for item in refund_items:
-                reserved_quantity[item.order_item_id] = reserved_quantity.get(item.order_item_id, 0) + item.quantity
-            amount = Decimal("0.00")
-            for order_item_id, quantity in normalized.items():
-                order_item = item_by_id[order_item_id]
-                if order_item.unit_price <= 0:
-                    raise AppException(
-                        status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="零金额明细不能申请资金退款"
-                    )
-                if quantity > order_item.quantity - reserved_quantity.get(order_item_id, 0):
-                    raise AppException(
-                        status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款数量超过可退款数量"
-                    )
-                amount += order_item.unit_price * quantity
-            amount = amount.quantize(Decimal("0.01"))
-            if (
-                amount <= 0
-                or amount + sum((item.amount for item in active_refunds), Decimal("0.00")) > order.items_amount
-            ):
+            if any(row.status != "rejected" for row in refunds):
                 raise AppException(
-                    status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款金额超过商品实付金额"
+                    status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="订单已存在未结束退款申请"
                 )
+            items_amount = sum((item.line_amount for item in order_items), Decimal("0.00")).quantize(Decimal("0.01"))
+            if items_amount != order.items_amount:
+                raise AppException(
+                    status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="订单退款商品金额快照异常"
+                )
+            amount = (items_amount + order.freight_amount).quantize(Decimal("0.01"))
+            review_mode = "automatic" if order.acceptance_status == "pending" else "manual"
             refund = RefundRequest(
                 id=new_uuid7(),
                 order_id=order.id,
@@ -433,26 +443,32 @@ class LifecycleService:
                 request_id=data.request_id,
                 request_hash=request_hash,
                 status="requested",
+                review_mode=review_mode,
+                items_amount=items_amount,
+                freight_amount=order.freight_amount,
                 amount=amount,
                 currency=order.currency,
                 reason=data.reason,
+                fulfillment_status_snapshot=fulfillment.status,
                 revision=1,
             )
             await self.repository.save(refund)
-            for order_item_id, quantity in normalized.items():
-                order_item = item_by_id[order_item_id]
+            for order_item in order_items:
                 await self.repository.save(
                     RefundItem(
                         id=new_uuid7(),
                         refund_request_id=refund.id,
-                        order_item_id=order_item_id,
-                        quantity=quantity,
-                        amount=(order_item.unit_price * quantity).quantize(Decimal("0.01")),
+                        order_item_id=order_item.id,
+                        quantity=order_item.quantity,
+                        amount=order_item.line_amount,
                     )
                 )
             await self.repository.save(
                 RefundEvent(
                     refund_request_id=refund.id,
+                    refund_attempt_id=None,
+                    event_scope="request",
+                    event_type="state_changed",
                     revision=1,
                     from_status=None,
                     to_status="requested",
@@ -461,7 +477,163 @@ class LifecycleService:
                     reason="用户申请退款",
                 )
             )
+            if review_mode == "automatic":
+                await self._approve_refund_in_open_transaction(refund, note="未接单订单自动审核通过", actor_id=None)
             return self._refund_read(refund)
+
+    async def _approve_refund_in_open_transaction(
+        self, refund: RefundRequest, *, note: str, actor_id: UUID | None
+    ) -> None:
+        if refund.status != "requested":
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款申请状态异常")
+        now = datetime.now(UTC)
+        refund.status = "approved"
+        refund.review_note = note
+        refund.reviewed_by_id = actor_id
+        refund.reviewed_at = now
+        refund.revision += 1
+        await self.repository.save(refund)
+        await self.repository.save(
+            RefundEvent(
+                refund_request_id=refund.id,
+                refund_attempt_id=None,
+                event_scope="request",
+                event_type="state_changed",
+                revision=refund.revision,
+                from_status="requested",
+                to_status="approved",
+                actor_type="admin" if actor_id is not None else "system",
+                actor_id=actor_id,
+                reason=note,
+            )
+        )
+        order = await self.orders.order(refund.order_id, lock=True)
+        if order is None:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款订单不存在")
+        if refund.amount == 0:
+            await self._complete_refund_in_open_transaction(refund, order.id, now)
+            return
+        if order.accepted_payment_attempt_id is None:
+            raise AppException(
+                status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="正额订单缺少已接受支付事实"
+            )
+        payment = await self.repository.payment(order.accepted_payment_attempt_id, lock=True)
+        if payment is None or payment.status != "succeeded" or payment.amount < refund.amount:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="原支付事实不能支持退款")
+        attempt = await self.repository.refund_attempt_for_request(refund.id, lock=True)
+        if attempt is None:
+            attempt = RefundAttempt(
+                id=new_uuid7(),
+                order_id=order.id,
+                payment_attempt_id=payment.id,
+                refund_request_id=refund.id,
+                purpose="after_sale",
+                attempt_no=1,
+                merchant_refund_reference=f"R5-{new_uuid7()}",
+                request_hash=self._request_hash(
+                    {
+                        "payment_attempt_id": str(payment.id),
+                        "refund_request_id": str(refund.id),
+                        "amount": str(refund.amount),
+                        "currency": refund.currency,
+                        "channel": payment.channel,
+                    }
+                ),
+                channel=payment.channel,
+                currency=refund.currency,
+                amount=refund.amount,
+                status="created",
+                revision=1,
+            )
+            await self.repository.save(attempt)
+            await self.repository.save(
+                RefundEvent(
+                    refund_request_id=None,
+                    refund_attempt_id=attempt.id,
+                    event_scope="attempt",
+                    event_type="state_changed",
+                    revision=1,
+                    from_status=None,
+                    to_status="created",
+                    actor_type="system",
+                    actor_id=None,
+                    reason="审核通过后创建退款执行意图",
+                )
+            )
+        await DurableTaskService(self.session).enqueue_in_open_transaction(
+            task_type="refund_submit",
+            business_key=f"refund-submit:{attempt.id}",
+            payload={"schema_version": 1, "refund_attempt_id": str(attempt.id)},
+        )
+
+    async def _complete_refund_in_open_transaction(
+        self, refund: RefundRequest, order_id: UUID, completed_at: datetime
+    ) -> None:
+        if refund.status == "completed":
+            return
+        if refund.status != "approved":
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款申请尚未审核通过")
+        order_items = await self.orders.order_items(order_id)
+        refund_items = await self.repository.refund_items([refund.id], lock=True)
+        expected = {item.id: (item.sku_id, item.quantity, item.line_amount) for item in order_items}
+        actual = {item.order_item_id: item for item in refund_items}
+        if set(actual) != set(expected) or any(
+            (actual[item_id].quantity, actual[item_id].amount) != (quantity, amount)
+            for item_id, (_, quantity, amount) in expected.items()
+        ):
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款明细未完整覆盖原订单")
+        archived_sku_ids = await self.products.archived_sku_ids([item.sku_id for item in order_items])
+        await self.inventory.restock_from_refund_in_open_transaction(
+            [
+                (refund_item.id, expected[refund_item.order_item_id][0], refund_item.quantity)
+                for refund_item in refund_items
+            ],
+            archived_sku_ids=archived_sku_ids,
+        )
+        await self.purchases.transition(order_id, "refunded", completed_at)
+        await self.distribution.recover_for_refund_in_open_transaction(
+            refund_request_id=refund.id,
+            order_id=order_id,
+            cumulative_refunded_amount=refund.items_amount,
+            refunded_at=completed_at,
+        )
+        fulfillment = await self.repository.fulfillment(order_id, lock=True)
+        if fulfillment is None or fulfillment.status not in {"awaiting_shipment", "awaiting_delivery"}:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款完成时履约状态异常")
+        previous_fulfillment_status = fulfillment.status
+        fulfillment.status = "cancelled"
+        fulfillment.cancelled_at = completed_at
+        fulfillment.revision += 1
+        await self.repository.save(fulfillment)
+        await self.repository.save(
+            FulfillmentEvent(
+                fulfillment_id=fulfillment.id,
+                revision=fulfillment.revision,
+                from_status=previous_fulfillment_status,
+                to_status="cancelled",
+                actor_type="system",
+                actor_id=None,
+                reason="整单退款完成终止履约",
+            )
+        )
+        refund.status = "completed"
+        refund.completed_at = completed_at
+        refund.revision += 1
+        await self.repository.save(refund)
+        await self.repository.save(
+            RefundEvent(
+                refund_request_id=refund.id,
+                refund_attempt_id=None,
+                event_scope="request",
+                event_type="state_changed",
+                revision=refund.revision,
+                from_status="approved",
+                to_status="completed",
+                actor_type="channel" if refund.amount > 0 else "system",
+                actor_id=None,
+                reason="退款资金确认或零额售后完成",
+            )
+        )
 
     async def confirm_verified_refund(self, data: VerifiedRefundConfirmation) -> RefundRequestRead:
         async with transaction_scope(self.session):
@@ -470,68 +642,85 @@ class LifecycleService:
     async def confirm_verified_refund_in_open_transaction(self, data: VerifiedRefundConfirmation) -> RefundRequestRead:
         confirmed_at = self._require_aware(data.confirmed_at, "退款确认时间")
         await self.repository.lock_key("refund", f"{data.channel}:{data.channel_refund_id}")
-        refund = await self.repository.refund(data.refund_request_id)
-        if refund is None:
-            raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="退款申请不存在")
-        order = await self.orders.order(refund.order_id, lock=True)
-        refund = await self.repository.refund(data.refund_request_id, lock=True)
-        if refund is None or order is None or order.status != "paid":
+        attempt = await self.repository.refund_attempt(data.refund_attempt_id)
+        if attempt is None:
+            raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="退款执行不存在")
+        order = await self.orders.order(attempt.order_id, lock=True)
+        attempt = await self.repository.refund_attempt(data.refund_attempt_id, lock=True)
+        if attempt is None or order is None or order.status != "paid":
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款订单状态异常")
-        if refund.amount != data.amount or refund.currency != data.currency or order.currency != data.currency:
+        if attempt.amount != data.amount or attempt.currency != data.currency or order.currency != data.currency:
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款金额或币种不匹配")
-        payment = await self.repository.payment_by_transaction(data.channel, data.payment_transaction_id)
-        if payment is None or payment.status != "succeeded" or payment.order_id != order.id:
+        payment = await self.repository.payment_by_transaction(data.channel, data.payment_transaction_id, lock=True)
+        if (
+            payment is None
+            or payment.id != attempt.payment_attempt_id
+            or payment.status != "succeeded"
+            or payment.order_id != order.id
+        ):
             raise AppException(
                 status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款渠道或原支付流水不匹配"
             )
-        if confirmed_at < refund.created_at:
-            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款确认时间早于退款申请")
-        if refund.status == "succeeded":
+        if confirmed_at < attempt.created_at:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款确认时间早于退款执行")
+        if attempt.status == "succeeded":
             if (
-                refund.channel != data.channel
-                or refund.channel_refund_id != data.channel_refund_id
-                or refund.confirmed_at != confirmed_at
+                attempt.channel != data.channel
+                or attempt.channel_refund_id != data.channel_refund_id
+                or attempt.confirmed_at != confirmed_at
             ):
                 raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款确认内容冲突")
+            refund = await self.repository.refund(attempt.refund_request_id) if attempt.refund_request_id else None
+            if refund is None:
+                raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="售后退款缺少申请")
             return self._refund_read(refund)
-        if refund.status not in {"approved", "processing", "unknown"}:
-            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前退款申请不能确认成功")
-        duplicate = await self.repository.refund_by_channel(data.channel, data.channel_refund_id)
-        if duplicate is not None and duplicate.id != refund.id:
+        if attempt.status not in {"created", "processing", "unknown", "abnormal"}:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前退款执行不能确认成功")
+        duplicate = await self.repository.refund_attempt_by_channel(data.channel, data.channel_refund_id, lock=True)
+        if duplicate is not None and duplicate.id != attempt.id:
             raise AppException(
-                status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="渠道退款流水已被其他退款申请使用"
+                status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="渠道退款流水已被其他退款执行使用"
             )
-        prior_refunds = await self.repository.refunds_for_order(order.id)
-        cumulative_amount = refund.amount + sum(
-            (item.amount for item in prior_refunds if item.status == "succeeded"), Decimal("0.00")
+        pending_total = sum(
+            (
+                row.amount
+                for row in await self.repository.refund_attempts_for_payment(payment.id, lock=True)
+                if row.status != "closed"
+            ),
+            Decimal("0.00"),
         )
-        if cumulative_amount > order.items_amount:
-            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="累计退款超过商品实付金额")
-        previous_status = refund.status
-        refund.status = "succeeded"
-        refund.channel_refund_id = data.channel_refund_id
-        refund.channel = data.channel
-        refund.confirmed_at = confirmed_at
-        refund.revision += 1
-        await self.repository.save(refund)
+        if pending_total > payment.amount:
+            raise AppException(
+                status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款执行总额超过原支付金额"
+            )
+        previous_status = attempt.status
+        attempt.status = "succeeded"
+        attempt.channel_refund_id = data.channel_refund_id
+        attempt.channel_refunded_at = confirmed_at
+        attempt.confirmed_at = confirmed_at
+        attempt.revision += 1
+        await self.repository.save(attempt)
         await self.repository.save(
             RefundEvent(
-                refund_request_id=refund.id,
-                revision=refund.revision,
+                refund_request_id=None,
+                refund_attempt_id=attempt.id,
+                event_scope="attempt",
+                event_type="state_changed",
+                revision=attempt.revision,
                 from_status=previous_status,
                 to_status="succeeded",
-                actor_type="payment",
+                actor_type="channel",
                 actor_id=None,
                 reason="可信渠道退款确认",
                 payload_hash=data.payload_hash,
             )
         )
-        await self.distribution.recover_for_refund_in_open_transaction(
-            refund_request_id=refund.id,
-            order_id=order.id,
-            cumulative_refunded_amount=cumulative_amount,
-            refunded_at=confirmed_at,
-        )
+        if attempt.refund_request_id is None:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="异常退款不能完成售后申请")
+        refund = await self.repository.refund(attempt.refund_request_id, lock=True)
+        if refund is None or refund.status != "approved":
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款申请状态异常")
+        await self._complete_refund_in_open_transaction(refund, order.id, confirmed_at)
         return self._refund_read(refund)
 
     async def refunds_for_user(self, user_id: UUID, order_id: UUID) -> list[RefundRequestRead]:
@@ -550,24 +739,7 @@ class LifecycleService:
             raise AppException(
                 status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款状态已变化，请重新读取"
             )
-        now = datetime.now(UTC)
-        refund.status = "approved"
-        refund.review_note = data.note
-        refund.reviewed_by_id = actor_id
-        refund.reviewed_at = now
-        refund.revision += 1
-        await self.repository.save(refund)
-        await self.repository.save(
-            RefundEvent(
-                refund_request_id=refund.id,
-                revision=refund.revision,
-                from_status="requested",
-                to_status="approved",
-                actor_type="admin",
-                actor_id=actor_id,
-                reason=data.note,
-            )
-        )
+        await self._approve_refund_in_open_transaction(refund, note=data.note, actor_id=actor_id)
         return self._refund_read(refund)
 
     async def reject_refund_in_open_transaction(
@@ -590,6 +762,9 @@ class LifecycleService:
         await self.repository.save(
             RefundEvent(
                 refund_request_id=refund.id,
+                refund_attempt_id=None,
+                event_scope="request",
+                event_type="state_changed",
                 revision=refund.revision,
                 from_status="requested",
                 to_status="rejected",
@@ -650,8 +825,10 @@ class LifecycleService:
 
     async def reconcile_in_open_transaction(self, data: ReconciliationRecordCreate) -> ReconciliationRecordRead:
         occurred_at = self._require_aware(data.occurred_at, "对账发生时间")
-        await self.repository.lock_key("payment", f"{data.channel}:{data.channel_transaction_id}")
-        existing = await self.repository.reconciliation(data.channel, data.channel_transaction_id, lock=True)
+        await self.repository.lock_key(data.record_type, f"{data.channel}:{data.channel_transaction_id}")
+        existing = await self.repository.reconciliation(
+            data.channel, data.record_type, data.channel_transaction_id, lock=True
+        )
         if existing is not None:
             if (
                 existing.source_hash != data.source_hash
@@ -662,27 +839,56 @@ class LifecycleService:
             ):
                 raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="渠道账单流水内容冲突")
             return ReconciliationRecordRead.model_validate(existing)
-        payment = await self.repository.payment_by_transaction(data.channel, data.channel_transaction_id, lock=True)
-        payment_attempt_id = (
-            payment.id
-            if payment is not None
-            and payment.status == "succeeded"
-            and payment.amount == data.amount
-            and payment.currency == data.currency
-            else None
-        )
+        payment_attempt_id: UUID | None = None
+        refund_attempt_id: UUID | None = None
+        withdrawal_request_id: UUID | None = None
+        if data.record_type == "payment":
+            payment = await self.repository.payment_by_transaction(data.channel, data.channel_transaction_id, lock=True)
+            payment_attempt_id = (
+                payment.id
+                if payment is not None
+                and payment.status == "succeeded"
+                and payment.amount == data.amount
+                and payment.currency == data.currency
+                else None
+            )
+        elif data.record_type == "refund":
+            attempt = await self.repository.refund_attempt_by_channel(
+                data.channel, data.channel_transaction_id, lock=True
+            )
+            refund_attempt_id = (
+                attempt.id
+                if attempt is not None
+                and attempt.status == "succeeded"
+                and attempt.amount == data.amount
+                and attempt.currency == data.currency
+                else None
+            )
+        else:
+            withdrawal_request_id = await self.distribution.matched_withdrawal_id_in_open_transaction(
+                channel=data.channel,
+                channel_reference=data.channel_transaction_id,
+                amount=data.amount,
+                currency=data.currency,
+            )
+        matched = any((payment_attempt_id, refund_attempt_id, withdrawal_request_id))
         record = ReconciliationRecord(
             id=new_uuid7(),
             channel=data.channel,
             channel_transaction_id=data.channel_transaction_id,
+            record_type=data.record_type,
             source_reference=data.source_reference,
             source_hash=data.source_hash,
             amount=data.amount,
             currency=data.currency,
             occurred_at=occurred_at,
-            status="matched" if payment_attempt_id is not None else "discrepancy",
+            status="matched" if matched else "discrepancy",
             payment_attempt_id=payment_attempt_id,
-            note=None if payment_attempt_id is not None else "渠道账单与本地支付事实不匹配",
+            refund_attempt_id=refund_attempt_id,
+            withdrawal_request_id=withdrawal_request_id,
+            resolution_status="open",
+            revision=1,
+            note=None if matched else "渠道账单与本地资金事实不匹配",
         )
         await self.repository.save(record)
         return ReconciliationRecordRead.model_validate(record)

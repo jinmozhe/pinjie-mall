@@ -1,13 +1,17 @@
 from typing import Literal, cast
 from uuid import UUID
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.batch import ActiveStatusBatch, BatchCompleted
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
 from app.core.pagination import PageResult
-from app.db.models.product import Category, Product, ProductSku
+from app.db.models.product import Category, Product
 
+from .catalog_schemas import DescriptionUpdate, SpecificationConversion
+from .catalog_service import catalog_conflict
 from .repository import ProductRepository
 from .schemas import (
     CategoryInput,
@@ -19,30 +23,48 @@ from .schemas import (
     ProductStatusUpdate,
     ProductUpdate,
     PublicProductRead,
+    PublicSkuRead,
     SkuInput,
     SkuRead,
     SkuStatusBatch,
     SkuUpdate,
     validate_category_tree,
 )
+from .specification_service import SpecificationService
 
 
-class ProductService:
+class ProductService(SpecificationService):
     def __init__(self, repository: ProductRepository) -> None:
         self.repository = repository
+
+    @classmethod
+    def for_session(cls, session: AsyncSession) -> "ProductService":
+        return cls(ProductRepository(session))
 
     async def lock_changes(self) -> None:
         await self.repository.lock_catalog()
 
     async def checkout_skus(self, sku_ids: list[UUID]) -> list[CheckoutSku]:
-        rows = await self.repository.checkout_skus(sku_ids)
+        rows = await self.repository.checkout_skus(sorted(set(sku_ids), key=lambda item: item.hex))
         if len(rows) != len(set(sku_ids)):
-            raise AppException(status_code=409, code=ErrorCode.CHECKOUT_INVALID, message="SKU 不存在")
-        visible_categories = {row.id for row in await self.categories(public=True)}
+            raise AppException(status_code=404, code=ErrorCode.SKU_NOT_FOUND, message="SKU 不存在")
+        categories = {category.id: category for category in await self.repository.categories()}
         result: list[CheckoutSku] = []
         for sku, product in rows:
-            if product.status != "on_sale" or not sku.is_active or product.category_id not in visible_categories:
-                raise AppException(status_code=409, code=ErrorCode.CHECKOUT_INVALID, message="商品、分类或 SKU 不可售")
+            if product.status != "on_sale":
+                raise AppException(status_code=409, code=ErrorCode.CHECKOUT_INVALID, message="SKU 当前不可销售")
+            category_id: UUID | None = product.category_id
+            while category_id is not None:
+                category = categories.get(category_id)
+                if category is None or not category.is_active:
+                    raise AppException(
+                        status_code=409, code=ErrorCode.CATEGORY_UNAVAILABLE, message="商品分类当前不可用"
+                    )
+                category_id = category.parent_id
+            if not await self.sku_is_available(
+                sku, await self.repository.adoptions(product.id), await self.repository.sku_selections(product.id)
+            ):
+                raise AppException(status_code=409, code=ErrorCode.CHECKOUT_INVALID, message="SKU 当前不可销售")
             result.append(
                 CheckoutSku(
                     id=sku.id,
@@ -54,7 +76,6 @@ class ProductService:
                     product_name=product.name,
                     product_type=cast(Literal["physical", "virtual"], product.product_type),
                     product_revision=product.revision,
-                    shipping_template_id=product.shipping_template_id,
                 )
             )
         return result
@@ -132,11 +153,13 @@ class ProductService:
             description=row.description,
             product_type=cast(Literal["physical", "virtual"], row.product_type),
             category_id=row.category_id,
-            shipping_template_id=row.shipping_template_id,
+            brand_id=row.brand_id,
+            purchase_limit_quantity=row.purchase_limit_quantity,
             status=cast(Literal["draft", "on_sale", "off_sale"], row.status),
             revision=row.revision,
             image_asset_ids=await self.repository.image_ids(row.id),
-            skus=[SkuRead.model_validate(sku) for sku in await self.repository.skus(row.id)],
+            skus=await self._sku_reads(row.id),
+            attributes=await self.adoption_reads(row.id),
         )
 
     async def public_read(self, product_id: UUID) -> PublicProductRead:
@@ -146,14 +169,23 @@ class ProductService:
         visible_categories = {category.id for category in await self.categories(public=True)}
         if row.category_id not in visible_categories:
             raise AppException(status_code=404, code=ErrorCode.PRODUCT_NOT_FOUND, message="商品不存在")
+        adoptions = await self.repository.adoptions(row.id)
+        selections = await self.repository.sku_selections(row.id)
+        visible_skus = [
+            PublicSkuRead.model_validate(sku)
+            for sku in await self.repository.skus(row.id)
+            if await self.sku_is_available(sku, adoptions, selections)
+        ]
         return PublicProductRead(
             id=row.id,
             name=row.name,
             description=row.description,
             product_type=cast(Literal["physical", "virtual"], row.product_type),
             category_id=row.category_id,
+            brand_id=row.brand_id,
             images=await self.repository.image_urls(row.id),
-            skus=[SkuRead.model_validate(sku) for sku in await self.repository.skus(row.id) if sku.is_active],
+            skus=visible_skus,
+            attributes=await self.adoption_reads(row.id, current_only=True),
         )
 
     async def page(
@@ -174,23 +206,8 @@ class ProductService:
             status=status,
             product_type=product_type,
         )
-        variants, image_ids, _ = await self.repository.details([row.id for row in rows])
         return PageResult[ProductRead].create(
-            items=[
-                ProductRead(
-                    id=row.id,
-                    name=row.name,
-                    description=row.description,
-                    product_type=cast(Literal["physical", "virtual"], row.product_type),
-                    category_id=row.category_id,
-                    shipping_template_id=row.shipping_template_id,
-                    status=cast(Literal["draft", "on_sale", "off_sale"], row.status),
-                    revision=row.revision,
-                    image_asset_ids=image_ids[row.id],
-                    skus=[SkuRead.model_validate(sku) for sku in variants[row.id]],
-                )
-                for row in rows
-            ],
+            items=[await self.read(row.id) for row in rows],
             page=page,
             page_size=page_size,
             total=total,
@@ -198,20 +215,8 @@ class ProductService:
 
     async def public_page(self, page: int, page_size: int) -> PageResult[PublicProductRead]:
         rows, total = await self.repository.page(page, page_size, public=True)
-        variants, _, urls = await self.repository.details([row.id for row in rows])
         return PageResult[PublicProductRead].create(
-            items=[
-                PublicProductRead(
-                    id=row.id,
-                    name=row.name,
-                    description=row.description,
-                    product_type=cast(Literal["physical", "virtual"], row.product_type),
-                    category_id=row.category_id,
-                    images=urls[row.id],
-                    skus=[SkuRead.model_validate(sku) for sku in variants[row.id] if sku.is_active],
-                )
-                for row in rows
-            ],
+            items=[await self.public_read(row.id) for row in rows],
             page=page,
             page_size=page_size,
             total=total,
@@ -220,12 +225,15 @@ class ProductService:
     async def create(self, data: ProductCreate) -> ProductRead:
         await self.repository.lock_catalog()
         await self._category(data.category_id)
+        await self._brand(data.brand_id)
         row = Product(
-            id=new_uuid7(), **data.model_dump(exclude={"skus", "image_asset_ids"}), status="draft", revision=1
+            id=new_uuid7(),
+            **data.model_dump(exclude={"skus", "image_asset_ids", "attributes", "category_revision"}),
+            status="draft",
+            revision=1,
         )
         await self.repository.save(row)
-        for sku in data.skus:
-            await self._write_sku(row.id, sku)
+        await self.build_specifications(row, data)
         await self.repository.replace_images(row.id, data.image_asset_ids)
         return await self.read(row.id)
 
@@ -252,8 +260,27 @@ class ProductService:
         await self._category(data.category_id)
         if data.product_type != row.product_type:
             raise AppException(status_code=409, code=ErrorCode.PRODUCT_TYPE_IMMUTABLE, message="商品类型创建后不能改变")
+        if data.category_id != row.category_id:
+            template = await self.repository.template(data.category_id)
+            adoptions = {
+                item.attribute_id: item
+                for item in await self.repository.adoptions(row.id)
+                if item.is_current and item.attribute_id is not None
+            }
+            if any(item.is_required and item.attribute_id not in adoptions for item in template) or any(
+                item.attribute_id in adoptions
+                and (
+                    item.is_variant != adoptions[item.attribute_id].is_variant
+                    or item.is_required != adoptions[item.attribute_id].is_required
+                    or item.allow_custom_value != adoptions[item.attribute_id].allow_custom_value
+                )
+                for item in template
+            ):
+                raise catalog_conflict("新分类模板与当前采用不符，请先调整规格采用")
+        if data.brand_id != row.brand_id:
+            await self._brand(data.brand_id)
         row.name, row.description, row.category_id = data.name, data.description, data.category_id
-        row.shipping_template_id = data.shipping_template_id
+        row.brand_id, row.purchase_limit_quantity = data.brand_id, data.purchase_limit_quantity
         row.revision += 1
         await self.repository.replace_images(product_id, data.image_asset_ids)
         await self.repository.save(row)
@@ -273,46 +300,60 @@ class ProductService:
         return await self.read(product_id)
 
     async def _write_sku(self, product_id: UUID, data: SkuInput, sku_id: UUID | None = None) -> None:
-        rows = await self.repository.skus(product_id)
+        rows = [row for row in await self.repository.skus(product_id) if row.archived_at is None]
         if await self.repository.code_exists(data.code, sku_id):
             raise AppException(status_code=409, code=ErrorCode.SKU_CODE_CONFLICT, message="SKU 编码已使用")
-        if any(row.id != sku_id and row.specifications == data.specifications for row in rows):
+        key, _, candidates = await self.combination(product_id, data.spec_value_ids)
+        if any(row.id != sku_id and row.specification_key == key for row in rows):
             raise AppException(status_code=409, code=ErrorCode.SKU_SPEC_CONFLICT, message="规格组合已存在")
         if sku_id is None:
             if len(rows) >= 100:
                 raise AppException(status_code=409, code=ErrorCode.SKU_LIMIT, message="每商品最多一百个 SKU")
-            row = ProductSku(id=new_uuid7(), product_id=product_id)
+            await self.insert_sku(
+                product_id,
+                data,
+                data.spec_value_ids,
+                max((row.sku_no for row in rows), default=0) + 1 if candidates else 0,
+            )
+            return
         else:
             found = next((row for row in rows if row.id == sku_id), None)
             if found is None:
                 raise AppException(status_code=404, code=ErrorCode.SKU_NOT_FOUND, message="SKU 不属于此商品")
             row = found
-        row.code, row.specifications, row.price = data.code, data.specifications, data.price
-        row.weight_grams, row.is_active = data.weight_grams, data.is_active
+            if row.specification_key != key:
+                raise catalog_conflict("货品规格身份不可原位修改，请使用规格转换")
+        self.set_sku_fields(row, data)
         await self.repository.save(row)
 
     async def validate_publish(self, product_id: UUID) -> None:
         row = await self._get(product_id)
         await self._category(row.category_id)
-        skus = [sku for sku in await self.repository.skus(product_id) if sku.is_active]
+        all_skus = [sku for sku in await self.repository.skus(product_id) if sku.archived_at is None]
+        adoptions = await self.repository.adoptions(product_id)
+        selections = await self.repository.sku_selections(product_id)
+        variants = [item for item in adoptions if item.is_current and item.is_variant]
+        if (not variants and (len(all_skus) != 1 or all_skus[0].sku_no != 0)) or (
+            variants and (not all_skus or any(sku.sku_no <= 0 for sku in all_skus))
+        ):
+            raise catalog_conflict("默认 SKU 与多规格集合不符合当前采用")
+        for sku in all_skus:
+            key, display, _ = await self.combination(
+                product_id, [item.spec_value_id for item in selections if item.sku_id == sku.id]
+            )
+            if key != sku.specification_key or display != sku.specifications:
+                raise catalog_conflict("SKU 规格关系与展示快照不一致")
+        skus = [sku for sku in all_skus if await self.sku_is_available(sku, adoptions, selections)]
         if not skus or not await self.repository.image_ids(product_id):
             raise AppException(
                 status_code=409, code=ErrorCode.PRODUCT_NOT_PUBLISHABLE, message="上架需要启用 SKU 和商品图片"
             )
-        if row.product_type == "physical" and (
-            row.shipping_template_id is None or any(sku.weight_grams <= 0 for sku in skus)
-        ):
-            raise AppException(
-                status_code=409, code=ErrorCode.PRODUCT_NOT_PUBLISHABLE, message="实物商品上架需要运费模板和正重量"
-            )
-        if row.product_type == "virtual" and any(sku.weight_grams != 0 for sku in skus):
-            raise AppException(status_code=409, code=ErrorCode.PRODUCT_NOT_PUBLISHABLE, message="虚拟商品重量必须为零")
 
     async def set_skus_active(self, product_id: UUID, data: SkuStatusBatch) -> ProductRead:
         await self.repository.lock_catalog()
         product = await self._get(product_id, lock=True)
         self._check_revision(product, data.revision)
-        rows = {sku.id: sku for sku in await self.repository.skus(product_id)}
+        rows = {sku.id: sku for sku in await self.repository.skus(product_id) if sku.archived_at is None}
         if any(sku_id not in rows for sku_id in data.sku_ids):
             raise AppException(status_code=404, code=ErrorCode.SKU_NOT_FOUND, message="SKU 不属于此商品")
         for sku_id in sorted(data.sku_ids):
@@ -341,3 +382,54 @@ class ProductService:
             raise AppException(
                 status_code=409, code=ErrorCode.PRODUCT_REVISION_CONFLICT, message="商品已变更，请重新读取"
             )
+
+    async def _sku_reads(self, product_id: UUID) -> list[SkuRead]:
+        selections = await self.repository.sku_selections(product_id)
+        result: list[SkuRead] = []
+        for sku in await self.repository.skus(product_id):
+            item = SkuRead.model_validate(sku)
+            item.spec_value_ids = [row.spec_value_id for row in selections if row.sku_id == sku.id]
+            result.append(item)
+        return result
+
+    async def _brand(self, brand_id: UUID | None) -> None:
+        if brand_id is not None:
+            brand = await self.repository.brand(brand_id)
+            if brand is None or not brand.is_active:
+                raise catalog_conflict("新关联品牌必须存在且启用")
+
+    async def convert_specifications(
+        self, product_id: UUID, data: SpecificationConversion
+    ) -> tuple[ProductRead, list[UUID]]:
+        await self.repository.lock_catalog()
+        product = await self._get(product_id, lock=True)
+        self._check_revision(product, data.revision)
+        await self._category(product.category_id)
+        retired = await self.retire_specifications(product_id)
+        await self.build_specifications(product, data)
+        product.revision += 1
+        await self.repository.save(product)
+        if product.status == "on_sale":
+            await self.validate_publish(product_id)
+        return await self.read(product_id), retired
+
+    async def update_description(self, product_id: UUID, adoption_id: UUID, data: DescriptionUpdate) -> ProductRead:
+        await self.repository.lock_catalog()
+        product = await self._get(product_id, lock=True)
+        self._check_revision(product, data.revision)
+        await self.replace_description(product, adoption_id, data)
+        product.revision += 1
+        await self.repository.save(product)
+        if product.status == "on_sale":
+            await self.validate_publish(product_id)
+        return await self.read(product_id)
+
+    async def require_current_sku(self, sku_id: UUID) -> None:
+        await self.repository.lock_catalog()
+        rows = await self.repository.checkout_skus([sku_id])
+        if not rows or rows[0][0].archived_at is not None:
+            raise catalog_conflict("SKU 不存在或已归档，不能人工调整库存")
+
+    async def archived_sku_ids(self, sku_ids: list[UUID]) -> set[UUID]:
+        await self.repository.lock_catalog()
+        return {sku.id for sku, _ in await self.repository.checkout_skus(sku_ids) if sku.archived_at is not None}

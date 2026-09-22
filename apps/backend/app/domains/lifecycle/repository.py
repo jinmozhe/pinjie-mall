@@ -11,6 +11,7 @@ from app.db.models.commerce_lifecycle import (
     PaymentEvent,
     ProductReview,
     ReconciliationRecord,
+    RefundAttempt,
     RefundEvent,
     RefundItem,
     RefundRequest,
@@ -57,6 +58,12 @@ class LifecycleRepository:
             statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.scalars(statement)).one_or_none()
 
+    async def fulfillment_by_id(self, fulfillment_id: UUID, *, lock: bool = False) -> Fulfillment | None:
+        statement = select(Fulfillment).where(Fulfillment.id == fulfillment_id)
+        if lock:
+            statement = statement.with_for_update().execution_options(populate_existing=True)
+        return (await self.session.scalars(statement)).one_or_none()
+
     async def count_due_fulfillments(self, now: datetime) -> int:
         return int(
             await self.session.scalar(
@@ -93,15 +100,37 @@ class LifecycleRepository:
             statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.scalars(statement)).one_or_none()
 
-    async def refund_by_channel(
+    async def refund_attempt(self, refund_attempt_id: UUID, *, lock: bool = False) -> RefundAttempt | None:
+        statement = select(RefundAttempt).where(RefundAttempt.id == refund_attempt_id)
+        if lock:
+            statement = statement.with_for_update().execution_options(populate_existing=True)
+        return (await self.session.scalars(statement)).one_or_none()
+
+    async def refund_attempt_for_request(self, refund_request_id: UUID, *, lock: bool = False) -> RefundAttempt | None:
+        statement = select(RefundAttempt).where(RefundAttempt.refund_request_id == refund_request_id)
+        if lock:
+            statement = statement.with_for_update().execution_options(populate_existing=True)
+        return (await self.session.scalars(statement)).one_or_none()
+
+    async def refund_attempt_by_channel(
         self, channel: str, channel_refund_id: str, *, lock: bool = False
-    ) -> RefundRequest | None:
-        statement = select(RefundRequest).where(
-            RefundRequest.channel == channel, RefundRequest.channel_refund_id == channel_refund_id
+    ) -> RefundAttempt | None:
+        statement = select(RefundAttempt).where(
+            RefundAttempt.channel == channel, RefundAttempt.channel_refund_id == channel_refund_id
         )
         if lock:
             statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.scalars(statement)).one_or_none()
+
+    async def refund_attempts_for_payment(self, payment_attempt_id: UUID, *, lock: bool = False) -> list[RefundAttempt]:
+        statement = (
+            select(RefundAttempt)
+            .where(RefundAttempt.payment_attempt_id == payment_attempt_id)
+            .order_by(RefundAttempt.id)
+        )
+        if lock:
+            statement = statement.with_for_update().execution_options(populate_existing=True)
+        return list(await self.session.scalars(statement))
 
     async def user_refund(self, user_id: UUID, refund_id: UUID) -> RefundRequest | None:
         return (
@@ -149,10 +178,11 @@ class LifecycleRepository:
         return rows, total
 
     async def reconciliation(
-        self, channel: str, channel_transaction_id: str, *, lock: bool = False
+        self, channel: str, record_type: str, channel_transaction_id: str, *, lock: bool = False
     ) -> ReconciliationRecord | None:
         statement = select(ReconciliationRecord).where(
             ReconciliationRecord.channel == channel,
+            ReconciliationRecord.record_type == record_type,
             ReconciliationRecord.channel_transaction_id == channel_transaction_id,
         )
         if lock:
@@ -173,6 +203,7 @@ class LifecycleRepository:
         | Fulfillment
         | FulfillmentEvent
         | RefundRequest
+        | RefundAttempt
         | RefundEvent
         | RefundItem
         | ProductReview

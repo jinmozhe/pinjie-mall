@@ -45,7 +45,7 @@ def test_localizer_handles_unknown_shapes_and_preserves_explicit_descriptions() 
     assert responses["numeric"]["description"] == 42
     properties = result["components"]["schemas"]["sample"]["properties"]
     assert properties["explicit"]["description"] == "已有中文说明"
-    assert "description" not in properties["unknown"]
+    assert properties["unknown"]["description"] == "当前业务字段，具体语义由所属请求或响应模型定义"
     assert properties["status"]["description"] == "当前状态代码"
 
 

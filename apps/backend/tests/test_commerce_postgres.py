@@ -42,8 +42,11 @@ async def inventory_database() -> AsyncIterator[tuple[async_sessionmaker[AsyncSe
                     id=sku_id,
                     product_id=product_id,
                     code=f"TEST-{sku_id}",
+                    sku_no=0,
+                    specification_key="default",
                     specifications={},
                     price=Decimal("1.00"),
+                    wholesale_prices=[],
                     weight_grams=0,
                 )
             )

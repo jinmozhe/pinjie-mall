@@ -11,7 +11,7 @@ from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.batch import ActiveStatusBatch, VersionedTarget
@@ -19,16 +19,30 @@ from app.core.config import Settings
 from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
 from app.core.request_metadata import RequestMetadata
-from app.db.models import Admin, Asset, User
-from app.db.models.commerce_lifecycle import Fulfillment, PaymentAttempt
-from app.db.models.distribution import CommissionRecord
+from app.db.models import Admin, AdminSession, Asset, User
+from app.db.models.commerce_lifecycle import Fulfillment, PaymentAttempt, RefundAttempt
+from app.db.models.distribution import CommissionRecord, MemberLevel, MemberProfile
 from app.db.models.order import Order
 from app.db.repositories.commerce_access import CommerceAccessRepository
 from app.db.transaction import transaction_scope
 from app.domains.addresses import AddressInput, AddressService
 from app.domains.addresses.repository import AddressRepository
 from app.domains.cart.schemas import CartItemInput, CartItemUpdate
-from app.domains.distribution import DistributionService, ReferralBindIn, WithdrawalCreate, WithdrawalReview
+from app.domains.commissioning import CommissionPolicyService
+from app.domains.commissioning.schemas import (
+    CommissionAmountRuleCreate,
+    CommissionControlUpdate,
+    CommissionDistributionRuleCreate,
+    CommissionPolicyCreate,
+    CommissionPolicyPublish,
+)
+from app.domains.distribution import (
+    DistributionService,
+    ReferralBindIn,
+    WithdrawalCreate,
+    WithdrawalManualCompletion,
+    WithdrawalReview,
+)
 from app.domains.inventory import InventoryAdjustment, InventoryService
 from app.domains.inventory.repository import InventoryRepository
 from app.domains.lifecycle.schemas import (
@@ -52,8 +66,9 @@ from app.domains.products import (
     ProductUpdate,
     SkuUpdate,
 )
+from app.domains.products.catalog_schemas import NewSkuInput
 from app.domains.products.repository import ProductRepository
-from app.domains.products.schemas import ProductStatusBatch, SkuInput, SkuStatusBatch
+from app.domains.products.schemas import ProductStatusBatch, SkuStatusBatch
 from app.domains.shipping import ShippingService, ShippingTemplateInput
 from app.domains.shipping.repository import ShippingRepository
 from app.domains.shipping.schemas import FreightQuoteInput
@@ -86,8 +101,10 @@ async def shop():
         factory = async_sessionmaker(connection, expire_on_commit=False, join_transaction_mode="create_savepoint")
         async with factory() as session:
             actor = new_uuid7()
+            actor_session_id = new_uuid7()
             users = [new_uuid7() for _ in range(3)]
             image = new_uuid7()
+            now = datetime.now(UTC)
             async with transaction_scope(session):
                 session.add(
                     Admin(
@@ -105,6 +122,19 @@ async def shop():
                     ]
                 )
                 session.add(
+                    AdminSession(
+                        id=actor_session_id,
+                        admin_id=actor,
+                        family_id=new_uuid7(),
+                        credential_profile="browser_cookie",
+                        client_id="pinjie-admin",
+                        csrf_digest="a" * 64,
+                        last_seen_at=now,
+                        idle_expires_at=now + timedelta(days=7),
+                        absolute_expires_at=now + timedelta(days=30),
+                    )
+                )
+                session.add(
                     Asset(
                         id=image,
                         uploader_type="admin",
@@ -116,7 +146,7 @@ async def shop():
                         file_size=1,
                         file_hash="a" * 64,
                         url=f"/uploads/{image}.png",
-                        scene="general",
+                        scene="product",
                     )
                 )
             access = CommerceAccessRepository(session)
@@ -134,6 +164,7 @@ async def shop():
                 access=access,
                 audit=audit,
                 actor_id=actor,
+                actor_session_id=actor_session_id,
             )
             lifecycle = LifecycleService(session)
             distribution = DistributionService(session)
@@ -180,9 +211,9 @@ async def prepare_product(shop, physical=False):
         name="运营测试商品",
         category_id=category.id,
         product_type="physical" if physical else "virtual",
-        shipping_template_id=shipping.id if physical else None,
+        category_revision=category.revision,
         image_asset_ids=[shop.image],
-        skus=[SkuInput(code=f"SKU-{new_uuid7().hex}", price="100.00", weight_grams=100 if physical else 0)],
+        skus=[NewSkuInput(code=f"SKU-{new_uuid7().hex}", price="100.00", weight_grams=100 if physical else None)],
     )
     product = await shop.commerce.create_product(data)
     await shop.commerce.adjust_inventory(
@@ -197,6 +228,52 @@ async def prepare_paid_order(shop, physical=False):
     profiles = [await shop.distribution.activate_profile(u) for u in shop.users]
     await shop.distribution.bind_referrer(shop.users[1], ReferralBindIn(invitation_code=profiles[2].invitation_code))
     await shop.distribution.bind_referrer(shop.users[0], ReferralBindIn(invitation_code=profiles[1].invitation_code))
+    if not hasattr(shop, "commission_level"):
+        level = MemberLevel(
+            id=new_uuid7(),
+            code=f"commerce_{new_uuid7().hex[:16]}",
+            name="交易测试等级",
+            discount_factor=Decimal("1.000000"),
+            level_rank=1,
+            sort_order=0,
+            is_active=True,
+            revision=1,
+        )
+        async with transaction_scope(shop.session):
+            shop.session.add(level)
+            await shop.session.flush()
+            await shop.session.execute(
+                update(MemberProfile).where(MemberProfile.user_id.in_(shop.users)).values(level_id=level.id)
+            )
+        policies = CommissionPolicyService(session=shop.session, actor_id=shop.actor, audit=shop.commerce.audit)
+        policy = await policies.create_policy(
+            CommissionPolicyCreate(
+                name="交易测试分佣政策",
+                default_mode="fixed_amount",
+                default_amount_per_unit="10.00",
+                max_depth=1,
+            )
+        )
+        await policies.add_amount_rule(
+            policy.id,
+            CommissionAmountRuleCreate(sku_id=product.skus[0].id, rule_mode="fixed_amount", amount_per_unit="10.00"),
+        )
+        await policies.add_distribution_rule(
+            policy.id,
+            CommissionDistributionRuleCreate(
+                buyer_level_id=level.id,
+                ancestor_depth=1,
+                beneficiary_level_id=level.id,
+                allocation_mode="percentage",
+                rate="1.000000",
+            ),
+        )
+        await policies.publish_policy(policy.id, CommissionPolicyPublish(revision=policy.revision))
+        control = await policies.commission_control()
+        await policies.update_commission_control(
+            CommissionControlUpdate(revision=control.revision, commissions_enabled=True)
+        )
+        shop.commission_level = level
     address = None
     if physical:
         address = await shop.addresses.create(
@@ -279,31 +356,22 @@ async def test_catalog_operating_flow_and_atomic_batch_conflicts(shop):
     product = await shop.commerce.update_product(
         product.id,
         ProductUpdate(
-            **data.model_dump(exclude={"skus", "description"}), revision=product.revision, description="新版说明"
+            **data.model_dump(exclude={"skus", "description", "attributes", "category_revision"}),
+            revision=product.revision,
+            description="新版说明",
         ),
     )
     assert product.description == "新版说明"
     sku = product.skus[0]
     product = await shop.commerce.write_sku(
-        product.id, SkuUpdate(**sku.model_dump(exclude={"id"}), revision=product.revision), sku.id
-    )
-    product = await shop.commerce.write_sku(
         product.id,
         SkuUpdate(
-            code=f"NEW-{new_uuid7().hex}",
-            specifications={"套餐": "第二档"},
-            price="120.00",
-            weight_grams=0,
+            **sku.model_dump(exclude={"id", "sku_no", "specifications", "specification_key", "archived_at"}),
             revision=product.revision,
         ),
+        sku.id,
     )
-    extra = next(s for s in product.skus if s.id != sku.id)
-    assert (await shop.commerce.inventory_read(extra.id)).available == 0
-    await shop.session.commit()
-    product = await shop.commerce.skus_status_batch(
-        product.id, SkuStatusBatch(sku_ids=[extra.id], revision=product.revision, is_active=False)
-    )
-    assert not next(s for s in product.skus if s.id == extra.id).is_active
+    assert (await shop.commerce.inventory_read(sku.id)).available == 50
     with pytest.raises(AppException):
         await shop.commerce.skus_status_batch(
             product.id, SkuStatusBatch(sku_ids=[sku.id], revision=product.revision, is_active=False)
@@ -320,10 +388,11 @@ async def test_catalog_operating_flow_and_atomic_batch_conflicts(shop):
     await shop.commerce.products_status_batch(
         ProductStatusBatch(targets=[VersionedTarget(id=product.id, revision=product.revision)], status="on_sale")
     )
-    quote = await shop.commerce.shipping_quote(
-        shipping.id, FreightQuoteInput(province_code="110000", pieces=3, weight_grams=0, items_amount="300.00")
-    )
-    assert quote.freight == Decimal("4.00")
+    with pytest.raises(AppException) as unavailable:
+        await shop.commerce.shipping_quote(
+            shipping.id, FreightQuoteInput(province_code="110000", pieces=3, weight_grams=0, items_amount="300.00")
+        )
+    assert unavailable.value.code == "COMMERCE_UPGRADE_REQUIRED"
     assert (await shop.commerce.shipping_page(1, 100)).total >= 1
     await shop.session.commit()
     await shop.commerce.shipping_status_batch(
@@ -359,7 +428,7 @@ async def test_paid_delivery_refund_wallet_and_reporting_flow(shop, physical):
             .where(CommissionRecord.order_id == order.id)
             .values(settle_after=datetime.now(UTC) - timedelta(seconds=1))
         )
-    assert await shop.distribution.settle_due() == 2
+    assert await shop.distribution.settle_due() == 1
     assert await shop.distribution.settle_due() == 0
     wallets = await shop.distribution.wallets_for_user(shop.users[1])
     assert {w.wallet_type: w.available_amount for w in wallets} == {
@@ -378,35 +447,51 @@ async def test_paid_delivery_refund_wallet_and_reporting_flow(shop, physical):
     )
     assert (await shop.lifecycle.public_reviews(product.id, 1, 20)).items[0].id == review.id
     await shop.session.commit()
-    refund_input = RefundRequestCreate(
-        request_id=new_uuid7(), reason="测试售后", items=[dict(order_item_id=order.items[0].id, quantity=1)]
+    refund_order, _, refund_payment = await prepare_paid_order(shop, physical)
+    refund_input = RefundRequestCreate(request_id=new_uuid7(), reason="测试售后")
+    refund = await shop.lifecycle.create_refund(shop.users[0], refund_order.id, refund_input)
+    assert refund.amount == refund_order.total_amount
+    assert (await shop.lifecycle.create_refund(shop.users[0], refund_order.id, refund_input)).id == refund.id
+    assert refund.status == "approved" and refund.revision == 2
+    refund_attempt = await shop.session.scalar(
+        select(RefundAttempt).where(RefundAttempt.refund_request_id == refund.id)
     )
-    refund = await shop.lifecycle.create_refund(shop.users[0], order.id, refund_input)
-    assert refund.amount == Decimal("100.00")
-    assert (await shop.lifecycle.create_refund(shop.users[0], order.id, refund_input)).id == refund.id
-    await shop.admin_lifecycle.approve_refund(refund.id, RefundReview(revision=1, note="同意退款"))
+    assert refund_attempt is not None
     refund_confirmation = VerifiedRefundConfirmation(
-        refund_request_id=refund.id,
+        refund_attempt_id=refund_attempt.id,
         channel="wechat",
-        payment_transaction_id=confirmation.channel_transaction_id,
+        payment_transaction_id=refund_payment.channel_transaction_id,
         amount=refund.amount,
         currency="CNY",
         channel_refund_id=f"REFUND-{refund.id}",
         confirmed_at=datetime.now(UTC),
         payload_hash="c" * 64,
     )
-    assert (await shop.lifecycle.confirm_verified_refund(refund_confirmation)).status == "succeeded"
+    assert (await shop.lifecycle.confirm_verified_refund(refund_confirmation)).status == "completed"
     assert (await shop.lifecycle.confirm_verified_refund(refund_confirmation)).id == refund.id
+    completed = await shop.admin_distribution.complete_withdrawal_manually(
+        withdrawal.id,
+        WithdrawalManualCompletion(revision=approved.revision, note="已线下转账", payment_reference="OFFLINE-TEST-001"),
+    )
+    assert completed.status == "succeeded" and completed.channel_reference == "OFFLINE-TEST-001"
+    with pytest.raises(AppException):
+        await shop.admin_distribution.complete_withdrawal_manually(
+            withdrawal.id,
+            WithdrawalManualCompletion(
+                revision=completed.revision, note="重复确认", payment_reference="OFFLINE-TEST-001"
+            ),
+        )
     wallet = next(w for w in await shop.distribution.wallets_for_user(shop.users[1]) if w.wallet_type == "commission")
     assert (wallet.available_amount, wallet.frozen_amount, wallet.debt_amount) == (
-        Decimal("0.00"),
-        Decimal("15.00"),
         Decimal("5.00"),
+        Decimal("0.00"),
+        Decimal("0.00"),
     )
     await shop.session.commit()
     reconciliation = await shop.admin_lifecycle.reconcile(
         ReconciliationRecordCreate(
             channel="wechat",
+            record_type="payment",
             channel_transaction_id=confirmation.channel_transaction_id,
             source_reference="测试账单",
             source_hash="d" * 64,
@@ -431,11 +516,11 @@ async def test_paid_delivery_refund_wallet_and_reporting_flow(shop, physical):
     assert {row.entry_type for row in ledger.items} == {
         "commission_settlement",
         "withdrawal_freeze",
-        "commission_recovery",
+        "withdrawal_paid",
     }
-    assert sum(row.amount for row in ledger.items) == Decimal("0.00")
+    assert sum(row.amount for row in ledger.items) == Decimal("5.00")
     assert (await shop.distribution.withdrawals_for_user(shop.users[1], 1, 20)).total == 1
-    assert (await shop.lifecycle.refunds_for_user(shop.users[0], order.id))[0].status == "succeeded"
+    assert (await shop.lifecycle.refunds_for_user(shop.users[0], refund_order.id))[0].status == "completed"
 
 
 @pytest.mark.integration
@@ -509,25 +594,31 @@ async def test_rejected_withdrawal_and_refund_preserve_money_and_idempotency(sho
         await shop.distribution.create_withdrawal(
             user, request.model_copy(update={"request_id": new_uuid7(), "amount": Decimal("21.00")})
         )
-    refund_input = RefundRequestCreate(
-        request_id=new_uuid7(), reason="售后测试", items=[dict(order_item_id=order.items[0].id, quantity=2)]
-    )
-    refund = await shop.lifecycle.create_refund(shop.users[0], order.id, refund_input)
+    refund_order, _, _ = await prepare_paid_order(shop)
+    async with transaction_scope(shop.session):
+        await shop.session.execute(
+            update(Order)
+            .where(Order.id == refund_order.id)
+            .values(acceptance_status="accepted", accepted_at=datetime.now(UTC), accepted_by_id=shop.actor)
+        )
+    refund_input = RefundRequestCreate(request_id=new_uuid7(), reason="售后测试")
+    refund = await shop.lifecycle.create_refund(shop.users[0], refund_order.id, refund_input)
     with pytest.raises(AppException):
         await shop.admin_lifecycle.approve_refund(refund.id, RefundReview(revision=99, note="过期决定"))
     rejected_refund = await shop.admin_lifecycle.reject_refund(refund.id, RefundReview(revision=1, note="资料不全"))
     assert rejected_refund.status == "rejected"
-    # 拒绝后数量占用释放，可重新申请全部商品金额。
+    # 整单申请被拒绝后可重新提交。
     next_refund = await shop.lifecycle.create_refund(
-        shop.users[0], order.id, refund_input.model_copy(update={"request_id": new_uuid7()})
+        shop.users[0], refund_order.id, refund_input.model_copy(update={"request_id": new_uuid7()})
     )
-    assert next_refund.amount == order.items_amount
+    assert next_refund.amount == refund_order.items_amount
     with pytest.raises(AppException):
         await shop.lifecycle.create_refund(
-            shop.users[0], order.id, refund_input.model_copy(update={"request_id": new_uuid7()})
+            shop.users[0], refund_order.id, refund_input.model_copy(update={"request_id": new_uuid7()})
         )
     recon_input = ReconciliationRecordCreate(
         channel="wechat",
+        record_type="payment",
         channel_transaction_id=confirmation.channel_transaction_id,
         source_reference="账单",
         source_hash="a" * 64,
@@ -699,3 +790,271 @@ async def test_catalog_batch_routes_validate_permissions_versions_and_csrf(shop)
             json={"targets": [{"id": str(product.id), "revision": 1}], "status": "on_sale"},
         )
         assert response.status_code == 403 and response.json()["code"] == "CSRF_REJECTED"
+
+
+@pytest.mark.integration
+async def test_trusted_payment_confirmation_rejects_conflicting_replay(shop):
+    order, _, confirmation = await prepare_paid_order(shop)
+    with pytest.raises(AppException) as error:
+        await shop.lifecycle.confirm_verified_payment(
+            confirmation.model_copy(update={"channel_transaction_id": f"CONFLICT-{order.id}"})
+        )
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+
+
+@pytest.mark.integration
+async def test_fulfillment_rejects_wrong_type_and_stale_versions(shop):
+    virtual_order, _, _ = await prepare_paid_order(shop)
+    with pytest.raises(AppException) as error:
+        await shop.admin_lifecycle.ship(
+            virtual_order.id, ShipmentCreate(carrier="测试物流", tracking_number="VIRTUAL", revision=1)
+        )
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+    with pytest.raises(AppException) as error:
+        await shop.admin_lifecycle.deliver_virtual(
+            virtual_order.id, VirtualDeliveryCreate(delivery_reference="虚拟交付", revision=99)
+        )
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+    with pytest.raises(AppException) as error:
+        await shop.lifecycle.confirm_receipt(shop.users[0], virtual_order.id, revision=1)
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+    delivered = await shop.admin_lifecycle.deliver_virtual(
+        virtual_order.id, VirtualDeliveryCreate(delivery_reference="虚拟交付", revision=1)
+    )
+    assert delivered.status == "delivered"
+    with pytest.raises(AppException) as error:
+        await shop.lifecycle.create_refund(
+            shop.users[0], virtual_order.id, RefundRequestCreate(request_id=new_uuid7(), reason="交付后退款")
+        )
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+
+    physical_order, _, _ = await prepare_paid_order(shop, physical=True)
+    with pytest.raises(AppException) as error:
+        await shop.admin_lifecycle.deliver_virtual(
+            physical_order.id, VirtualDeliveryCreate(delivery_reference="错误交付", revision=1)
+        )
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+    with pytest.raises(AppException) as error:
+        await shop.lifecycle.confirm_receipt(shop.users[0], physical_order.id, revision=1)
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+    with pytest.raises(AppException) as error:
+        await shop.admin_lifecycle.ship(
+            physical_order.id, ShipmentCreate(carrier="测试物流", tracking_number="STALE", revision=99)
+        )
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+    shipped = await shop.admin_lifecycle.ship(
+        physical_order.id, ShipmentCreate(carrier="测试物流", tracking_number="PHYSICAL", revision=1)
+    )
+    delivered = await shop.lifecycle.confirm_receipt(shop.users[0], physical_order.id, shipped.revision)
+    assert delivered.status == "delivered"
+    assert (await shop.lifecycle.confirm_receipt(shop.users[0], physical_order.id, revision=1)).status == "delivered"
+
+
+@pytest.mark.integration
+async def test_payment_and_refund_confirmation_reject_invalid_channel_amount_and_replay(shop):
+    paid_order, _, payment_confirmation = await prepare_paid_order(shop)
+    with pytest.raises(AppException) as error:
+        await shop.lifecycle.confirm_verified_payment(payment_confirmation.model_copy(update={"channel": "alipay"}))
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+    with pytest.raises(AppException) as error:
+        await shop.lifecycle.confirm_verified_payment(
+            payment_confirmation.model_copy(update={"amount": payment_confirmation.amount + Decimal("0.01")})
+        )
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+
+    refund_order, _, refund_payment = await prepare_paid_order(shop)
+    refund = await shop.lifecycle.create_refund(
+        shop.users[0], refund_order.id, RefundRequestCreate(request_id=new_uuid7(), reason="退款确认边界")
+    )
+    refund_attempt = await shop.session.scalar(
+        select(RefundAttempt).where(RefundAttempt.refund_request_id == refund.id)
+    )
+    assert refund_attempt is not None
+    confirmation = VerifiedRefundConfirmation(
+        refund_attempt_id=refund_attempt.id,
+        channel="wechat",
+        payment_transaction_id=refund_payment.channel_transaction_id,
+        amount=refund.amount,
+        currency="CNY",
+        channel_refund_id=f"REFUND-BOUNDARY-{refund.id}",
+        confirmed_at=datetime.now(UTC),
+        payload_hash="e" * 64,
+    )
+    with pytest.raises(AppException) as error:
+        await shop.lifecycle.confirm_verified_refund(confirmation.model_copy(update={"channel": "alipay"}))
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+    with pytest.raises(AppException) as error:
+        await shop.lifecycle.confirm_verified_refund(
+            confirmation.model_copy(update={"amount": confirmation.amount + Decimal("0.01")})
+        )
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+    completed = await shop.lifecycle.confirm_verified_refund(confirmation)
+    assert completed.status == "completed"
+    with pytest.raises(AppException) as error:
+        await shop.lifecycle.confirm_verified_refund(
+            confirmation.model_copy(update={"channel_refund_id": f"CONFLICT-{refund.id}"})
+        )
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+
+
+@pytest.mark.integration
+async def test_checkout_request_payment_and_cancellation_conflicts_preserve_order_state(shop):
+    product, _, _, _ = await prepare_product(shop)
+    request = CheckoutRequest(request_id=new_uuid7(), items=[CheckoutLine(sku_id=product.skus[0].id, quantity=1)])
+    preview = await shop.orders.preview(shop.users[0], request)
+    with pytest.raises(AppException) as error:
+        await shop.orders.create(shop.users[0], request.model_copy(update={"quote_fingerprint": "stale"}))
+    assert error.value.code == "CHECKOUT_STALE_QUOTE"
+    order = await shop.orders.create(
+        shop.users[0], request.model_copy(update={"quote_fingerprint": preview.fingerprint})
+    )
+    with pytest.raises(AppException) as error:
+        await shop.orders.create(
+            shop.users[0],
+            request.model_copy(
+                update={
+                    "items": [CheckoutLine(sku_id=product.skus[0].id, quantity=2)],
+                    "quote_fingerprint": preview.fingerprint,
+                }
+            ),
+        )
+    assert error.value.code == "ORDER_REQUEST_CONFLICT"
+    payment = PaymentAttemptCreate(request_id=new_uuid7(), channel="wechat")
+    assert (await shop.lifecycle.initiate_payment(shop.users[0], order.id, payment)).status == "unavailable"
+    with pytest.raises(AppException) as error:
+        await shop.lifecycle.initiate_payment(shop.users[0], order.id, payment.model_copy(update={"channel": "alipay"}))
+    assert error.value.code == "ORDER_REQUEST_CONFLICT"
+    with pytest.raises(AppException) as error:
+        await shop.lifecycle.initiate_payment(
+            shop.users[0], new_uuid7(), PaymentAttemptCreate(request_id=new_uuid7(), channel="wechat")
+        )
+    assert error.value.code == "ORDER_NOT_FOUND"
+    cancelled = await shop.orders.cancel(shop.users[0], order.id)
+    assert cancelled.status == "cancelled"
+    assert (await shop.orders.cancel(shop.users[0], order.id)).status == "cancelled"
+
+
+@pytest.mark.integration
+async def test_manual_money_and_lifecycle_missing_resource_boundaries(shop):
+    await shop.distribution.activate_profile(shop.users[1])
+    with pytest.raises(AppException) as error:
+        await shop.distribution.create_withdrawal(
+            shop.users[1], WithdrawalCreate(request_id=new_uuid7(), amount="1.00", destination_reference="余额不足")
+        )
+    assert error.value.code == "WALLET_INSUFFICIENT_BALANCE"
+    assert (
+        await shop.distribution.matched_withdrawal_id_in_open_transaction(
+            channel="manual", channel_reference="UNKNOWN", amount=Decimal("1.00"), currency="CNY"
+        )
+        is None
+    )
+    with pytest.raises(AppException) as error:
+        await shop.admin_distribution.approve_withdrawal(new_uuid7(), WithdrawalReview(revision=1, note="不存在"))
+    assert error.value.code == "WITHDRAWAL_NOT_FOUND"
+    with pytest.raises(AppException) as error:
+        await shop.admin_distribution.reject_withdrawal(new_uuid7(), WithdrawalReview(revision=1, note="不存在"))
+    assert error.value.code == "WITHDRAWAL_NOT_FOUND"
+    with pytest.raises(AppException) as error:
+        await shop.admin_distribution.complete_withdrawal_manually(
+            new_uuid7(), WithdrawalManualCompletion(revision=1, note="不存在", payment_reference="OFFLINE-MISSING")
+        )
+    assert error.value.code == "WITHDRAWAL_NOT_FOUND"
+    with pytest.raises(AppException):
+        await shop.distribution.settle_due_in_open_transaction(limit=0)
+    with pytest.raises(AppException):
+        await shop.distribution.recover_for_refund_in_open_transaction(
+            refund_request_id=new_uuid7(),
+            order_id=new_uuid7(),
+            cumulative_refunded_amount=Decimal("-0.01"),
+            refunded_at=datetime.now(UTC),
+        )
+    with pytest.raises(AppException):
+        await shop.lifecycle.admin_fulfillment(new_uuid7())
+    with pytest.raises(AppException):
+        await shop.lifecycle.auto_confirm_scheduled(new_uuid7())
+
+    order, product, _ = await prepare_paid_order(shop)
+    with pytest.raises(AppException):
+        await shop.lifecycle.create_review(
+            shop.users[0], order.items[0].id, ProductReviewCreate(rating=5, content="过早评价")
+        )
+    await shop.admin_lifecycle.deliver_virtual(
+        order.id, VirtualDeliveryCreate(revision=1, delivery_reference="评价交付")
+    )
+    review = await shop.lifecycle.create_review(
+        shop.users[0], order.items[0].id, ProductReviewCreate(rating=5, content="已交付评价")
+    )
+    assert (
+        await shop.lifecycle.create_review(
+            shop.users[0], order.items[0].id, ProductReviewCreate(rating=5, content="已交付评价")
+        )
+    ).id == review.id
+    with pytest.raises(AppException):
+        await shop.lifecycle.create_review(
+            shop.users[0], order.items[0].id, ProductReviewCreate(rating=4, content="冲突评价")
+        )
+    assert (await shop.lifecycle.public_reviews(product.id, 1, 20)).total == 1
+
+
+@pytest.mark.integration
+async def test_auto_delivery_manual_refund_and_unmatched_reconciliation_paths(shop):
+    physical_order, _, _ = await prepare_paid_order(shop, physical=True)
+    shipped = await shop.admin_lifecycle.ship(
+        physical_order.id, ShipmentCreate(carrier="自动确认", tracking_number="AUTO-CONFIRM", revision=1)
+    )
+    async with transaction_scope(shop.session):
+        await shop.session.execute(
+            update(Fulfillment)
+            .where(Fulfillment.order_id == physical_order.id)
+            .values(auto_confirm_at=datetime.now(UTC) - timedelta(seconds=1))
+        )
+    assert await shop.lifecycle.auto_confirm_scheduled(shipped.id) is True
+    assert await shop.lifecycle.auto_confirm_scheduled(shipped.id) is False
+
+    refund_order, _, _ = await prepare_paid_order(shop)
+    async with transaction_scope(shop.session):
+        await shop.session.execute(
+            update(Order)
+            .where(Order.id == refund_order.id)
+            .values(acceptance_status="accepted", accepted_at=datetime.now(UTC), accepted_by_id=shop.actor)
+        )
+    manual_refund = await shop.lifecycle.create_refund(
+        shop.users[0], refund_order.id, RefundRequestCreate(request_id=new_uuid7(), reason="人工审核路径")
+    )
+    assert manual_refund.status == "requested"
+    approved = await shop.admin_lifecycle.approve_refund(
+        manual_refund.id, RefundReview(revision=manual_refund.revision, note="人工审核通过")
+    )
+    assert approved.status == "approved"
+    with pytest.raises(AppException):
+        await shop.admin_lifecycle.approve_refund(new_uuid7(), RefundReview(revision=1, note="不存在"))
+    with pytest.raises(AppException):
+        await shop.admin_lifecycle.reject_refund(new_uuid7(), RefundReview(revision=1, note="不存在"))
+
+    occurred_at = datetime.now(UTC)
+    refund_reconciliation = await shop.admin_lifecycle.reconcile(
+        ReconciliationRecordCreate(
+            channel="wechat",
+            record_type="refund",
+            channel_transaction_id="UNMATCHED-REFUND",
+            source_reference="缺失退款账单",
+            source_hash="f" * 64,
+            amount=Decimal("1.00"),
+            currency="CNY",
+            occurred_at=occurred_at,
+        )
+    )
+    assert refund_reconciliation.status == "discrepancy"
+    withdrawal_reconciliation = await shop.admin_lifecycle.reconcile(
+        ReconciliationRecordCreate(
+            channel="wechat",
+            record_type="withdrawal",
+            channel_transaction_id="UNMATCHED-WITHDRAWAL",
+            source_reference="缺失提现账单",
+            source_hash="a" * 64,
+            amount=Decimal("1.00"),
+            currency="CNY",
+            occurred_at=occurred_at,
+        )
+    )
+    assert withdrawal_reconciliation.status == "discrepancy"
