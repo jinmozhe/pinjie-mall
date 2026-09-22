@@ -19,7 +19,7 @@
     "check:text": "powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/ci/check-text-files.ps1",
     "check:workspace": "powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/ci/check-workspace-state.ps1",
     "lint": "turbo run lint",
-    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules/**\" \"#**/.venv/**\" \"#**/coverage/**\" \"#**/.next/**\" \"#**/.pytest_cache/**\" \"#**/.pytest-cache-runtime/**\"",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#**/.git/**\" \"#temp/**\" \"#**/node_modules/**\" \"#**/.venv/**\" \"#**/coverage/**\" \"#**/.next/**\" \"#**/.pytest_cache/**\" \"#**/.pytest-cache-runtime/**\"",
     "typecheck": "turbo run typecheck",
     "test:e2e": "node scripts/e2e/run-e2e.mjs"
   },

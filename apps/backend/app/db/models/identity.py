@@ -15,6 +15,7 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import INET, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -59,7 +60,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     email: Mapped[str | None] = mapped_column(String(320), nullable=True, unique=True, comment="未验证可选邮箱")
     display_name: Mapped[str | None] = mapped_column(String(100), nullable=True, comment="展示名称")
     avatar: Mapped[str | None] = mapped_column(String(500), nullable=True, comment="用户头像站内资源路径")
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False, comment="Argon2id 密码摘要")
+    password_hash: Mapped[str | None] = mapped_column(
+        String(255), nullable=True, comment="Argon2id 密码摘要；仅外部身份用户可为空"
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, comment="是否允许登录")
     credential_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, comment="凭据版本")
     sessions: Mapped[list["UserSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -115,6 +118,25 @@ class UserRefreshToken(UUIDPrimaryKeyMixin, Base):
     )
 
     session: Mapped[UserSession] = relationship(back_populates="refresh_tokens", foreign_keys=[session_id])
+
+
+class UserExternalIdentity(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "user_external_identities"
+    __table_args__ = (
+        UniqueConstraint("provider", "app_id", "subject_id", name="uq_user_external_identity_subject"),
+        UniqueConstraint("user_id", "provider", "app_id", name="uq_user_external_identity_user_provider"),
+        Index("ix_user_external_identity_user", "user_id"),
+        CheckConstraint("provider = 'wechat'", name="ck_user_external_identity_provider"),
+        {"comment": "可信外部身份与商城用户的不可变绑定"},
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, comment="商城用户"
+    )
+    provider: Mapped[str] = mapped_column(String(16), nullable=False, default="wechat", comment="外部身份提供方")
+    app_id: Mapped[str] = mapped_column(String(64), nullable=False, comment="服务端登记的平台应用标识")
+    subject_id: Mapped[str] = mapped_column(String(128), nullable=False, comment="可信 OpenID")
+    union_id: Mapped[str | None] = mapped_column(String(128), nullable=True, comment="可信返回的 UnionID，仅记录不合并")
 
 
 class Admin(UUIDPrimaryKeyMixin, TimestampMixin, Base):

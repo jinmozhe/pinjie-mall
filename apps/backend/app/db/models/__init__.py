@@ -4,6 +4,16 @@ from .address import UserAddress
 from .asset import Asset
 from .base import Base, SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
 from .cart import CartItem
+from .catalog import (
+    Brand,
+    CategorySpecAttribute,
+    ProductAttributeValue,
+    ProductSkuSpecValue,
+    ProductSpecAttribute,
+    ProductSpecValue,
+    SpecAttribute,
+    SpecAttributeValue,
+)
 from .commerce_lifecycle import (
     Fulfillment,
     FulfillmentEvent,
@@ -11,14 +21,26 @@ from .commerce_lifecycle import (
     PaymentEvent,
     ProductReview,
     ReconciliationRecord,
+    RefundAttempt,
     RefundEvent,
     RefundItem,
     RefundRequest,
 )
 from .distribution import (
+    CommissionAmountRule,
+    CommissionDistributionRule,
+    CommissionPolicy,
     CommissionRecord,
     CommissionRecovery,
+    DurableTask,
+    MemberLevel,
+    MemberLevelCondition,
+    MemberLevelEvent,
+    MemberPriceRule,
     MemberProfile,
+    MembershipQualificationEvent,
+    PointsAccount,
+    PointsLedger,
     WalletAccount,
     WalletLedger,
     WithdrawalRequest,
@@ -33,6 +55,7 @@ from .identity import (
     Role,
     SecurityLoginEvent,
     User,
+    UserExternalIdentity,
     UserRefreshToken,
     UserSession,
     admin_roles,
@@ -41,18 +64,38 @@ from .identity import (
 from .inventory import InventoryAccount, InventoryMovement
 from .order import Order, OrderEvent, OrderItem
 from .product import Category, Product, ProductImage, ProductSku
+from .purchase import ProductPurchaseLimit, ProductPurchaseRecord
 from .reservation import InventoryReservation, InventoryReservationEvent
 from .shipping import ShippingTemplate
 from .system_setting import SystemSetting
 
 __all__ = [
+    "Brand",
+    "CategorySpecAttribute",
+    "ProductAttributeValue",
+    "ProductSkuSpecValue",
+    "ProductSpecAttribute",
+    "ProductSpecValue",
+    "SpecAttribute",
+    "SpecAttributeValue",
     "CartItem",
+    "CommissionAmountRule",
+    "CommissionDistributionRule",
+    "CommissionPolicy",
     "CommissionRecord",
     "CommissionRecovery",
+    "DurableTask",
     "MemberProfile",
+    "MemberLevel",
+    "MemberLevelCondition",
+    "MemberLevelEvent",
+    "MemberPriceRule",
     "WalletAccount",
     "WalletLedger",
     "WithdrawalRequest",
+    "MembershipQualificationEvent",
+    "PointsAccount",
+    "PointsLedger",
     "Category",
     "Fulfillment",
     "FulfillmentEvent",
@@ -60,6 +103,7 @@ __all__ = [
     "PaymentEvent",
     "ProductReview",
     "ReconciliationRecord",
+    "RefundAttempt",
     "RefundEvent",
     "RefundItem",
     "RefundRequest",
@@ -73,6 +117,8 @@ __all__ = [
     "Product",
     "ProductImage",
     "ProductSku",
+    "ProductPurchaseLimit",
+    "ProductPurchaseRecord",
     "ShippingTemplate",
     "UserAddress",
     "Admin",
@@ -90,6 +136,7 @@ __all__ = [
     "TimestampMixin",
     "UUIDPrimaryKeyMixin",
     "User",
+    "UserExternalIdentity",
     "UserRefreshToken",
     "UserSession",
     "admin_roles",

@@ -136,7 +136,7 @@ async def admin_product(product_id: UUID, service: AdminCommerce) -> ResponseMod
     "/admin/products",
     response_model=ResponseModel[ProductRead],
     status_code=201,
-    summary="创建商品与零库存变体",
+    summary="创建商品属性、变体与初始盘点库存",
     dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.PRODUCTS_CREATE))],
 )
 async def create_product(payload: ProductCreate, service: AdminCommerce) -> ResponseModel[ProductRead]:

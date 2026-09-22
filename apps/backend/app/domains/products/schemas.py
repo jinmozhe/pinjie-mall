@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import Literal, Self
 from uuid import UUID
@@ -5,6 +6,8 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.core.batch import VersionedBatch
+
+from .catalog_schemas import AdoptionRead, SkuFields, SpecificationSet, WholesalePrice
 
 
 class CategoryInput(BaseModel):
@@ -27,22 +30,16 @@ class CategoryRead(CategoryInput):
     revision: int = Field(description="分类版本")
 
 
-class SkuInput(BaseModel):
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+class SkuInput(SkuFields):
+    spec_value_ids: list[UUID] = Field(
+        default_factory=list, max_length=10, description="当前商品采用版本的候选值 ID，无规格为空"
+    )
 
-    code: str = Field(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_-]+$", description="全局唯一 SKU 编码")
-    specifications: dict[str, str] = Field(default_factory=dict, description="规格组合，无规格为默认 SKU")
-    price: Decimal = Field(ge=0, max_digits=15, decimal_places=2, description="基础售价人民币元")
-    weight_grams: int = Field(ge=0, le=1000000000, description="重量克数，虚拟商品为零")
-    is_active: bool = Field(default=True, strict=True, description="是否启用 SKU")
-
-    @field_validator("specifications")
+    @field_validator("spec_value_ids")
     @classmethod
-    def bounded_specs(cls, values: dict[str, str]) -> dict[str, str]:
-        if len(values) > 10 or any(
-            not key.strip() or not value.strip() or len(key) > 50 or len(value) > 100 for key, value in values.items()
-        ):
-            raise ValueError("规格最多十项，名称和取值必须非空并符合长度限制")
+    def unique_values(cls, values: list[UUID]) -> list[UUID]:
+        if len(set(values)) != len(values):
+            raise ValueError("规格候选值不能重复")
         return values
 
 
@@ -50,6 +47,23 @@ class SkuRead(SkuInput):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID = Field(description="稳定 SKU ID")
+    sku_no: int
+    specifications: dict[str, str]
+    specification_key: str
+    archived_at: datetime | None
+
+
+class PublicSkuRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    code: str
+    sku_no: int
+    specifications: dict[str, str]
+    price: Decimal
+    market_price: Decimal | None
+    wholesale_prices: list[WholesalePrice]
+    weight_grams: int | None
+    is_active: bool
 
 
 class CheckoutSku(BaseModel):
@@ -60,11 +74,10 @@ class CheckoutSku(BaseModel):
     code: str
     specifications: dict[str, str]
     price: Decimal
-    weight_grams: int
+    weight_grams: int | None
     product_name: str
     product_type: Literal["physical", "virtual"]
     product_revision: int
-    shipping_template_id: UUID | None
 
 
 class SkuUpdate(SkuInput):
@@ -78,29 +91,21 @@ class ProductInput(BaseModel):
     description: str = Field(default="", max_length=20000, description="纯文本商品说明")
     product_type: Literal["physical", "virtual"] = Field(description="实物或虚拟商品")
     category_id: UUID = Field(description="所属分类 ID")
-    shipping_template_id: UUID | None = Field(default=None, description="实物运费模板，虚拟商品为空")
+    brand_id: UUID | None = Field(default=None, description="可选品牌")
+    purchase_limit_quantity: int = Field(
+        default=0, ge=0, le=2147483647, description="每用户累计限购配置，交易阶段实施计数"
+    )
     image_asset_ids: list[UUID] = Field(default_factory=list, max_length=20, description="有序图片资产 ID，首张为主图")
 
     @model_validator(mode="after")
     def check_product(self) -> Self:
-        if self.product_type == "virtual" and self.shipping_template_id is not None:
-            raise ValueError("虚拟商品不能绑定物流运费模板")
         if len(self.image_asset_ids) != len(set(self.image_asset_ids)):
             raise ValueError("商品图片不能重复")
         return self
 
 
-class ProductCreate(ProductInput):
-    skus: list[SkuInput] = Field(min_length=1, max_length=100, description="初始 SKU，无规格也需默认 SKU")
-
-    @model_validator(mode="after")
-    def unique_variants(self) -> Self:
-        if len({sku.code for sku in self.skus}) != len(self.skus):
-            raise ValueError("SKU 编码不能重复")
-        specs = [tuple(sorted(sku.specifications.items())) for sku in self.skus]
-        if len(set(specs)) != len(specs):
-            raise ValueError("规格组合不能重复")
-        return self
+class ProductCreate(ProductInput, SpecificationSet):
+    pass
 
 
 class ProductUpdate(ProductInput):
@@ -138,6 +143,7 @@ class ProductRead(ProductInput):
     status: Literal["draft", "on_sale", "off_sale"] = Field(description="商品状态")
     revision: int = Field(description="商品版本")
     skus: list[SkuRead] = Field(description="商品全部 SKU")
+    attributes: list[AdoptionRead] = Field(description="当前及历史属性采用")
 
 
 class PublicProductRead(BaseModel):
@@ -146,8 +152,10 @@ class PublicProductRead(BaseModel):
     description: str = Field(description="商品纯文本说明")
     product_type: Literal["physical", "virtual"] = Field(description="商品类型")
     category_id: UUID = Field(description="分类 ID")
+    brand_id: UUID | None
     images: list[str] = Field(description="图片公开地址")
-    skus: list[SkuRead] = Field(description="启用中的商品变体")
+    skus: list[PublicSkuRead] = Field(description="启用且未归档的商品变体，无成本字段")
+    attributes: list[AdoptionRead] = Field(description="当前采用定义及描述值")
 
 
 def validate_category_tree(parents: dict[UUID, UUID | None]) -> None:

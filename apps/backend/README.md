@@ -41,6 +41,7 @@ uv run mypy app
 uv run lint-imports
 uv run python -m compileall -q app alembic scripts
 uv run python -c "from app.main import app; app.openapi()"
+uv run python -m scripts.verify_target_model
 ```
 
-公开接口变化后运行 `uv run python -m scripts.export_openapi`，再在仓库根运行 `pnpm generate-api`。待付款超时处理使用 `uv run python -m scripts.expire_pending_orders --confirm-database <数据库名>` 预览，只有显式追加 `--apply` 才修改订单与库存。任何 pytest 与真实数据库迁移仅在当前任务明确点名授权后执行；数据库集成测试必须显式配置独立的 `TEST_DATABASE_URL` 和 `TEST_REDIS_URL`，数据库名以 `_test` 结尾。
+公开接口变化后运行 `uv run python -m scripts.export_openapi`，再在仓库根运行 `pnpm generate-api`。待付款超时处理使用 `uv run python -m scripts.expire_pending_orders --confirm-database <数据库名>` 预览，只有显式追加 `--apply` 才修改订单与库存。持久任务执行器使用 `uv run python -m scripts.run_durable_tasks --confirm-database <数据库名>` 预览，显式追加 `--apply` 才领取并执行一轮有界任务；它不替代常驻调度、告警或渠道适配器。任何 pytest 与真实数据库迁移仅在当前任务明确点名授权后执行；数据库集成测试必须显式配置独立的 `TEST_DATABASE_URL` 和 `TEST_REDIS_URL`，数据库名以 `_test` 结尾。

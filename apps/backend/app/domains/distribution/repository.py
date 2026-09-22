@@ -151,6 +151,17 @@ class DistributionRepository:
             statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.scalars(statement)).one_or_none()
 
+    async def withdrawal_by_channel_reference(
+        self, channel: str, channel_reference: str, *, lock: bool = False
+    ) -> WithdrawalRequest | None:
+        statement = select(WithdrawalRequest).where(
+            WithdrawalRequest.channel == channel,
+            WithdrawalRequest.channel_reference == channel_reference,
+        )
+        if lock:
+            statement = statement.with_for_update().execution_options(populate_existing=True)
+        return (await self.session.scalars(statement)).one_or_none()
+
     async def withdrawals_for_user(
         self, user_id: UUID, page: int, page_size: int
     ) -> tuple[list[WithdrawalRequest], int]:

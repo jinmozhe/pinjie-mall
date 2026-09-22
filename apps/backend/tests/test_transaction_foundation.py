@@ -1,12 +1,15 @@
 """交易阶段不变量回归资产；实际执行遵循专项测试授权。"""
 
 from decimal import Decimal
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 from uuid import uuid7
 
 import pytest
+from pydantic import ValidationError
 
 from app.core.exceptions import AppException
-from app.domains.orders.schemas import CheckoutLine, CheckoutRequest, QuoteLine, ShippingQuoteGroup
+from app.domains.orders.schemas import CheckoutLine, CheckoutRequest, QuoteLine
 from app.domains.products.schemas import CheckoutSku
 from app.services.orders import OrderService
 
@@ -26,7 +29,7 @@ def test_checkout_merges_identical_skus_and_rejects_overflow() -> None:
     assert error.value.code == "CHECKOUT_INVALID"
 
 
-def test_quote_fingerprint_changes_with_authoritative_amount_or_address() -> None:
+def test_quote_line_keeps_target_model_snapshots_immutable() -> None:
     line = QuoteLine(
         sku_id=uuid7(),
         product_id=uuid7(),
@@ -36,30 +39,19 @@ def test_quote_fingerprint_changes_with_authoritative_amount_or_address() -> Non
         quantity=1,
         unit_price=Decimal("10.00"),
         line_amount=Decimal("10.00"),
-        weight_grams=100,
         product_revision=1,
         product_type="physical",
-        shipping_template_id=uuid7(),
+        price_snapshot={"schema_version": 1, "final_unit_price": "10.00"},
+        category_snapshot={"schema_version": 1, "category": {"name": "分类"}},
+        brand_snapshot=None,
+        commission_snapshot={"schema_version": 1, "source_amount": "0.00"},
+        purchase_limit_quantity=0,
+        weight_grams=100,
     )
-    shipping = [
-        ShippingQuoteGroup(
-            template_id=line.shipping_template_id,
-            revision=1,
-            product_type="physical",
-            pieces=1,
-            weight_grams=100,
-            items_amount=Decimal("10.00"),
-            freight=Decimal("5.00"),
-        )
-    ]
-    address = {"province_code": "110000"}
-    fingerprint = OrderService._fingerprint([line], shipping, address)
-    assert fingerprint != OrderService._fingerprint(
-        [line.model_copy(update={"unit_price": Decimal("11.00"), "line_amount": Decimal("11.00")})],
-        shipping,
-        address,
-    )
-    assert fingerprint != OrderService._fingerprint([line], shipping, {"province_code": "120000"})
+    assert line.price_snapshot["final_unit_price"] == "10.00"
+    assert line.category_snapshot["category"] == {"name": "分类"}
+    with pytest.raises(ValidationError):
+        line.unit_price = Decimal("11.00")
 
 
 class CatalogProducts:
@@ -83,11 +75,12 @@ async def test_quote_rejects_mixed_physical_and_virtual_products() -> None:
             product_name=kind,
             product_type=kind,
             product_revision=1,
-            shipping_template_id=None,
         )
         for kind in ("physical", "virtual")
     ]
-    service = OrderService(session=object(), products=CatalogProducts(rows))
+    service = OrderService(session=object())
+    service.products = CatalogProducts(rows)
+    service.access = SimpleNamespace(require_active_user=AsyncMock())
     with pytest.raises(AppException) as error:
         await service.preview(uuid7(), checkout(*(CheckoutLine(sku_id=row.id, quantity=1) for row in rows)))
     assert error.value.code == "CHECKOUT_INVALID"

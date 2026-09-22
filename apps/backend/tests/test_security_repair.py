@@ -68,7 +68,14 @@ async def test_management_write_rechecks_revoked_actor_session() -> None:
         get_admin_for_update=AsyncMock(return_value=SimpleNamespace(is_active=True, is_superuser=True, roles=[]))
     )
     coordinator._sessions = SimpleNamespace(
-        get_admin=AsyncMock(return_value=SimpleNamespace(revoked_at=datetime.now(UTC)))
+        get_admin=AsyncMock(
+            return_value=SimpleNamespace(
+                admin_id=coordinator._actor_id,
+                revoked_at=datetime.now(UTC),
+                idle_expires_at=datetime.now(UTC) + timedelta(days=1),
+                absolute_expires_at=datetime.now(UTC) + timedelta(days=1),
+            )
+        )
     )
     operation = AsyncMock()
 

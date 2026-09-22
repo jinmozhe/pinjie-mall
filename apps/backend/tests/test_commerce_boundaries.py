@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
 from app.core.payload_sanitizer import is_sensitive_route
+from app.db.models.commerce_lifecycle import RefundAttempt
 from app.db.models.distribution import (
     CommissionRecord,
     CommissionRecovery,
@@ -26,11 +27,8 @@ from app.domains.distribution.service import DistributionService
 from app.domains.inventory.schemas import InventoryAdjustment
 from app.domains.inventory.service import InventoryService
 from app.domains.lifecycle.schemas import VerifiedRefundConfirmation
-from app.domains.orders.schemas import CheckoutLine, CheckoutRequest
-from app.domains.products.schemas import CheckoutSku
 from app.domains.products.service import ProductService
 from app.services.cart import CartService
-from app.services.orders import OrderService
 from app.services.payment_lifecycle import LifecycleService
 
 
@@ -92,8 +90,8 @@ async def test_inventory_transitions_preserve_versions_balances_and_idempotency(
     await service.reserve(order_id, quantities)
     await service.reserve(order_id, quantities)
     assert (store.account.available, store.account.reserved, store.account.revision) == (7, 3, 2)
-    await service.transition_reservations(order_id, quantities, status)
-    await service.transition_reservations(order_id, quantities, status)
+    await service.transition_reservations(order_id, quantities, status, archived_sku_ids=set())
+    await service.transition_reservations(order_id, quantities, status, archived_sku_ids=set())
     assert (store.account.available, store.account.reserved, store.account.revision) == (
         10 if status == "released" else 7,
         0,
@@ -122,7 +120,9 @@ async def test_inventory_adjustment_cannot_fill_capacity_reserved_for_order_rele
 async def test_payment_cannot_confirm_missing_or_mismatched_inventory_reservations():
     store = InventoryStore()
     with pytest.raises(AppException) as error:
-        await InventoryService(store).transition_reservations(new_uuid7(), {store.account.sku_id: 1}, "confirmed")
+        await InventoryService(store).transition_reservations(
+            new_uuid7(), {store.account.sku_id: 1}, "confirmed", archived_sku_ids=set()
+        )
     assert error.value.code == "ORDER_STOCK_REJECTED"
     assert store.account.available == 10
     assert not store.events
@@ -156,8 +156,11 @@ class CatalogStore:
             id=new_uuid7(),
             product_id=self.product.id,
             code="SKU",
+            sku_no=0,
+            specification_key="default",
             specifications={},
             price=Decimal("1"),
+            wholesale_prices=[],
             weight_grams=0,
             is_active=True,
         )
@@ -170,43 +173,11 @@ class CatalogStore:
 
 
 @pytest.mark.asyncio
-async def test_hidden_parent_category_also_blocks_checkout():
+async def test_checkout_rejects_product_under_inactive_category_chain():
     store = CatalogStore()
     with pytest.raises(AppException) as error:
         await ProductService(store).checkout_skus([store.sku.id])
-    assert error.value.code == "CHECKOUT_INVALID"
-
-
-class Products:
-    def __init__(self, price):
-        self.sku = CheckoutSku(
-            id=new_uuid7(),
-            product_id=new_uuid7(),
-            code="VIRTUAL",
-            specifications={},
-            price=Decimal(price),
-            weight_grams=0,
-            product_name="商品",
-            product_type="virtual",
-            product_revision=1,
-            shipping_template_id=None,
-        )
-
-    async def checkout_skus(self, sku_ids):
-        return [self.sku]
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(("price", "quantity"), [("0.00", 1), ("9999999999999.99", 2)])
-async def test_checkout_rejects_unpayable_and_overflow_orders_before_persistence(price, quantity):
-    products = Products(price)
-    service = OrderService(Session(), products=products)
-    with pytest.raises(AppException) as error:
-        await service.preview(
-            new_uuid7(),
-            CheckoutRequest(request_id=new_uuid7(), items=[CheckoutLine(sku_id=products.sku.id, quantity=quantity)]),
-        )
-    assert error.value.code == "CHECKOUT_INVALID"
+    assert error.value.code == "CATEGORY_UNAVAILABLE"
 
 
 class CartStore:
@@ -221,7 +192,7 @@ class CartStore:
 
 
 @pytest.mark.asyncio
-async def test_cart_stale_write_is_rejected_before_mutating_selection():
+async def test_cart_update_rejects_stale_revision_before_catalog_lookup():
     store, session = CartStore(), Session()
     with pytest.raises(AppException) as error:
         await CartService(session, store, access=Access()).update(
@@ -243,12 +214,29 @@ class RefundStore:
             created_at=datetime.now(UTC) - timedelta(days=1),
         )
         self.writes = []
+        self.attempt = RefundAttempt(
+            id=new_uuid7(),
+            order_id=self.row.order_id,
+            refund_request_id=self.row.id,
+            payment_attempt_id=new_uuid7(),
+            attempt_no=1,
+            merchant_refund_reference="R5-test",
+            request_hash="a" * 64,
+            channel="wechat",
+            currency="CNY",
+            amount=Decimal("10.00"),
+            status="created",
+            revision=1,
+        )
 
     async def lock_key(self, kind, value):
         pass
 
     async def refund(self, refund_id, *, lock=False):
         return self.row
+
+    async def refund_attempt(self, attempt_id, *, lock=False):
+        return self.attempt if attempt_id == self.attempt.id else None
 
     async def save(self, value):
         self.writes.append(value)
@@ -264,7 +252,7 @@ async def test_refund_confirmation_cannot_claim_a_different_amount():
     store = RefundStore()
     service = LifecycleService(Session(), store, orders=Orders())
     data = VerifiedRefundConfirmation(
-        refund_request_id=store.row.id,
+        refund_attempt_id=store.attempt.id,
         channel="wechat",
         payment_transaction_id="payment",
         channel_refund_id="refund",
@@ -288,6 +276,7 @@ class DistributionStore:
             amount=Decimal("0.03"),
             recovered_amount=Decimal("0.00"),
             status="settled" if settled else "frozen",
+            revision=1,
         )
         self.account = WalletAccount(
             id=new_uuid7(),

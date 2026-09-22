@@ -42,6 +42,8 @@ class WalletLedgerRead(BaseModel):
     debt_delta: Decimal = Field(description="欠款变化")
     reference_type: str = Field(description="关联业务类型")
     reference_id: UUID = Field(description="关联业务标识")
+    wallet_revision: int = Field(description="变动后钱包版本")
+    balance_after: dict[str, object] = Field(description="变动后余额快照")
     created_at: datetime = Field(description="入账时间")
 
 

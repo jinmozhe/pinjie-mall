@@ -8,8 +8,8 @@
 | --- | --- |
 | 项目角色 | 高可用标准电商与多级分销全栈商城平台 |
 | 项目类型 | 独立商城仓库 |
-| 当前阶段 | 商城后端 M1 至 M4、Admin 电商 A0 至 A4 已完成本地实现；Backend 适用轻量门禁通过，最新安全并发回归用例补充后 pytest 未重跑，Admin 动态验收未执行；小程序工程留待后续，Web 永久冻结 |
-| 业务范围 | SPU/SKU 商品、购物车、订单状态机、库存防超卖、微信/支付宝支付、多级分销裂变与双轨佣金钱包 |
+| 当前阶段 | 后端目标模型本机动态验证已完成：阶段 1 至 6、会员资格与积分、开发库和隔离测试库迁移、静态模型核对与单轮任务恢复入口均已完成；真实外部渠道、小程序 Bearer 会话及 Admin 交易页面尚未实施，Web 永久冻结 |
+| 业务范围 | SPU/SKU 商品、品牌与属性、库存管理、会员价格与平台运费报价、会员资格与积分账本、三级分佣政策、钱包、购物车、结算、订单、可信成交、履约及售后资金退出已有本地后端实现，并已通过本机 PostgreSQL 与 Redis 动态验证及 90% Backend 覆盖率门禁；真实渠道、常驻 Worker 部署，以及积分兑换、到期和抵扣政策仍未完成 |
 
 ## 权威入口
 
@@ -19,7 +19,7 @@
 | 项目身份与阶段导航 | [PROJECT_INDEX.md](PROJECT_INDEX.md) | 项目身份、当前阶段、活动计划和权威入口 |
 | 详细实现状态 | 实际源码、配置、迁移、生成契约与对应架构文档 | 判断具体能力、接口和运行机制是否已经实现 |
 | 产品需求基线 | [docs/PROJECT_REQUIREMENTS.md](docs/PROJECT_REQUIREMENTS.md) | 商城目标用户、能力、非目标和验收边界 |
-| 全域目标数据库字典 | [docs/architecture/database-schema-guide.md](docs/architecture/database-schema-guide.md) | 长期目标物理模型、字段约束、配置、事务与迁移差异；现有代码尚未迁移 |
+| 全域目标数据库字典 | [docs/architecture/database-schema-guide.md](docs/architecture/database-schema-guide.md) | 长期目标物理模型、字段约束、配置、事务与迁移差异；23 张目标新增运行表已迁移至本机开发库和隔离测试库 |
 | 小程序详细需求 | [docs/MINIAPP_PRD.md](docs/MINIAPP_PRD.md) | 小程序用户流程、交付分组与专项验收；不代表工程已启动 |
 | 小程序工程设计 | [docs/architecture/miniapp-architecture.md](docs/architecture/miniapp-architecture.md) | 待实施的目录、分层、调用链与状态归属 |
 | 计划规则 | [plans/README.md](plans/README.md) | 计划创建、格式、状态、完成和保护规则 |
@@ -34,4 +34,4 @@
 
 ## 活动计划
 
-当前没有活动实施计划；最近完成的[全域数据库字典整合计划](plans/2026-09-21_全域数据库字典整合计划.md)已建立 67 表长期目标字典并同步需求，当前源码与数据库尚未迁移。小程序工程留待后续专项实施，已结束计划继续保留在[计划永久登记](plans/INDEX.md)。
+当前没有活动实施计划。后端目标模型、会员资格与积分及动态验证计划均已结束；小程序工程和真实渠道留待后续专项实施，全部记录继续保留在[计划永久登记](plans/INDEX.md)。

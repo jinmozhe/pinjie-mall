@@ -266,6 +266,15 @@ class WebAuthService(_AuthBase):
                 reason_code="INVALID_CREDENTIALS",
             )
             raise _auth_error()
+        if user.password_hash is None:
+            await self.password_manager.verify_unknown_user(payload.password)
+            await self.record_failure(
+                identifier=payload.username,
+                event_type="login",
+                reason_code="INVALID_CREDENTIALS",
+                principal_id=user.id,
+            )
+            raise _auth_error()
         verified_password_hash = user.password_hash
         verified_credential_version = user.credential_version
         verified, updated_hash = await self.password_manager.verify_and_update(payload.password, verified_password_hash)

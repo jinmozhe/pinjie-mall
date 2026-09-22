@@ -15,6 +15,7 @@ from app.domains.distribution import (
     ReferralBindIn,
     WalletAccountRead,
     WithdrawalCreate,
+    WithdrawalManualCompletion,
     WithdrawalPage,
     WithdrawalRead,
     WithdrawalReview,
@@ -132,4 +133,23 @@ async def admin_reject_withdrawal(
         data=await service.reject_withdrawal(withdrawal_id, payload),
         request_id=current_request_id(),
         message="提现申请已驳回",
+    )
+
+
+@router.post(
+    "/admin/withdrawals/{withdrawal_id}/complete-manually",
+    response_model=ResponseModel[WithdrawalRead],
+    summary="确认线下转账完成",
+    dependencies=[
+        Depends(require_admin_csrf),
+        Depends(require_permission(PermissionCode.WITHDRAWALS_COMPLETE_MANUAL)),
+    ],
+)
+async def admin_complete_withdrawal_manually(
+    withdrawal_id: UUID, payload: WithdrawalManualCompletion, service: AdminDistribution
+) -> ResponseModel[WithdrawalRead]:
+    return success_response(
+        data=await service.complete_withdrawal_manually(withdrawal_id, payload),
+        request_id=current_request_id(),
+        message="线下转账已确认",
     )

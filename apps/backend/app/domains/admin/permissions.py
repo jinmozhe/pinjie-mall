@@ -11,11 +11,36 @@ class PermissionDefinition:
 
 
 class PermissionCode(StrEnum):
+    BRANDS_READ = "brands:read"
+    BRANDS_CREATE = "brands:create"
+    BRANDS_UPDATE = "brands:update"
+    SPEC_ATTRIBUTES_READ = "spec-attributes:read"
+    SPEC_ATTRIBUTES_CREATE = "spec-attributes:create"
+    SPEC_ATTRIBUTES_UPDATE = "spec-attributes:update"
     PAYMENTS_READ = "payments:read"
     RECONCILIATION_READ = "reconciliation:read"
     MEMBERS_READ = "members:read"
+    MEMBER_LEVELS_READ = "member-levels:read"
+    MEMBER_LEVELS_CREATE = "member-levels:create"
+    MEMBER_LEVELS_UPDATE = "member-levels:update"
+    MEMBER_LEVEL_CONDITIONS_READ = "member-level-conditions:read"
+    MEMBER_LEVEL_CONDITIONS_CREATE = "member-level-conditions:create"
+    MEMBER_LEVEL_CONDITIONS_UPDATE = "member-level-conditions:update"
+    MEMBER_PRICE_RULES_READ = "member-price-rules:read"
+    MEMBER_PRICE_RULES_CREATE = "member-price-rules:create"
+    MEMBER_PRICE_RULES_UPDATE = "member-price-rules:update"
+    SETTINGS_ORDER_SHIPPING_READ = "settings:order-shipping:read"
+    SETTINGS_ORDER_SHIPPING_UPDATE = "settings:order-shipping:update"
+    SETTINGS_COMMISSION_CONTROL_READ = "settings:commission-control:read"
+    SETTINGS_COMMISSION_CONTROL_UPDATE = "settings:commission-control:update"
+    COMMISSION_POLICIES_READ = "commission-policies:read"
+    COMMISSION_POLICIES_CREATE = "commission-policies:create"
+    COMMISSION_POLICIES_UPDATE = "commission-policies:update"
+    COMMISSION_POLICIES_PUBLISH = "commission-policies:publish"
     COMMISSIONS_READ = "commissions:read"
     WALLETS_READ = "wallets:read"
+    POINTS_READ = "points:read"
+    POINTS_ADJUST = "points:adjust"
     ORDERS_EXPORT = "orders:export"
     REFUNDS_EXPORT = "refunds:export"
     WITHDRAWALS_EXPORT = "withdrawals:export"
@@ -75,14 +100,40 @@ class PermissionCode(StrEnum):
     RECONCILIATION_IMPORT = "reconciliation:import"
     WITHDRAWALS_READ = "withdrawals:read"
     WITHDRAWALS_REVIEW = "withdrawals:review"
+    WITHDRAWALS_COMPLETE_MANUAL = "withdrawals:complete-manual"
 
 
 PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
+    PermissionDefinition("brands:read", "查看品牌", "查看商品品牌资料"),
+    PermissionDefinition("brands:create", "创建品牌", "创建商品品牌及图片引用"),
+    PermissionDefinition("brands:update", "修改品牌", "修改品牌资料和启用状态"),
+    PermissionDefinition("spec-attributes:read", "查看属性库", "查看公共属性及标准候选值"),
+    PermissionDefinition("spec-attributes:create", "创建公共属性", "创建公共销售或描述属性"),
+    PermissionDefinition("spec-attributes:update", "修改公共属性", "修改公共属性及标准候选值"),
     PermissionDefinition("payments:read", "查看支付记录", "查询支付意图与渠道状态"),
     PermissionDefinition("reconciliation:read", "查看对账记录", "查询渠道对账匹配及差异"),
     PermissionDefinition("members:read", "查看会员档案", "查询会员等级及首次推荐关系"),
+    PermissionDefinition("member-levels:read", "查看会员等级", "查看会员等级与默认折扣"),
+    PermissionDefinition("member-levels:create", "创建会员等级", "创建会员等级与默认折扣"),
+    PermissionDefinition("member-levels:update", "修改会员等级", "修改会员等级、启停与默认折扣"),
+    PermissionDefinition("member-level-conditions:read", "查看会员资格条件", "查看会员等级自动资格条件"),
+    PermissionDefinition("member-level-conditions:create", "创建会员资格条件", "创建会员等级资格条件"),
+    PermissionDefinition("member-level-conditions:update", "修改会员资格条件", "修改会员等级资格条件与启停"),
+    PermissionDefinition("member-price-rules:read", "查看会员价格规则", "查看 SKU、商品和分类会员价格规则"),
+    PermissionDefinition("member-price-rules:create", "创建会员价格规则", "创建会员价格规则"),
+    PermissionDefinition("member-price-rules:update", "修改会员价格规则", "修改会员价格规则与启停"),
+    PermissionDefinition("settings:order-shipping:read", "查看平台运费", "查看统一平台运费配置"),
+    PermissionDefinition("settings:order-shipping:update", "修改平台运费", "修改统一平台运费配置"),
+    PermissionDefinition("settings:commission-control:read", "查看分佣总开关", "查看全平台分佣总开关"),
+    PermissionDefinition("settings:commission-control:update", "修改分佣总开关", "修改全平台分佣总开关"),
+    PermissionDefinition("commission-policies:read", "查看分佣政策", "查看分佣政策、来源规则与三级矩阵"),
+    PermissionDefinition("commission-policies:create", "创建分佣政策", "创建分佣政策草稿"),
+    PermissionDefinition("commission-policies:update", "修改分佣政策", "修改草稿政策及其规则矩阵"),
+    PermissionDefinition("commission-policies:publish", "发布分佣政策", "发布草稿并归档旧生效政策"),
     PermissionDefinition("commissions:read", "查看佣金", "查询两级佣金及追回状态"),
     PermissionDefinition("wallets:read", "查看钱包", "查询双轨钱包及不可变流水"),
+    PermissionDefinition("points:read", "查看积分", "查询积分账户和不可变积分流水"),
+    PermissionDefinition("points:adjust", "调整积分", "人工授予或冲销积分并记录审计"),
     PermissionDefinition("orders:export", "导出订单", "导出选中订单摘要"),
     PermissionDefinition("refunds:export", "导出退款", "导出选中退款申请"),
     PermissionDefinition("withdrawals:export", "导出提现", "导出选中提现申请"),
@@ -147,11 +198,12 @@ PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
     PermissionDefinition("reconciliation:import", "导入支付对账", "导入渠道账单并记录匹配或差异"),
     PermissionDefinition("withdrawals:read", "查看提现申请", "查看待审核的佣金钱包提现申请"),
     PermissionDefinition("withdrawals:review", "审核提现申请", "审核通过或驳回佣金钱包提现申请"),
+    PermissionDefinition("withdrawals:complete-manual", "确认线下提现", "确认线下转账完成并结清提现冻结余额"),
 )
 
 PERMISSION_CODES = frozenset(item.code for item in PERMISSION_CATALOG)
 ROLE_ASSIGNABLE_PERMISSION_CODES = frozenset(item.code for item in PERMISSION_CATALOG if item.assignable_to_roles)
-CATALOG_VERSION = "2026-09-18.1"
+CATALOG_VERSION = "2026-09-22.5"
 
 __all__ = [
     "CATALOG_VERSION",

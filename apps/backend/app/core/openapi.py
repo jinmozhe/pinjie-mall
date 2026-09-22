@@ -188,9 +188,9 @@ def _localize_schema_fields(schema: dict[str, Any]) -> None:
         for field_name, field_schema in properties.items():
             if not isinstance(field_schema, dict) or field_schema.get("description"):
                 continue
-            description = _FIELD_DESCRIPTIONS.get(field_name)
-            if description:
-                field_schema["description"] = description
+            field_schema["description"] = _FIELD_DESCRIPTIONS.get(
+                field_name, "当前业务字段，具体语义由所属请求或响应模型定义"
+            )
 
 
 def localize_openapi_schema(schema: dict[str, Any]) -> dict[str, Any]:

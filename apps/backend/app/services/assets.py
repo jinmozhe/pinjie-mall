@@ -259,9 +259,11 @@ class AssetService:
             # 在循环外实例化 Repository，避免每次迭代重复创建对象
             commerce_access = CommerceAccessRepository(self._session)
             for asset in assets:
-                if await commerce_access.asset_is_product_image(asset.id):
+                if await commerce_access.asset_is_product_image(asset.id) or await commerce_access.asset_is_brand_logo(
+                    asset.id
+                ):
                     raise AppException(
-                        status_code=409, code=ErrorCode.STATE_CONFLICT, message="商品图片正在被使用，无法删除"
+                        status_code=409, code=ErrorCode.STATE_CONFLICT, message="商品或品牌图片正在被使用，无法删除"
                     )
                 if await self._assets.is_referenced_by_avatar(asset.url):
                     raise AppException(
