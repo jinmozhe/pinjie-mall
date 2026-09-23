@@ -32,11 +32,15 @@ describe("admin access mapping", () => {
   it("denies every protected area without a current administrator", () => {
     expect(access({ settings })).toEqual({
       ...commerceDenied,
+      canMembership: false,
       canUsers: false,
+      canFinance: false,
+      canSystemMgmt: false,
       canAdmins: false,
       canRoles: false,
       canAssets: false,
       canSettings: false,
+      canOps: false,
       canSystem: false,
       canSecurity: false,
     });
@@ -52,11 +56,15 @@ describe("admin access mapping", () => {
   it("maps ordinary read permissions and grants every area to superusers", () => {
     expect(access(state(["users:read", "admins:read", "roles:read", "assets:read", "system:overview:read", "settings:site:read"]))).toEqual({
       ...commerceDenied,
+      canMembership: true,
       canUsers: true,
+      canFinance: false,
+      canSystemMgmt: true,
       canAdmins: true,
       canRoles: true,
       canAssets: true,
       canSettings: true,
+      canOps: true,
       canSystem: true,
       canSecurity: false,
     });
@@ -65,6 +73,10 @@ describe("admin access mapping", () => {
       canTrade: true, canPayments: true, canReconciliation: true, canMembers: true,
       canCommissions: true, canWallets: true, canOrders: true, canRefunds: true,
       canDistribution: true, canWithdrawals: true,
+      canMembership: true,
+      canFinance: true,
+      canSystemMgmt: true,
+      canOps: true,
       canUsers: true,
       canAdmins: true,
       canRoles: true,
