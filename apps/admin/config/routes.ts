@@ -58,7 +58,9 @@ export default [
     icon: "ApartmentOutlined",
     access: "canDistribution",
     routes: [
-      { path: "/distribution", redirect: "/distribution/commissions" },
+      { path: "/distribution", redirect: "/distribution/network" },
+      { path: "/distribution/network", name: "推荐关系", component: "../features/distribution/ReferralNetworkPage", access: "canReferralNetwork" },
+      { path: "/distribution/policies", name: "分销政策", component: "../features/distribution/PoliciesPage", access: "canPolicies" },
       { path: "/distribution/commissions", name: "佣金记录", component: "../features/distribution/CommissionsPage", access: "canCommissions" },
     ],
   },

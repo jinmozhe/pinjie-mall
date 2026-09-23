@@ -19,6 +19,10 @@ import type {
   MemberPriceRuleCreate, MemberPriceRuleRead, MemberPriceRuleUpdate, PageResultMemberPriceRuleRead,
   PointsAccountRead, PageResultPointsAccountRead, PageResultPointsLedgerRead, PointsManualAdjustment,
   PageResultMemberLevelEventRead, PageResultMembershipQualificationEventRead,
+  CommissionControlRead, CommissionControlUpdate,
+  CommissionPolicyRead, CommissionPolicyCreate, CommissionPolicyUpdate, CommissionPolicyPublish, PageResultCommissionPolicyRead,
+  CommissionAmountRuleRead, CommissionAmountRuleCreate,
+  CommissionDistributionRuleRead, CommissionDistributionRuleCreate,
 } from "@pinjie/api-client";
 
 import { apiRequest, jsonBody } from "./http";
@@ -111,4 +115,19 @@ export const commerceApi = {
   memberPriceRules: (page: number, pageSize: number = 20) => apiRequest<PageResultMemberPriceRuleRead>(`/api/v1/admin/member-price-rules?page=${page}&page_size=${pageSize}`),
   createMemberPriceRule: (input: MemberPriceRuleCreate) => apiRequest<MemberPriceRuleRead>("/api/v1/admin/member-price-rules", { method: "POST", body: jsonBody(input) }),
   updateMemberPriceRule: (id: string, input: MemberPriceRuleUpdate) => apiRequest<MemberPriceRuleRead>(`/api/v1/admin/member-price-rules/${id}`, { method: "PUT", body: jsonBody(input) }),
+  commissionControl: () => apiRequest<CommissionControlRead>("/api/v1/admin/settings/commission-control"),
+  updateCommissionControl: (input: CommissionControlUpdate) => apiRequest<CommissionControlRead>("/api/v1/admin/settings/commission-control", { method: "PUT", body: jsonBody(input) }),
+  policies: (page: number, pageSize: number = 20) => apiRequest<PageResultCommissionPolicyRead>(`/api/v1/admin/commission-policies?page=${page}&page_size=${pageSize}`),
+  policy: (id: string) => apiRequest<CommissionPolicyRead>(`/api/v1/admin/commission-policies/${id}`),
+  createPolicy: (input: CommissionPolicyCreate) => apiRequest<CommissionPolicyRead>("/api/v1/admin/commission-policies", { method: "POST", body: jsonBody(input) }),
+  updatePolicy: (id: string, input: CommissionPolicyUpdate) => apiRequest<CommissionPolicyRead>(`/api/v1/admin/commission-policies/${id}`, { method: "PUT", body: jsonBody(input) }),
+  publishPolicy: (id: string, input: CommissionPolicyPublish) => apiRequest<CommissionPolicyRead>(`/api/v1/admin/commission-policies/${id}/publish`, { method: "POST", body: jsonBody(input) }),
+  amountRules: (policyId: string) => apiRequest<CommissionAmountRuleRead[]>(`/api/v1/admin/commission-policies/${policyId}/amount-rules`),
+  addAmountRule: (policyId: string, input: CommissionAmountRuleCreate) => apiRequest<CommissionAmountRuleRead>(`/api/v1/admin/commission-policies/${policyId}/amount-rules`, { method: "POST", body: jsonBody(input) }),
+  updateAmountRule: (policyId: string, ruleId: string, input: CommissionAmountRuleCreate) => apiRequest<CommissionAmountRuleRead>(`/api/v1/admin/commission-policies/${policyId}/amount-rules/${ruleId}`, { method: "PUT", body: jsonBody(input) }),
+  deleteAmountRule: (policyId: string, ruleId: string) => apiRequest<void>(`/api/v1/admin/commission-policies/${policyId}/amount-rules/${ruleId}`, { method: "DELETE" }),
+  distributionRules: (policyId: string) => apiRequest<CommissionDistributionRuleRead[]>(`/api/v1/admin/commission-policies/${policyId}/distribution-rules`),
+  addDistributionRule: (policyId: string, input: CommissionDistributionRuleCreate) => apiRequest<CommissionDistributionRuleRead>(`/api/v1/admin/commission-policies/${policyId}/distribution-rules`, { method: "POST", body: jsonBody(input) }),
+  updateDistributionRule: (policyId: string, ruleId: string, input: CommissionDistributionRuleCreate) => apiRequest<CommissionDistributionRuleRead>(`/api/v1/admin/commission-policies/${policyId}/distribution-rules/${ruleId}`, { method: "PUT", body: jsonBody(input) }),
+  deleteDistributionRule: (policyId: string, ruleId: string) => apiRequest<void>(`/api/v1/admin/commission-policies/${policyId}/distribution-rules/${ruleId}`, { method: "DELETE" }),
 };
