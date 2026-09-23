@@ -562,9 +562,11 @@ class MembershipService:
             if rule.price_mode == "exclude":
                 return base, "member_excluded"
             if rule.price_mode == "discount":
-                return MembershipService._money(
-                    base * (rule.discount_factor or Decimal("1"))
-                ), f"{rule.scope_type}_discount"
+                if rule.discount_factor is None:
+                    raise AppException(
+                        status_code=503, code=ErrorCode.CONFIGURATION_ERROR, message="会员折扣规则缺少折扣因子"
+                    )
+                return MembershipService._money(base * rule.discount_factor), f"{rule.scope_type}_discount"
         return MembershipService._money(base * level.discount_factor), "level_discount"
 
     @staticmethod

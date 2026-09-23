@@ -6,7 +6,7 @@ from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.config import Settings
@@ -17,10 +17,14 @@ from app.db.models import (
     InventoryAccount,
     InventoryReservation,
     InventoryReservationEvent,
+    MemberLevelEvent,
     MemberProfile,
+    MembershipQualificationEvent,
     Order,
     OrderEvent,
     OrderItem,
+    PointsAccount,
+    PointsLedger,
     Product,
     ProductPurchaseLimit,
     ProductPurchaseRecord,
@@ -30,7 +34,9 @@ from app.db.models import (
 )
 from app.db.transaction import transaction_scope
 from app.domains.distribution import DistributionService, ReferralBindIn
+from app.domains.membership import PointsManualAdjustment
 from app.domains.orders import CheckoutLine, CheckoutRequest
+from app.domains.points import PointsService
 from app.domains.users import UserAccessService
 from app.services.orders import OrderService
 
@@ -108,6 +114,13 @@ async def commerce_database():
                 await session.execute(delete(ProductPurchaseLimit).where(ProductPurchaseLimit.product_id == product_id))
                 await session.execute(delete(Order).where(Order.user_id.in_(users)))
                 await session.execute(delete(WalletAccount).where(WalletAccount.user_id.in_(users)))
+                await session.execute(delete(MemberLevelEvent).where(MemberLevelEvent.user_id.in_(users)))
+                await session.execute(
+                    delete(MembershipQualificationEvent).where(MembershipQualificationEvent.user_id.in_(users))
+                )
+                points_accounts = select(PointsAccount.id).where(PointsAccount.user_id.in_(users))
+                await session.execute(delete(PointsLedger).where(PointsLedger.account_id.in_(points_accounts)))
+                await session.execute(delete(PointsAccount).where(PointsAccount.user_id.in_(users)))
                 await session.execute(delete(MemberProfile).where(MemberProfile.user_id.in_(users)))
                 await session.execute(delete(InventoryAccount).where(InventoryAccount.sku_id == sku_id))
                 await session.execute(delete(ProductSku).where(ProductSku.id == sku_id))
@@ -116,6 +129,62 @@ async def commerce_database():
                 await session.execute(delete(User).where(User.id.in_(users)))
         finally:
             await engine.dispose()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+@pytest.mark.parametrize("shared_key", [True, False])
+async def test_concurrent_first_points_adjustments_preserve_idempotency_and_account(commerce_database, shared_key):
+    fixture = commerce_database
+    user_id, actor_id = fixture.users[:2]
+    async with fixture.factory() as session, transaction_scope(session):
+        session.add(MemberProfile(user_id=user_id, invitation_code=new_uuid7().hex[-16:], revision=1))
+
+    class TransactionAudit:
+        """权限不属于本用例目标；保留真实事务、仓储和会员贡献链。"""
+
+        def __init__(self, session):
+            self.session = session
+
+        async def execute(self, *, operation, **metadata):
+            async with transaction_scope(self.session):
+                return await operation()
+
+    gate = asyncio.Event()
+    first_key = f"concurrent-points:{new_uuid7()}"
+    second_key = first_key if shared_key else f"concurrent-points:{new_uuid7()}"
+
+    async def adjust(key):
+        async with fixture.factory() as session:
+            service = PointsService(session=session, actor_id=actor_id, audit=TransactionAudit(session))
+            await gate.wait()
+            return await service.adjust(
+                PointsManualAdjustment(user_id=user_id, points=7, operation="grant", idempotency_key=key)
+            )
+
+    tasks = [asyncio.create_task(adjust(key)) for key in (first_key, second_key)]
+    gate.set()
+    results = await asyncio.wait_for(asyncio.gather(*tasks), timeout=20)
+    assert results[0].id == results[1].id
+    expected_entries = 1 if shared_key else 2
+    async with fixture.factory() as session:
+        account = (await session.scalars(select(PointsAccount).where(PointsAccount.user_id == user_id))).one()
+        assert account.available_points == 7 * expected_entries
+        assert account.revision == 1 + expected_entries
+        assert (
+            await session.scalar(
+                select(func.count()).select_from(PointsLedger).where(PointsLedger.account_id == account.id)
+            )
+            == expected_entries
+        )
+        assert (
+            await session.scalar(
+                select(func.count())
+                .select_from(MembershipQualificationEvent)
+                .where(MembershipQualificationEvent.user_id == user_id, MembershipQualificationEvent.metric == "points")
+            )
+            == expected_entries
+        )
 
 
 @pytest.mark.integration
