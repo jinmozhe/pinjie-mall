@@ -23,6 +23,7 @@ import type {
   CommissionPolicyRead, CommissionPolicyCreate, CommissionPolicyUpdate, CommissionPolicyPublish, PageResultCommissionPolicyRead,
   CommissionAmountRuleRead, CommissionAmountRuleCreate,
   CommissionDistributionRuleRead, CommissionDistributionRuleCreate,
+  PageResultRefundAttemptRead,
 } from "@pinjie/api-client";
 
 import { apiRequest, jsonBody } from "./http";
@@ -33,7 +34,7 @@ export type ProductFilters = {
 };
 
 export type CommerceFilters = NonNullable<OrdersPageApiV1AdminOrdersGetData["query"]>;
-export type CommerceResource = "orders" | "refunds" | "withdrawals" | "payments" | "reconciliation-records" | "members" | "commissions" | "wallets";
+export type CommerceResource = "orders" | "refunds" | "withdrawals" | "payments" | "reconciliation-records" | "members" | "commissions" | "wallets" | "refund-executions";
 
 export function queryString(values: Record<string, string | number | null | undefined>): string {
   const query = new URLSearchParams();
@@ -82,6 +83,7 @@ export const commerceApi = {
   ship: (id: string, input: ShipmentCreate) => apiRequest<FulfillmentRead>(`/api/v1/admin/orders/${id}/fulfillment/shipment`, { method: "POST", body: jsonBody(input) }),
   deliverVirtual: (id: string, input: VirtualDeliveryCreate) => apiRequest<FulfillmentRead>(`/api/v1/admin/orders/${id}/fulfillment/virtual-delivery`, { method: "POST", body: jsonBody(input) }),
   refunds: (filters: CommerceFilters) => apiRequest<PageResultRefundRequestRead>(`/api/v1/admin/refunds?${queryString(filters)}`),
+  refundExecutions: (filters: CommerceFilters) => apiRequest<PageResultRefundAttemptRead>(`/api/v1/admin/refund-executions?${queryString(filters)}`),
   approveRefund: (id: string, input: RefundReview) => apiRequest<RefundRequestRead>(`/api/v1/admin/refunds/${id}/approve`, { method: "POST", body: jsonBody(input) }),
   rejectRefund: (id: string, input: RefundReview) => apiRequest<RefundRequestRead>(`/api/v1/admin/refunds/${id}/reject`, { method: "POST", body: jsonBody(input) }),
   withdrawals: (filters: CommerceFilters) => apiRequest<PageResultWithdrawalRead>(`/api/v1/admin/withdrawals?${queryString(filters)}`),

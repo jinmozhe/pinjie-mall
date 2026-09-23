@@ -5220,6 +5220,42 @@ export type PageResultReconciliationRecordRead = {
 };
 
 /**
+ * PageResult[RefundAttemptRead]
+ */
+export type PageResultRefundAttemptRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<RefundAttemptRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
  * PageResult[RefundRequestRead]
  */
 export type PageResultRefundRequestRead = {
@@ -6685,6 +6721,96 @@ export type RefreshSessionOut = {
      * 会话绝对过期时间
      */
     absolute_expires_at: string;
+};
+
+/**
+ * RefundAttemptRead
+ */
+export type RefundAttemptRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Order Id
+     *
+     * 订单标识
+     */
+    order_id?: string | null;
+    /**
+     * Payment Attempt Id
+     *
+     * 支付意图标识
+     */
+    payment_attempt_id?: string | null;
+    /**
+     * Refund Request Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    refund_request_id: string | null;
+    /**
+     * Purpose
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    purpose?: string | null;
+    /**
+     * Attempt No
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    attempt_no?: number | null;
+    /**
+     * Merchant Refund Reference
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    merchant_refund_reference: string;
+    /**
+     * Channel
+     *
+     * 支付渠道代码
+     */
+    channel: 'wechat' | 'alipay';
+    /**
+     * Amount
+     *
+     * 业务金额，单位人民币元
+     */
+    amount: string;
+    /**
+     * Currency
+     *
+     * 货币代码
+     */
+    currency: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: string;
+    /**
+     * Channel Refund Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    channel_refund_id: string | null;
+    /**
+     * Confirmed At
+     *
+     * 权威渠道确认时间
+     */
+    confirmed_at: string | null;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
 };
 
 /**
@@ -8549,6 +8675,34 @@ export type ResponseModelPageResultReconciliationRecordRead = {
      * 响应业务数据
      */
     data: PageResultReconciliationRecordRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[RefundAttemptRead]]
+ */
+export type ResponseModelPageResultRefundAttemptRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultRefundAttemptRead;
     /**
      * Request Id
      *
@@ -12944,6 +13098,92 @@ export type WalletLedgersApiV1AdminWalletsWalletIdLedgersGetResponses = {
 };
 
 export type WalletLedgersApiV1AdminWalletsWalletIdLedgersGetResponse = WalletLedgersApiV1AdminWalletsWalletIdLedgersGetResponses[keyof WalletLedgersApiV1AdminWalletsWalletIdLedgersGetResponses];
+
+export type RefundExecutionsPageApiV1AdminRefundExecutionsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+        /**
+         * Record Id
+         *
+         * 记录标识，会员列表使用用户标识
+         */
+        record_id?: string | null;
+        /**
+         * User Id
+         *
+         * 用户标识，佣金列表使用受益人标识
+         */
+        user_id?: string | null;
+        /**
+         * Order Id
+         *
+         * 订单标识
+         */
+        order_id?: string | null;
+        /**
+         * Inviter Id
+         *
+         * 直接推荐人标识
+         */
+        inviter_id?: string | null;
+        /**
+         * Status
+         *
+         * 状态代码
+         */
+        status?: string | null;
+        /**
+         * Channel
+         *
+         * 支付渠道
+         */
+        channel?: 'wechat' | 'alipay' | null;
+        /**
+         * Product Type
+         *
+         * 商品类型
+         */
+        product_type?: 'physical' | 'virtual' | null;
+        /**
+         * Wallet Type
+         *
+         * 钱包轨道
+         */
+        wallet_type?: 'commission' | 'consumption' | null;
+    };
+    url: '/api/v1/admin/refund-executions';
+};
+
+export type RefundExecutionsPageApiV1AdminRefundExecutionsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type RefundExecutionsPageApiV1AdminRefundExecutionsGetError = RefundExecutionsPageApiV1AdminRefundExecutionsGetErrors[keyof RefundExecutionsPageApiV1AdminRefundExecutionsGetErrors];
+
+export type RefundExecutionsPageApiV1AdminRefundExecutionsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultRefundAttemptRead;
+};
+
+export type RefundExecutionsPageApiV1AdminRefundExecutionsGetResponse = RefundExecutionsPageApiV1AdminRefundExecutionsGetResponses[keyof RefundExecutionsPageApiV1AdminRefundExecutionsGetResponses];
 
 export type AdminCategoriesApiV1AdminProductCategoriesGetData = {
     body?: never;

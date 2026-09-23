@@ -3527,6 +3527,244 @@
         }
       }
     },
+    "/api/v1/admin/refund-executions": {
+      "get": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "查询退款执行列表",
+        "operationId": "refund_executions_page_api_v1_admin_refund_executions_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "记录标识，会员列表使用用户标识",
+              "title": "Record Id"
+            },
+            "description": "记录标识，会员列表使用用户标识"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "用户标识，佣金列表使用受益人标识",
+              "title": "User Id"
+            },
+            "description": "用户标识，佣金列表使用受益人标识"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "订单标识",
+              "title": "Order Id"
+            },
+            "description": "订单标识"
+          },
+          {
+            "name": "inviter_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "直接推荐人标识",
+              "title": "Inviter Id"
+            },
+            "description": "直接推荐人标识"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "状态代码",
+              "title": "Status"
+            },
+            "description": "状态代码"
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "wechat",
+                    "alipay"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "支付渠道",
+              "title": "Channel"
+            },
+            "description": "支付渠道"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "physical",
+                    "virtual"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品类型",
+              "title": "Product Type"
+            },
+            "description": "商品类型"
+          },
+          {
+            "name": "wallet_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "commission",
+                    "consumption"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "钱包轨道",
+              "title": "Wallet Type"
+            },
+            "description": "钱包轨道"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_RefundAttemptRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/product-categories": {
       "get": {
         "tags": [
@@ -21480,6 +21718,53 @@
         ],
         "title": "PageResult[ReconciliationRecordRead]"
       },
+      "PageResult_RefundAttemptRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RefundAttemptRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[RefundAttemptRead]"
+      },
       "PageResult_RefundRequestRead_": {
         "properties": {
           "items": {
@@ -23464,6 +23749,154 @@
           "absolute_expires_at"
         ],
         "title": "RefreshSessionOut"
+      },
+      "RefundAttemptRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "资源唯一标识"
+          },
+          "order_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id",
+            "description": "订单标识"
+          },
+          "payment_attempt_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Attempt Id",
+            "description": "支付意图标识"
+          },
+          "refund_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Request Id",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "purpose": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purpose",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "attempt_no": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attempt No",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "merchant_refund_reference": {
+            "type": "string",
+            "title": "Merchant Refund Reference",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "wechat",
+              "alipay"
+            ],
+            "title": "Channel",
+            "description": "支付渠道代码"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "description": "业务金额，单位人民币元"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "货币代码"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "当前状态代码"
+          },
+          "channel_refund_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel Refund Id",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed At",
+            "description": "权威渠道确认时间"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "创建时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "refund_request_id",
+          "merchant_refund_reference",
+          "channel",
+          "amount",
+          "currency",
+          "status",
+          "channel_refund_id",
+          "confirmed_at",
+          "created_at"
+        ],
+        "title": "RefundAttemptRead"
       },
       "RefundRequestCreate": {
         "properties": {
@@ -25642,6 +26075,38 @@
           "request_id"
         ],
         "title": "ResponseModel[PageResult[ReconciliationRecordRead]]"
+      },
+      "ResponseModel_PageResult_RefundAttemptRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_RefundAttemptRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[RefundAttemptRead]]"
       },
       "ResponseModel_PageResult_RefundRequestRead__": {
         "properties": {
