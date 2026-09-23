@@ -42,9 +42,14 @@ export default [
     icon: "UserOutlined",
     access: "canMembership",
     routes: [
-      { path: "/membership", redirect: "/users" },
-      { path: "/users", name: "用户管理", component: "../features/users/UsersPage", access: "canUsers" },
-      { path: "/distribution/members", name: "会员档案", component: "../features/distribution/MembersPage", access: "canMembers" },
+      { path: "/membership", redirect: "/membership/users" },
+      { path: "/membership/users", name: "用户管理", component: "../features/users/UsersPage", access: "canUsers" },
+      { path: "/membership/members", name: "会员档案", component: "../features/membership/MembersPage", access: "canMembers" },
+      { path: "/membership/levels", name: "会员等级", component: "../features/membership/MemberLevelsPage", access: "canMemberLevels" },
+      { path: "/membership/prices", name: "会员价格", component: "../features/membership/MemberPricesPage", access: "canMemberPrices" },
+      { path: "/membership/points", name: "积分管理", component: "../features/membership/PointsPage", access: "canPoints" },
+      { path: "/users", redirect: "/membership/users" },
+      { path: "/distribution/members", redirect: "/membership/members" },
     ],
   },
   {
