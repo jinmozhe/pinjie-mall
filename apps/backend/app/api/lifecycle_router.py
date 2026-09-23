@@ -25,6 +25,7 @@ from app.domains.lifecycle import (
     ShipmentCreate,
     VirtualDeliveryCreate,
 )
+from app.domains.orders import OrderAcceptance, OrderRead
 
 router = APIRouter(tags=["支付与售后"])
 Page = Annotated[int, Query(ge=1, description="页码，从一开始")]
@@ -147,6 +148,18 @@ async def review_page(
     return success_response(
         data=await service.public_reviews(product_id, page, page_size), request_id=current_request_id()
     )
+
+
+@router.post(
+    "/admin/orders/{order_id}/acceptance",
+    response_model=ResponseModel[OrderRead],
+    summary="管理员接单",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.ORDERS_ACCEPT))],
+)
+async def admin_accept_order(
+    order_id: UUID, payload: OrderAcceptance, service: AdminLifecycle
+) -> ResponseModel[OrderRead]:
+    return success_response(data=await service.accept_order(order_id, payload), request_id=current_request_id())
 
 
 @router.post(

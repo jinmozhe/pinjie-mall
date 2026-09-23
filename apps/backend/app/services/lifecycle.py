@@ -15,6 +15,7 @@ from app.domains.lifecycle import (
     ShipmentCreate,
     VirtualDeliveryCreate,
 )
+from app.domains.orders import OrderAcceptance, OrderRead
 from app.services.payment_lifecycle import LifecycleService
 from app.services.security_events import AuditCoordinator
 
@@ -66,6 +67,13 @@ class AdminLifecycleApplicationService:
             PermissionCode.FULFILLMENTS_SHIP,
             order_id,
             lambda: self.lifecycle.ship_in_open_transaction(order_id, data, self.actor_id),
+        )
+
+    async def accept_order(self, order_id: UUID, data: OrderAcceptance) -> OrderRead:
+        return await self._write(
+            PermissionCode.ORDERS_ACCEPT,
+            order_id,
+            lambda: self.lifecycle.accept_order_in_open_transaction(order_id, data, self.actor_id),
         )
 
     async def deliver_virtual(self, order_id: UUID, data: VirtualDeliveryCreate) -> FulfillmentRead:

@@ -94,6 +94,7 @@ class PermissionCode(StrEnum):
     SETTINGS_REGISTRATION_UPDATE = "settings:registration:update"
     FULFILLMENTS_SHIP = "fulfillments:ship"
     ORDERS_READ = "orders:read"
+    ORDERS_ACCEPT = "orders:accept"
     REFUNDS_READ = "refunds:read"
     FULFILLMENTS_DELIVER_VIRTUAL = "fulfillments:deliver-virtual"
     REFUNDS_REVIEW = "refunds:review"
@@ -143,6 +144,7 @@ PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
     PermissionDefinition("commissions:export", "导出佣金", "导出选中佣金记录"),
     PermissionDefinition("wallets:export", "导出钱包", "导出选中钱包余额摘要"),
     PermissionDefinition("orders:read", "查看订单", "查看订单列表、成交快照和履约状态"),
+    PermissionDefinition("orders:accept", "接单", "确认已付款订单进入履约处理"),
     PermissionDefinition("refunds:read", "查看退款", "查看退款申请及审核版本"),
     PermissionDefinition("product-categories:read", "查看商品分类", "查看商品分类树"),
     PermissionDefinition("product-categories:create", "创建商品分类", "创建三级商品分类"),

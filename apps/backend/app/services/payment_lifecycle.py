@@ -44,7 +44,7 @@ from app.domains.lifecycle.schemas import (
     VerifiedRefundConfirmation,
     VirtualDeliveryCreate,
 )
-from app.domains.orders import OrderQueryService
+from app.domains.orders import OrderAcceptance, OrderQueryService, OrderRead
 from app.domains.products import ProductService
 from app.domains.purchases import PurchaseLimitService
 from app.domains.users import UserAccessService
@@ -261,6 +261,26 @@ class LifecycleService:
             items=[self._refund_read(row) for row in rows], total=total, page=page, page_size=page_size
         )
 
+    async def accept_order_in_open_transaction(
+        self, order_id: UUID, data: OrderAcceptance, actor_id: UUID
+    ) -> OrderRead:
+        order = await self.orders.order(order_id, lock=True)
+        if order is None:
+            raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
+        refunds = await self.repository.refunds_for_order(order.id, lock=True)
+        if any(refund.status != "rejected" for refund in refunds):
+            raise AppException(
+                status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="订单存在未结束退款申请，不能接单"
+            )
+        return await OrderService(self.session).accept_in_open_transaction(order.id, data.revision, actor_id)
+
+    async def _ensure_no_unfinished_refunds(self, order_id: UUID) -> None:
+        refunds = await self.repository.refunds_for_order(order_id, lock=True)
+        if any(refund.status != "rejected" for refund in refunds):
+            raise AppException(
+                status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="订单存在未结束退款申请，不能继续履约"
+            )
+
     async def ship_in_open_transaction(self, order_id: UUID, data: ShipmentCreate, actor_id: UUID) -> FulfillmentRead:
         order = await self.orders.order(order_id, lock=True)
         if order is None:
@@ -268,10 +288,13 @@ class LifecycleService:
         fulfillment = await self.repository.fulfillment(order.id, lock=True)
         if fulfillment is None or order.status != "paid" or order.product_type != "physical":
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前订单不能发货")
+        if order.acceptance_status != "accepted":
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="订单尚未接单，不能发货")
         if fulfillment.status != "awaiting_shipment" or fulfillment.revision != data.revision:
             raise AppException(
                 status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="履约状态已变化，请重新读取"
             )
+        await self._ensure_no_unfinished_refunds(order.id)
         now = datetime.now(UTC)
         fulfillment.status = "shipped"
         fulfillment.carrier = data.carrier
@@ -309,10 +332,15 @@ class LifecycleService:
         fulfillment = await self.repository.fulfillment(order.id, lock=True)
         if fulfillment is None or order.status != "paid" or order.product_type != "virtual":
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前订单不能进行虚拟交付")
+        if order.acceptance_status != "accepted":
+            raise AppException(
+                status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="订单尚未接单，不能进行虚拟交付"
+            )
         if fulfillment.status != "awaiting_delivery" or fulfillment.revision != data.revision:
             raise AppException(
                 status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="履约状态已变化，请重新读取"
             )
+        await self._ensure_no_unfinished_refunds(order.id)
         now = datetime.now(UTC)
         fulfillment.status = "delivered"
         fulfillment.delivery_reference = data.delivery_reference
@@ -349,8 +377,12 @@ class LifecycleService:
                 raise AppException(
                     status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="履约状态已变化，请重新读取"
                 )
-            await self._deliver_physical(fulfillment, "user", user_id, "用户确认收货")
-            return self._fulfillment_read(fulfillment)
+            delivered = await self._deliver_physical(fulfillment, "user", user_id, "用户确认收货")
+            if delivered is None:
+                raise AppException(
+                    status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="履约状态已变化，请重新读取"
+                )
+            return self._fulfillment_read(delivered)
 
     async def auto_confirm_due(self, limit: int = 100) -> int:
         # 每次单独开启一个事务处理一条 fulfillment，与 expire_due 设计一致。
@@ -362,36 +394,54 @@ class LifecycleService:
                 fulfillments = await self.repository.due_fulfillments(now, 1)
                 if not fulfillments:
                     break
-                await self._deliver_physical(fulfillments[0], "system", None, "发货满七日自动确认")
-                completed += 1
+                delivered = await self._deliver_physical(
+                    fulfillments[0], "system", None, "发货满七日自动确认", auto_confirm_due=True
+                )
+                if delivered is not None:
+                    completed += 1
         return completed
 
     async def auto_confirm_scheduled(self, fulfillment_id: UUID) -> bool:
         async with transaction_scope(self.session):
-            fulfillment = await self.repository.fulfillment_by_id(fulfillment_id, lock=True)
+            fulfillment = await self.repository.fulfillment_by_id(fulfillment_id)
             if fulfillment is None:
                 raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="待自动确认履约不存在")
-            if (
-                fulfillment.status != "shipped"
-                or fulfillment.auto_confirm_at is None
-                or fulfillment.auto_confirm_at > datetime.now(UTC)
-            ):
-                return False
-            await self._deliver_physical(fulfillment, "system", None, "发货满七日自动确认")
-            return True
+            delivered = await self._deliver_physical(
+                fulfillment, "system", None, "发货满七日自动确认", auto_confirm_due=True
+            )
+            return delivered is not None
 
     async def _deliver_physical(
-        self, fulfillment: Fulfillment, actor_type: str, actor_id: UUID | None, reason: str
-    ) -> None:
+        self,
+        fulfillment: Fulfillment,
+        actor_type: str,
+        actor_id: UUID | None,
+        reason: str,
+        *,
+        auto_confirm_due: bool = False,
+    ) -> Fulfillment | None:
+        order = await self.orders.order(fulfillment.order_id, lock=True)
+        if order is None:
+            raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
+        locked_fulfillment = await self.repository.fulfillment_by_id(fulfillment.id, lock=True)
+        if locked_fulfillment is None or locked_fulfillment.product_type != "physical":
+            return None
+        if locked_fulfillment.status != "shipped":
+            return None
+        if auto_confirm_due and (
+            locked_fulfillment.auto_confirm_at is None or locked_fulfillment.auto_confirm_at > datetime.now(UTC)
+        ):
+            return None
+        await self._ensure_no_unfinished_refunds(order.id)
         now = datetime.now(UTC)
-        fulfillment.status = "delivered"
-        fulfillment.delivered_at = now
-        fulfillment.revision += 1
-        await self.repository.save(fulfillment)
+        locked_fulfillment.status = "delivered"
+        locked_fulfillment.delivered_at = now
+        locked_fulfillment.revision += 1
+        await self.repository.save(locked_fulfillment)
         await self.repository.save(
             FulfillmentEvent(
-                fulfillment_id=fulfillment.id,
-                revision=fulfillment.revision,
+                fulfillment_id=locked_fulfillment.id,
+                revision=locked_fulfillment.revision,
                 from_status="shipped",
                 to_status="delivered",
                 actor_type=actor_type,
@@ -399,7 +449,8 @@ class LifecycleService:
                 reason=reason,
             )
         )
-        await self.distribution.schedule_settlement_for_delivery_in_open_transaction(fulfillment.order_id, now)
+        await self.distribution.schedule_settlement_for_delivery_in_open_transaction(order.id, now)
+        return locked_fulfillment
 
     async def create_refund(self, user_id: UUID, order_id: UUID, data: RefundRequestCreate) -> RefundRequestRead:
         request_hash = self._request_hash({"reason": data.reason})

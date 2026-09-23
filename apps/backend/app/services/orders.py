@@ -344,6 +344,36 @@ class OrderService:
         await self._confirm(order, confirmed_at, "channel", payment_attempt_id)
         return await self._read(order)
 
+    async def accept_in_open_transaction(self, order_id: UUID, revision: int, actor_id: UUID) -> OrderRead:
+        order = await self.repository.order_by_id(order_id, lock=True)
+        if order is None:
+            raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
+        if order.acceptance_status == "accepted":
+            return await self._read(order)
+        if order.status != "paid" or order.acceptance_status != "pending" or order.revision != revision:
+            raise AppException(
+                status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="订单接单状态已变化，请重新读取"
+            )
+        order.acceptance_status = "accepted"
+        order.accepted_at = datetime.now(UTC)
+        order.accepted_by_id = actor_id
+        order.revision += 1
+        await self.repository.save(order)
+        await self.repository.save(
+            OrderEvent(
+                id=new_uuid7(),
+                order_id=order.id,
+                revision=order.revision,
+                event_type="accepted",
+                from_status="paid",
+                to_status="paid",
+                actor_type="admin",
+                actor_id=actor_id,
+                reason="管理员接单",
+            )
+        )
+        return await self._read(order)
+
     async def _confirm(
         self, order: Order, confirmed_at: datetime, settlement: str, payment_attempt_id: UUID | None
     ) -> None:
@@ -479,6 +509,7 @@ class OrderService:
             buyer_level_snapshot=order.buyer_level_snapshot,
             settlement_kind=order.settlement_kind,
             expires_at=order.expires_at,
+            acceptance_status=order.acceptance_status,
             created_at=order.created_at,
             revision=order.revision,
             items=[OrderItemRead.model_validate(item) for item in await self.repository.items(order.id)],
