@@ -254,6 +254,7 @@ class QuoteLineRead(MembershipInput):
     unit_price: Money
     line_amount: Money
     price_source: str
+    pricing_snapshot: dict[str, object]
 
 
 class CommerceQuoteRead(MembershipInput):
@@ -263,7 +264,9 @@ class CommerceQuoteRead(MembershipInput):
     total_amount: Money
     buyer_level_id: UUID | None
     buyer_level_state: Literal["none", "active", "disabled"]
+    buyer_level_snapshot: dict[str, object]
     shipping_rule_id: UUID | None
+    shipping_snapshot: dict[str, object]
     fingerprint: str
 
 

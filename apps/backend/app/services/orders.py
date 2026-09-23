@@ -2,7 +2,6 @@ import hashlib
 import json
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +15,7 @@ from app.db.models.order import Order, OrderEvent, OrderItem
 from app.db.transaction import transaction_scope
 from app.domains.addresses.repository import AddressRepository
 from app.domains.addresses.service import AddressService
+from app.domains.distribution.commission_freeze import freeze_order_commission_sources
 from app.domains.distribution.service import DistributionService
 from app.domains.durable_tasks.service import DurableTaskService
 from app.domains.inventory.repository import InventoryRepository
@@ -93,22 +93,7 @@ class OrderService:
                 items=[QuoteItemInput(sku_id=sku, quantity=qty) for sku, qty in normalized], province_code=province_code
             ),
         )
-        setting = await self.membership_repository.setting("order_shipping")
-        if setting is None:
-            raise AppException(status_code=503, code=ErrorCode.CONFIGURATION_ERROR, message="平台运费配置不可用")
-        profile = await self.membership_repository.profile(user_id)
-        level = await self.membership_repository.level(profile.level_id) if profile and profile.level_id else None
-        level_snapshot: dict[str, object] = {
-            "schema_version": 1,
-            "state": pricing.buyer_level_state,
-            "level_id": str(profile.level_id) if profile and profile.level_id else None,
-            "code": level.code if level else None,
-            "name": level.name if level else None,
-            "level_revision": level.revision if level else None,
-            "discount_factor": str(
-                level.discount_factor if level and pricing.buyer_level_state == "active" else Decimal("1.000000")
-            ),
-        }
+        level_snapshot = pricing.buyer_level_snapshot
         product_repository = ProductRepository(self.session)
         products = {
             sku.id: (sku, product)
@@ -142,19 +127,7 @@ class OrderService:
                     product_type=product_type,
                     weight_grams=sku.weight_grams,
                     purchase_limit_quantity=product.purchase_limit_quantity,
-                    price_snapshot={
-                        "schema_version": 1,
-                        "pricing_version": "platform_v1",
-                        "product_revision": product.revision,
-                        "base_price": str(sku.price),
-                        "market_price": str(sku.market_price) if sku.market_price is not None else None,
-                        "quantity": priced.quantity,
-                        "wholesale_tiers": sku.wholesale_prices,
-                        "quantity_unit_price": str(priced.base_unit_price),
-                        "final_unit_price": str(priced.unit_price),
-                        "price_source": priced.price_source,
-                        "rounding": "unit_half_up_2dp",
-                    },
+                    price_snapshot=priced.pricing_snapshot,
                     category_snapshot={
                         "schema_version": 1,
                         "category": {"id": str(chain[-1].id), "name": chain[-1].name, "revision": chain[-1].revision},
@@ -175,18 +148,7 @@ class OrderService:
                 )
             )
         lines.sort(key=lambda item: item.sku_id.hex)
-        shipping: dict[str, object] = {
-            "schema_version": 1,
-            "mode": "virtual" if product_type == "virtual" else "platform",
-            "setting_id": str(setting.id),
-            "setting_revision": setting.revision,
-            "matched_rule_id": str(pricing.shipping_rule_id) if pricing.shipping_rule_id else None,
-            "province_code": province_code,
-            "basis_amount": str(pricing.items_amount),
-            "free_shipping_threshold": None,
-            "fixed_fee": str(pricing.freight_amount),
-            "freight_amount": str(pricing.freight_amount),
-        }
+        shipping = pricing.shipping_snapshot
         payload = {
             "lines": [line.model_dump(mode="json") for line in lines],
             "shipping": shipping,
@@ -205,7 +167,7 @@ class OrderService:
             total_amount=pricing.total_amount,
             address_id=data.address_id,
             address_snapshot=address_snapshot,
-            buyer_level_id=profile.level_id if profile else None,
+            buyer_level_id=pricing.buyer_level_id,
             buyer_level_snapshot=level_snapshot,
             fingerprint=fingerprint,
             expires_at=datetime.now(UTC) + timedelta(minutes=30),
@@ -314,6 +276,7 @@ class OrderService:
                     reason="创建订单",
                 )
             )
+            await freeze_order_commission_sources(self.session, order.id)
             if order.total_amount == 0:
                 await self.confirm_zero_in_open_transaction(order.id, datetime.now(UTC))
             return await self._read(order)

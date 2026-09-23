@@ -86,6 +86,10 @@ class CommissionPolicyService:
         row = await self._require_control()
         return self._control_read(row)
 
+    async def commission_control_in_open_transaction(self) -> tuple[UUID, CommissionControlRead]:
+        row = await self._require_control(lock=True)
+        return row.id, self._control_read(row)
+
     async def active_decision_context_in_open_transaction(self) -> CommissionDecisionContext:
         control_row = await self._require_control(lock=True)
         control = self._control_read(control_row)

@@ -16866,6 +16866,12 @@
             "title": "Buyer Level State",
             "description": "当前业务字段，具体语义由所属请求或响应模型定义"
           },
+          "buyer_level_snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Buyer Level Snapshot",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
           "shipping_rule_id": {
             "anyOf": [
               {
@@ -16877,6 +16883,12 @@
               }
             ],
             "title": "Shipping Rule Id",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "shipping_snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Shipping Snapshot",
             "description": "当前业务字段，具体语义由所属请求或响应模型定义"
           },
           "fingerprint": {
@@ -16894,7 +16906,9 @@
           "total_amount",
           "buyer_level_id",
           "buyer_level_state",
+          "buyer_level_snapshot",
           "shipping_rule_id",
+          "shipping_snapshot",
           "fingerprint"
         ],
         "title": "CommerceQuoteRead"
@@ -22928,6 +22942,12 @@
             "type": "string",
             "title": "Price Source",
             "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "pricing_snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Pricing Snapshot",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
           }
         },
         "additionalProperties": false,
@@ -22940,7 +22960,8 @@
           "base_unit_price",
           "unit_price",
           "line_amount",
-          "price_source"
+          "price_source",
+          "pricing_snapshot"
         ],
         "title": "QuoteLineRead"
       },
