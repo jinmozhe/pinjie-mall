@@ -320,6 +320,7 @@ async def prepare_paid_order(shop, physical=False):
     confirmed = await shop.lifecycle.confirm_verified_payment(confirmation)
     assert confirmed.status == "succeeded"
     assert (await shop.lifecycle.confirm_verified_payment(confirmation)).id == attempt.id
+    await shop.lifecycle.confirm_order_scheduled(attempt.id)
     return order, product, confirmation
 
 
@@ -470,8 +471,11 @@ async def test_paid_delivery_refund_wallet_and_reporting_flow(shop, physical):
         confirmed_at=datetime.now(UTC),
         payload_hash="c" * 64,
     )
-    assert (await shop.lifecycle.confirm_verified_refund(refund_confirmation)).status == "completed"
-    assert (await shop.lifecycle.confirm_verified_refund(refund_confirmation)).id == refund.id
+    confirmed_refund = await shop.lifecycle.confirm_verified_refund(refund_confirmation)
+    assert confirmed_refund.status == "succeeded"
+    assert (await shop.lifecycle.confirm_verified_refund(refund_confirmation)).id == refund_attempt.id
+    await shop.lifecycle.complete_refund_scheduled(refund_attempt.id)
+    assert (await shop.lifecycle.refunds_for_user(shop.users[0], refund_order.id))[0].status == "completed"
     completed = await shop.admin_distribution.complete_withdrawal_manually(
         withdrawal.id,
         WithdrawalManualCompletion(revision=approved.revision, note="已线下转账", payment_reference="OFFLINE-TEST-001"),
@@ -902,7 +906,9 @@ async def test_payment_and_refund_confirmation_reject_invalid_channel_amount_and
         )
     assert error.value.code == "ORDER_STATE_CONFLICT"
     completed = await shop.lifecycle.confirm_verified_refund(confirmation)
-    assert completed.status == "completed"
+    assert completed.status == "succeeded"
+    await shop.lifecycle.complete_refund_scheduled(refund_attempt.id)
+    assert (await shop.lifecycle.refunds_for_user(shop.users[0], refund_order.id))[0].status == "completed"
     with pytest.raises(AppException) as error:
         await shop.lifecycle.confirm_verified_refund(
             confirmation.model_copy(update={"channel_refund_id": f"CONFLICT-{refund.id}"})

@@ -52,6 +52,12 @@ class LifecycleRepository:
             statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.scalars(statement)).one_or_none()
 
+    async def payment_attempts_for_order(self, order_id: UUID, *, lock: bool = False) -> list[PaymentAttempt]:
+        statement = select(PaymentAttempt).where(PaymentAttempt.order_id == order_id).order_by(PaymentAttempt.id)
+        if lock:
+            statement = statement.with_for_update().execution_options(populate_existing=True)
+        return list(await self.session.scalars(statement))
+
     async def fulfillment(self, order_id: UUID, *, lock: bool = False) -> Fulfillment | None:
         statement = select(Fulfillment).where(Fulfillment.order_id == order_id)
         if lock:

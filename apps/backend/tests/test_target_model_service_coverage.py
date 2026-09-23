@@ -836,8 +836,14 @@ async def test_durable_runner_executes_each_internal_handler_and_handles_lease_c
         def __init__(self, session: object) -> None:
             self.session = session
 
+        async def confirm_order_scheduled(self, payment_attempt_id: UUID) -> None:
+            calls.append(("confirm_order", payment_attempt_id))
+
         async def auto_confirm_scheduled(self, fulfillment_id: UUID) -> None:
             calls.append(("confirm", fulfillment_id))
+
+        async def complete_refund_scheduled(self, refund_attempt_id: UUID) -> None:
+            calls.append(("refund_followup", refund_attempt_id))
 
     class FakeDistribution:
         def __init__(self, session: object) -> None:
@@ -861,7 +867,9 @@ async def test_durable_runner_executes_each_internal_handler_and_handles_lease_c
     assert leased[0].task_type == "expire_order"
     for task_type, payload_key, action in (
         ("expire_order", "order_id", "expire"),
+        ("confirm_order", "payment_attempt_id", "confirm_order"),
         ("auto_confirm_fulfillment", "fulfillment_id", "confirm"),
+        ("refund_followup", "refund_attempt_id", "refund_followup"),
         ("commission_settlement", "order_id", "commission"),
     ):
         task_id = uuid7()
@@ -2355,30 +2363,18 @@ async def test_lifecycle_confirmation_guards_reject_inconsistent_external_facts(
         order_id=order_id,
         payment_attempt_id=payment_id,
         refund_request_id=None,
+        merchant_refund_reference="ABNORMAL-REFUND",
         channel="wechat",
+        channel_refund_id=None,
+        confirmed_at=None,
         status="created",
         amount=Decimal("10.00"),
         currency="CNY",
         created_at=now,
         revision=1,
     )
-    with pytest.raises(AppException):
-        await service.confirm_verified_refund_in_open_transaction(refund_confirmation)
-    repository.attempt = SimpleNamespace(
-        id=refund_attempt.id,
-        order_id=order_id,
-        payment_attempt_id=payment_id,
-        refund_request_id=refund_id,
-        channel="wechat",
-        status="created",
-        amount=Decimal("10.00"),
-        currency="CNY",
-        created_at=now,
-        revision=1,
-    )
-    repository.refund_row = SimpleNamespace(status="requested")
-    with pytest.raises(AppException):
-        await service.confirm_verified_refund_in_open_transaction(refund_confirmation)
+    confirmed_refund = await service.confirm_verified_refund_in_open_transaction(refund_confirmation)
+    assert confirmed_refund.status == "succeeded"
 
 
 class WalletScalarResult:

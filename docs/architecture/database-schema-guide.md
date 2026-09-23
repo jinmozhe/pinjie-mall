@@ -1975,7 +1975,7 @@ commission_records.rule_snapshot 保存该项决策、买家冻结身份、受�
 | --- | --- |
 | payment_attempts.channel_context、withdrawal_requests.channel_context | schema_version=1、merchant_id、app_id（适配器无应用概念时 null）、config_version；非秘密标识，调用与回调均核对；更换配置不能改变在途单归属 |
 | wallet_ledgers.balance_after | schema_version=1、available_amount、frozen_amount、debt_amount，全部两位非负有限金额字符串；等于该 wallet_revision 的账户结果 |
-| durable_tasks.payload | schema_version=1 加该任务唯一业务 ID；payment_submit/payment_query/payment_close/confirm_order 用 payment_attempt_id，expire_order 用 order_id，auto_confirm_fulfillment 用 fulfillment_id，refund_execute/refund_query 用 refund_attempt_id，refund_followup 用 refund_request_id，commission_settle 用 commission_id，withdrawal_execute/withdrawal_query 用 withdrawal_request_id；金额以业务表为准 |
+| durable_tasks.payload | schema_version=1 加该任务唯一业务 ID；payment_submit/payment_query/payment_close/confirm_order 用 payment_attempt_id，expire_order 用 order_id，auto_confirm_fulfillment 用 fulfillment_id，refund_submit/refund_query/refund_followup 用 refund_attempt_id，commission_settlement 用 order_id，withdrawal_submit/withdrawal_query 用 withdrawal_request_id；金额以业务表为准 |
 | audit_events.changed_fields | 现行为白名单对象，支持字段名对应 old/new 或操作摘要。目标提现事件固定 schema_version=1、from_status（创建时 null）、to_status、reason、payload_hash（无渠道载荷时 null）；action=withdrawal.state_changed、target_type=withdrawal_request、target_id 为请求 ID，target_revision/actor_type/actor_id 使用物理列，不记录收款明文；系统/用户写入口尚待扩展 |
 | shipping_templates.regions | 当前存量数组 1 至 100 组；每组 provinces 为六位省编码数组，空数组为唯一默认组，跨组不重复；first_unit/ additional_unit 为 1 至 1000000000 整数，first_price/additional_price 为非负两位金额字符串；piece/weight 按剩余数量或重量向上取整计算续费；详见现行 [shipping Schema](../../apps/backend/app/domains/shipping/schemas.py)，目标新单不再读取 |
 | shipping_templates.excluded_provinces | 存量六位省级编码字符串数组，最多 100 项且不重复；保留原模板语义 |
@@ -2105,7 +2105,7 @@ remaining = S
 3. 按订单商品把限购 confirmed 标为 refunded，purchased_quantity 保持累计。
 4. 终止尚未交付履约，保存事件；已发货/交付保留原记录。所有步骤完成后跟进任务 succeeded。
 
-申请 completed 表示退款资金已确认或零元内部退款已确认，后续任务可以仍 pending/attention。界面应区分“钱已退，库存/追佣处理中”，不能为了掩盖任务错误回滚真实资金成功。
+退款执行 `succeeded` 表示渠道资金已确认；常规售后申请在 `refund_followup` 完成库存、追佣、限购和履约补偿后才转 `completed`。界面应区分“钱已退，售后补偿处理中”，不能为了掩盖任务错误回滚真实资金成功。
 
 duplicate_payment/late_payment 的执行没有售后申请，只退相应异常原支付；不触发正常订单的追佣、库存回补或限购改变。退款预算按原支付锁控制：所有 succeeded 加 created/processing/unknown/abnormal 等未决执行总额不得超过原实收。
 
@@ -2402,7 +2402,7 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 | wallet_ledgers | 现有缺结果余额/账户版本，类型不含 withdrawal_paid | 补版本账链、结果快照和真实打款类型；历史期初不捏造完整账链 |
 | reconciliation_records | `20260922_05` 使用 channel、record_type、渠道流水复合唯一键，并关联支付、退款或提现对象 | 记录 payment/refund/withdrawal 三类匹配；迁移不伪造旧账单类型，旧事实存在时明确失败 |
 | 多表默认值/时间 | 多数由 ORM 生成，无数据库 server_default | 字典明确生成来源；SQL 迁移显式提供必填列，不能把文档初值当现行 DEFAULT |
-| 定时扫描 | `scripts.run_durable_tasks` 已提供有界单轮 Worker，处理订单过期、自动确认履约和佣金结算；渠道任务明确重试或 attention | 常驻调度、告警、渠道适配器和部署证据仍待专项完成 |
+| 定时扫描 | `scripts.run_durable_tasks` 已提供有界单轮 Worker，处理订单过期、订单确认、自动确认履约、退款补偿和佣金结算；渠道任务明确重试或 attention | 常驻调度、告警、渠道适配器和部署证据仍待专项完成 |
 
 字段审计还补回原稿漏记的 users.deletion_reason、购物车/库存/订单/退款 revision、下单/退款/提现 request_hash、库存原/结果版本、订单取消字段、明细重量/版本、退款事件 payload_hash 和提现确认时间。字段已在对应表定义，避免另一份可独立编辑的字段字典。
 
