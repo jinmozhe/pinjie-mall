@@ -43,6 +43,8 @@ export default function access(initialState?: AdminInitialState) {
       "settings:commission-control:read",
     ].some(has),
     canCommissions: has("commissions:read"),
+    canPolicies: ["commission-policies:read", "settings:commission-control:read"].some(has),
+    canReferralNetwork: has("members:read"),
     canFinance: [
       "payments:read",
       "wallets:read",
