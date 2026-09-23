@@ -14,6 +14,11 @@ import type {
   AttributeInput, AttributeRead, AttributeUpdate, PageResultAttributeRead,
   StandardValueInput, StandardValueRead, StandardValueUpdate,
   TemplateRead, TemplateUpdate, SpecificationConversion,
+  MemberLevelCreate, MemberLevelRead, MemberLevelUpdate, PageResultMemberLevelRead,
+  MemberLevelConditionCreate, MemberLevelConditionRead, MemberLevelConditionUpdate, PageResultMemberLevelConditionRead,
+  MemberPriceRuleCreate, MemberPriceRuleRead, MemberPriceRuleUpdate, PageResultMemberPriceRuleRead,
+  PointsAccountRead, PageResultPointsAccountRead, PageResultPointsLedgerRead, PointsManualAdjustment,
+  PageResultMemberLevelEventRead, PageResultMembershipQualificationEventRead,
 } from "@pinjie/api-client";
 
 import { apiRequest, jsonBody } from "./http";
@@ -92,4 +97,18 @@ export const commerceApi = {
   categoryTemplate: (categoryId: string) => apiRequest<TemplateRead>(`/api/v1/admin/product-categories/${categoryId}/attributes`),
   updateCategoryTemplate: (categoryId: string, input: TemplateUpdate) => apiRequest<TemplateRead>(`/api/v1/admin/product-categories/${categoryId}/attributes`, { method: "PUT", body: jsonBody(input) }),
   convertSpecifications: (productId: string, input: SpecificationConversion) => apiRequest<ProductRead>(`/api/v1/admin/products/${productId}/specification-conversions`, { method: "POST", body: jsonBody(input) }),
+  memberLevels: (page: number, pageSize: number = 20) => apiRequest<PageResultMemberLevelRead>(`/api/v1/admin/member-levels?page=${page}&page_size=${pageSize}`),
+  createMemberLevel: (input: MemberLevelCreate) => apiRequest<MemberLevelRead>("/api/v1/admin/member-levels", { method: "POST", body: jsonBody(input) }),
+  updateMemberLevel: (id: string, input: MemberLevelUpdate) => apiRequest<MemberLevelRead>(`/api/v1/admin/member-levels/${id}`, { method: "PUT", body: jsonBody(input) }),
+  memberLevelConditions: (page: number, pageSize: number = 20) => apiRequest<PageResultMemberLevelConditionRead>(`/api/v1/admin/member-level-conditions?page=${page}&page_size=${pageSize}`),
+  createMemberLevelCondition: (input: MemberLevelConditionCreate) => apiRequest<MemberLevelConditionRead>("/api/v1/admin/member-level-conditions", { method: "POST", body: jsonBody(input) }),
+  updateMemberLevelCondition: (id: string, input: MemberLevelConditionUpdate) => apiRequest<MemberLevelConditionRead>(`/api/v1/admin/member-level-conditions/${id}`, { method: "PUT", body: jsonBody(input) }),
+  qualificationEvents: (userId: string, page: number = 1, pageSize: number = 20) => apiRequest<PageResultMembershipQualificationEventRead>(`/api/v1/admin/members/${userId}/qualification-events?page=${page}&page_size=${pageSize}`),
+  levelEvents: (userId: string, page: number = 1, pageSize: number = 20) => apiRequest<PageResultMemberLevelEventRead>(`/api/v1/admin/members/${userId}/level-events?page=${page}&page_size=${pageSize}`),
+  pointsAccounts: (page: number, pageSize: number = 20) => apiRequest<PageResultPointsAccountRead>(`/api/v1/admin/points-accounts?page=${page}&page_size=${pageSize}`),
+  pointsLedgers: (accountId: string, page: number = 1, pageSize: number = 20) => apiRequest<PageResultPointsLedgerRead>(`/api/v1/admin/points-accounts/${accountId}/ledgers?page=${page}&page_size=${pageSize}`),
+  adjustPoints: (input: PointsManualAdjustment) => apiRequest<PointsAccountRead>("/api/v1/admin/points-adjustments", { method: "POST", body: jsonBody(input) }),
+  memberPriceRules: (page: number, pageSize: number = 20) => apiRequest<PageResultMemberPriceRuleRead>(`/api/v1/admin/member-price-rules?page=${page}&page_size=${pageSize}`),
+  createMemberPriceRule: (input: MemberPriceRuleCreate) => apiRequest<MemberPriceRuleRead>("/api/v1/admin/member-price-rules", { method: "POST", body: jsonBody(input) }),
+  updateMemberPriceRule: (id: string, input: MemberPriceRuleUpdate) => apiRequest<MemberPriceRuleRead>(`/api/v1/admin/member-price-rules/${id}`, { method: "PUT", body: jsonBody(input) }),
 };

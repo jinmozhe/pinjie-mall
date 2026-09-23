@@ -31,6 +31,9 @@ export default function access(initialState?: AdminInitialState) {
     ].some(has),
     canUsers: has("users:read"),
     canMembers: has("members:read"),
+    canMemberLevels: ["member-levels:read", "member-level-conditions:read"].some(has),
+    canMemberPrices: has("member-price-rules:read"),
+    canPoints: has("points:read"),
     canDistribution: [
       "withdrawals:read",
       "members:read",
