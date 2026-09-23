@@ -2830,6 +2830,96 @@ export type DescriptionUpdate = {
 };
 
 /**
+ * DurableTaskRead
+ */
+export type DurableTaskRead = {
+    /**
+     * Id
+     *
+     * 任务标识
+     */
+    id: string;
+    /**
+     * Task Type
+     *
+     * 任务类型
+     */
+    task_type: string;
+    /**
+     * Business Key
+     *
+     * 业务键
+     */
+    business_key: string;
+    /**
+     * Status
+     *
+     * 任务状态: pending/running/succeeded/attention
+     */
+    status: string;
+    /**
+     * Available At
+     *
+     * 可用/计划执行时间
+     */
+    available_at: string;
+    /**
+     * Attempt Count
+     *
+     * 尝试执行次数
+     */
+    attempt_count: number;
+    /**
+     * Failure Count
+     *
+     * 失败次数
+     */
+    failure_count: number;
+    /**
+     * Max Failures
+     *
+     * 最大重试失败上限
+     */
+    max_failures: number;
+    /**
+     * Revision
+     *
+     * 版本号
+     */
+    revision: number;
+    /**
+     * Completed At
+     *
+     * 完成时间
+     */
+    completed_at?: string | null;
+    /**
+     * Last Error Code
+     *
+     * 最近错误代码
+     */
+    last_error_code?: string | null;
+    /**
+     * Last Error Summary
+     *
+     * 脱敏错误摘要
+     */
+    last_error_summary?: string | null;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 更新时间
+     */
+    updated_at: string;
+};
+
+/**
  * FreightQuote
  */
 export type FreightQuote = {
@@ -4653,6 +4743,42 @@ export type PageResultCommissionRead = {
      * 当前分页中的资源列表
      */
     items: Array<CommissionRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[DurableTaskRead]
+ */
+export type PageResultDurableTaskRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<DurableTaskRead>;
     /**
      * Page
      *
@@ -8255,6 +8381,34 @@ export type ResponseModelPageResultCommissionRead = {
      * 响应业务数据
      */
     data: PageResultCommissionRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[DurableTaskRead]]
+ */
+export type ResponseModelPageResultDurableTaskRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultDurableTaskRead;
     /**
      * Request Id
      *
@@ -12211,6 +12365,18 @@ export type OrdersPageApiV1AdminOrdersGetData = {
          * 钱包轨道
          */
         wallet_type?: 'commission' | 'consumption' | null;
+        /**
+         * Task Type
+         *
+         * 任务类型
+         */
+        task_type?: string | null;
+        /**
+         * Business Key
+         *
+         * 业务键
+         */
+        business_key?: string | null;
     };
     url: '/api/v1/admin/orders';
 };
@@ -12322,6 +12488,18 @@ export type RefundsPageApiV1AdminRefundsGetData = {
          * 钱包轨道
          */
         wallet_type?: 'commission' | 'consumption' | null;
+        /**
+         * Task Type
+         *
+         * 任务类型
+         */
+        task_type?: string | null;
+        /**
+         * Business Key
+         *
+         * 业务键
+         */
+        business_key?: string | null;
     };
     url: '/api/v1/admin/refunds';
 };
@@ -12433,6 +12611,18 @@ export type WithdrawalsPageApiV1AdminWithdrawalsGetData = {
          * 钱包轨道
          */
         wallet_type?: 'commission' | 'consumption' | null;
+        /**
+         * Task Type
+         *
+         * 任务类型
+         */
+        task_type?: string | null;
+        /**
+         * Business Key
+         *
+         * 业务键
+         */
+        business_key?: string | null;
     };
     url: '/api/v1/admin/withdrawals';
 };
@@ -12544,6 +12734,18 @@ export type PaymentsPageApiV1AdminPaymentsGetData = {
          * 钱包轨道
          */
         wallet_type?: 'commission' | 'consumption' | null;
+        /**
+         * Task Type
+         *
+         * 任务类型
+         */
+        task_type?: string | null;
+        /**
+         * Business Key
+         *
+         * 业务键
+         */
+        business_key?: string | null;
     };
     url: '/api/v1/admin/payments';
 };
@@ -12655,6 +12857,18 @@ export type ReconciliationRecordsPageApiV1AdminReconciliationRecordsGetData = {
          * 钱包轨道
          */
         wallet_type?: 'commission' | 'consumption' | null;
+        /**
+         * Task Type
+         *
+         * 任务类型
+         */
+        task_type?: string | null;
+        /**
+         * Business Key
+         *
+         * 业务键
+         */
+        business_key?: string | null;
     };
     url: '/api/v1/admin/reconciliation-records';
 };
@@ -12791,6 +13005,18 @@ export type MembersPageApiV1AdminMembersGetData = {
          * 钱包轨道
          */
         wallet_type?: 'commission' | 'consumption' | null;
+        /**
+         * Task Type
+         *
+         * 任务类型
+         */
+        task_type?: string | null;
+        /**
+         * Business Key
+         *
+         * 业务键
+         */
+        business_key?: string | null;
     };
     url: '/api/v1/admin/members';
 };
@@ -12902,6 +13128,18 @@ export type CommissionsPageApiV1AdminCommissionsGetData = {
          * 钱包轨道
          */
         wallet_type?: 'commission' | 'consumption' | null;
+        /**
+         * Task Type
+         *
+         * 任务类型
+         */
+        task_type?: string | null;
+        /**
+         * Business Key
+         *
+         * 业务键
+         */
+        business_key?: string | null;
     };
     url: '/api/v1/admin/commissions';
 };
@@ -13013,6 +13251,18 @@ export type WalletsPageApiV1AdminWalletsGetData = {
          * 钱包轨道
          */
         wallet_type?: 'commission' | 'consumption' | null;
+        /**
+         * Task Type
+         *
+         * 任务类型
+         */
+        task_type?: string | null;
+        /**
+         * Business Key
+         *
+         * 业务键
+         */
+        business_key?: string | null;
     };
     url: '/api/v1/admin/wallets';
 };
@@ -13163,6 +13413,18 @@ export type RefundExecutionsPageApiV1AdminRefundExecutionsGetData = {
          * 钱包轨道
          */
         wallet_type?: 'commission' | 'consumption' | null;
+        /**
+         * Task Type
+         *
+         * 任务类型
+         */
+        task_type?: string | null;
+        /**
+         * Business Key
+         *
+         * 业务键
+         */
+        business_key?: string | null;
     };
     url: '/api/v1/admin/refund-executions';
 };
@@ -13184,6 +13446,129 @@ export type RefundExecutionsPageApiV1AdminRefundExecutionsGetResponses = {
 };
 
 export type RefundExecutionsPageApiV1AdminRefundExecutionsGetResponse = RefundExecutionsPageApiV1AdminRefundExecutionsGetResponses[keyof RefundExecutionsPageApiV1AdminRefundExecutionsGetResponses];
+
+export type ListDurableTasksApiV1AdminDurableTasksGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         *
+         * 页码
+         */
+        page?: number;
+        /**
+         * Page Size
+         *
+         * 每页数量
+         */
+        page_size?: number;
+        /**
+         * Record Id
+         *
+         * 记录标识，会员列表使用用户标识
+         */
+        record_id?: string | null;
+        /**
+         * User Id
+         *
+         * 用户标识，佣金列表使用受益人标识
+         */
+        user_id?: string | null;
+        /**
+         * Order Id
+         *
+         * 订单标识
+         */
+        order_id?: string | null;
+        /**
+         * Inviter Id
+         *
+         * 直接推荐人标识
+         */
+        inviter_id?: string | null;
+        /**
+         * Status
+         *
+         * 状态代码
+         */
+        status?: string | null;
+        /**
+         * Channel
+         *
+         * 支付渠道
+         */
+        channel?: 'wechat' | 'alipay' | null;
+        /**
+         * Product Type
+         *
+         * 商品类型
+         */
+        product_type?: 'physical' | 'virtual' | null;
+        /**
+         * Wallet Type
+         *
+         * 钱包轨道
+         */
+        wallet_type?: 'commission' | 'consumption' | null;
+        /**
+         * Task Type
+         *
+         * 任务类型
+         */
+        task_type?: string | null;
+        /**
+         * Business Key
+         *
+         * 业务键
+         */
+        business_key?: string | null;
+    };
+    url: '/api/v1/admin/durable-tasks';
+};
+
+export type ListDurableTasksApiV1AdminDurableTasksGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ListDurableTasksApiV1AdminDurableTasksGetError = ListDurableTasksApiV1AdminDurableTasksGetErrors[keyof ListDurableTasksApiV1AdminDurableTasksGetErrors];
+
+export type ListDurableTasksApiV1AdminDurableTasksGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultDurableTaskRead;
+};
+
+export type ListDurableTasksApiV1AdminDurableTasksGetResponse = ListDurableTasksApiV1AdminDurableTasksGetResponses[keyof ListDurableTasksApiV1AdminDurableTasksGetResponses];
+
+export type ExportDurableTasksApiV1AdminDurableTasksExportPostData = {
+    body: SelectedCommerceIds;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/durable-tasks/export';
+};
+
+export type ExportDurableTasksApiV1AdminDurableTasksExportPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ExportDurableTasksApiV1AdminDurableTasksExportPostError = ExportDurableTasksApiV1AdminDurableTasksExportPostErrors[keyof ExportDurableTasksApiV1AdminDurableTasksExportPostErrors];
+
+export type ExportDurableTasksApiV1AdminDurableTasksExportPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCommerceExportRead;
+};
+
+export type ExportDurableTasksApiV1AdminDurableTasksExportPostResponse = ExportDurableTasksApiV1AdminDurableTasksExportPostResponses[keyof ExportDurableTasksApiV1AdminDurableTasksExportPostResponses];
 
 export type AdminCategoriesApiV1AdminProductCategoriesGetData = {
     body?: never;

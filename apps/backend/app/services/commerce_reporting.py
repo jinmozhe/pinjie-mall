@@ -18,12 +18,38 @@ from app.core.exceptions import AppException
 from app.core.pagination import PageResult
 from app.db.models.base import Base
 from app.db.models.commerce_lifecycle import PaymentAttempt, ReconciliationRecord, RefundAttempt, RefundRequest
-from app.db.models.distribution import CommissionRecord, MemberProfile, WalletAccount, WalletLedger, WithdrawalRequest
+from app.db.models.distribution import (
+    CommissionRecord,
+    DurableTask,
+    MemberProfile,
+    WalletAccount,
+    WalletLedger,
+    WithdrawalRequest,
+)
 from app.db.models.order import Order
 from app.domains.distribution import CommissionRead, MemberProfileRead, WalletAccountRead, WithdrawalRead
 from app.domains.lifecycle import PaymentAttemptRead, ReconciliationRecordRead, RefundAttemptRead, RefundRequestRead
 from app.domains.orders.schemas import AdminOrderSummary
 from app.services.security_events import AuditCoordinator
+
+
+class DurableTaskRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID = Field(description="任务标识")
+    task_type: str = Field(description="任务类型")
+    business_key: str = Field(description="业务键")
+    status: str = Field(description="任务状态: pending/running/succeeded/attention")
+    available_at: datetime = Field(description="可用/计划执行时间")
+    attempt_count: int = Field(description="尝试执行次数")
+    failure_count: int = Field(description="失败次数")
+    max_failures: int = Field(description="最大重试失败上限")
+    revision: int = Field(description="版本号")
+    completed_at: datetime | None = Field(default=None, description="完成时间")
+    last_error_code: str | None = Field(default=None, description="最近错误代码")
+    last_error_summary: str | None = Field(default=None, description="脱敏错误摘要")
+    created_at: datetime = Field(description="创建时间")
+    updated_at: datetime = Field(description="更新时间")
 
 
 class AdminWalletRead(WalletAccountRead):
@@ -60,6 +86,8 @@ class CommerceFilters(BaseModel):
     channel: Literal["wechat", "alipay"] | None = Field(default=None, description="支付渠道")
     product_type: Literal["physical", "virtual"] | None = Field(default=None, description="商品类型")
     wallet_type: Literal["commission", "consumption"] | None = Field(default=None, description="钱包轨道")
+    task_type: str | None = Field(default=None, min_length=1, max_length=64, description="任务类型")
+    business_key: str | None = Field(default=None, min_length=1, max_length=160, description="业务键")
 
 
 class SelectedCommerceIds(BaseModel):
@@ -90,6 +118,7 @@ _RESOURCES: dict[str, tuple[type[Base], type[BaseModel]]] = {
     "commissions": (CommissionRecord, CommissionRead),
     "wallets": (WalletAccount, AdminWalletRead),
     "refund-executions": (RefundAttempt, RefundAttemptRead),
+    "durable-tasks": (DurableTask, DurableTaskRead),
 }
 _FILTERS = {
     "orders": {"user_id": "user_id", "status": "status", "product_type": "product_type"},
@@ -101,6 +130,7 @@ _FILTERS = {
     "commissions": {"user_id": "beneficiary_user_id", "order_id": "order_id", "status": "status"},
     "wallets": {"user_id": "user_id", "wallet_type": "wallet_type"},
     "refund-executions": {"order_id": "order_id", "status": "status", "channel": "channel"},
+    "durable-tasks": {"status": "status", "task_type": "task_type", "business_key": "business_key"},
 }
 
 

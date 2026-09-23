@@ -24,6 +24,7 @@ import type {
   CommissionAmountRuleRead, CommissionAmountRuleCreate,
   CommissionDistributionRuleRead, CommissionDistributionRuleCreate,
   PageResultRefundAttemptRead,
+  PageResultDurableTaskRead,
 } from "@pinjie/api-client";
 
 import { apiRequest, jsonBody } from "./http";
@@ -34,7 +35,7 @@ export type ProductFilters = {
 };
 
 export type CommerceFilters = NonNullable<OrdersPageApiV1AdminOrdersGetData["query"]>;
-export type CommerceResource = "orders" | "refunds" | "withdrawals" | "payments" | "reconciliation-records" | "members" | "commissions" | "wallets" | "refund-executions";
+export type CommerceResource = "orders" | "refunds" | "withdrawals" | "payments" | "reconciliation-records" | "members" | "commissions" | "wallets" | "refund-executions" | "durable-tasks";
 
 export function queryString(values: Record<string, string | number | null | undefined>): string {
   const query = new URLSearchParams();
@@ -132,4 +133,6 @@ export const commerceApi = {
   addDistributionRule: (policyId: string, input: CommissionDistributionRuleCreate) => apiRequest<CommissionDistributionRuleRead>(`/api/v1/admin/commission-policies/${policyId}/distribution-rules`, { method: "POST", body: jsonBody(input) }),
   updateDistributionRule: (policyId: string, ruleId: string, input: CommissionDistributionRuleCreate) => apiRequest<CommissionDistributionRuleRead>(`/api/v1/admin/commission-policies/${policyId}/distribution-rules/${ruleId}`, { method: "PUT", body: jsonBody(input) }),
   deleteDistributionRule: (policyId: string, ruleId: string) => apiRequest<void>(`/api/v1/admin/commission-policies/${policyId}/distribution-rules/${ruleId}`, { method: "DELETE" }),
+  durableTasks: (filters: CommerceFilters) =>
+    apiRequest<PageResultDurableTaskRead>(`/api/v1/admin/durable-tasks?${queryString(filters)}`),
 };

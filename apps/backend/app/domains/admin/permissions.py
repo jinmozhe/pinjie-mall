@@ -103,6 +103,8 @@ class PermissionCode(StrEnum):
     WITHDRAWALS_READ = "withdrawals:read"
     WITHDRAWALS_REVIEW = "withdrawals:review"
     WITHDRAWALS_COMPLETE_MANUAL = "withdrawals:complete-manual"
+    DURABLE_TASKS_READ = "durable-tasks:read"
+    DURABLE_TASKS_EXPORT = "durable-tasks:export"
 
 
 PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
@@ -203,6 +205,8 @@ PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
     PermissionDefinition("withdrawals:read", "查看提现申请", "查看待审核的佣金钱包提现申请"),
     PermissionDefinition("withdrawals:review", "审核提现申请", "审核通过或驳回佣金钱包提现申请"),
     PermissionDefinition("withdrawals:complete-manual", "确认线下提现", "确认线下转账完成并结清提现冻结余额"),
+    PermissionDefinition("durable-tasks:read", "查看异步任务", "查看持久任务状态、执行次数与脱敏错误信息"),
+    PermissionDefinition("durable-tasks:export", "导出异步任务", "导出持久任务脱敏诊断信息"),
 )
 
 PERMISSION_CODES = frozenset(item.code for item in PERMISSION_CATALOG)

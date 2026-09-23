@@ -74,6 +74,7 @@ export default function access(initialState?: AdminInitialState) {
       "security:audit-events:read",
       "system:request-logs:read",
       "system:overview:read",
+      "durable-tasks:read",
     ].some(has),
     canSecurity: [
       "security:login-events:read",
@@ -81,5 +82,6 @@ export default function access(initialState?: AdminInitialState) {
       "system:request-logs:read",
     ].some(has),
     canSystem: has("system:overview:read"),
+    canDurableTasks: has("durable-tasks:read"),
   };
 }
