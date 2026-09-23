@@ -10,6 +10,10 @@ import type {
   ShippingTemplateInput, ShippingTemplateRead, ShippingTemplateUpdate, SkuUpdate, SkuStatusBatch,
   OrderRead, OrderAcceptance, FulfillmentRead, RefundRequestRead, RefundReview, ShipmentCreate, VirtualDeliveryCreate,
   PageResultAdminOrderSummary, PageResultRefundRequestRead, PageResultWithdrawalRead, WithdrawalRead, WithdrawalReview,
+  BrandInput, BrandRead, BrandUpdate, PageResultBrandRead,
+  AttributeInput, AttributeRead, AttributeUpdate, PageResultAttributeRead,
+  StandardValueInput, StandardValueRead, StandardValueUpdate,
+  TemplateRead, TemplateUpdate, SpecificationConversion,
 } from "@pinjie/api-client";
 
 import { apiRequest, jsonBody } from "./http";
@@ -74,4 +78,18 @@ export const commerceApi = {
   withdrawals: (filters: CommerceFilters) => apiRequest<PageResultWithdrawalRead>(`/api/v1/admin/withdrawals?${queryString(filters)}`),
   approveWithdrawal: (id: string, input: WithdrawalReview) => apiRequest<WithdrawalRead>(`/api/v1/admin/withdrawals/${id}/approve`, { method: "POST", body: jsonBody(input) }),
   rejectWithdrawal: (id: string, input: WithdrawalReview) => apiRequest<WithdrawalRead>(`/api/v1/admin/withdrawals/${id}/reject`, { method: "POST", body: jsonBody(input) }),
+  brands: (page: number, pageSize: number = 20) => apiRequest<PageResultBrandRead>(`/api/v1/admin/brands?page=${page}&page_size=${pageSize}`),
+  brand: (id: string) => apiRequest<BrandRead>(`/api/v1/admin/brands/${id}`),
+  createBrand: (input: BrandInput) => apiRequest<BrandRead>("/api/v1/admin/brands", { method: "POST", body: jsonBody(input) }),
+  updateBrand: (id: string, input: BrandUpdate) => apiRequest<BrandRead>(`/api/v1/admin/brands/${id}`, { method: "PUT", body: jsonBody(input) }),
+  attributes: (page: number, pageSize: number = 20) => apiRequest<PageResultAttributeRead>(`/api/v1/admin/spec-attributes?page=${page}&page_size=${pageSize}`),
+  attribute: (id: string) => apiRequest<AttributeRead>(`/api/v1/admin/spec-attributes/${id}`),
+  createAttribute: (input: AttributeInput) => apiRequest<AttributeRead>("/api/v1/admin/spec-attributes", { method: "POST", body: jsonBody(input) }),
+  updateAttribute: (id: string, input: AttributeUpdate) => apiRequest<AttributeRead>(`/api/v1/admin/spec-attributes/${id}`, { method: "PUT", body: jsonBody(input) }),
+  attributeValues: (attributeId: string) => apiRequest<StandardValueRead[]>(`/api/v1/admin/spec-attributes/${attributeId}/values`),
+  createAttributeValue: (attributeId: string, input: StandardValueInput) => apiRequest<StandardValueRead>(`/api/v1/admin/spec-attributes/${attributeId}/values`, { method: "POST", body: jsonBody(input) }),
+  updateAttributeValue: (attributeId: string, valueId: string, input: StandardValueUpdate) => apiRequest<StandardValueRead>(`/api/v1/admin/spec-attributes/${attributeId}/values/${valueId}`, { method: "PUT", body: jsonBody(input) }),
+  categoryTemplate: (categoryId: string) => apiRequest<TemplateRead>(`/api/v1/admin/product-categories/${categoryId}/attributes`),
+  updateCategoryTemplate: (categoryId: string, input: TemplateUpdate) => apiRequest<TemplateRead>(`/api/v1/admin/product-categories/${categoryId}/attributes`, { method: "PUT", body: jsonBody(input) }),
+  convertSpecifications: (productId: string, input: SpecificationConversion) => apiRequest<ProductRead>(`/api/v1/admin/products/${productId}/specification-conversions`, { method: "POST", body: jsonBody(input) }),
 };

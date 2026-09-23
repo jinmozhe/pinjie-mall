@@ -6,6 +6,7 @@ import type { AdminInitialState } from "./app";
 const settings = {} as AdminInitialState["settings"];
 const commerceDenied = {
   canCatalog: false, canProducts: false, canCategories: false, canShipping: false,
+  canBrands: false, canSpecAttributes: false, canInventory: false,
   canTrade: false, canPayments: false, canReconciliation: false, canMembers: false,
   canCommissions: false, canWallets: false, canOrders: false, canRefunds: false,
   canDistribution: false, canWithdrawals: false,
@@ -70,6 +71,7 @@ describe("admin access mapping", () => {
     });
     expect(access(state([], true))).toEqual({
       canCatalog: true, canProducts: true, canCategories: true, canShipping: true,
+      canBrands: true, canSpecAttributes: true, canInventory: true,
       canTrade: true, canPayments: true, canReconciliation: true, canMembers: true,
       canCommissions: true, canWallets: true, canOrders: true, canRefunds: true,
       canDistribution: true, canWithdrawals: true,
