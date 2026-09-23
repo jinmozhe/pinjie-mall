@@ -19,7 +19,12 @@ export function CommerceList<T extends object>({ resource, title, load, columns,
   columns: ProColumns<T>[]; fields: CommerceFilterField[]; rowKey?: string; toolbar?: ReactNode[];
 }) {
   const admin = useCurrentAdmin();
-  const permission = resource === "reconciliation-records" ? "reconciliation" : resource;
+  const permission =
+    resource === "reconciliation-records"
+      ? "reconciliation"
+      : resource === "refund-executions"
+      ? "refunds"
+      : resource;
   const allowed = canAccess(admin, `${permission}:read`);
   const canExport = canAccess(admin, `${permission}:export`);
   const [form] = Form.useForm<CommerceFilters>();

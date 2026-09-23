@@ -38,11 +38,20 @@ import type {
   CommissionDistributionRuleCreate,
 } from "@pinjie/api-client";
 import { PageFrame } from "@/components/PageFrame";
+import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi } from "@/lib/api/commerce";
 
 export default function PoliciesPage() {
+  const admin = useCurrentAdmin();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
+
+  const canControlRead = canAccess(admin, "settings:commission-control:read");
+  const canControlUpdate = canAccess(admin, "settings:commission-control:update");
+  const canPoliciesRead = canAccess(admin, "commission-policies:read");
+  const canPoliciesCreate = canAccess(admin, "commission-policies:create");
+  const canPoliciesUpdate = canAccess(admin, "commission-policies:update");
+  const canPoliciesPublish = canAccess(admin, "commission-policies:publish");
 
   // Policy Modal
   const [policyModalOpen, setPolicyModalOpen] = useState(false);
@@ -65,23 +74,25 @@ export default function PoliciesPage() {
   const { data: controlData, isLoading: controlLoading } = useQuery({
     queryKey: ["commission-control"],
     queryFn: () => commerceApi.commissionControl(),
+    enabled: canControlRead,
   });
 
   const { data: policiesData, isLoading: policiesLoading } = useQuery({
     queryKey: ["commission-policies", page],
     queryFn: () => commerceApi.policies(page),
+    enabled: canPoliciesRead,
   });
 
   const { data: amountRulesData, isLoading: amountRulesLoading } = useQuery({
     queryKey: ["amount-rules", detailPolicy?.id],
     queryFn: () => commerceApi.amountRules(detailPolicy!.id),
-    enabled: Boolean(detailPolicy),
+    enabled: Boolean(detailPolicy) && canPoliciesRead,
   });
 
   const { data: distRulesData, isLoading: distRulesLoading } = useQuery({
     queryKey: ["distribution-rules", detailPolicy?.id],
     queryFn: () => commerceApi.distributionRules(detailPolicy!.id),
-    enabled: Boolean(detailPolicy),
+    enabled: Boolean(detailPolicy) && canPoliciesRead,
   });
 
   // Global switch mutation
@@ -261,8 +272,9 @@ export default function PoliciesPage() {
     {
       title: "操作",
       key: "actions",
+      width: "1%",
       render: (_, row) => (
-        <Space orientation="horizontal" size="small">
+        <Space size="small">
           <Button
             size="small"
             icon={<UnorderedListOutlined />}
@@ -272,33 +284,37 @@ export default function PoliciesPage() {
           </Button>
           {row.status === "draft" && (
             <>
-              <Button
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => {
-                  setEditingPolicy(row);
-                  policyForm.setFieldsValue({
-                    name: row.name,
-                    default_mode: row.default_mode,
-                    default_percentage_rate: row.default_percentage_rate ? Number(row.default_percentage_rate) : undefined,
-                    default_amount_per_unit: row.default_amount_per_unit ? Number(row.default_amount_per_unit) : undefined,
-                    max_depth: row.max_depth,
-                    settle_delay_days: row.settle_delay_days,
-                  });
-                  setPolicyModalOpen(true);
-                }}
-              >
-                配置
-              </Button>
-              <Popconfirm
-                title="确认发布此政策？"
-                description="发布后该政策将转为 active 并自动归档当前生效政策，且政策规则将冻结为只读事实。"
-                onConfirm={() => publishMutation.mutate(row)}
-              >
-                <Button size="small" type="primary" icon={<CheckCircleOutlined />}>
-                  发布政策
+              {canPoliciesUpdate && (
+                <Button
+                  size="small"
+                  icon={<EditOutlined />}
+                  onClick={() => {
+                    setEditingPolicy(row);
+                    policyForm.setFieldsValue({
+                      name: row.name,
+                      default_mode: row.default_mode,
+                      default_percentage_rate: row.default_percentage_rate ? Number(row.default_percentage_rate) : undefined,
+                      default_amount_per_unit: row.default_amount_per_unit ? Number(row.default_amount_per_unit) : undefined,
+                      max_depth: row.max_depth,
+                      settle_delay_days: row.settle_delay_days,
+                    });
+                    setPolicyModalOpen(true);
+                  }}
+                >
+                  配置
                 </Button>
-              </Popconfirm>
+              )}
+              {canPoliciesPublish && (
+                <Popconfirm
+                  title="确认发布此政策？"
+                  description="发布后该政策将转为 active 并自动归档当前生效政策，且政策规则将冻结为只读事实。"
+                  onConfirm={() => publishMutation.mutate(row)}
+                >
+                  <Button size="small" type="primary" icon={<CheckCircleOutlined />}>
+                    发布政策
+                  </Button>
+                </Popconfirm>
+              )}
             </>
           )}
         </Space>
@@ -307,6 +323,7 @@ export default function PoliciesPage() {
   ];
 
   const isDraft = detailPolicy?.status === "draft";
+  const canEditDraft = isDraft && canPoliciesUpdate;
 
   return (
     <PageFrame
@@ -334,53 +351,71 @@ export default function PoliciesPage() {
               版本: v{controlData?.revision} | 最近更新: {controlData?.updated_at ?? "-"}
             </span>
           </div>
-          <Popconfirm
-            title={`确认要${controlData?.commissions_enabled ? "关闭" : "开启"}全平台分佣吗？`}
-            description="修改全平台分佣总开关立即对所有新下单生效，请谨慎操作。"
-            onConfirm={() => toggleControlMutation.mutate(!controlData?.commissions_enabled)}
-          >
+          {canControlUpdate ? (
+            <Popconfirm
+              title={`确认要${controlData?.commissions_enabled ? "关闭" : "开启"}全平台分佣吗？`}
+              description="修改全平台分佣总开关立即对所有新下单生效，请谨慎操作。"
+              onConfirm={() => toggleControlMutation.mutate(!controlData?.commissions_enabled)}
+            >
+              <Switch
+                loading={controlLoading || toggleControlMutation.isPending}
+                checked={controlData?.commissions_enabled}
+              />
+            </Popconfirm>
+          ) : (
             <Switch
-              loading={controlLoading || toggleControlMutation.isPending}
+              disabled
               checked={controlData?.commissions_enabled}
             />
-          </Popconfirm>
+          )}
         </div>
       </Card>
 
       {/* Policy list */}
-      <div style={{ marginBottom: 16 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            setEditingPolicy(null);
-            policyForm.resetFields();
-            policyForm.setFieldsValue({
-              default_mode: "percentage",
-              default_percentage_rate: 0.1,
-              max_depth: 2,
-              settle_delay_days: 7,
-            });
-            setPolicyModalOpen(true);
-          }}
-        >
-          新建分佣政策草稿
-        </Button>
-      </div>
+      {canPoliciesCreate && (
+        <div style={{ marginBottom: 16 }}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setEditingPolicy(null);
+              policyForm.resetFields();
+              policyForm.setFieldsValue({
+                default_mode: "percentage",
+                default_percentage_rate: 0.1,
+                max_depth: 2,
+                settle_delay_days: 7,
+              });
+              setPolicyModalOpen(true);
+            }}
+          >
+            新建分佣政策草稿
+          </Button>
+        </div>
+      )}
 
-      <Table<CommissionPolicyRead>
-        rowKey="id"
-        loading={policiesLoading}
-        dataSource={policiesData?.items ?? []}
-        columns={columns}
-        pagination={{
-          current: page,
-          pageSize: 20,
-          total: policiesData?.total ?? 0,
-          onChange: (p) => setPage(p),
-          showTotal: (total) => `共 ${total} 条分佣政策`,
-        }}
-      />
+      {!canPoliciesRead ? (
+        <Alert type="warning" title="无权查看分佣政策列表" />
+      ) : (
+        <Table<CommissionPolicyRead>
+          rowKey="id"
+          loading={policiesLoading}
+          dataSource={policiesData?.items ?? []}
+          columns={columns.map((col) => ({
+            ...col,
+            onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+            onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+          }))}
+          scroll={{ x: "max-content" }}
+          pagination={{
+            current: page,
+            pageSize: 20,
+            total: policiesData?.total ?? 0,
+            onChange: (p) => setPage(p),
+            showTotal: (total) => `共 ${total} 条分佣政策`,
+          }}
+        />
+      )}
 
       {/* Policy Modal */}
       <Modal
@@ -454,7 +489,7 @@ export default function PoliciesPage() {
               label: "特定来源计提规则",
               children: (
                 <div>
-                  {isDraft && (
+                  {canEditDraft && (
                     <div style={{ marginBottom: 16 }}>
                       <Button
                         type="primary"
@@ -476,25 +511,27 @@ export default function PoliciesPage() {
                     rowKey="id"
                     loading={amountRulesLoading}
                     dataSource={amountRulesData ?? []}
-                    columns={[
+                    scroll={{ x: "max-content" }}
+                    columns={([
                       { title: "范围模式", dataIndex: "buyer_scope", key: "buyer_scope" },
-                      { title: "商品 ID", dataIndex: "product_id", key: "product_id", ellipsis: true, render: (v) => v || "全部商品" },
-                      { title: "变体 SKU ID", dataIndex: "sku_id", key: "sku_id", ellipsis: true, render: (v) => v || "全部SKU" },
+                      { title: "商品 ID", dataIndex: "product_id", key: "product_id", ellipsis: true, render: (v: string | null) => v || "全部商品" },
+                      { title: "变体 SKU ID", dataIndex: "sku_id", key: "sku_id", ellipsis: true, render: (v: string | null) => v || "全部SKU" },
                       { title: "计提模式", dataIndex: "rule_mode", key: "rule_mode" },
                       {
                         title: "比例/定额",
                         key: "rate_val",
-                        render: (_, r) => {
+                        render: (_: unknown, r: CommissionAmountRuleRead) => {
                           if (r.percentage_rate) return `${(Number(r.percentage_rate) * 100).toFixed(1)}%`;
                           if (r.amount_per_unit) return `¥${r.amount_per_unit}/件`;
                           return "-";
                         },
                       },
-                      ...(isDraft
+                      ...(canEditDraft
                         ? [
                             {
                               title: "操作",
                               key: "actions",
+                              width: "1%",
                               render: (_: unknown, r: CommissionAmountRuleRead) => (
                                 <Popconfirm
                                   title="确认删除该规则？"
@@ -508,7 +545,11 @@ export default function PoliciesPage() {
                             },
                           ]
                         : []),
-                    ]}
+                    ] as ColumnsType<CommissionAmountRuleRead>).map((col) => ({
+                      ...col,
+                      onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+                      onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+                    }))}
                     pagination={false}
                   />
                 </div>
@@ -519,7 +560,7 @@ export default function PoliciesPage() {
               label: "三级分配矩阵",
               children: (
                 <div>
-                  {isDraft && (
+                  {canEditDraft && (
                     <div style={{ marginBottom: 16 }}>
                       <Button
                         type="primary"
@@ -541,25 +582,27 @@ export default function PoliciesPage() {
                     rowKey="id"
                     loading={distRulesLoading}
                     dataSource={distRulesData ?? []}
-                    columns={[
-                      { title: "上线层级", dataIndex: "ancestor_depth", key: "ancestor_depth", render: (d) => `${d} 级上级 (深度)` },
+                    scroll={{ x: "max-content" }}
+                    columns={([
+                      { title: "上线层级", dataIndex: "ancestor_depth", key: "ancestor_depth", render: (d: number) => `${d} 级上级 (深度)` },
                       { title: "购买人等级", dataIndex: "buyer_level_id", key: "buyer_level_id", ellipsis: true },
                       { title: "受益人等级", dataIndex: "beneficiary_level_id", key: "beneficiary_level_id", ellipsis: true },
                       { title: "分配方式", dataIndex: "allocation_mode", key: "allocation_mode" },
                       {
                         title: "分配比例/定额",
                         key: "alloc_val",
-                        render: (_, r) => {
+                        render: (_: unknown, r: CommissionDistributionRuleRead) => {
                           if (r.rate) return `${(Number(r.rate) * 100).toFixed(1)}%`;
                           if (r.amount_per_unit) return `¥${r.amount_per_unit}/件`;
                           return "-";
                         },
                       },
-                      ...(isDraft
+                      ...(canEditDraft
                         ? [
                             {
                               title: "操作",
                               key: "actions",
+                              width: "1%",
                               render: (_: unknown, r: CommissionDistributionRuleRead) => (
                                 <Popconfirm
                                   title="确认删除该分配规则？"
@@ -573,7 +616,11 @@ export default function PoliciesPage() {
                             },
                           ]
                         : []),
-                    ]}
+                    ] as ColumnsType<CommissionDistributionRuleRead>).map((col) => ({
+                      ...col,
+                      onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+                      onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+                    }))}
                     pagination={false}
                   />
                 </div>

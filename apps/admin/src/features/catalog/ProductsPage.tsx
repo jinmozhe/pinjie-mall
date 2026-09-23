@@ -22,6 +22,7 @@ import {
   message,
 } from "antd";
 import { useState } from "react";
+import type { ColumnsType } from "antd/es/table";
 
 import { PageFrame } from "@/components/PageFrame";
 import { ResourceTable } from "@/components/ResourceTable";
@@ -107,7 +108,7 @@ export function ProductsPage() {
       {!allowed ? (
         <Alert type="warning" title="无权查看商品管理" />
       ) : (
-        <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+        <Space direction="vertical" size="large" style={{ width: "100%" }}>
           <Card size="small">
             <Form
               layout="inline"
@@ -308,17 +309,17 @@ export function ProductsPage() {
             rowKey="id"
             scroll={{ x: "max-content" }}
             dataSource={inspectProduct.skus}
-            columns={[
+            columns={([
               { title: "SKU 编码", dataIndex: "code" },
               {
                 title: "售价",
                 dataIndex: "price",
-                render: (v) => `￥${v}`,
+                render: (v: string | number) => `￥${v}`,
               },
               {
                 title: "划线原价",
                 dataIndex: "market_price",
-                render: (v) => (v ? `￥${v}` : "-"),
+                render: (v: string | number | null) => (v ? `￥${v}` : "-"),
               },
               {
                 title: "状态",
@@ -340,7 +341,11 @@ export function ProductsPage() {
                   </Button>
                 ),
               },
-            ]}
+            ] as ColumnsType<SkuRead>).map((col) => ({
+              ...col,
+              onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+              onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+            }))}
           />
         </Drawer>
       )}

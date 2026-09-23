@@ -154,14 +154,14 @@ export function BrandsPage() {
               title: "操作",
               width: "1%",
               render: (_, row) =>
-                canUpdate && (
+                canUpdate ? (
                   <Button
                     icon={<EditOutlined />}
                     onClick={() => setEdit({ target: row })}
                   >
                     编辑
                   </Button>
-                ),
+                ) : null,
             },
           ]}
         />

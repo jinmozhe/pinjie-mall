@@ -102,7 +102,7 @@ export function ProductEditor({
           <Input maxLength={200} placeholder="例如：品界特级有机绿茶 250g" />
         </Form.Item>
 
-        <Space orientation="horizontal" size="middle" style={{ width: "100%" }}>
+        <Space size="middle" style={{ width: "100%" }}>
           <Form.Item
             name="category_id"
             label="所属分类"
@@ -149,7 +149,7 @@ export function ProductEditor({
               title="新建商品时创建首个标准货品，后续可在商品列表中新增变体或进行多规格转换。"
               style={{ marginBottom: 16 }}
             />
-            <Space orientation="horizontal" size="middle" style={{ width: "100%" }}>
+            <Space size="middle" style={{ width: "100%" }}>
               <Form.Item
                 name="sku_code"
                 label="SKU 编码"
