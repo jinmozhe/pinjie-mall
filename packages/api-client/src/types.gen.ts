@@ -2127,11 +2127,27 @@ export type CommerceQuoteRead = {
      */
     buyer_level_state: 'none' | 'active' | 'disabled';
     /**
+     * Buyer Level Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_level_snapshot: {
+        [key: string]: unknown;
+    };
+    /**
      * Shipping Rule Id
      *
      * 当前业务字段，具体语义由所属请求或响应模型定义
      */
     shipping_rule_id: string | null;
+    /**
+     * Shipping Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    shipping_snapshot: {
+        [key: string]: unknown;
+    };
     /**
      * Fingerprint
      *
@@ -6371,6 +6387,14 @@ export type QuoteLineRead = {
      * 当前业务字段，具体语义由所属请求或响应模型定义
      */
     price_source: string;
+    /**
+     * Pricing Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    pricing_snapshot: {
+        [key: string]: unknown;
+    };
 };
 
 /**

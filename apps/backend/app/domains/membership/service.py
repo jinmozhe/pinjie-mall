@@ -463,8 +463,8 @@ class MembershipService:
         for sku, product in catalog:
             self._assert_sellable(sku, product, categories)
             quantity = quantities[sku.id]
-            base = self._wholesale_price(sku, quantity)
-            unit_price, source = self._member_price(
+            base, wholesale_snapshot = self._wholesale_price(sku, quantity)
+            unit_price, source, member_snapshot = self._member_price(
                 sku, product, categories, base, level, by_sku, by_product, by_category
             )
             line_amount = self._money(unit_price * quantity)
@@ -478,13 +478,34 @@ class MembershipService:
                     unit_price=unit_price,
                     line_amount=line_amount,
                     price_source=source,
+                    pricing_snapshot={
+                        "schema_version": 1,
+                        "product_revision": product.revision,
+                        "sku_id": str(sku.id),
+                        "quantity": quantity,
+                        "base_price": str(sku.price),
+                        "wholesale": wholesale_snapshot,
+                        "member": member_snapshot,
+                        "base_unit_price": str(base),
+                        "final_unit_price": str(unit_price),
+                        "rounding": "unit_half_up_2dp",
+                    },
                 )
             )
         lines.sort(key=lambda line: str(line.sku_id))
         items_amount = self._money(sum((line.line_amount for line in lines), Decimal("0.00")))
-        freight, rule_id = await self._freight(product_types.pop(), items_amount, data.province_code)
+        freight, rule_id, shipping_snapshot = await self._freight(product_types.pop(), items_amount, data.province_code)
         total = self._money(items_amount + freight)
-        fingerprint = self._fingerprint(user_id, lines, level.id if level else None, state, freight, rule_id)
+        level_snapshot: dict[str, object] = {
+            "schema_version": 1,
+            "state": state,
+            "level_id": str(level.id) if level else None,
+            "code": level.code if level else None,
+            "name": level.name if level else None,
+            "revision": level.revision if level else None,
+            "discount_factor": str(level.discount_factor) if level else None,
+        }
+        fingerprint = self._fingerprint(user_id, lines, level_snapshot, shipping_snapshot)
         return CommerceQuoteRead(
             items=lines,
             items_amount=items_amount,
@@ -492,7 +513,9 @@ class MembershipService:
             total_amount=total,
             buyer_level_id=level.id if level else None,
             buyer_level_state=state,
+            buyer_level_snapshot=level_snapshot,
             shipping_rule_id=rule_id,
+            shipping_snapshot=shipping_snapshot,
             fingerprint=fingerprint,
         )
 
@@ -508,9 +531,9 @@ class MembershipService:
 
     async def _freight(
         self, product_type: str, items_amount: Decimal, province_code: str | None
-    ) -> tuple[Decimal, UUID | None]:
+    ) -> tuple[Decimal, UUID | None, dict[str, object]]:
         if product_type == "virtual":
-            return Decimal("0.00"), None
+            return Decimal("0.00"), None, {"schema_version": 1, "mode": "virtual", "freight_amount": "0.00"}
         if province_code is None:
             raise AppException(status_code=422, code=ErrorCode.CHECKOUT_INVALID, message="实物商品报价需要省级行政编码")
         setting = await self._repository.setting("order_shipping")
@@ -522,17 +545,43 @@ class MembershipService:
             raise self._configuration_error() from exc
         selected = next((rule for rule in value.region_rules if province_code in rule.province_codes), None)
         rule = selected or value.default_rule
+        snapshot: dict[str, object] = {
+            "schema_version": 1,
+            "mode": "platform",
+            "setting_id": str(setting.id),
+            "setting_revision": setting.revision,
+            "province_code": province_code,
+            "matched_rule": {
+                "id": str(selected.id) if selected else None,
+                "name": selected.name if selected else "default",
+                "province_codes": selected.province_codes if selected else None,
+                "source": "region" if selected else "default",
+            },
+            "free_shipping_threshold": str(rule.free_shipping_threshold)
+            if rule.free_shipping_threshold is not None
+            else None,
+            "fixed_fee": str(rule.fixed_fee),
+            "basis_amount": str(items_amount),
+        }
         if rule.free_shipping_threshold is not None and items_amount >= rule.free_shipping_threshold:
-            return Decimal("0.00"), selected.id if selected else None
-        return self._money(rule.fixed_fee), selected.id if selected else None
+            snapshot.update({"decision": "free_shipping_threshold_met", "freight_amount": "0.00"})
+            return Decimal("0.00"), selected.id if selected else None, snapshot
+        freight = self._money(rule.fixed_fee)
+        snapshot.update({"decision": "fixed_fee", "freight_amount": str(freight)})
+        return freight, selected.id if selected else None, snapshot
 
     @staticmethod
-    def _wholesale_price(sku: ProductSku, quantity: int) -> Decimal:
+    def _wholesale_price(sku: ProductSku, quantity: int) -> tuple[Decimal, dict[str, object]]:
+        matched_tier: dict[str, object] | None = None
         price = sku.price
         for tier in sku.wholesale_prices:
             if int(str(tier["min_quantity"])) <= quantity:
+                matched_tier = {"min_quantity": int(str(tier["min_quantity"])), "unit_price": str(tier["unit_price"])}
                 price = Decimal(str(tier["unit_price"]))
-        return MembershipService._money(price)
+        return MembershipService._money(price), {
+            "decision": "wholesale_tier" if matched_tier else "base_price",
+            "matched_tier": matched_tier,
+        }
 
     @staticmethod
     def _member_price(
@@ -544,12 +593,16 @@ class MembershipService:
         by_sku: dict[UUID | None, MemberPriceRule],
         by_product: dict[UUID | None, MemberPriceRule],
         by_category: dict[UUID | None, MemberPriceRule],
-    ) -> tuple[Decimal, str]:
+    ) -> tuple[Decimal, str, dict[str, object]]:
         if level is None:
-            return base, "wholesale_or_base"
+            return base, "wholesale_or_base", {"decision": "buyer_level_unavailable"}
         for source, rule in (("sku_fixed", by_sku.get(sku.id)), ("product_fixed", by_product.get(product.id))):
             if rule is not None and rule.price_mode == "fixed":
-                return MembershipService._money(rule.fixed_price or Decimal("0.00")), source
+                return (
+                    MembershipService._money(rule.fixed_price or Decimal("0.00")),
+                    source,
+                    MembershipService._rule_snapshot(rule),
+                )
         candidates = [by_sku.get(sku.id), by_product.get(product.id)]
         current_id: UUID | None = product.category_id
         while current_id is not None:
@@ -560,14 +613,42 @@ class MembershipService:
             if rule is None:
                 continue
             if rule.price_mode == "exclude":
-                return base, "member_excluded"
+                return base, "member_excluded", MembershipService._rule_snapshot(rule)
             if rule.price_mode == "discount":
                 if rule.discount_factor is None:
                     raise AppException(
                         status_code=503, code=ErrorCode.CONFIGURATION_ERROR, message="会员折扣规则缺少折扣因子"
                     )
-                return MembershipService._money(base * rule.discount_factor), f"{rule.scope_type}_discount"
-        return MembershipService._money(base * level.discount_factor), "level_discount"
+                return (
+                    MembershipService._money(base * rule.discount_factor),
+                    f"{rule.scope_type}_discount",
+                    MembershipService._rule_snapshot(rule),
+                )
+        return (
+            MembershipService._money(base * level.discount_factor),
+            "level_discount",
+            {
+                "decision": "level_discount",
+                "level_id": str(level.id),
+                "level_revision": level.revision,
+                "discount_factor": str(level.discount_factor),
+            },
+        )
+
+    @staticmethod
+    def _rule_snapshot(rule: MemberPriceRule) -> dict[str, object]:
+        return {
+            "decision": "member_price_rule",
+            "rule_id": str(rule.id),
+            "rule_revision": rule.revision,
+            "scope_type": rule.scope_type,
+            "price_mode": rule.price_mode,
+            "sku_id": str(rule.sku_id) if rule.sku_id else None,
+            "product_id": str(rule.product_id) if rule.product_id else None,
+            "category_id": str(rule.category_id) if rule.category_id else None,
+            "fixed_price": str(rule.fixed_price) if rule.fixed_price is not None else None,
+            "discount_factor": str(rule.discount_factor) if rule.discount_factor is not None else None,
+        }
 
     @staticmethod
     def _assert_sellable(sku: ProductSku, product: Product, categories: dict[UUID, Category]) -> None:
@@ -588,18 +669,14 @@ class MembershipService:
     def _fingerprint(
         user_id: UUID,
         lines: list[QuoteLineRead],
-        level_id: UUID | None,
-        state: str,
-        freight: Decimal,
-        shipping_rule_id: UUID | None,
+        level_snapshot: dict[str, object],
+        shipping_snapshot: dict[str, object],
     ) -> str:
         payload = {
             "user_id": str(user_id),
             "lines": [line.model_dump(mode="json") for line in lines],
-            "level_id": str(level_id) if level_id else None,
-            "level_state": state,
-            "freight": str(freight),
-            "shipping_rule_id": str(shipping_rule_id) if shipping_rule_id else None,
+            "level": level_snapshot,
+            "shipping": shipping_snapshot,
         }
         return hashlib.sha256(
             json.dumps(payload, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode()

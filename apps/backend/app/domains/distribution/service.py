@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
+from app.db.models.commerce_lifecycle import Fulfillment, RefundRequest
 from app.db.models.distribution import (
     CommissionRecord,
     CommissionRecovery,
@@ -18,12 +19,12 @@ from app.db.models.distribution import (
     WalletLedger,
     WithdrawalRequest,
 )
-from app.db.models.order import Order, OrderItem
+from app.db.models.order import Order
 from app.db.transaction import transaction_scope
-from app.domains.commissioning import CommissionPolicyService
 from app.domains.durable_tasks import DurableTaskService
 from app.domains.users import UserAccessService
 
+from .commission_freeze import freeze_paid_commissions
 from .repository import DistributionRepository
 from .schemas import (
     CommissionPage,
@@ -436,188 +437,34 @@ class DistributionService:
     async def freeze_commissions_for_payment_in_open_transaction(
         self, *, order_id: UUID, source_user_id: UUID, base_amount: Decimal, paid_at: datetime
     ) -> None:
-        order = await self.session.get(Order, order_id, with_for_update=True)
-        if order is None:
-            raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
-        if order.commission_result_snapshot is not None:
-            return
-        decision = await CommissionPolicyService(session=self.session).active_decision_context_in_open_transaction()
-        control = decision.control
-        enabled = control.commissions_enabled
-        policy = decision.policy
-        items = list(
-            await self.session.scalars(select(OrderItem).where(OrderItem.order_id == order_id).order_by(OrderItem.id))
-        )
-        results: list[dict[str, object]] = []
-        if not enabled or policy is None:
-            order.commission_result_snapshot = {
-                "schema_version": 1,
-                "calculation_version": "commission_budget_v1",
-                "confirmed_at": paid_at.isoformat(),
-                "control": {
-                    "setting_id": str(decision.control_id),
-                    "revision": control.revision,
-                    "commissions_enabled": enabled,
-                },
-                "policy_id": None,
-                "policy_content_version": None,
-                "results": results,
-            }
-            await self.session.flush()
-            return
-        amount_rules = decision.amount_rules
-        distribution_rules = decision.distribution_rules
-        buyer = await self.repository.profile(source_user_id, lock=True)
-        buyer_level_id = buyer.level_id if buyer else None
-        for item in items:
-            source = next(
-                (rule for rule in amount_rules if rule.sku_id == item.sku_id and rule.buyer_level_id == buyer_level_id),
-                None,
-            )
-            source = source or next(
-                (rule for rule in amount_rules if rule.sku_id == item.sku_id and rule.buyer_level_id is None), None
-            )
-            source = source or next(
-                (
-                    rule
-                    for rule in amount_rules
-                    if rule.product_id == item.product_id and rule.buyer_level_id == buyer_level_id
-                ),
-                None,
-            )
-            source = source or next(
-                (rule for rule in amount_rules if rule.product_id == item.product_id and rule.buyer_level_id is None),
-                None,
-            )
-            mode = source.rule_mode if source else policy.default_mode
-            source_amount = Decimal("0.00")
-            if mode == "fixed_amount":
-                source_amount = self._money(
-                    (
-                        (source.amount_per_unit or Decimal("0"))
-                        if source
-                        else (policy.default_amount_per_unit or Decimal("0"))
-                    )
-                    * item.quantity
-                )
-            elif mode == "percentage":
-                source_amount = self._money(
-                    item.line_amount
-                    * (
-                        (source.percentage_rate or Decimal("0"))
-                        if source
-                        else (policy.default_percentage_rate or Decimal("0"))
-                    )
-                )
-            item.commission_snapshot = {
-                "schema_version": 1,
-                "policy_id": str(policy.id),
-                "policy_content_version": policy.content_version,
-                "source_rule_id": str(source.id) if source else None,
-                "source_mode": mode,
-                "source_amount": str(source_amount),
-                "quantity": item.quantity,
-                "line_amount": str(item.line_amount),
-                "rounding": "half_up_2dp",
-            }
-            budget = source_amount
-            ancestor_id = buyer.inviter_id if buyer and buyer.bound_at and buyer.bound_at <= paid_at else None
-            for depth in range(1, policy.max_depth + 1):
-                if ancestor_id is None:
-                    break
-                beneficiary = await self.repository.profile(ancestor_id, lock=True)
-                if beneficiary is None:
-                    break
-                rule = next(
-                    (
-                        candidate
-                        for candidate in distribution_rules
-                        if candidate.buyer_level_id == buyer_level_id
-                        and candidate.beneficiary_level_id == beneficiary.level_id
-                        and candidate.ancestor_depth == depth
-                    ),
-                    None,
-                )
-                candidate_amount = Decimal("0.00")
-                if rule and rule.allocation_mode == "percentage":
-                    candidate_amount = self._money(source_amount * (rule.rate or Decimal("0")))
-                elif rule:
-                    candidate_amount = self._money((rule.amount_per_unit or Decimal("0")) * item.quantity)
-                amount = min(candidate_amount, budget)
-                result = {
-                    "order_item_id": str(item.id),
-                    "ancestor_depth": depth,
-                    "beneficiary_user_id": str(beneficiary.user_id),
-                    "source_amount": str(source_amount),
-                    "candidate_amount": str(candidate_amount),
-                    "budget_before": str(budget),
-                    "amount": str(amount),
-                    "budget_after": str(budget - amount),
-                    "zero_reason": None if amount > 0 else "no_matrix_at_depth",
-                }
-                results.append(result)
-                if amount > 0:
-                    self.session.add(
-                        CommissionRecord(
-                            id=new_uuid7(),
-                            order_id=order.id,
-                            order_item_id=item.id,
-                            source_user_id=source_user_id,
-                            beneficiary_user_id=beneficiary.user_id,
-                            level=depth,
-                            base_amount=item.line_amount,
-                            policy_id=policy.id,
-                            rate=rule.rate if rule else None,
-                            amount=amount,
-                            recovered_amount=Decimal("0.00"),
-                            status="frozen",
-                            frozen_at=paid_at,
-                            settle_after=None,
-                            settled_at=None,
-                            recovered_at=None,
-                            revision=1,
-                            rule_snapshot={"schema_version": 1, **result},
-                        )
-                    )
-                budget -= amount
-                ancestor_id = (
-                    beneficiary.inviter_id if beneficiary.bound_at and beneficiary.bound_at <= paid_at else None
-                )
-        order.commission_policy_id = policy.id
-        order.commission_result_snapshot = {
-            "schema_version": 1,
-            "calculation_version": "commission_budget_v1",
-            "confirmed_at": paid_at.isoformat(),
-            "control": {
-                "setting_id": str(decision.control_id),
-                "revision": control.revision,
-                "commissions_enabled": True,
-            },
-            "policy_id": str(policy.id),
-            "policy_content_version": policy.content_version,
-            "results": results,
-        }
-        await self.session.flush()
-        return
+        await freeze_paid_commissions(self.session, order_id=order_id, source_user_id=source_user_id, paid_at=paid_at)
 
     async def schedule_settlement_for_delivery_in_open_transaction(
         self, order_id: UUID, delivered_at: datetime
     ) -> None:
         commissions = await self.repository.commissions_for_order(order_id, lock=True)
-        settle_after = delivered_at + timedelta(days=7)
+        scheduled_at: datetime | None = None
         changed = False
         for commission in commissions:
             if commission.status == "frozen" and commission.settle_after is None:
-                commission.settle_after = settle_after
+                delay_days = commission.rule_snapshot.get("settle_delay_days")
+                if not isinstance(delay_days, int) or isinstance(delay_days, bool) or delay_days < 0:
+                    raise AppException(
+                        status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="佣金冻结政策缺少有效结算等待期"
+                    )
+                commission.settle_after = delivered_at + timedelta(days=delay_days)
+                scheduled_at = (
+                    commission.settle_after if scheduled_at is None else min(scheduled_at, commission.settle_after)
+                )
                 commission.revision += 1
                 await self.repository.save(commission)
                 changed = True
-        if changed:
+        if changed and scheduled_at is not None:
             await DurableTaskService(self.session).enqueue_in_open_transaction(
                 task_type="commission_settlement",
                 business_key=f"commission-settlement:{order_id}",
                 payload={"schema_version": 1, "order_id": str(order_id)},
-                available_at=settle_after,
+                available_at=scheduled_at,
             )
 
     async def settle_due(self, limit: int = 100) -> int:
@@ -641,10 +488,36 @@ class DistributionService:
             ]
             return await self._settle_commissions_in_open_transaction(due, datetime.now(UTC))
 
+    async def _settlement_ready_in_open_transaction(self, commission: CommissionRecord) -> bool:
+        order = await self.session.get(Order, commission.order_id, with_for_update=True)
+        if order is None:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="佣金来源订单不存在")
+        fulfillment = (
+            await self.session.scalars(
+                select(Fulfillment)
+                .where(Fulfillment.order_id == order.id)
+                .with_for_update()
+                .execution_options(populate_existing=True)
+            )
+        ).one_or_none()
+        if fulfillment is None or fulfillment.status != "delivered":
+            return False
+        refunds = list(
+            await self.session.scalars(
+                select(RefundRequest)
+                .where(RefundRequest.order_id == order.id)
+                .order_by(RefundRequest.id)
+                .with_for_update()
+                .execution_options(populate_existing=True)
+            )
+        )
+        return not any(refund.status in {"requested", "approved"} for refund in refunds)
+
     async def _settle_commissions_in_open_transaction(self, commissions: list[CommissionRecord], now: datetime) -> int:
+        ready = [item for item in commissions if await self._settlement_ready_in_open_transaction(item)]
         settled = 0
-        await self.repository.lock_wallets(sorted({item.beneficiary_user_id for item in commissions}))
-        for commission in commissions:
+        await self.repository.lock_wallets(sorted({item.beneficiary_user_id for item in ready}))
+        for commission in ready:
             remaining = self._money(commission.amount - commission.recovered_amount)
             if remaining <= 0:
                 commission.status = "recovered"
