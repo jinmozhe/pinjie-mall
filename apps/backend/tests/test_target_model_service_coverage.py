@@ -718,33 +718,55 @@ async def test_membership_price_helpers_preserve_priority_and_sellability() -> N
         is_active=True,
         archived_at=None,
     )
-    level = SimpleNamespace(id=uuid7(), is_active=True, discount_factor=Decimal("0.900000"))
-    fixed = SimpleNamespace(price_mode="fixed", fixed_price=Decimal("6.66"), discount_factor=None, scope_type="sku")
-    excluded = SimpleNamespace(price_mode="exclude", fixed_price=None, discount_factor=None, scope_type="category")
-    assert MembershipService._wholesale_price(sku, 2) == Decimal("8.00")
-    assert MembershipService._member_price(
-        sku, product, {category_id: category}, Decimal("8.00"), level, {sku_id: fixed}, {}, {}
-    ) == (
-        Decimal("6.66"),
-        "sku_fixed",
+    level = SimpleNamespace(id=uuid7(), revision=1, is_active=True, discount_factor=Decimal("0.900000"))
+    fixed = SimpleNamespace(
+        id=uuid7(),
+        revision=1,
+        sku_id=sku_id,
+        product_id=None,
+        category_id=None,
+        price_mode="fixed",
+        fixed_price=Decimal("6.66"),
+        discount_factor=None,
+        scope_type="sku",
     )
-    assert MembershipService._member_price(
-        sku, product, {category_id: category}, Decimal("8.00"), level, {}, {}, {category_id: excluded}
-    ) == (
+    excluded = SimpleNamespace(
+        id=uuid7(),
+        revision=1,
+        sku_id=None,
+        product_id=None,
+        category_id=category_id,
+        price_mode="exclude",
+        fixed_price=None,
+        discount_factor=None,
+        scope_type="category",
+    )
+    assert MembershipService._wholesale_price(sku, 2) == (
         Decimal("8.00"),
-        "member_excluded",
+        {"decision": "wholesale_tier", "matched_tier": {"min_quantity": 2, "unit_price": "8.00"}},
     )
+    fixed_price = MembershipService._member_price(
+        sku, product, {category_id: category}, Decimal("8.00"), level, {sku_id: fixed}, {}, {}
+    )
+    assert fixed_price[:2] == (Decimal("6.66"), "sku_fixed")
+    assert fixed_price[2]["rule_id"] == str(fixed.id) and fixed_price[2]["rule_revision"] == 1
+    excluded_price = MembershipService._member_price(
+        sku, product, {category_id: category}, Decimal("8.00"), level, {}, {}, {category_id: excluded}
+    )
+    assert excluded_price[:2] == (Decimal("8.00"), "member_excluded")
+    assert excluded_price[2]["rule_id"] == str(excluded.id)
     assert MembershipService._member_price(
         sku, product, {category_id: category}, Decimal("8.00"), level, {}, {}, {}
     ) == (
         Decimal("7.20"),
         "level_discount",
+        {"decision": "level_discount", "level_id": str(level.id), "level_revision": 1, "discount_factor": "0.900000"},
     )
     MembershipService._assert_sellable(sku, product, {category_id: category})
     sku.is_active = False
     with pytest.raises(AppException):
         MembershipService._assert_sellable(sku, product, {category_id: category})
-    assert len(MembershipService._fingerprint(uuid7(), [], None, "none", Decimal("0.00"), None)) == 64
+    assert len(MembershipService._fingerprint(uuid7(), [], {"state": "none"}, {"mode": "virtual"})) == 64
 
 
 @pytest.mark.asyncio
@@ -1754,7 +1776,7 @@ async def test_membership_prices_shipping_and_quote_cover_customer_pricing_paths
     service._repository = store  # type: ignore[assignment]
     category = SimpleNamespace(id=category_id, parent_id=None, is_active=True)
     product = SimpleNamespace(
-        id=product_id, name="实物商品", product_type="physical", category_id=category_id, status="on_sale"
+        id=product_id, name="实物商品", product_type="physical", category_id=category_id, status="on_sale", revision=1
     )
     sku = SimpleNamespace(
         id=sku_id,
@@ -1768,6 +1790,7 @@ async def test_membership_prices_shipping_and_quote_cover_customer_pricing_paths
     store.catalog_rows = [(sku, product)]
     store.category_rows = [category]
     store.shipping_setting = SimpleNamespace(
+        id=uuid7(),
         setting_value={
             "schema_version": 1,
             "region_level": "province",
@@ -1907,7 +1930,9 @@ async def test_quote_preserves_zero_discount_and_rejects_missing_factor(scope, f
     user, sku_id, product_id, category_id, ancestor_id, level_id, rule_id = (uuid7() for _ in range(7))
     session = MemorySession()
     profile = SimpleNamespace(user_id=user, level_id=level_id)
-    level = SimpleNamespace(id=level_id, is_active=True, discount_factor=Decimal("0.8"))
+    level = SimpleNamespace(
+        id=level_id, code="vip", name="VIP", revision=1, is_active=True, discount_factor=Decimal("0.8")
+    )
     store = MembershipStore(session, profile, level, None)
     store.catalog_rows = [
         (
@@ -1919,7 +1944,12 @@ async def test_quote_preserves_zero_discount_and_rejects_missing_factor(scope, f
                 archived_at=None,
             ),
             SimpleNamespace(
-                id=product_id, category_id=category_id, name="折扣边界", product_type="virtual", status="on_sale"
+                id=product_id,
+                category_id=category_id,
+                name="折扣边界",
+                product_type="virtual",
+                status="on_sale",
+                revision=1,
             ),
         )
     ]
@@ -1928,6 +1958,9 @@ async def test_quote_preserves_zero_discount_and_rejects_missing_factor(scope, f
         SimpleNamespace(id=ancestor_id, parent_id=None, is_active=True),
     ]
     store.price_rule_rows[rule_id] = SimpleNamespace(
+        id=rule_id,
+        revision=1,
+        fixed_price=None,
         member_level_id=level_id,
         is_active=True,
         scope_type="category" if scope == "ancestor" else scope,
@@ -2298,7 +2331,9 @@ async def test_lifecycle_confirmation_guards_reject_inconsistent_external_facts(
         await service.confirm_verified_payment_in_open_transaction(payment_confirmation)
     service.orders = LifecycleGuardOrders(order)  # type: ignore[assignment]
     with pytest.raises(AppException):
-        await service.confirm_verified_payment_in_open_transaction(payment_confirmation)
+        await service.confirm_verified_payment_in_open_transaction(
+            payment_confirmation.model_copy(update={"channel": "alipay"})
+        )
     repository.attempt.status = "pending"
     with pytest.raises(AppException):
         await service.confirm_verified_payment_in_open_transaction(

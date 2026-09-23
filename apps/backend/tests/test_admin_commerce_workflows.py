@@ -20,9 +20,17 @@ from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
 from app.core.request_metadata import RequestMetadata
 from app.db.models import Admin, AdminSession, Asset, AuditEvent, User
-from app.db.models.commerce_lifecycle import Fulfillment, PaymentAttempt, RefundAttempt
-from app.db.models.distribution import CommissionRecord, MemberLevel, MemberProfile, MembershipQualificationEvent
+from app.db.models.commerce_lifecycle import Fulfillment, PaymentAttempt, RefundAttempt, RefundEvent, RefundRequest
+from app.db.models.distribution import (
+    CommissionRecord,
+    DurableTask,
+    MemberLevel,
+    MemberProfile,
+    MembershipQualificationEvent,
+)
+from app.db.models.inventory import InventoryAccount, InventoryMovement
 from app.db.models.order import Order
+from app.db.models.purchase import ProductPurchaseRecord
 from app.db.repositories.commerce_access import CommerceAccessRepository
 from app.db.transaction import transaction_scope
 from app.domains.addresses import AddressInput, AddressService
@@ -986,6 +994,226 @@ async def test_payment_and_refund_confirmation_reject_invalid_channel_amount_and
             confirmation.model_copy(update={"channel_refund_id": f"CONFLICT-{refund.id}"})
         )
     assert error.value.code == "ORDER_STATE_CONFLICT"
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("payment_status", ["created", "pending", "unknown"])
+async def test_unresolved_payment_blocks_expiry_and_cancellation_without_releasing_stock(shop, payment_status):
+    product, _, _, _ = await prepare_product(shop)
+    request = CheckoutRequest(request_id=new_uuid7(), items=[CheckoutLine(sku_id=product.skus[0].id, quantity=1)])
+    preview = await shop.orders.preview(shop.users[0], request)
+    order = await shop.orders.create(
+        shop.users[0], request.model_copy(update={"quote_fingerprint": preview.fingerprint})
+    )
+    attempt = await shop.lifecycle.initiate_payment(
+        shop.users[0], order.id, PaymentAttemptCreate(request_id=new_uuid7(), channel="wechat")
+    )
+    async with transaction_scope(shop.session):
+        await shop.session.execute(
+            update(PaymentAttempt).where(PaymentAttempt.id == attempt.id).values(status=payment_status)
+        )
+        await shop.session.execute(
+            update(Order).where(Order.id == order.id).values(expires_at=datetime.now(UTC) - timedelta(seconds=1))
+        )
+    assert not await shop.orders.expire_scheduled(order.id)
+    assert not await shop.orders.expire_scheduled(order.id)
+    with pytest.raises(AppException) as blocked:
+        await shop.orders.cancel(shop.users[0], order.id)
+    assert blocked.value.code == "ORDER_STATE_CONFLICT"
+    assert (await shop.orders.read(shop.users[0], order.id)).status == "pending_payment"
+    inventory = (
+        await shop.session.execute(
+            select(InventoryAccount.available, InventoryAccount.reserved).where(
+                InventoryAccount.sku_id == product.skus[0].id
+            )
+        )
+    ).one()
+    assert tuple(inventory) == (49, 1)
+    tasks = list(
+        await shop.session.scalars(select(DurableTask).where(DurableTask.business_key == f"payment-query:{attempt.id}"))
+    )
+    assert len(tasks) == 1 and tasks[0].task_type == "payment_query" and tasks[0].status == "pending"
+    assert (
+        await shop.session.scalar(select(PaymentAttempt.status).where(PaymentAttempt.id == attempt.id))
+        == payment_status
+    )
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("scenario", ["duplicate", "cancelled", "expired"])
+async def test_late_and_duplicate_payments_preserve_money_and_refund_only_extra_payment(shop, scenario):
+    product, _, _, _ = await prepare_product(shop)
+    request = CheckoutRequest(request_id=new_uuid7(), items=[CheckoutLine(sku_id=product.skus[0].id, quantity=1)])
+    preview = await shop.orders.preview(shop.users[0], request)
+    order = await shop.orders.create(
+        shop.users[0], request.model_copy(update={"quote_fingerprint": preview.fingerprint})
+    )
+    first = await shop.lifecycle.initiate_payment(
+        shop.users[0], order.id, PaymentAttemptCreate(request_id=new_uuid7(), channel="wechat")
+    )
+    extra = await shop.lifecycle.initiate_payment(
+        shop.users[0], order.id, PaymentAttemptCreate(request_id=new_uuid7(), channel="wechat")
+    )
+    confirmed_at = datetime.now(UTC)
+    confirmation = VerifiedPaymentConfirmation(
+        payment_attempt_id=extra.id,
+        channel="wechat",
+        channel_transaction_id=f"EXTRA-{extra.id}",
+        amount=order.total_amount,
+        currency="CNY",
+        confirmed_at=confirmed_at,
+        payload_hash="d" * 64,
+    )
+    if scenario == "duplicate":
+        await shop.lifecycle.confirm_verified_payment(
+            confirmation.model_copy(
+                update={"payment_attempt_id": first.id, "channel_transaction_id": f"FIRST-{first.id}"}
+            )
+        )
+        # Money has committed, but the order and reserved stock await the independent follow-up.
+        assert (await shop.orders.read(shop.users[0], order.id)).status == "pending_payment"
+        with pytest.raises(AppException) as blocked:
+            await shop.orders.cancel(shop.users[0], order.id)
+        assert blocked.value.code == "ORDER_STATE_CONFLICT"
+        await shop.lifecycle.confirm_order_scheduled(first.id)
+    elif scenario == "cancelled":
+        await shop.orders.cancel(shop.users[0], order.id)
+    else:
+        async with transaction_scope(shop.session):
+            await shop.session.execute(update(Order).where(Order.id == order.id).values(expires_at=confirmed_at))
+
+    # A locally closed or unavailable attempt must still retain a later verified money fact.
+    async with transaction_scope(shop.session):
+        await shop.session.execute(update(PaymentAttempt).where(PaymentAttempt.id == extra.id).values(status="closed"))
+    assert (await shop.lifecycle.confirm_verified_payment(confirmation)).status == "succeeded"
+    await shop.lifecycle.confirm_order_scheduled(extra.id)
+    await shop.lifecycle.confirm_order_scheduled(extra.id)
+    attempts = list(
+        await shop.session.scalars(select(RefundAttempt).where(RefundAttempt.payment_attempt_id == extra.id))
+    )
+    assert len(attempts) == 1
+    abnormal = attempts[0]
+    assert abnormal.purpose == ("duplicate_payment" if scenario == "duplicate" else "late_payment")
+    assert abnormal.refund_request_id is None and abnormal.amount == order.total_amount
+    abnormal_id = abnormal.id
+    await shop.session.commit()
+    refund_confirmation = VerifiedRefundConfirmation(
+        refund_attempt_id=abnormal_id,
+        channel="wechat",
+        payment_transaction_id=confirmation.channel_transaction_id,
+        amount=order.total_amount,
+        currency="CNY",
+        channel_refund_id=f"EXTRA-REFUND-{abnormal_id}",
+        confirmed_at=datetime.now(UTC),
+        payload_hash="e" * 64,
+    )
+    assert (await shop.lifecycle.confirm_verified_refund(refund_confirmation)).status == "succeeded"
+    await shop.lifecycle.complete_refund_scheduled(abnormal_id)
+    stored_order = (await shop.session.execute(select(Order.__table__).where(Order.id == order.id))).mappings().one()
+    assert stored_order["status"] == ("paid" if scenario == "duplicate" else "cancelled")
+    assert stored_order["accepted_payment_attempt_id"] == (first.id if scenario == "duplicate" else None)
+    assert await shop.session.scalar(select(RefundRequest.id).where(RefundRequest.order_id == order.id)) is None
+    inventory = await shop.session.scalar(
+        select(InventoryAccount.available).where(InventoryAccount.sku_id == product.skus[0].id)
+    )
+    assert inventory == (49 if scenario == "duplicate" else 50)
+    contributions = list(
+        await shop.session.scalars(
+            select(MembershipQualificationEvent).where(MembershipQualificationEvent.order_id == order.id)
+        )
+    )
+    assert len(contributions) == (1 if scenario == "duplicate" else 0)
+    assert all(row.amount_delta == order.items_amount for row in contributions)
+
+
+@pytest.mark.integration
+async def test_refund_followup_rolls_back_and_retries_without_repeating_effects(shop):
+    order, product, payment = await prepare_paid_order(shop)
+    refund = await shop.lifecycle.create_refund(
+        shop.users[0], order.id, RefundRequestCreate(request_id=new_uuid7(), reason="补偿失败恢复")
+    )
+    attempt_id = await shop.session.scalar(select(RefundAttempt.id).where(RefundAttempt.refund_request_id == refund.id))
+    assert attempt_id is not None
+    confirmation = VerifiedRefundConfirmation(
+        refund_attempt_id=attempt_id,
+        channel="wechat",
+        payment_transaction_id=payment.channel_transaction_id,
+        amount=refund.amount,
+        currency="CNY",
+        channel_refund_id=f"REFUND-RECOVERY-{refund.id}",
+        confirmed_at=datetime.now(UTC),
+        payload_hash="f" * 64,
+    )
+    assert (await shop.lifecycle.confirm_verified_refund(confirmation)).status == "succeeded"
+
+    async def snapshot():
+        # Read persisted columns directly so rollback assertions cannot reuse stale ORM instances.
+        result = {}
+        for model, predicate in (
+            (RefundRequest, RefundRequest.id == refund.id),
+            (RefundAttempt, RefundAttempt.id == attempt_id),
+            (RefundEvent, (RefundEvent.refund_request_id == refund.id) | (RefundEvent.refund_attempt_id == attempt_id)),
+            (InventoryAccount, InventoryAccount.sku_id == product.skus[0].id),
+            (InventoryMovement, InventoryMovement.sku_id == product.skus[0].id),
+            (ProductPurchaseRecord, ProductPurchaseRecord.order_id == order.id),
+            (CommissionRecord, CommissionRecord.order_id == order.id),
+            (MembershipQualificationEvent, MembershipQualificationEvent.order_id == order.id),
+            (Fulfillment, Fulfillment.order_id == order.id),
+            (DurableTask, DurableTask.business_key == f"refund-followup:{attempt_id}"),
+        ):
+            rows = await shop.session.execute(select(model.__table__).where(predicate).order_by(model.id))
+            result[model.__tablename__] = [dict(row) for row in rows.mappings()]
+        await shop.session.commit()
+        return result
+
+    confirmed = await snapshot()
+    assert confirmed["refund_requests"][0]["status"] == "approved"
+    assert confirmed["refund_requests"][0]["completed_at"] is None
+    assert confirmed["refund_attempts"][0]["confirmed_at"] == confirmation.confirmed_at
+    assert len(confirmed["durable_tasks"]) == 1
+    assert confirmed["durable_tasks"][0]["status"] == "pending"
+    assert confirmed["product_purchase_records"][0]["status"] == "confirmed"
+    assert len(confirmed["membership_qualification_events"]) == 1
+
+    # Persist a conflicting fulfillment fact in the isolated fixture. The real service rejects it
+    # after inventory, purchase, commission and membership writes, exercising the transaction rollback.
+    async with transaction_scope(shop.session):
+        await shop.session.execute(
+            update(Fulfillment).where(Fulfillment.order_id == order.id).values(status="cancelled")
+        )
+    before_failure = await snapshot()
+    with pytest.raises(AppException) as error:
+        await shop.lifecycle.complete_refund_scheduled(attempt_id)
+    assert error.value.code == "ORDER_STATE_CONFLICT"
+    assert error.value.message == "退款完成时履约状态异常"
+    assert await snapshot() == before_failure
+
+    async with transaction_scope(shop.session):
+        await shop.session.execute(
+            update(Fulfillment)
+            .where(Fulfillment.order_id == order.id)
+            .values(status=confirmed["fulfillments"][0]["status"])
+        )
+    await shop.lifecycle.complete_refund_scheduled(attempt_id)
+    completed = await snapshot()
+    assert completed["refund_requests"][0]["status"] == "completed"
+    assert completed["refund_requests"][0]["completed_at"] == confirmation.confirmed_at
+    assert completed["refund_attempts"] == confirmed["refund_attempts"]
+    assert completed["inventory_accounts"][0]["available"] == (
+        confirmed["inventory_accounts"][0]["available"] + order.items[0].quantity
+    )
+    assert len(completed["inventory_movements"]) == len(confirmed["inventory_movements"]) + 1
+    assert completed["product_purchase_records"][0]["status"] == "refunded"
+    assert completed["fulfillments"][0]["status"] == "cancelled"
+    qualification = completed["membership_qualification_events"]
+    assert len(qualification) == 2
+    assert sum(row["amount_delta"] for row in qualification) == Decimal("0.00")
+    assert completed["durable_tasks"] == confirmed["durable_tasks"]
+
+    # Simulate redelivery after the business commit but before the worker acknowledges its task.
+    await shop.lifecycle.complete_refund_scheduled(attempt_id)
+    await shop.lifecycle.confirm_verified_refund(confirmation)
+    assert await snapshot() == completed
 
 
 @pytest.mark.integration
