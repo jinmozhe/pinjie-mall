@@ -21,6 +21,12 @@ class CheckoutRequest(BaseModel):
     quote_fingerprint: str | None = Field(default=None, min_length=64, max_length=64)
 
 
+class OrderAcceptance(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    revision: int = Field(gt=0)
+
+
 class QuoteLine(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -89,6 +95,7 @@ class OrderRead(BaseModel):
     expires_at: datetime
     created_at: datetime
     revision: int
+    acceptance_status: str
     items: list[OrderItemRead]
 
 

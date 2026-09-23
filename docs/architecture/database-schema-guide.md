@@ -1763,7 +1763,7 @@ erDiagram
 | user_addresses | 部分 U(user_id) WHERE is_default；FK user RESTRICT；revision > 0 | (user_id,id)；锁用户控制最多 20 条和默认替补 |
 | orders | U(user_id,request_id)、U(zero_confirmation_id)、U(accepted_payment_attempt_id)；用户/等级/政策/接单人 FK RESTRICT；金额等式与非负；CNY；状态/确认/取消字段互斥 | (user_id,id)、部分 (expires_at,id) WHERE status='pending_payment'；接受付款复合 FK (accepted_payment_attempt_id,id) → payment_attempts(id,order_id)，不能接受别单支付 |
 | order_items | U(order_id,sku_id)、U(id,order_id)、U(id,product_id)；FK order RESTRICT；目标增加 (sku_id,product_id) → SKU 完整归属；quantity 1 至 999，line_amount = unit_price × quantity | (order_id,id)；旧历史缺商品实体时不得伪造补 FK，应先处理存量证据 |
-| order_events | U(order_id,revision)；FK order RESTRICT；event_type 与主状态一致；接单允许同主状态 | (order_id,id)；actor_type 可含 payment，仅追加 |
+| order_events | U(order_id,revision)；FK order RESTRICT；event_type 与主状态一致；接单允许同主状态 | (order_id,id)；actor_type 可含 payment、admin，仅追加 |
 | payment_attempts | U(user_id,request_id)、U(merchant_reference)、U(channel,channel_transaction_id)、U(id,order_id)；amount > 0、CNY | (order_id,id)、(status,id)；不对 order_id 建 succeeded 唯一约束，以免丢弃第二笔真实收款 |
 | payment_events | U(payment_attempt_id,revision)、FK 支付 RESTRICT；状态枚举和主体事件同事务 | (payment_attempt_id,id)；只追加，未知结果不当失败 |
 | fulfillments | U(order_id)、FK order RESTRICT；类型与状态对应；shipped 必须有物流与时间，delivered 必须有交付时间，cancelled 不得已实际交付 | 部分 (auto_confirm_at,id) WHERE status='shipped'；同一订单首期一履约单 |
@@ -2051,7 +2051,7 @@ orders.status 仅为 pending_payment → paid 或 pending_payment → cancelled�
 
 ### 8.4 接单、履约与售后阻断
 
-接单仅允许已成交且无 requested/approved/completed 售后订单，pending → accepted 后写管理员、时间及订单事件；不提供任意撤回。发货/虚拟交付锁同一订单并复查退款，不能信任前端按钮状态；completed 即使后续补偿尚未完成也永久阻断新履约。
+接单仅允许持有 `orders:accept` 权限的管理员对已成交且无 requested/approved/completed 售后订单执行，订单锁内 pending → accepted 后写管理员、时间及管理员订单事件；不提供任意撤回。发货、虚拟交付、用户确认收货和自动确认均先锁同一订单，再锁履约与退款并复查状态，不能信任前端按钮状态；completed 即使后续补偿尚未完成也永久阻断新履约。
 
 | 对象 | 合法转换 | 同步动作 |
 | --- | --- | --- |
@@ -2060,7 +2060,7 @@ orders.status 仅为 pending_payment → paid 或 pending_payment → cancelled�
 | 未交付售后终止 | awaiting_shipment/awaiting_delivery → cancelled | 仅退款完成后终止，写 cancelled_at 和履约事件 |
 | 已实际发货/交付 | 保留 shipped/delivered 历史 | 本期拒绝新增售后申请；存量历史售后按原权益处理，不抹去发货记录 |
 
-未决申请阻断接单、发货、自动确认以及尚未结算佣金；被拒绝后恢复原有到期任务，不重新生成权益或改写原等待期。已实际交付时间是佣金等待起点，与创建、付款、接单时间分开。
+未决申请阻断接单、发货、虚拟交付、用户确认收货、自动确认以及尚未结算佣金；退款申请和上述履约操作都先取得订单锁，之后按履约、退款顺序锁定相关记录；被拒绝后恢复原有到期任务，不重新生成权益或改写原等待期。已实际交付时间是佣金等待起点，与创建、付款、接单时间分开。
 
 发货事务同时写 auto_confirm_fulfillment 任务；交付确认事务同时按原政策 settle_delay_days 设置冻结权益 settle_after 并登记 commission_settle 任务。确认收货与自动确认竞争时只有首次合法转换写事件和任务，重复调用返回已有事实。
 

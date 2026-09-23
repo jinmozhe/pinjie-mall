@@ -56,7 +56,7 @@ from app.domains.lifecycle.schemas import (
     VerifiedRefundConfirmation,
     VirtualDeliveryCreate,
 )
-from app.domains.orders import CheckoutLine, CheckoutRequest
+from app.domains.orders import CheckoutLine, CheckoutRequest, OrderAcceptance
 from app.domains.products import (
     CategoryInput,
     CategoryUpdate,
@@ -407,6 +407,9 @@ async def test_catalog_operating_flow_and_atomic_batch_conflicts(shop):
 async def test_paid_delivery_refund_wallet_and_reporting_flow(shop, physical):
     order, product, confirmation = await prepare_paid_order(shop, physical)
     assert (await shop.orders.admin_read(order.id)).status == "paid"
+    await shop.admin_lifecycle.accept_order(
+        order.id, OrderAcceptance(revision=(await shop.orders.admin_read(order.id)).revision)
+    )
     assert (await shop.lifecycle.fulfillment_for_user(shop.users[0], order.id)).revision == 1
     await shop.session.commit()
     if physical:
@@ -565,6 +568,9 @@ async def test_reporting_rejects_unsupported_filters_and_stale_selection(shop):
 @pytest.mark.integration
 async def test_rejected_withdrawal_and_refund_preserve_money_and_idempotency(shop):
     order, _, confirmation = await prepare_paid_order(shop)
+    await shop.admin_lifecycle.accept_order(
+        order.id, OrderAcceptance(revision=(await shop.orders.admin_read(order.id)).revision)
+    )
     await shop.admin_lifecycle.deliver_virtual(order.id, VirtualDeliveryCreate(revision=1, delivery_reference="交付"))
     async with transaction_scope(shop.session):
         await shop.session.execute(
@@ -595,12 +601,10 @@ async def test_rejected_withdrawal_and_refund_preserve_money_and_idempotency(sho
             user, request.model_copy(update={"request_id": new_uuid7(), "amount": Decimal("21.00")})
         )
     refund_order, _, _ = await prepare_paid_order(shop)
-    async with transaction_scope(shop.session):
-        await shop.session.execute(
-            update(Order)
-            .where(Order.id == refund_order.id)
-            .values(acceptance_status="accepted", accepted_at=datetime.now(UTC), accepted_by_id=shop.actor)
-        )
+    accepted = await shop.admin_lifecycle.accept_order(
+        refund_order.id, OrderAcceptance(revision=(await shop.orders.admin_read(refund_order.id)).revision)
+    )
+    assert accepted.acceptance_status == "accepted"
     refund_input = RefundRequestCreate(request_id=new_uuid7(), reason="售后测试")
     refund = await shop.lifecycle.create_refund(shop.users[0], refund_order.id, refund_input)
     with pytest.raises(AppException):
@@ -641,6 +645,9 @@ async def test_rejected_withdrawal_and_refund_preserve_money_and_idempotency(sho
 @pytest.mark.integration
 async def test_expiration_auto_delivery_and_missing_resource_boundaries(shop):
     order, product, _ = await prepare_paid_order(shop, physical=True)
+    await shop.admin_lifecycle.accept_order(
+        order.id, OrderAcceptance(revision=(await shop.orders.admin_read(order.id)).revision)
+    )
     await shop.admin_lifecycle.ship(order.id, ShipmentCreate(carrier="测试", tracking_number="TEST", revision=1))
     async with transaction_scope(shop.session):
         await shop.session.execute(
@@ -805,6 +812,9 @@ async def test_trusted_payment_confirmation_rejects_conflicting_replay(shop):
 @pytest.mark.integration
 async def test_fulfillment_rejects_wrong_type_and_stale_versions(shop):
     virtual_order, _, _ = await prepare_paid_order(shop)
+    await shop.admin_lifecycle.accept_order(
+        virtual_order.id, OrderAcceptance(revision=(await shop.orders.admin_read(virtual_order.id)).revision)
+    )
     with pytest.raises(AppException) as error:
         await shop.admin_lifecycle.ship(
             virtual_order.id, ShipmentCreate(carrier="测试物流", tracking_number="VIRTUAL", revision=1)
@@ -829,6 +839,9 @@ async def test_fulfillment_rejects_wrong_type_and_stale_versions(shop):
     assert error.value.code == "ORDER_STATE_CONFLICT"
 
     physical_order, _, _ = await prepare_paid_order(shop, physical=True)
+    await shop.admin_lifecycle.accept_order(
+        physical_order.id, OrderAcceptance(revision=(await shop.orders.admin_read(physical_order.id)).revision)
+    )
     with pytest.raises(AppException) as error:
         await shop.admin_lifecycle.deliver_virtual(
             physical_order.id, VirtualDeliveryCreate(delivery_reference="错误交付", revision=1)
@@ -978,6 +991,9 @@ async def test_manual_money_and_lifecycle_missing_resource_boundaries(shop):
         await shop.lifecycle.create_review(
             shop.users[0], order.items[0].id, ProductReviewCreate(rating=5, content="过早评价")
         )
+    await shop.admin_lifecycle.accept_order(
+        order.id, OrderAcceptance(revision=(await shop.orders.admin_read(order.id)).revision)
+    )
     await shop.admin_lifecycle.deliver_virtual(
         order.id, VirtualDeliveryCreate(revision=1, delivery_reference="评价交付")
     )
@@ -999,6 +1015,9 @@ async def test_manual_money_and_lifecycle_missing_resource_boundaries(shop):
 @pytest.mark.integration
 async def test_auto_delivery_manual_refund_and_unmatched_reconciliation_paths(shop):
     physical_order, _, _ = await prepare_paid_order(shop, physical=True)
+    await shop.admin_lifecycle.accept_order(
+        physical_order.id, OrderAcceptance(revision=(await shop.orders.admin_read(physical_order.id)).revision)
+    )
     shipped = await shop.admin_lifecycle.ship(
         physical_order.id, ShipmentCreate(carrier="自动确认", tracking_number="AUTO-CONFIRM", revision=1)
     )
@@ -1012,12 +1031,10 @@ async def test_auto_delivery_manual_refund_and_unmatched_reconciliation_paths(sh
     assert await shop.lifecycle.auto_confirm_scheduled(shipped.id) is False
 
     refund_order, _, _ = await prepare_paid_order(shop)
-    async with transaction_scope(shop.session):
-        await shop.session.execute(
-            update(Order)
-            .where(Order.id == refund_order.id)
-            .values(acceptance_status="accepted", accepted_at=datetime.now(UTC), accepted_by_id=shop.actor)
-        )
+    accepted = await shop.admin_lifecycle.accept_order(
+        refund_order.id, OrderAcceptance(revision=(await shop.orders.admin_read(refund_order.id)).revision)
+    )
+    assert accepted.acceptance_status == "accepted"
     manual_refund = await shop.lifecycle.create_refund(
         shop.users[0], refund_order.id, RefundRequestCreate(request_id=new_uuid7(), reason="人工审核路径")
     )
@@ -1058,3 +1075,27 @@ async def test_auto_delivery_manual_refund_and_unmatched_reconciliation_paths(sh
         )
     )
     assert withdrawal_reconciliation.status == "discrepancy"
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("physical", [False, True])
+async def test_unfinished_refund_blocks_fulfillment_after_acceptance(shop, physical):
+    order, _, _ = await prepare_paid_order(shop, physical=physical)
+    accepted = await shop.admin_lifecycle.accept_order(
+        order.id, OrderAcceptance(revision=(await shop.orders.admin_read(order.id)).revision)
+    )
+    refund = await shop.lifecycle.create_refund(
+        shop.users[0], order.id, RefundRequestCreate(request_id=new_uuid7(), reason="履约前售后")
+    )
+    assert accepted.acceptance_status == "accepted" and refund.status == "requested"
+
+    with pytest.raises(AppException) as rejected:
+        if physical:
+            await shop.admin_lifecycle.ship(
+                order.id, ShipmentCreate(carrier="测试物流", tracking_number="REFUND-BLOCKED", revision=1)
+            )
+        else:
+            await shop.admin_lifecycle.deliver_virtual(
+                order.id, VirtualDeliveryCreate(delivery_reference="REFUND-BLOCKED", revision=1)
+            )
+    assert rejected.value.code == "ORDER_STATE_CONFLICT"

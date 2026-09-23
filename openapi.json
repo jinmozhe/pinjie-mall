@@ -8061,6 +8061,75 @@
         }
       }
     },
+    "/api/v1/admin/orders/{order_id}/acceptance": {
+      "post": {
+        "tags": [
+          "支付与售后"
+        ],
+        "summary": "管理员接单",
+        "operationId": "admin_accept_order_api_v1_admin_orders__order_id__acceptance_post",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderAcceptance"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_OrderRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/orders/{order_id}/fulfillment/shipment": {
       "post": {
         "tags": [
@@ -19816,6 +19885,22 @@
         ],
         "title": "NewSkuInput"
       },
+      "OrderAcceptance": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision"
+        ],
+        "title": "OrderAcceptance"
+      },
       "OrderItemRead": {
         "properties": {
           "id": {
@@ -19976,6 +20061,11 @@
             "title": "Revision",
             "description": "资源并发控制版本"
           },
+          "acceptance_status": {
+            "type": "string",
+            "title": "Acceptance Status",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/OrderItemRead"
@@ -20000,6 +20090,7 @@
           "expires_at",
           "created_at",
           "revision",
+          "acceptance_status",
           "items"
         ],
         "title": "OrderRead"

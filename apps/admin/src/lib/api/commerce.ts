@@ -8,7 +8,7 @@ import type {
   PageResultInventoryMovementRead, PageResultProductRead, PageResultShippingTemplateRead,
   ProductCreate, ProductRead, ProductStatusBatch, ProductStatusUpdate, ProductUpdate,
   ShippingTemplateInput, ShippingTemplateRead, ShippingTemplateUpdate, SkuUpdate, SkuStatusBatch,
-  OrderRead, FulfillmentRead, RefundRequestRead, RefundReview, ShipmentCreate, VirtualDeliveryCreate,
+  OrderRead, OrderAcceptance, FulfillmentRead, RefundRequestRead, RefundReview, ShipmentCreate, VirtualDeliveryCreate,
   PageResultAdminOrderSummary, PageResultRefundRequestRead, PageResultWithdrawalRead, WithdrawalRead, WithdrawalReview,
 } from "@pinjie/api-client";
 
@@ -62,6 +62,7 @@ export const commerceApi = {
   quote: (id: string, input: FreightQuoteInput) => apiRequest<FreightQuote>(`/api/v1/admin/shipping-templates/${id}/quote`, { method: "POST", body: jsonBody(input) }),
   orders: (filters: CommerceFilters) => apiRequest<PageResultAdminOrderSummary>(`/api/v1/admin/orders?${queryString(filters)}`),
   order: (id: string) => apiRequest<OrderRead>(`/api/v1/admin/orders/${id}`),
+  acceptOrder: (id: string, input: OrderAcceptance) => apiRequest<OrderRead>(`/api/v1/admin/orders/${id}/acceptance`, { method: "POST", body: jsonBody(input) }),
   fulfillment: (id: string) => apiRequest<FulfillmentRead>(`/api/v1/admin/orders/${id}/fulfillment`),
   ship: (id: string, input: ShipmentCreate) => apiRequest<FulfillmentRead>(`/api/v1/admin/orders/${id}/fulfillment/shipment`, { method: "POST", body: jsonBody(input) }),
   deliverVirtual: (id: string, input: VirtualDeliveryCreate) => apiRequest<FulfillmentRead>(`/api/v1/admin/orders/${id}/fulfillment/virtual-delivery`, { method: "POST", body: jsonBody(input) }),

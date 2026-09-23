@@ -81,8 +81,6 @@ class LifecycleRepository:
                 .where(Fulfillment.status == "shipped", Fulfillment.auto_confirm_at <= now)
                 .order_by(Fulfillment.auto_confirm_at, Fulfillment.id)
                 .limit(limit)
-                .with_for_update(skip_locked=True)
-                .execution_options(populate_existing=True)
             )
         )
 

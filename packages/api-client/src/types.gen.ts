@@ -4034,6 +4034,18 @@ export type NewSkuInput = {
 };
 
 /**
+ * OrderAcceptance
+ */
+export type OrderAcceptance = {
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+};
+
+/**
  * OrderItemRead
  */
 export type OrderItemRead = {
@@ -4185,6 +4197,12 @@ export type OrderRead = {
      * 资源并发控制版本
      */
     revision: number;
+    /**
+     * Acceptance Status
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    acceptance_status: string;
     /**
      * Items
      *
@@ -14982,6 +15000,36 @@ export type ReviewPageApiV1ProductsProductIdReviewsGetResponses = {
 };
 
 export type ReviewPageApiV1ProductsProductIdReviewsGetResponse = ReviewPageApiV1ProductsProductIdReviewsGetResponses[keyof ReviewPageApiV1ProductsProductIdReviewsGetResponses];
+
+export type AdminAcceptOrderApiV1AdminOrdersOrderIdAcceptancePostData = {
+    body: OrderAcceptance;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/orders/{order_id}/acceptance';
+};
+
+export type AdminAcceptOrderApiV1AdminOrdersOrderIdAcceptancePostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminAcceptOrderApiV1AdminOrdersOrderIdAcceptancePostError = AdminAcceptOrderApiV1AdminOrdersOrderIdAcceptancePostErrors[keyof AdminAcceptOrderApiV1AdminOrdersOrderIdAcceptancePostErrors];
+
+export type AdminAcceptOrderApiV1AdminOrdersOrderIdAcceptancePostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelOrderRead;
+};
+
+export type AdminAcceptOrderApiV1AdminOrdersOrderIdAcceptancePostResponse = AdminAcceptOrderApiV1AdminOrdersOrderIdAcceptancePostResponses[keyof AdminAcceptOrderApiV1AdminOrdersOrderIdAcceptancePostResponses];
 
 export type AdminShipApiV1AdminOrdersOrderIdFulfillmentShipmentPostData = {
     body: ShipmentCreate;

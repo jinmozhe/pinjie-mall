@@ -128,7 +128,7 @@ class OrderEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "order_events"
     __table_args__ = (
         UniqueConstraint("order_id", "revision", name="uq_order_event_revision"),
-        CheckConstraint("actor_type IN ('user', 'system', 'payment')", name="ck_order_event_actor"),
+        CheckConstraint("actor_type IN ('user', 'system', 'payment', 'admin')", name="ck_order_event_actor"),
         CheckConstraint("to_status IN ('pending_payment', 'paid', 'cancelled')", name="ck_order_event_status"),
         {"comment": "订单状态变更事实，与订单和库存同事务写入"},
     )
