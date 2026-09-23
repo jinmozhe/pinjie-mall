@@ -35,6 +35,7 @@ from app.domains.lifecycle.schemas import (
     ProductReviewRead,
     ReconciliationRecordCreate,
     ReconciliationRecordRead,
+    ReconciliationResolve,
     RefundAttemptRead,
     RefundRequestCreate,
     RefundRequestRead,
@@ -1020,5 +1021,23 @@ class LifecycleService:
             revision=1,
             note=None if matched else "渠道账单与本地资金事实不匹配",
         )
+        await self.repository.save(record)
+        return ReconciliationRecordRead.model_validate(record)
+
+    async def resolve_reconciliation_in_open_transaction(
+        self, record_id: UUID, data: ReconciliationResolve, actor_id: UUID
+    ) -> ReconciliationRecordRead:
+        record = await self.repository.reconciliation_by_id(record_id, lock=True)
+        if record is None:
+            raise AppException(status_code=404, code=ErrorCode.NOT_FOUND, message="对账记录不存在")
+        if record.status != "discrepancy" or record.resolution_status != "open" or record.revision != data.revision:
+            raise AppException(
+                status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="对账差异已处置或版本已变更"
+            )
+        record.resolution_status = "resolved"
+        record.resolution_note = data.note
+        record.resolved_by_id = actor_id
+        record.resolved_at = datetime.now(UTC)
+        record.revision += 1
         await self.repository.save(record)
         return ReconciliationRecordRead.model_validate(record)

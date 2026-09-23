@@ -19,6 +19,7 @@ from app.domains.lifecycle import (
     ReceiptConfirm,
     ReconciliationRecordCreate,
     ReconciliationRecordRead,
+    ReconciliationResolve,
     RefundRequestCreate,
     RefundRequestRead,
     RefundReview,
@@ -224,3 +225,17 @@ async def admin_reconcile(
     payload: ReconciliationRecordCreate, service: AdminLifecycle
 ) -> ResponseModel[ReconciliationRecordRead]:
     return success_response(data=await service.reconcile(payload), request_id=current_request_id())
+
+
+@router.post(
+    "/admin/reconciliation-records/{record_id}/resolve",
+    response_model=ResponseModel[ReconciliationRecordRead],
+    summary="处置对账差异",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.RECONCILIATION_RESOLVE))],
+)
+async def admin_resolve_reconciliation(
+    record_id: UUID, payload: ReconciliationResolve, service: AdminLifecycle
+) -> ResponseModel[ReconciliationRecordRead]:
+    return success_response(
+        data=await service.resolve_reconciliation(record_id, payload), request_id=current_request_id()
+    )

@@ -378,9 +378,11 @@ class AuditEventRead(BaseModel):
 
     id: uuid.UUID
     actor_id: uuid.UUID | None
+    actor_type: str
     action: str
     target_type: str
     target_id: uuid.UUID | None
+    target_revision: int | None
     result: str
     changed_fields: dict[str, object]
     request_id: str

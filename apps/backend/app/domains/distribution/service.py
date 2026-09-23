@@ -272,56 +272,62 @@ class DistributionService:
         return withdrawal.id
 
     async def create_withdrawal(self, user_id: UUID, data: WithdrawalCreate) -> WithdrawalRead:
+        async with transaction_scope(self.session):
+            withdrawal, _ = await self.create_withdrawal_in_open_transaction(user_id, data, new_uuid7())
+            return withdrawal
+
+    async def create_withdrawal_in_open_transaction(
+        self, user_id: UUID, data: WithdrawalCreate, withdrawal_id: UUID
+    ) -> tuple[WithdrawalRead, bool]:
         request_hash = self._request_hash(
             {"amount": str(data.amount), "destination_reference": data.destination_reference}
         )
-        async with transaction_scope(self.session):
-            await self.access.require_active_user(user_id)
-            existing = await self.repository.withdrawal_by_request(user_id, data.request_id, lock=True)
-            if existing is not None:
-                if existing.amount != data.amount or existing.destination_reference != data.destination_reference:
-                    raise AppException(
-                        status_code=409, code=ErrorCode.WITHDRAWAL_REQUEST_CONFLICT, message="提现请求号已用于其他内容"
-                    )
-                return self._withdrawal_read(existing)
-            wallet = await self._commission_wallet(user_id, lock=True)
-            amount = self._money(data.amount)
-            if wallet.debt_amount > 0 or wallet.available_amount < amount:
+        await self.access.require_active_user(user_id)
+        existing = await self.repository.withdrawal_by_request(user_id, data.request_id, lock=True)
+        if existing is not None:
+            if existing.amount != data.amount or existing.destination_reference != data.destination_reference:
                 raise AppException(
-                    status_code=409, code=ErrorCode.WALLET_INSUFFICIENT_BALANCE, message="佣金钱包可提现余额不足"
+                    status_code=409, code=ErrorCode.WITHDRAWAL_REQUEST_CONFLICT, message="提现请求号已用于其他内容"
                 )
-            wallet.available_amount -= amount
-            wallet.frozen_amount += amount
-            wallet.revision += 1
-            withdrawal = WithdrawalRequest(
-                id=new_uuid7(),
-                user_id=user_id,
-                wallet_id=wallet.id,
-                request_id=data.request_id,
-                request_hash=request_hash,
-                merchant_reference=f"W3-{new_uuid7()}",
-                channel="manual",
-                channel_context={"schema_version": 1, "merchant_id": None, "app_id": None, "config_version": None},
-                amount=amount,
-                currency="CNY",
-                destination_reference=data.destination_reference,
-                status="requested",
-                revision=1,
+            return self._withdrawal_read(existing), False
+        wallet = await self._commission_wallet(user_id, lock=True)
+        amount = self._money(data.amount)
+        if wallet.debt_amount > 0 or wallet.available_amount < amount:
+            raise AppException(
+                status_code=409, code=ErrorCode.WALLET_INSUFFICIENT_BALANCE, message="佣金钱包可提现余额不足"
             )
-            self._check_wallet(wallet)
-            await self.repository.save(wallet)
-            await self.repository.save(withdrawal)
-            await self._write_wallet_ledger(
-                wallet=wallet,
-                entry_type="withdrawal_freeze",
-                amount=-amount,
-                frozen_delta=amount,
-                debt_delta=Decimal("0.00"),
-                idempotency_key=f"withdrawal-freeze:{withdrawal.id}",
-                reference_type="withdrawal",
-                reference_id=withdrawal.id,
-            )
-            return self._withdrawal_read(withdrawal)
+        wallet.available_amount -= amount
+        wallet.frozen_amount += amount
+        wallet.revision += 1
+        withdrawal = WithdrawalRequest(
+            id=withdrawal_id,
+            user_id=user_id,
+            wallet_id=wallet.id,
+            request_id=data.request_id,
+            request_hash=request_hash,
+            merchant_reference=f"W3-{new_uuid7()}",
+            channel="manual",
+            channel_context={"schema_version": 1, "merchant_id": None, "app_id": None, "config_version": None},
+            amount=amount,
+            currency="CNY",
+            destination_reference=data.destination_reference,
+            status="requested",
+            revision=1,
+        )
+        self._check_wallet(wallet)
+        await self.repository.save(wallet)
+        await self.repository.save(withdrawal)
+        await self._write_wallet_ledger(
+            wallet=wallet,
+            entry_type="withdrawal_freeze",
+            amount=-amount,
+            frozen_delta=amount,
+            debt_delta=Decimal("0.00"),
+            idempotency_key=f"withdrawal-freeze:{withdrawal.id}",
+            reference_type="withdrawal",
+            reference_id=withdrawal.id,
+        )
+        return self._withdrawal_read(withdrawal), True
 
     async def approve_withdrawal_in_open_transaction(
         self, withdrawal_id: UUID, data: WithdrawalReview, actor_id: UUID

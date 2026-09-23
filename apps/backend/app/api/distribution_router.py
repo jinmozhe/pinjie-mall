@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 
 from app.api.dependencies import require_admin_csrf, require_permission, require_web_csrf
-from app.api.distribution_dependencies import AdminDistribution, Distribution
+from app.api.distribution_dependencies import AdminDistribution, Distribution, UserDistribution
 from app.api.transaction_dependencies import UserPrincipal
 from app.core.context import current_request_id
 from app.core.response import ResponseModel, success_response
@@ -85,11 +85,9 @@ async def commissions_read(
     summary="申请佣金钱包提现",
     dependencies=[Depends(require_web_csrf)],
 )
-async def withdrawal_create(
-    payload: WithdrawalCreate, service: Distribution, current: UserPrincipal
-) -> ResponseModel[WithdrawalRead]:
+async def withdrawal_create(payload: WithdrawalCreate, service: UserDistribution) -> ResponseModel[WithdrawalRead]:
     return success_response(
-        data=await service.create_withdrawal(current.user.id, payload),
+        data=await service.create_withdrawal(payload),
         request_id=current_request_id(),
         message="提现申请已提交",
     )
