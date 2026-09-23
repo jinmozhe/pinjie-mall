@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import PointsAccount, PointsLedger
@@ -9,6 +9,10 @@ from app.db.models import PointsAccount, PointsLedger
 class PointsRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
+
+    async def lock_adjustment(self, idempotency_key: str, user_id: UUID) -> None:
+        for key in (f"pinjie:points:adjustment:{idempotency_key}", f"pinjie:points:account:{user_id}"):
+            await self.session.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"), {"key": key})
 
     async def account(self, user_id: UUID, *, lock: bool = False) -> PointsAccount | None:
         statement = (

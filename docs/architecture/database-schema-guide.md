@@ -835,6 +835,8 @@ erDiagram
   - 检查约束保证 `sku_id`、`product_id`、`category_id` 依据 `scope_type` 恰好有一个非空。
   - 分别建立部分唯一索引：`UNIQUE(member_level_id, sku_id)`、`UNIQUE(member_level_id, product_id)`、`UNIQUE(member_level_id, category_id)`，确保同一作用对象对同一等级只有一条有效规则。
 
+当前统一报价明确区分零折扣与缺失配置：SKU、商品及分类继承规则的 `discount_factor=0` 产生零单价；discount 规则缺少因子时返回配置错误，不回退为原价。固定价、批发、exclude 和等级默认折扣的优先级保持一致。
+
 ---
 
 ### 4.09 分销政策与多级分佣模块
@@ -1713,6 +1715,8 @@ erDiagram
 | `note` | VARCHAR(200) | 是 | NULL | 变动备注说明 |
 | `created_at` | TIMESTAMPTZ | 否 | 应用当前 UTC 时间 | 创建时间 |
 | `updated_at` | TIMESTAMPTZ | 否 | 系统写入 | 最近更新时间 |
+
+当前人工积分调整按幂等键、用户账户顺序取得事务级锁，同键同意图返回已有账户结果，同键异意图返回冲突。意图核对包含用户、操作、调整量、原冲销流水、备注和管理员来源；调整量依据不可变流水的 `available_delta - debt_delta` 还原，并按 grant/reverse 校验正负，不能把还债后的可用增量当成原授予量。不同键对同一用户首次建账同样串行化，避免重复创建账户。相关并发回归用例已编写，本轮修复尚未执行动态验证。
 
 ---
 

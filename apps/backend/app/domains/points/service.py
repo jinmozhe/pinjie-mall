@@ -54,9 +54,24 @@ class PointsService:
             raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="需要管理员权限")
 
         async def operation() -> PointsAccountRead:
-            existing = await self._repository.ledger_by_key(data.idempotency_key, lock=True)
+            await self._repository.lock_adjustment(data.idempotency_key, data.user_id)
+            existing = await self._repository.ledger_by_key(data.idempotency_key)
             if existing is not None:
                 account = await self._require_account(existing.account_id)
+                expected_delta = data.points if data.operation == "grant" else -data.points
+                if (
+                    account.user_id != data.user_id
+                    or existing.entry_type != data.operation
+                    or existing.available_delta - existing.debt_delta != expected_delta
+                    or existing.frozen_delta != 0
+                    or existing.source_type != "manual"
+                    or existing.source_id != self._actor_id
+                    or existing.reverses_ledger_id != data.reverses_ledger_id
+                    or existing.note != data.note
+                ):
+                    raise AppException(
+                        status_code=409, code=ErrorCode.STATE_CONFLICT, message="积分调整幂等键已用于不同请求"
+                    )
                 return PointsAccountRead.model_validate(account)
             account_for_user = await self._repository.account(data.user_id, lock=True)
             if account_for_user is None:

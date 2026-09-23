@@ -885,6 +885,9 @@ class PointsStore:
         self.ledgers: dict[UUID, object] = {}
         self.keys: dict[str, object] = {}
 
+    async def lock_adjustment(self, idempotency_key: str, user_id: UUID) -> None:
+        return None
+
     async def account(self, user_id: UUID, *, lock: bool = False) -> object:
         return self.account_row
 
@@ -1840,6 +1843,10 @@ class PointsAdjustmentStore(PointsStore):
                 row.available_points = row.available_points or 0
                 row.frozen_points = row.frozen_points or 0
                 row.debt_points = row.debt_points or 0
+                self.accounts[row.user_id] = row
+            elif type(row).__name__ == "PointsLedger":
+                self.ledgers[row.id] = row
+                self.keys[row.idempotency_key] = row
         return None
 
 
@@ -1883,6 +1890,128 @@ async def test_points_manual_adjustment_creates_accounts_and_records_membership(
         )
     )
     assert reverse.available_points == 4 and len(MembershipSpy.calls) == 2
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("scope", ["sku", "product", "category", "ancestor"])
+@pytest.mark.parametrize("factor", [Decimal("0"), Decimal("0.95"), Decimal("1"), None])
+async def test_quote_preserves_zero_discount_and_rejects_missing_factor(scope, factor) -> None:
+    user, sku_id, product_id, category_id, ancestor_id, level_id, rule_id = (uuid7() for _ in range(7))
+    session = MemorySession()
+    profile = SimpleNamespace(user_id=user, level_id=level_id)
+    level = SimpleNamespace(id=level_id, is_active=True, discount_factor=Decimal("0.8"))
+    store = MembershipStore(session, profile, level, None)
+    store.catalog_rows = [
+        (
+            SimpleNamespace(
+                id=sku_id,
+                price=Decimal("100.00"),
+                wholesale_prices=[{"min_quantity": 2, "unit_price": "80.00"}],
+                is_active=True,
+                archived_at=None,
+            ),
+            SimpleNamespace(
+                id=product_id, category_id=category_id, name="折扣边界", product_type="virtual", status="on_sale"
+            ),
+        )
+    ]
+    store.category_rows = [
+        SimpleNamespace(id=category_id, parent_id=ancestor_id, is_active=True),
+        SimpleNamespace(id=ancestor_id, parent_id=None, is_active=True),
+    ]
+    store.price_rule_rows[rule_id] = SimpleNamespace(
+        member_level_id=level_id,
+        is_active=True,
+        scope_type="category" if scope == "ancestor" else scope,
+        sku_id=sku_id if scope == "sku" else None,
+        product_id=product_id if scope == "product" else None,
+        category_id=ancestor_id if scope == "ancestor" else category_id if scope == "category" else None,
+        price_mode="discount",
+        discount_factor=factor,
+    )
+    service = MembershipService(session=session)  # type: ignore[arg-type]
+    service._repository = store  # type: ignore[assignment]
+    request = CommerceQuoteRequest(items=[QuoteItemInput(sku_id=sku_id, quantity=2)])
+    if factor is None:
+        with pytest.raises(AppException) as rejected:
+            await service.quote(user, request)
+        assert rejected.value.status_code == 503 and rejected.value.code == "CONFIGURATION_ERROR"
+        return
+    quote = await service.quote(user, request)
+    assert quote.items[0].base_unit_price == Decimal("80.00")
+    assert quote.items[0].unit_price == Decimal("80.00") * factor
+    assert quote.total_amount == Decimal("160.00") * factor
+    assert quote.freight_amount == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("operation", ["grant", "reverse"])
+@pytest.mark.parametrize("change", [None, "user", "points", "operation", "original", "note", "actor", "source"])
+async def test_points_replay_checks_intent_including_debt_components(operation, change) -> None:
+    now = datetime.now(UTC)
+    actor, user, account_id, ledger_id, original_id = (uuid7() for _ in range(5))
+    account = SimpleNamespace(
+        id=account_id,
+        user_id=user,
+        available_points=1,
+        frozen_points=0,
+        debt_points=0,
+        revision=2,
+        created_at=now,
+        updated_at=now,
+    )
+    session, store = MemorySession(), PointsStore(account)
+    data = PointsManualAdjustment(
+        user_id=user,
+        points=5,
+        operation=operation,
+        idempotency_key="replay-with-debt",
+        reverses_ledger_id=original_id if operation == "reverse" else None,
+        note="已核实",
+    )
+    ledger = SimpleNamespace(
+        id=ledger_id,
+        account_id=account_id,
+        entry_type=operation,
+        available_delta=1 if operation == "grant" else -3,
+        debt_delta=-4 if operation == "grant" else 2,
+        frozen_delta=0,
+        source_type="manual",
+        source_id=actor,
+        reverses_ledger_id=data.reverses_ledger_id,
+        note=data.note,
+    )
+    store.keys[data.idempotency_key] = ledger
+    if change == "user":
+        data = data.model_copy(update={"user_id": uuid7()})
+    elif change == "points":
+        data = data.model_copy(update={"points": 4})
+    elif change == "operation":
+        data = data.model_copy(
+            update={
+                "operation": "reverse" if operation == "grant" else "grant",
+                "reverses_ledger_id": original_id if operation == "grant" else None,
+            }
+        )
+    elif change == "original":
+        ledger.reverses_ledger_id = uuid7()
+    elif change == "note":
+        data = data.model_copy(update={"note": "修改说明"})
+    elif change == "actor":
+        actor = uuid7()
+    elif change == "source":
+        ledger.source_type = "order"
+    service = PointsService(session=session, actor_id=actor, audit=Audit())  # type: ignore[arg-type]
+    service._repository = store  # type: ignore[assignment]
+    if change is None:
+        result = await service.adjust(data)
+        assert result.available_points == 1 and result.revision == 2
+    else:
+        with pytest.raises(AppException) as rejected:
+            await service.adjust(data)
+        assert rejected.value.status_code == 409 and rejected.value.code == "STATE_CONFLICT"
+    assert not session.added
+    assert account.available_points == 1 and account.revision == 2
 
 
 class ProductBoundaryStore:
