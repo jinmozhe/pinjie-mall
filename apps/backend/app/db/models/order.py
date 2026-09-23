@@ -2,7 +2,17 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, Numeric, String, UniqueConstraint
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -15,6 +25,12 @@ class Order(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         UniqueConstraint("user_id", "request_id", name="uq_order_user_request"),
         UniqueConstraint("accepted_payment_attempt_id", name="uq_orders_accepted_payment_attempt"),
         UniqueConstraint("zero_confirmation_id", name="uq_orders_zero_confirmation"),
+        ForeignKeyConstraint(
+            ["accepted_payment_attempt_id", "id"],
+            ["payment_attempts.id", "payment_attempts.order_id"],
+            ondelete="RESTRICT",
+            name="fk_orders_accepted_payment_same_order",
+        ),
         CheckConstraint("status IN ('pending_payment', 'paid', 'cancelled')", name="ck_order_status"),
         CheckConstraint("product_type IN ('physical', 'virtual')", name="ck_order_product_type"),
         CheckConstraint(
@@ -83,9 +99,7 @@ class Order(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     pricing_version: Mapped[str] = mapped_column(String(32), comment="计价规则版本")
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), comment="待付款截止时间")
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, comment="可信支付确认时间")
-    accepted_payment_attempt_id: Mapped[UUID | None] = mapped_column(
-        ForeignKey("payment_attempts.id", ondelete="RESTRICT"), nullable=True, comment="已接受的正额支付意图"
-    )
+    accepted_payment_attempt_id: Mapped[UUID | None] = mapped_column(nullable=True, comment="已接受的正额支付意图")
     settlement_kind: Mapped[str | None] = mapped_column(String(16), nullable=True, comment="渠道或零元内部成交")
     zero_confirmation_id: Mapped[UUID | None] = mapped_column(nullable=True, comment="零元订单内部确认号")
     acceptance_status: Mapped[str] = mapped_column(String(16), default="pending", comment="平台接单状态")
@@ -100,6 +114,14 @@ class OrderItem(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "order_items"
     __table_args__ = (
         UniqueConstraint("order_id", "sku_id", name="uq_order_item_sku"),
+        UniqueConstraint("id", "order_id", name="uq_order_item_id_order"),
+        UniqueConstraint("id", "product_id", name="uq_order_item_id_product"),
+        ForeignKeyConstraint(
+            ["sku_id", "product_id"],
+            ["product_skus.id", "product_skus.product_id"],
+            ondelete="RESTRICT",
+            name="fk_order_items_sku_product",
+        ),
         CheckConstraint("quantity BETWEEN 1 AND 999", name="ck_order_item_quantity"),
         CheckConstraint("unit_price >= 0 AND line_amount = unit_price * quantity", name="ck_order_item_amount"),
         CheckConstraint("jsonb_typeof(specifications) = 'object'", name="ck_order_item_specs"),

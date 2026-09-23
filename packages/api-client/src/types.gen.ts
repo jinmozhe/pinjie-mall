@@ -1449,6 +1449,12 @@ export type AuditEventRead = {
      */
     actor_id: string | null;
     /**
+     * Actor Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    actor_type: string;
+    /**
      * Action
      *
      * 操作代码
@@ -1466,6 +1472,12 @@ export type AuditEventRead = {
      * 操作目标唯一标识
      */
     target_id: string | null;
+    /**
+     * Target Revision
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    target_revision: number | null;
     /**
      * Result
      *
@@ -6560,11 +6572,53 @@ export type ReconciliationRecordRead = {
      */
     resolution_status: string;
     /**
+     * Resolution Note
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    resolution_note: string | null;
+    /**
+     * Resolved By Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    resolved_by_id: string | null;
+    /**
+     * Resolved At
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    resolved_at: string | null;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
      * Note
      *
      * 操作说明或核对备注
      */
     note: string | null;
+};
+
+/**
+ * ReconciliationResolve
+ */
+export type ReconciliationResolve = {
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Note
+     *
+     * 操作说明或核对备注
+     */
+    note: string;
 };
 
 /**
@@ -15174,6 +15228,36 @@ export type AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponses = {
 };
 
 export type AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponse = AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponses[keyof AdminRejectRefundApiV1AdminRefundsRefundIdRejectPostResponses];
+
+export type AdminResolveReconciliationApiV1AdminReconciliationRecordsRecordIdResolvePostData = {
+    body: ReconciliationResolve;
+    path: {
+        /**
+         * Record Id
+         */
+        record_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/reconciliation-records/{record_id}/resolve';
+};
+
+export type AdminResolveReconciliationApiV1AdminReconciliationRecordsRecordIdResolvePostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AdminResolveReconciliationApiV1AdminReconciliationRecordsRecordIdResolvePostError = AdminResolveReconciliationApiV1AdminReconciliationRecordsRecordIdResolvePostErrors[keyof AdminResolveReconciliationApiV1AdminReconciliationRecordsRecordIdResolvePostErrors];
+
+export type AdminResolveReconciliationApiV1AdminReconciliationRecordsRecordIdResolvePostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelReconciliationRecordRead;
+};
+
+export type AdminResolveReconciliationApiV1AdminReconciliationRecordsRecordIdResolvePostResponse = AdminResolveReconciliationApiV1AdminReconciliationRecordsRecordIdResolvePostResponses[keyof AdminResolveReconciliationApiV1AdminReconciliationRecordsRecordIdResolvePostResponses];
 
 export type MemberLevelsApiV1AdminMemberLevelsGetData = {
     body?: never;

@@ -181,6 +181,12 @@ class LifecycleRepository:
         )
         return rows, total
 
+    async def reconciliation_by_id(self, record_id: UUID, *, lock: bool = False) -> ReconciliationRecord | None:
+        statement = select(ReconciliationRecord).where(ReconciliationRecord.id == record_id)
+        if lock:
+            statement = statement.with_for_update().execution_options(populate_existing=True)
+        return (await self.session.scalars(statement)).one_or_none()
+
     async def reconciliation(
         self, channel: str, record_type: str, channel_transaction_id: str, *, lock: bool = False
     ) -> ReconciliationRecord | None:

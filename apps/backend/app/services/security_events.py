@@ -1,5 +1,6 @@
 import uuid
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TypeVar
 
@@ -14,6 +15,14 @@ from app.db.repositories import SecurityRepository
 from app.db.transaction import transaction_scope
 
 T = TypeVar("T")
+
+
+@dataclass(frozen=True, slots=True)
+class AuditSuccess:
+    action: str
+    target_id: uuid.UUID | None
+    target_revision: int | None
+    changed_fields: dict[str, object]
 
 
 def login_event(
@@ -86,8 +95,17 @@ class AuditCoordinator:
         target_id: uuid.UUID | None,
         changed_fields: dict[str, object],
         operation: Callable[[], Awaitable[T]],
+        actor_type: str = "admin",
+        target_revision: int | None = None,
+        success_event: Callable[[T], AuditSuccess] | None = None,
     ) -> T:
-        event_id = await self._start(action=action, target_type=target_type, target_id=target_id)
+        event_id = await self._start(
+            action=action,
+            target_type=target_type,
+            target_id=target_id,
+            actor_type=actor_type,
+            target_revision=target_revision,
+        )
         try:
             async with transaction_scope(self._session):
                 result = await operation()
@@ -98,8 +116,12 @@ class AuditCoordinator:
                         code=ErrorCode.SERVICE_UNAVAILABLE,
                         message="审计事件存储暂时不可用",
                     )
+                resolved = success_event(result) if success_event is not None else None
+                event.action = resolved.action if resolved is not None else event.action
+                event.target_id = resolved.target_id if resolved is not None else event.target_id
+                event.target_revision = resolved.target_revision if resolved is not None else event.target_revision
                 event.result = "succeeded"
-                event.changed_fields = changed_fields
+                event.changed_fields = resolved.changed_fields if resolved is not None else changed_fields
                 event.completed_at = datetime.now(UTC)
             return result
         except AppException:
@@ -109,14 +131,24 @@ class AuditCoordinator:
             await self._finish_failed(event_id, result="failed")
             raise
 
-    async def _start(self, *, action: str, target_type: str, target_id: uuid.UUID | None) -> uuid.UUID:
+    async def _start(
+        self,
+        *,
+        action: str,
+        target_type: str,
+        target_id: uuid.UUID | None,
+        actor_type: str,
+        target_revision: int | None,
+    ) -> uuid.UUID:
         event_id = new_uuid7()
         event = AuditEvent(
             id=event_id,
             actor_id=self._actor_id,
+            actor_type=actor_type,
             action=action,
             target_type=target_type,
             target_id=target_id,
+            target_revision=target_revision,
             result="started",
             changed_fields={},
             request_id=self._metadata.request_id,
@@ -152,4 +184,4 @@ class AuditCoordinator:
             )
 
 
-__all__ = ["AuditCoordinator", "SecurityEventWriter", "login_event"]
+__all__ = ["AuditCoordinator", "AuditSuccess", "SecurityEventWriter", "login_event"]

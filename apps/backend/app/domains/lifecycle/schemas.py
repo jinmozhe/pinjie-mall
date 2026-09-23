@@ -173,6 +173,13 @@ class ReconciliationRecordCreate(BaseModel):
     occurred_at: datetime
 
 
+class ReconciliationResolve(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    revision: int = Field(gt=0)
+    note: str = Field(min_length=1, max_length=500)
+
+
 class ReconciliationRecordRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -188,4 +195,8 @@ class ReconciliationRecordRead(BaseModel):
     refund_attempt_id: UUID | None
     withdrawal_request_id: UUID | None
     resolution_status: str
+    resolution_note: str | None
+    resolved_by_id: UUID | None
+    resolved_at: datetime | None
+    revision: int
     note: str | None

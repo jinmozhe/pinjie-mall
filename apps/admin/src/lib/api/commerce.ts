@@ -2,7 +2,7 @@ import type {
   OrdersPageApiV1AdminOrdersGetData, CommerceExportRead, SelectedCommerceIds,
   PageResultPaymentAttemptRead, PageResultReconciliationRecordRead, PageResultMemberProfileRead,
   PageResultCommissionRead, PageResultAdminWalletRead, PageResultWalletLedgerRead,
-  ReconciliationRecordCreate, ReconciliationRecordRead,
+  ReconciliationRecordCreate, ReconciliationRecordRead, ReconciliationResolve,
   ActiveStatusBatch, BatchCompleted, CategoryInput, CategoryRead, CategoryUpdate,
   FreightQuote, FreightQuoteInput, InventoryAdjustment, InventoryMovementRead, InventoryRead,
   PageResultInventoryMovementRead, PageResultProductRead, PageResultShippingTemplateRead,
@@ -35,6 +35,8 @@ export const commerceApi = {
   payments: (filters: CommerceFilters) => apiRequest<PageResultPaymentAttemptRead>(`/api/v1/admin/payments?${queryString(filters)}`),
   reconciliations: (filters: CommerceFilters) => apiRequest<PageResultReconciliationRecordRead>(`/api/v1/admin/reconciliation-records?${queryString(filters)}`),
   reconcile: (input: ReconciliationRecordCreate) => apiRequest<ReconciliationRecordRead>("/api/v1/admin/reconciliation-records", { method: "POST", body: jsonBody(input) }),
+  resolveReconciliation: (id: string, input: ReconciliationResolve) =>
+    apiRequest<ReconciliationRecordRead>("/api/v1/admin/reconciliation-records/" + id + "/resolve", { method: "POST", body: jsonBody(input) }),
   members: (filters: CommerceFilters) => apiRequest<PageResultMemberProfileRead>(`/api/v1/admin/members?${queryString(filters)}`),
   commissions: (filters: CommerceFilters) => apiRequest<PageResultCommissionRead>(`/api/v1/admin/commissions?${queryString(filters)}`),
   wallets: (filters: CommerceFilters) => apiRequest<PageResultAdminWalletRead>(`/api/v1/admin/wallets?${queryString(filters)}`),

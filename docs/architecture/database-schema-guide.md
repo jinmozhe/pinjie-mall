@@ -404,14 +404,14 @@ erDiagram
 
 #### 4.03.2 高风险管理操作审计表 `audit_events`
 
-实现标记：现有表，字段/约束按本版目标核对，具体差异见第 13 章。
+实现标记：阶段 E 已在 ORM 与前向迁移源码补齐主体类型、目标版本、提现状态事件目标约束和唯一版本索引；实际升级及历史数据核验未执行，具体差异见第 13 章。
 
-用途：同事务固化管理员对商品、价格、运费、会员、退款审核等高危操作的前后快照。
+用途：同事务固化管理员高危操作、用户提现创建及对账差异处置的审计事实。
 
 | 字段名 | 数据类型 | 可空 | 默认值/生成方式 | 业务含义与约束规则 |
 | --- | --- | --- | --- | --- |
 | `id` | UUID | 否 | 应用生成 UUID v7 | 审计主键 |
-| `actor_type` | VARCHAR(16) | 否 | 入口确定，存量回填 admin | admin/user/system/channel；现行审计仅管理入口，目标扩展自动资金及用户动作 |
+| `actor_type` | VARCHAR(16) | 否 | 入口确定，历史待核验 | admin/user/system/channel；阶段 E 已接入管理员、用户提现及对账处置入口，system/channel 留待对应执行器与渠道适配器 |
 | `actor_id` | UUID | 是 | 操作获取 | admin/user 对应已验证主体 ID，system/channel 为 NULL；多态主体不伪造 FK |
 | `action` | VARCHAR(150) | 否 | 接口声明 | 动作标识（例如 `product:update_price`, `refund:approve`） |
 | `target_type` | VARCHAR(64) | 否 | 目标识别 | 目标实体类型（例如 `products`, `orders`, `commission_policies`） |
@@ -1843,7 +1843,7 @@ erDiagram
 | 售后与实际退款 | refund_requests、refund_attempts 分别负责 | 审核通过不代表退款成功；退款任务成功也不代替资金事实 |
 | 佣金权益与追回 | commission_records、commission_recoveries | 身份及原应得额不变，状态与已处置额度受控变更 |
 | 钱包余额 | wallet_accounts | wallet_ledgers 同事务记增量、结果余额与账户版本 |
-| 提现 | withdrawal_requests | 账本记录冻结/释放/支付，audit_events 记录审核及渠道状态变迁 |
+| 提现 | withdrawal_requests | 账本记录冻结/释放/支付，audit_events 同事务记录用户创建、管理员审核、线下完成及后续渠道状态变迁 |
 | 可靠执行 | durable_tasks | 任务只调度业务命令，不自行决定支付/退款/佣金金额 |
 | 账单差异 | reconciliation_records | 原始账单不可改；人工处理加意见与审计，不能把差异强改为渠道匹配 |
 
@@ -1976,7 +1976,7 @@ commission_records.rule_snapshot 保存该项决策、买家冻结身份、受�
 | payment_attempts.channel_context、withdrawal_requests.channel_context | schema_version=1、merchant_id、app_id（适配器无应用概念时 null）、config_version；非秘密标识，调用与回调均核对；更换配置不能改变在途单归属 |
 | wallet_ledgers.balance_after | schema_version=1、available_amount、frozen_amount、debt_amount，全部两位非负有限金额字符串；等于该 wallet_revision 的账户结果 |
 | durable_tasks.payload | schema_version=1 加该任务唯一业务 ID；payment_submit/payment_query/payment_close/confirm_order 用 payment_attempt_id，expire_order 用 order_id，auto_confirm_fulfillment 用 fulfillment_id，refund_submit/refund_query/refund_followup 用 refund_attempt_id，commission_settlement 用 order_id，withdrawal_submit/withdrawal_query 用 withdrawal_request_id；金额以业务表为准 |
-| audit_events.changed_fields | 现行为白名单对象，支持字段名对应 old/new 或操作摘要。目标提现事件固定 schema_version=1、from_status（创建时 null）、to_status、reason、payload_hash（无渠道载荷时 null）；action=withdrawal.state_changed、target_type=withdrawal_request、target_id 为请求 ID，target_revision/actor_type/actor_id 使用物理列，不记录收款明文；系统/用户写入口尚待扩展 |
+| audit_events.changed_fields | 现行为白名单对象，支持字段名对应 old/new 或操作摘要。提现创建和管理员状态事件固定 schema_version=1、from_status（创建时 null）、to_status、reason、payload_hash（无渠道载荷时 null）；action=withdrawal.state_changed、target_type=withdrawal_request、target_id 为请求 ID，target_revision/actor_type/actor_id 使用物理列，不记录收款明文。幂等重放使用 withdrawal.request_replayed，避免占用状态版本唯一键；system/channel 写入口留待对应执行器与渠道适配器 |
 | shipping_templates.regions | 当前存量数组 1 至 100 组；每组 provinces 为六位省编码数组，空数组为唯一默认组，跨组不重复；first_unit/ additional_unit 为 1 至 1000000000 整数，first_price/additional_price 为非负两位金额字符串；piece/weight 按剩余数量或重量向上取整计算续费；详见现行 [shipping Schema](../../apps/backend/app/domains/shipping/schemas.py)，目标新单不再读取 |
 | shipping_templates.excluded_provinces | 存量六位省级编码字符串数组，最多 100 项且不重复；保留原模板语义 |
 | member_level_events.qualification_snapshot | 后续规划对象至少含 schema_version、condition_ids、condition_revisions、metrics、evaluated_at、reason；条件组合及时间窗口未启用，不能据字段自行上线自动升级 |
@@ -2395,12 +2395,12 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 | refund_requests.status/amount | `20260922_05` 使用 requested/approved/rejected/completed、商品金额、运费和整单金额 | 零额整单售后内部完成，正额渠道状态仅由执行表表达 |
 | users.password_hash 与 C 端会话 | 密码非空；browser_cookie/pinjie-web；csrf_digest 非空 | 新身份与可空密码、独立 miniapp_bearer；旧会话明确撤销/退役，不把 Cookie 当 Bearer |
 | commission_records 粒度 | U(order_id,level)，仅 1/2 级，base_amount 为整单基数，rate NUMERIC(5,4) | 新权益按明细/层级、政策和 S 预算；历史整单佣金不能无依据拆成多行 |
-| order_items.product_id/sku_id | UUID 快照引用，当前无实体 FK | 目标复合归属 FK；先核验存量可关联性，不能因为同名列写了“外键”就声称已生效 |
+| order_items.product_id/sku_id | UUID 快照引用，阶段 E ORM 与前向迁移源码已补 SKU 到商品的复合归属 FK | 实际升级前先核验存量可关联性；未执行迁移时不得声称数据库约束已生效 |
 | refund_items、member_profiles、inventory_accounts | 现有均有 UUID id 与时间列 | 继续保留主键，业务唯一键补强，避免原稿把实体 ID 静默删除 |
 | asset 系统主体去重 | 可空 uploader_id 的普通唯一约束 | 目标补系统主体部分唯一，先核验已有重复，不自动删资产 |
-| audit_events | 现行管理审计，无 actor_type/target_revision，调用协调器绑定管理员 | 补主体类型与业务版本，提现状态采用固定审计契约及唯一版本；历史空主体需依据事件来源核验，不伪造管理员；扩展用户/系统/渠道入口及事务审计 |
+| audit_events | 阶段 E ORM、前向迁移与协调器已补 actor_type/target_revision、提现状态目标约束和成功版本唯一索引；管理员、用户提现与对账处置已接入 | 实际升级前核验历史主体、提现目标和版本，不伪造主体；system/channel 入口留待对应执行器与适配器 |
 | wallet_ledgers | 现有缺结果余额/账户版本，类型不含 withdrawal_paid | 补版本账链、结果快照和真实打款类型；历史期初不捏造完整账链 |
-| reconciliation_records | `20260922_05` 使用 channel、record_type、渠道流水复合唯一键，并关联支付、退款或提现对象 | 记录 payment/refund/withdrawal 三类匹配；迁移不伪造旧账单类型，旧事实存在时明确失败 |
+| reconciliation_records | `20260922_05` 使用 channel、record_type、渠道流水复合唯一键，并关联支付、退款或提现对象；阶段 E 已增加版本化人工处置入口与同事务审计 | 记录 payment/refund/withdrawal 三类匹配；处置只记录责任人与说明，不改写渠道匹配、资金事实或 discrepancy 状态；迁移不伪造旧账单类型，旧事实存在时明确失败 |
 | 多表默认值/时间 | 多数由 ORM 生成，无数据库 server_default | 字典明确生成来源；SQL 迁移显式提供必填列，不能把文档初值当现行 DEFAULT |
 | 定时扫描 | `scripts.run_durable_tasks` 已提供有界单轮 Worker，处理订单过期、订单确认、自动确认履约、退款补偿和佣金结算；渠道任务明确重试或 attention | 常驻调度、告警、渠道适配器和部署证据仍待专项完成 |
 

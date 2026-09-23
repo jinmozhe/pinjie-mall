@@ -19,7 +19,7 @@ from app.core.config import Settings
 from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
 from app.core.request_metadata import RequestMetadata
-from app.db.models import Admin, AdminSession, Asset, User
+from app.db.models import Admin, AdminSession, Asset, AuditEvent, User
 from app.db.models.commerce_lifecycle import Fulfillment, PaymentAttempt, RefundAttempt
 from app.db.models.distribution import CommissionRecord, MemberLevel, MemberProfile
 from app.db.models.order import Order
@@ -49,6 +49,7 @@ from app.domains.lifecycle.schemas import (
     PaymentAttemptCreate,
     ProductReviewCreate,
     ReconciliationRecordCreate,
+    ReconciliationResolve,
     RefundRequestCreate,
     RefundReview,
     ShipmentCreate,
@@ -81,7 +82,7 @@ from app.services.commerce_reporting import (
     CommerceReportingService,
     SelectedCommerceIds,
 )
-from app.services.distribution import AdminDistributionApplicationService
+from app.services.distribution import AdminDistributionApplicationService, UserDistributionApplicationService
 from app.services.lifecycle import AdminLifecycleApplicationService
 from app.services.orders import OrderService
 from app.services.payment_lifecycle import LifecycleService
@@ -184,6 +185,16 @@ async def shop():
                 ),
                 admin_distribution=AdminDistributionApplicationService(
                     distribution=distribution, access=access, audit=audit, actor_id=actor
+                ),
+                user_distribution=UserDistributionApplicationService(
+                    distribution=distribution,
+                    audit=AuditCoordinator(
+                        session=session,
+                        session_factory=factory,
+                        actor_id=users[1],
+                        metadata=RequestMetadata(str(new_uuid7()), str(new_uuid7()), "127.0.0.1", "pytest", "test"),
+                    ),
+                    actor_id=users[1],
                 ),
                 reporting=CommerceReportingService(session, audit),
                 addresses=AddressApplicationService(
@@ -481,6 +492,18 @@ async def test_paid_delivery_refund_wallet_and_reporting_flow(shop, physical):
         WithdrawalManualCompletion(revision=approved.revision, note="已线下转账", payment_reference="OFFLINE-TEST-001"),
     )
     assert completed.status == "succeeded" and completed.channel_reference == "OFFLINE-TEST-001"
+    withdrawal_audits = list(
+        await shop.session.scalars(
+            select(AuditEvent)
+            .where(
+                AuditEvent.action == "withdrawal.state_changed",
+                AuditEvent.target_id == withdrawal.id,
+                AuditEvent.result == "succeeded",
+            )
+            .order_by(AuditEvent.target_revision)
+        )
+    )
+    assert [(event.actor_type, event.target_revision) for event in withdrawal_audits] == [("admin", 2), ("admin", 3)]
     with pytest.raises(AppException):
         await shop.admin_distribution.complete_withdrawal_manually(
             withdrawal.id,
@@ -587,9 +610,22 @@ async def test_rejected_withdrawal_and_refund_preserve_money_and_idempotency(sho
     before = await shop.distribution.profile_for_user(user)
     assert (await shop.distribution.activate_profile(user)).invitation_code == before.invitation_code
     request = WithdrawalCreate(request_id=new_uuid7(), amount="10.00", destination_reference="测试引用")
-    withdrawal = await shop.distribution.create_withdrawal(user, request)
+    withdrawal = await shop.user_distribution.create_withdrawal(request)
+    replayed = await shop.user_distribution.create_withdrawal(request)
+    assert replayed.id == withdrawal.id
+    withdrawal_audits = list(
+        (
+            await shop.session.scalars(
+                select(AuditEvent).where(AuditEvent.target_id == withdrawal.id).order_by(AuditEvent.occurred_at)
+            )
+        ).all()
+    )
+    assert [(event.actor_type, event.action, event.target_revision, event.result) for event in withdrawal_audits] == [
+        ("user", "withdrawal.state_changed", 1, "succeeded"),
+        ("user", "withdrawal.request_replayed", 1, "succeeded"),
+    ]
     with pytest.raises(AppException) as reused:
-        await shop.distribution.create_withdrawal(user, request.model_copy(update={"amount": Decimal("11.00")}))
+        await shop.user_distribution.create_withdrawal(request.model_copy(update={"amount": Decimal("11.00")}))
     assert reused.value.code == "WITHDRAWAL_REQUEST_CONFLICT"
     with pytest.raises(AppException):
         await shop.admin_distribution.approve_withdrawal(withdrawal.id, WithdrawalReview(revision=99, note="旧版本"))
@@ -1068,6 +1104,30 @@ async def test_auto_delivery_manual_refund_and_unmatched_reconciliation_paths(sh
         )
     )
     assert refund_reconciliation.status == "discrepancy"
+    resolved_reconciliation = await shop.admin_lifecycle.resolve_reconciliation(
+        refund_reconciliation.id,
+        ReconciliationResolve(revision=refund_reconciliation.revision, note="已核对渠道差异并完成后续处理"),
+    )
+    assert (
+        resolved_reconciliation.status,
+        resolved_reconciliation.resolution_status,
+        resolved_reconciliation.resolution_note,
+        resolved_reconciliation.resolved_by_id,
+        resolved_reconciliation.revision,
+        resolved_reconciliation.refund_attempt_id,
+    ) == ("discrepancy", "resolved", "已核对渠道差异并完成后续处理", shop.actor, 2, None)
+    audit = await shop.session.scalar(
+        select(AuditEvent).where(
+            AuditEvent.action == "reconciliation:resolve",
+            AuditEvent.target_id == refund_reconciliation.id,
+        )
+    )
+    assert audit is not None and (audit.actor_type, audit.target_revision, audit.result) == ("admin", 2, "succeeded")
+    with pytest.raises(AppException):
+        await shop.admin_lifecycle.resolve_reconciliation(
+            refund_reconciliation.id,
+            ReconciliationResolve(revision=1, note="过期版本不得覆盖"),
+        )
     withdrawal_reconciliation = await shop.admin_lifecycle.reconcile(
         ReconciliationRecordCreate(
             channel="wechat",

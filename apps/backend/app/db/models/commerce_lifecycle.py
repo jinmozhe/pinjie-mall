@@ -26,6 +26,7 @@ class PaymentAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         UniqueConstraint("user_id", "request_id", name="uq_payment_attempt_user_request"),
         UniqueConstraint("merchant_reference", name="uq_payment_attempt_merchant_reference"),
         UniqueConstraint("channel", "channel_transaction_id", name="uq_payment_attempt_channel_transaction"),
+        UniqueConstraint("id", "order_id", name="uq_payment_attempt_id_order"),
         CheckConstraint("channel IN ('wechat', 'alipay')", name="ck_payment_attempt_channel"),
         CheckConstraint(
             "status IN ('created', 'unavailable', 'pending', 'succeeded', 'closed', 'unknown')",
@@ -304,6 +305,11 @@ class ReconciliationRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("record_type IN ('payment', 'refund', 'withdrawal')", name="ck_reconciliation_record_type"),
         CheckConstraint("status IN ('matched', 'discrepancy')", name="ck_reconciliation_status"),
         CheckConstraint("resolution_status IN ('open', 'resolved')", name="ck_reconciliation_resolution_status"),
+        CheckConstraint(
+            "(resolution_status = 'open' AND resolution_note IS NULL AND resolved_by_id IS NULL AND resolved_at IS NULL) OR "
+            "(resolution_status = 'resolved' AND resolution_note IS NOT NULL AND resolved_by_id IS NOT NULL AND resolved_at IS NOT NULL)",
+            name="ck_reconciliation_resolution_fact",
+        ),
         CheckConstraint("amount > 0", name="ck_reconciliation_amount"),
         CheckConstraint("currency = 'CNY'", name="ck_reconciliation_currency"),
         CheckConstraint(
@@ -313,6 +319,7 @@ class ReconciliationRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             name="ck_reconciliation_record_target",
         ),
         Index("ix_reconciliation_occurred", "occurred_at", "id"),
+        Index("ix_reconciliation_resolution", "resolution_status", "id"),
         {"comment": "渠道账单与本地支付事实对账记录"},
     )
 

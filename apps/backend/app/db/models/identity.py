@@ -16,6 +16,7 @@ from sqlalchemy import (
     Table,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import INET, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -266,15 +267,37 @@ class AuditEvent(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "audit_events"
     __table_args__ = (
         CheckConstraint("result IN ('started', 'succeeded', 'denied', 'failed')", name="ck_audit_events_result"),
+        CheckConstraint(
+            "actor_type IN ('admin', 'user', 'system', 'channel') AND "
+            "((actor_type IN ('admin', 'user') AND actor_id IS NOT NULL) OR "
+            "(actor_type IN ('system', 'channel') AND actor_id IS NULL))",
+            name="ck_audit_events_actor",
+        ),
+        CheckConstraint("target_revision IS NULL OR target_revision > 0", name="ck_audit_events_target_revision"),
+        CheckConstraint(
+            "action <> 'withdrawal.state_changed' OR "
+            "(target_type = 'withdrawal_request' AND target_id IS NOT NULL AND target_revision IS NOT NULL)",
+            name="ck_audit_events_withdrawal_target",
+        ),
+        Index(
+            "uq_audit_events_withdrawal_revision",
+            "target_type",
+            "target_id",
+            "target_revision",
+            unique=True,
+            postgresql_where=text("action = 'withdrawal.state_changed' AND result = 'succeeded'"),
+        ),
         Index("ix_audit_events_occurred", "occurred_at"),
         Index("ix_audit_events_actor_action", "actor_id", "action", "occurred_at"),
         {"comment": "高风险管理操作审计事件"},
     )
 
     actor_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
+    actor_type: Mapped[str] = mapped_column(String(16), nullable=False)
     action: Mapped[str] = mapped_column(String(150), nullable=False)
     target_type: Mapped[str] = mapped_column(String(64), nullable=False)
     target_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
+    target_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
     result: Mapped[str] = mapped_column(String(16), nullable=False)
     changed_fields: Mapped[dict[str, Any]] = mapped_column(JSONB().with_variant(JSON(), "sqlite"), nullable=False)
     request_id: Mapped[str] = mapped_column(String(128), nullable=False)

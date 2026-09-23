@@ -8406,6 +8406,75 @@
         }
       }
     },
+    "/api/v1/admin/reconciliation-records/{record_id}/resolve": {
+      "post": {
+        "tags": [
+          "支付与售后"
+        ],
+        "summary": "处置对账差异",
+        "operationId": "admin_resolve_reconciliation_api_v1_admin_reconciliation_records__record_id__resolve_post",
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Record Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconciliationResolve"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ReconciliationRecordRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/member-levels": {
       "get": {
         "tags": [
@@ -15883,6 +15952,11 @@
             "title": "Actor Id",
             "description": "操作管理员唯一标识"
           },
+          "actor_type": {
+            "type": "string",
+            "title": "Actor Type",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
           "action": {
             "type": "string",
             "title": "Action",
@@ -15905,6 +15979,18 @@
             ],
             "title": "Target Id",
             "description": "操作目标唯一标识"
+          },
+          "target_revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Revision",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
           },
           "result": {
             "type": "string",
@@ -15947,9 +16033,11 @@
         "required": [
           "id",
           "actor_id",
+          "actor_type",
           "action",
           "target_type",
           "target_id",
+          "target_revision",
           "result",
           "changed_fields",
           "request_id",
@@ -23185,6 +23273,49 @@
             "title": "Resolution Status",
             "description": "当前业务字段，具体语义由所属请求或响应模型定义"
           },
+          "resolution_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Note",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "resolved_by_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved By Id",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          },
           "note": {
             "anyOf": [
               {
@@ -23212,9 +23343,37 @@
           "refund_attempt_id",
           "withdrawal_request_id",
           "resolution_status",
+          "resolution_note",
+          "resolved_by_id",
+          "resolved_at",
+          "revision",
           "note"
         ],
         "title": "ReconciliationRecordRead"
+      },
+      "ReconciliationResolve": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Note",
+            "description": "操作说明或核对备注"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "note"
+        ],
+        "title": "ReconciliationResolve"
       },
       "RedisHealthRead": {
         "properties": {

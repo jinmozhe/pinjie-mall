@@ -10,6 +10,7 @@ from app.domains.lifecycle import (
     FulfillmentRead,
     ReconciliationRecordCreate,
     ReconciliationRecordRead,
+    ReconciliationResolve,
     RefundRequestRead,
     RefundReview,
     ShipmentCreate,
@@ -102,4 +103,30 @@ class AdminLifecycleApplicationService:
             PermissionCode.RECONCILIATION_IMPORT,
             None,
             lambda: self.lifecycle.reconcile_in_open_transaction(data),
+        )
+
+    async def resolve_reconciliation(self, record_id: UUID, data: ReconciliationResolve) -> ReconciliationRecordRead:
+        async def authorized() -> ReconciliationRecordRead:
+            admin = await self.access.get_admin_for_update(self.actor_id)
+            if admin is None or not admin.is_active:
+                raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="当前管理员权限已失效")
+            granted = admin.is_superuser or any(
+                role.is_active
+                and any(
+                    item.is_active and item.code == PermissionCode.RECONCILIATION_RESOLVE.value
+                    for item in role.permissions
+                )
+                for role in admin.roles
+            )
+            if not granted:
+                raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="当前管理员权限已失效")
+            return await self.lifecycle.resolve_reconciliation_in_open_transaction(record_id, data, self.actor_id)
+
+        return await self.audit.execute(
+            action=PermissionCode.RECONCILIATION_RESOLVE.value,
+            target_type="reconciliation_record",
+            target_id=record_id,
+            target_revision=data.revision + 1,
+            changed_fields={"operation": PermissionCode.RECONCILIATION_RESOLVE.value, "resolution_status": "resolved"},
+            operation=authorized,
         )

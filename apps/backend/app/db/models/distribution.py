@@ -8,6 +8,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
     Numeric,
@@ -544,7 +545,13 @@ class WithdrawalRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "withdrawal_requests"
     __table_args__ = (
         UniqueConstraint("user_id", "request_id", name="uq_withdrawal_user_request"),
-        UniqueConstraint("channel_reference", name="uq_withdrawal_channel_reference"),
+        UniqueConstraint("channel", "channel_reference", name="uq_withdrawal_channel_reference"),
+        ForeignKeyConstraint(
+            ["wallet_id", "user_id"],
+            ["wallet_accounts.id", "wallet_accounts.user_id"],
+            ondelete="RESTRICT",
+            name="fk_withdrawal_wallet_owner",
+        ),
         CheckConstraint(
             "status IN ('requested', 'approved', 'rejected', 'processing', 'succeeded', 'unknown')",
             name="ck_withdrawal_status",
@@ -556,7 +563,7 @@ class WithdrawalRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"), comment="申请用户")
-    wallet_id: Mapped[UUID] = mapped_column(ForeignKey("wallet_accounts.id", ondelete="RESTRICT"), comment="佣金钱包")
+    wallet_id: Mapped[UUID] = mapped_column(comment="佣金钱包")
     request_id: Mapped[UUID] = mapped_column(comment="用户范围幂等请求号")
     request_hash: Mapped[str] = mapped_column(String(64), comment="规范化请求摘要")
     merchant_reference: Mapped[str] = mapped_column(String(80), unique=True, comment="服务端提现业务号")
