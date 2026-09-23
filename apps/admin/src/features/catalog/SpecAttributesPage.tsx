@@ -182,7 +182,7 @@ function ValuesDrawer({
             <InputNumber placeholder="排序" min={0} precision={0} style={{ width: 80 }} />
           </Form.Item>
           <Form.Item name="is_active" valuePropName="checked">
-            <Switch checkedChildren="启" unCheckedChildren="停" defaultChecked />
+            <Switch checkedChildren="启" unCheckedChildren="停" />
           </Form.Item>
           <Form.Item>
             <Space>
@@ -235,7 +235,7 @@ function ValuesDrawer({
             title: "操作",
             width: "1%",
             render: (_, row) =>
-              canUpdate && (
+              canUpdate ? (
                 <Button
                   size="small"
                   icon={<EditOutlined />}
@@ -251,7 +251,7 @@ function ValuesDrawer({
                 >
                   编辑
                 </Button>
-              ),
+              ) : null,
           },
         ]}
       />

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Alert,
   Button,
   Form,
   Input,
@@ -22,10 +23,16 @@ import type {
   MemberLevelRead,
 } from "@pinjie/api-client";
 import { PageFrame } from "@/components/PageFrame";
+import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi } from "@/lib/api/commerce";
 
 export default function MemberPricesPage() {
+  const admin = useCurrentAdmin();
   const queryClient = useQueryClient();
+  const canPricesRead = canAccess(admin, "member-price-rules:read");
+  const canPricesCreate = canAccess(admin, "member-price-rules:create");
+  const canPricesUpdate = canAccess(admin, "member-price-rules:update");
+
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<MemberPriceRuleRead | null>(null);
@@ -36,11 +43,13 @@ export default function MemberPricesPage() {
   const { data: levelsData } = useQuery({
     queryKey: ["admin-member-levels-all"],
     queryFn: () => commerceApi.memberLevels(1, 100),
+    enabled: canPricesRead,
   });
 
   const { data: rulesData, isLoading } = useQuery({
     queryKey: ["admin-member-price-rules", page],
     queryFn: () => commerceApi.memberPriceRules(page),
+    enabled: canPricesRead,
   });
 
   const saveMutation = useMutation({
@@ -148,29 +157,31 @@ export default function MemberPricesPage() {
     {
       title: "操作",
       key: "actions",
-      render: (_, row) => (
-        <Button
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => {
-            setEditingRule(row);
-            form.setFieldsValue({
-              member_level_id: row.member_level_id,
-              scope_type: row.scope_type,
-              sku_id: row.sku_id,
-              product_id: row.product_id,
-              category_id: row.category_id,
-              price_mode: row.price_mode,
-              fixed_price: row.fixed_price ? Number(row.fixed_price) : undefined,
-              discount_factor: row.discount_factor ? Number(row.discount_factor) : undefined,
-              is_active: row.is_active ?? true,
-            });
-            setModalOpen(true);
-          }}
-        >
-          编辑
-        </Button>
-      ),
+      width: "1%",
+      render: (_, row) =>
+        canPricesUpdate ? (
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setEditingRule(row);
+              form.setFieldsValue({
+                member_level_id: row.member_level_id,
+                scope_type: row.scope_type,
+                sku_id: row.sku_id,
+                product_id: row.product_id,
+                category_id: row.category_id,
+                price_mode: row.price_mode,
+                fixed_price: row.fixed_price ? Number(row.fixed_price) : undefined,
+                discount_factor: row.discount_factor ? Number(row.discount_factor) : undefined,
+                is_active: row.is_active ?? true,
+              });
+              setModalOpen(true);
+            }}
+          >
+            编辑
+          </Button>
+        ) : null,
     },
   ];
 
@@ -179,38 +190,49 @@ export default function MemberPricesPage() {
       title="会员价格"
       description="配置各会员等级针对指定商品变体 SKU、SPU 商品或全品类的一口价特惠、分层折扣或排除规则。"
     >
-      <div style={{ marginBottom: 16 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            setEditingRule(null);
-            form.resetFields();
-            form.setFieldsValue({
-              scope_type: "sku",
-              price_mode: "fixed",
-              is_active: true,
-            });
-            setModalOpen(true);
-          }}
-        >
-          新建会员价格规则
-        </Button>
-      </div>
+      {canPricesCreate && (
+        <div style={{ marginBottom: 16 }}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              setEditingRule(null);
+              form.resetFields();
+              form.setFieldsValue({
+                scope_type: "sku",
+                price_mode: "fixed",
+                is_active: true,
+              });
+              setModalOpen(true);
+            }}
+          >
+            新建会员价格规则
+          </Button>
+        </div>
+      )}
 
-      <Table<MemberPriceRuleRead>
-        rowKey="id"
-        loading={isLoading}
-        dataSource={rulesData?.items ?? []}
-        columns={columns}
-        pagination={{
-          current: page,
-          pageSize: 20,
-          total: rulesData?.total ?? 0,
-          onChange: (p) => setPage(p),
-          showTotal: (total) => `共 ${total} 条规则`,
-        }}
-      />
+      {!canPricesRead ? (
+        <Alert type="warning" title="无权查看会员价格规则列表" />
+      ) : (
+        <Table<MemberPriceRuleRead>
+          rowKey="id"
+          loading={isLoading}
+          dataSource={rulesData?.items ?? []}
+          columns={columns.map((col) => ({
+            ...col,
+            onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+            onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+          }))}
+          scroll={{ x: "max-content" }}
+          pagination={{
+            current: page,
+            pageSize: 20,
+            total: rulesData?.total ?? 0,
+            onChange: (p) => setPage(p),
+            showTotal: (total) => `共 ${total} 条规则`,
+          }}
+        />
+      )}
 
       <Modal
         title={editingRule ? "编辑会员价格规则" : "新建会员价格规则"}

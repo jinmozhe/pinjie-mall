@@ -107,8 +107,9 @@ export default function MembersPage() {
           {
             title: "资格与升降级历史",
             key: "actions",
+            width: "1%",
             render: (_, row) => (
-              <Space orientation="horizontal" size="small">
+              <Space size="small">
                 <Button
                   size="small"
                   icon={<TrophyOutlined />}
@@ -145,7 +146,12 @@ export default function MembersPage() {
           rowKey="id"
           loading={qualLoading}
           dataSource={qualData?.items ?? []}
-          columns={qualColumns}
+          columns={qualColumns.map((col) => ({
+            ...col,
+            onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+            onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+          }))}
+          scroll={{ x: "max-content" }}
           pagination={{
             current: qualPage,
             pageSize: 20,
@@ -166,7 +172,12 @@ export default function MembersPage() {
           rowKey="id"
           loading={levelLoading}
           dataSource={levelData?.items ?? []}
-          columns={levelColumns}
+          columns={levelColumns.map((col) => ({
+            ...col,
+            onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+            onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+          }))}
+          scroll={{ x: "max-content" }}
           pagination={{
             current: levelPage,
             pageSize: 20,

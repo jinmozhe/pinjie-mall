@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Alert,
   Button,
   Drawer,
   Form,
@@ -22,12 +23,17 @@ import type {
   PointsManualAdjustment,
 } from "@pinjie/api-client";
 import { PageFrame } from "@/components/PageFrame";
+import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi } from "@/lib/api/commerce";
 
 export default function PointsPage() {
+  const admin = useCurrentAdmin();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [ledgerPage, setLedgerPage] = useState(1);
+
+  const canRead = canAccess(admin, "points:read");
+  const canAdjust = canAccess(admin, "points:adjust");
 
   // Selected account for ledger drawer
   const [selectedAccount, setSelectedAccount] = useState<PointsAccountRead | null>(null);
@@ -40,12 +46,13 @@ export default function PointsPage() {
   const { data: accountsData, isLoading } = useQuery({
     queryKey: ["admin-points-accounts", page],
     queryFn: () => commerceApi.pointsAccounts(page),
+    enabled: canRead,
   });
 
   const { data: ledgersData, isLoading: ledgersLoading } = useQuery({
     queryKey: ["admin-points-ledgers", selectedAccount?.id, ledgerPage],
     queryFn: () => commerceApi.pointsLedgers(selectedAccount!.id, ledgerPage),
-    enabled: Boolean(selectedAccount),
+    enabled: Boolean(selectedAccount) && canRead,
   });
 
   const adjustMutation = useMutation({
@@ -105,8 +112,9 @@ export default function PointsPage() {
     {
       title: "操作",
       key: "actions",
+      width: "1%",
       render: (_, row) => (
-        <Space orientation="horizontal" size="small">
+        <Space size="small">
           <Button
             size="small"
             icon={<UnorderedListOutlined />}
@@ -117,20 +125,22 @@ export default function PointsPage() {
           >
             积分流水
           </Button>
-          <Button
-            size="small"
-            onClick={() => {
-              adjustForm.resetFields();
-              adjustForm.setFieldsValue({
-                user_id: row.user_id,
-                operation: "grant",
-                points: 100,
-              });
-              setAdjustModalOpen(true);
-            }}
-          >
-            人工调整
-          </Button>
+          {canAdjust && (
+            <Button
+              size="small"
+              onClick={() => {
+                adjustForm.resetFields();
+                adjustForm.setFieldsValue({
+                  user_id: row.user_id,
+                  operation: "grant",
+                  points: 100,
+                });
+                setAdjustModalOpen(true);
+              }}
+            >
+              人工调整
+            </Button>
+          )}
         </Space>
       ),
     },
@@ -186,33 +196,44 @@ export default function PointsPage() {
       title="积分管理"
       description="查看商城用户积分账户资产（可用、冻结、欠积分），审计不可变积分流水并执行受控的人工授予与冲销操作。"
     >
-      <div style={{ marginBottom: 16 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            adjustForm.resetFields();
-            adjustForm.setFieldsValue({ operation: "grant", points: 100 });
-            setAdjustModalOpen(true);
-          }}
-        >
-          人工授予 / 冲销积分
-        </Button>
-      </div>
+      {canAdjust && (
+        <div style={{ marginBottom: 16 }}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => {
+              adjustForm.resetFields();
+              adjustForm.setFieldsValue({ operation: "grant", points: 100 });
+              setAdjustModalOpen(true);
+            }}
+          >
+            人工授予 / 冲销积分
+          </Button>
+        </div>
+      )}
 
-      <Table<PointsAccountRead>
-        rowKey="id"
-        loading={isLoading}
-        dataSource={accountsData?.items ?? []}
-        columns={columns}
-        pagination={{
-          current: page,
-          pageSize: 20,
-          total: accountsData?.total ?? 0,
-          onChange: (p) => setPage(p),
-          showTotal: (total) => `共 ${total} 个积分账户`,
-        }}
-      />
+      {!canRead ? (
+        <Alert type="warning" title="无权查看积分账户列表" />
+      ) : (
+        <Table<PointsAccountRead>
+          rowKey="id"
+          loading={isLoading}
+          dataSource={accountsData?.items ?? []}
+          columns={columns.map((col) => ({
+            ...col,
+            onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+            onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+          }))}
+          scroll={{ x: "max-content" }}
+          pagination={{
+            current: page,
+            pageSize: 20,
+            total: accountsData?.total ?? 0,
+            onChange: (p) => setPage(p),
+            showTotal: (total) => `共 ${total} 个积分账户`,
+          }}
+        />
+      )}
 
       {/* Ledger Drawer */}
       <Drawer
@@ -229,7 +250,12 @@ export default function PointsPage() {
           rowKey="id"
           loading={ledgersLoading}
           dataSource={ledgersData?.items ?? []}
-          columns={ledgerColumns}
+          columns={ledgerColumns.map((col) => ({
+            ...col,
+            onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+            onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+          }))}
+          scroll={{ x: "max-content" }}
           pagination={{
             current: ledgerPage,
             pageSize: 20,

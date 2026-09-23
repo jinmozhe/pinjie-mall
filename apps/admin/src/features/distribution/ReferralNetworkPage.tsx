@@ -33,7 +33,7 @@ export default function ReferralNetworkPage() {
         load={(filters) =>
           commerceApi.members({
             ...filters,
-            inviter_id: currentInviterFilter ?? (filters as { inviter_id?: string })?.inviter_id,
+            inviter_id: currentInviterFilter ?? filters.inviter_id,
           })
         }
         fields={[
@@ -59,6 +59,7 @@ export default function ReferralNetworkPage() {
           {
             title: "拓扑下钻",
             key: "network_drill",
+            width: "1%",
             render: (_, row) => (
               <Button
                 size="small"

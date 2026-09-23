@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Alert,
   Button,
   Form,
   Input,
@@ -25,10 +26,19 @@ import type {
   MemberLevelConditionUpdate,
 } from "@pinjie/api-client";
 import { PageFrame } from "@/components/PageFrame";
+import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi } from "@/lib/api/commerce";
 
 export default function MemberLevelsPage() {
+  const admin = useCurrentAdmin();
   const queryClient = useQueryClient();
+  const canLevelsRead = canAccess(admin, "member-levels:read");
+  const canLevelsCreate = canAccess(admin, "member-levels:create");
+  const canLevelsUpdate = canAccess(admin, "member-levels:update");
+  const canCondsRead = canAccess(admin, "member-level-conditions:read");
+  const canCondsCreate = canAccess(admin, "member-level-conditions:create");
+  const canCondsUpdate = canAccess(admin, "member-level-conditions:update");
+
   const [levelPage, setLevelPage] = useState(1);
   const [condPage, setCondPage] = useState(1);
 
@@ -46,11 +56,13 @@ export default function MemberLevelsPage() {
   const { data: levelsData, isLoading: levelsLoading } = useQuery({
     queryKey: ["admin-member-levels", levelPage],
     queryFn: () => commerceApi.memberLevels(levelPage),
+    enabled: canLevelsRead,
   });
 
   const { data: conditionsData, isLoading: condsLoading } = useQuery({
     queryKey: ["admin-member-level-conditions", condPage],
     queryFn: () => commerceApi.memberLevelConditions(condPage),
+    enabled: canCondsRead,
   });
 
   // Mutations
@@ -132,26 +144,28 @@ export default function MemberLevelsPage() {
     {
       title: "操作",
       key: "actions",
-      render: (_, row) => (
-        <Button
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => {
-            setEditingLevel(row);
-            levelForm.setFieldsValue({
-              code: row.code,
-              name: row.name,
-              level_rank: row.level_rank,
-              discount_factor: row.discount_factor ? Number(row.discount_factor) : undefined,
-              sort_order: row.sort_order,
-              is_active: row.is_active ?? true,
-            });
-            setLevelModalOpen(true);
-          }}
-        >
-          编辑
-        </Button>
-      ),
+      width: "1%",
+      render: (_, row) =>
+        canLevelsUpdate ? (
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setEditingLevel(row);
+              levelForm.setFieldsValue({
+                code: row.code,
+                name: row.name,
+                level_rank: row.level_rank,
+                discount_factor: row.discount_factor ? Number(row.discount_factor) : undefined,
+                sort_order: row.sort_order,
+                is_active: row.is_active ?? true,
+              });
+              setLevelModalOpen(true);
+            }}
+          >
+            编辑
+          </Button>
+        ) : null,
     },
   ];
 
@@ -205,27 +219,29 @@ export default function MemberLevelsPage() {
     {
       title: "操作",
       key: "actions",
-      render: (_, row) => (
-        <Button
-          size="small"
-          icon={<EditOutlined />}
-          onClick={() => {
-            setEditingCond(row);
-            condForm.setFieldsValue({
-              level_id: row.level_id,
-              metric: row.metric,
-              aggregation: row.aggregation,
-              amount_threshold: row.amount_threshold ? Number(row.amount_threshold) : undefined,
-              count_threshold: row.count_threshold ?? undefined,
-              effective_at: row.effective_at,
-              is_active: row.is_active ?? true,
-            });
-            setCondModalOpen(true);
-          }}
-        >
-          编辑
-        </Button>
-      ),
+      width: "1%",
+      render: (_, row) =>
+        canCondsUpdate ? (
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setEditingCond(row);
+              condForm.setFieldsValue({
+                level_id: row.level_id,
+                metric: row.metric,
+                aggregation: row.aggregation,
+                amount_threshold: row.amount_threshold ? Number(row.amount_threshold) : undefined,
+                count_threshold: row.count_threshold ?? undefined,
+                effective_at: row.effective_at,
+                is_active: row.is_active ?? true,
+              });
+              setCondModalOpen(true);
+            }}
+          >
+            编辑
+          </Button>
+        ) : null,
     },
   ];
 
@@ -242,33 +258,44 @@ export default function MemberLevelsPage() {
             label: "会员等级体系",
             children: (
               <div>
-                <div style={{ marginBottom: 16 }}>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => {
-                      setEditingLevel(null);
-                      levelForm.resetFields();
-                      levelForm.setFieldsValue({ is_active: true, level_rank: 1 });
-                      setLevelModalOpen(true);
+                {canLevelsCreate && (
+                  <div style={{ marginBottom: 16 }}>
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => {
+                        setEditingLevel(null);
+                        levelForm.resetFields();
+                        levelForm.setFieldsValue({ is_active: true, level_rank: 1 });
+                        setLevelModalOpen(true);
+                      }}
+                    >
+                      新建会员等级
+                    </Button>
+                  </div>
+                )}
+                {!canLevelsRead ? (
+                  <Alert type="warning" title="无权查看会员等级列表" />
+                ) : (
+                  <Table<MemberLevelRead>
+                    rowKey="id"
+                    loading={levelsLoading}
+                    dataSource={levelsData?.items ?? []}
+                    columns={levelColumns.map((col) => ({
+                      ...col,
+                      onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+                      onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+                    }))}
+                    scroll={{ x: "max-content" }}
+                    pagination={{
+                      current: levelPage,
+                      pageSize: 20,
+                      total: levelsData?.total ?? 0,
+                      onChange: (p) => setLevelPage(p),
+                      showTotal: (total) => `共 ${total} 个等级`,
                     }}
-                  >
-                    新建会员等级
-                  </Button>
-                </div>
-                <Table<MemberLevelRead>
-                  rowKey="id"
-                  loading={levelsLoading}
-                  dataSource={levelsData?.items ?? []}
-                  columns={levelColumns}
-                  pagination={{
-                    current: levelPage,
-                    pageSize: 20,
-                    total: levelsData?.total ?? 0,
-                    onChange: (p) => setLevelPage(p),
-                    showTotal: (total) => `共 ${total} 个等级`,
-                  }}
-                />
+                  />
+                )}
               </div>
             ),
           },
@@ -277,38 +304,49 @@ export default function MemberLevelsPage() {
             label: "晋升资格条件",
             children: (
               <div>
-                <div style={{ marginBottom: 16 }}>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => {
-                      setEditingCond(null);
-                      condForm.resetFields();
-                      condForm.setFieldsValue({
-                        is_active: true,
-                        metric: "consumption",
-                        aggregation: "cumulative",
-                        effective_at: new Date().toISOString(),
-                      });
-                      setCondModalOpen(true);
+                {canCondsCreate && (
+                  <div style={{ marginBottom: 16 }}>
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => {
+                        setEditingCond(null);
+                        condForm.resetFields();
+                        condForm.setFieldsValue({
+                          is_active: true,
+                          metric: "consumption",
+                          aggregation: "cumulative",
+                          effective_at: new Date().toISOString(),
+                        });
+                        setCondModalOpen(true);
+                      }}
+                    >
+                      新建资格条件
+                    </Button>
+                  </div>
+                )}
+                {!canCondsRead ? (
+                  <Alert type="warning" title="无权查看会员资格条件列表" />
+                ) : (
+                  <Table<MemberLevelConditionRead>
+                    rowKey="id"
+                    loading={condsLoading}
+                    dataSource={conditionsData?.items ?? []}
+                    columns={condColumns.map((col) => ({
+                      ...col,
+                      onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
+                      onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+                    }))}
+                    scroll={{ x: "max-content" }}
+                    pagination={{
+                      current: condPage,
+                      pageSize: 20,
+                      total: conditionsData?.total ?? 0,
+                      onChange: (p) => setCondPage(p),
+                      showTotal: (total) => `共 ${total} 条资格条件`,
                     }}
-                  >
-                    新建资格条件
-                  </Button>
-                </div>
-                <Table<MemberLevelConditionRead>
-                  rowKey="id"
-                  loading={condsLoading}
-                  dataSource={conditionsData?.items ?? []}
-                  columns={condColumns}
-                  pagination={{
-                    current: condPage,
-                    pageSize: 20,
-                    total: conditionsData?.total ?? 0,
-                    onChange: (p) => setCondPage(p),
-                    showTotal: (total) => `共 ${total} 条资格条件`,
-                  }}
-                />
+                  />
+                )}
               </div>
             ),
           },

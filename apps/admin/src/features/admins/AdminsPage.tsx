@@ -460,7 +460,7 @@ export function AdminsPage() {
           edit.mutate(values, { onSettled: () => { editSubmittingRef.current = false; } });
         }}>
           <Form.Item label="头像">
-            <Space orientation="vertical" size={4}>
+            <Space direction="vertical" size={4}>
               <Form.Item name="avatar" noStyle><AvatarUploader disabled={edit.isPending || removingAvatar} onUploadingChange={setUploadingAvatar} /></Form.Item>
               {editAvatar ? <Button type="link" size="small" danger icon={<DeleteOutlined />} disabled={edit.isPending || removingAvatar || uploadingAvatar} onClick={() => setRemovingAvatar(true)}>移除头像</Button> : null}
             </Space>
