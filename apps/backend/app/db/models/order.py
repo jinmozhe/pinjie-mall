@@ -30,6 +30,7 @@ class Order(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             ["payment_attempts.id", "payment_attempts.order_id"],
             ondelete="RESTRICT",
             name="fk_orders_accepted_payment_same_order",
+            use_alter=True,
         ),
         CheckConstraint("status IN ('pending_payment', 'paid', 'cancelled')", name="ck_order_status"),
         CheckConstraint("product_type IN ('physical', 'virtual')", name="ck_order_product_type"),

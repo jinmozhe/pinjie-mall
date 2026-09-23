@@ -39,6 +39,7 @@ class ReadService:
         return OrderRead(
             id=order_id,
             status="pending_payment",
+            acceptance_status="pending",
             product_type="virtual",
             items_amount=Decimal("1"),
             freight_amount=Decimal("0"),

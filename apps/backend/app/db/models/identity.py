@@ -293,11 +293,11 @@ class AuditEvent(UUIDPrimaryKeyMixin, Base):
     )
 
     actor_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
-    actor_type: Mapped[str] = mapped_column(String(16), nullable=False)
+    actor_type: Mapped[str] = mapped_column(String(16), nullable=False, comment="审计主体类型")
     action: Mapped[str] = mapped_column(String(150), nullable=False)
     target_type: Mapped[str] = mapped_column(String(64), nullable=False)
     target_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
-    target_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    target_revision: Mapped[int | None] = mapped_column(Integer, nullable=True, comment="目标业务版本")
     result: Mapped[str] = mapped_column(String(16), nullable=False)
     changed_fields: Mapped[dict[str, Any]] = mapped_column(JSONB().with_variant(JSON(), "sqlite"), nullable=False)
     request_id: Mapped[str] = mapped_column(String(128), nullable=False)

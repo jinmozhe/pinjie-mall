@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 
@@ -138,7 +139,14 @@ async def test_concurrent_first_points_adjustments_preserve_idempotency_and_acco
     fixture = commerce_database
     user_id, actor_id = fixture.users[:2]
     async with fixture.factory() as session, transaction_scope(session):
-        session.add(MemberProfile(user_id=user_id, invitation_code=new_uuid7().hex[-16:], revision=1))
+        session.add(
+            MemberProfile(
+                user_id=user_id,
+                invitation_code=new_uuid7().hex[-16:],
+                level_changed_at=datetime.now(UTC),
+                revision=1,
+            )
+        )
 
     class TransactionAudit:
         """权限不属于本用例目标；保留真实事务、仓储和会员贡献链。"""

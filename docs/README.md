@@ -49,7 +49,7 @@
 | [project-structure.md](architecture/project-structure.md)                       | 完整目录树 + 工程文件设计说明（全项目索引、全栈计划、AI 规则桥接、环境变量和锁文件等）     |
 | [backend-engineering-standard.md](architecture/backend-engineering-standard.md) | Backend 配置、Router、事务、数据、外部调用、日志、探针、测试和质量门禁的具体实施标准       |
 | [admin-engineering-standard.md](architecture/admin-engineering-standard.md) | Admin Umi/Pro 边界、请求状态、统一页面间距、响应式工具栏、列宽、开关交互与依赖准入 |
-| [commerce-backend.md](architecture/commerce-backend.md) | 商城后端领域边界、阶段 1 至 5 的商品交易、售后退款、分销、钱包和对账实施机制 |
+| [commerce-backend.md](architecture/commerce-backend.md) | 商城后端领域边界、阶段 1 至 6 及符合性修复后的商品交易、资金恢复、售后、分佣、钱包、会员资格、积分和对账机制 |
 | [miniapp-architecture.md](architecture/miniapp-architecture.md) | 待实施的小程序目录、Feature 分层、商品加购链路、状态与认证边界及工程验证要求 |
 | [module-boundaries.md](architecture/module-boundaries.md)                       | Backend 领域、Frontend Feature、共享包和机械依赖门禁的边界                                 |
 | [error-model.md](architecture/error-model.md)                                   | 错误分类、HTTP 契约、分层处理和禁止吞错、假成功、静默降级的规则                            |
@@ -59,7 +59,7 @@
 | [file-asset-storage.md](architecture/file-asset-storage.md)                     | 统一文件资产的存储端口、上传安全、双域鉴权、去重、删除补偿和生产卷边界                   |
 | [system-settings.md](architecture/system-settings.md)                           | 系统设置的数据模型、强类型接口、注册 Fail Closed、配置媒体恢复及三端消费边界             |
 | [全栈Monorepo架构规划原始方案.md](architecture/全栈Monorepo架构规划原始方案.md) | 从 pinjie-standard 迁移的完整原始规划方案，包含技术选型对比、电商领域设计、1Panel 部署规范 |
-| [database-schema-guide.md](architecture/database-schema-guide.md) | 长期全域目标数据库字典：15 个文档分组、67 张表设计及固定配置分组，含字段约束、预算分佣、事务恢复、验收与现行 44 表迁移差异 |
+| [database-schema-guide.md](architecture/database-schema-guide.md) | 长期全域目标数据库字典：15 个文档分组、67 张模型表及固定配置分组，含字段约束、预算分佣、事务恢复、剩余差异及源码、迁移和分版本验证证据 |
 
 ---
 

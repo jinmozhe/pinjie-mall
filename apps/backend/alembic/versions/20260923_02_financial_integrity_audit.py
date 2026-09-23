@@ -72,18 +72,6 @@ def upgrade() -> None:
         """,
         "无法添加对账处置事实约束：存在无法解释的历史处置字段，请先人工核对并前向修复。",
     )
-    _require_no_rows(
-        """
-        SELECT 1
-        FROM audit_events
-        WHERE action = 'withdrawal.state_changed' AND result = 'succeeded'
-        GROUP BY target_type, target_id, target_revision
-        HAVING count(*) > 1
-        LIMIT 1
-        """,
-        "无法添加提现审计唯一版本约束：存在重复成功的历史提现状态审计，请先人工核对并前向修复。",
-    )
-
     op.add_column(
         "audit_events",
         sa.Column("actor_type", sa.String(length=16), nullable=False, server_default="admin", comment="审计主体类型"),
@@ -116,6 +104,17 @@ def upgrade() -> None:
         "audit_events",
         "action <> 'withdrawal.state_changed' OR "
         "(target_type = 'withdrawal_request' AND target_id IS NOT NULL AND target_revision IS NOT NULL)",
+    )
+    _require_no_rows(
+        """
+        SELECT 1
+        FROM audit_events
+        WHERE action = 'withdrawal.state_changed' AND result = 'succeeded'
+        GROUP BY target_type, target_id, target_revision
+        HAVING count(*) > 1
+        LIMIT 1
+        """,
+        "无法添加提现审计唯一版本约束：存在重复成功的历史提现状态审计，请先人工核对并前向修复。",
     )
     op.create_index(
         "uq_audit_events_withdrawal_revision",
