@@ -27,7 +27,9 @@ class DurableTaskRunResult:
 class DurableTaskRunner:
     """Runs one bounded batch without holding a task lease transaction during business work."""
 
-    _INTERNAL_HANDLERS = frozenset({"expire_order", "auto_confirm_fulfillment", "commission_settlement"})
+    _INTERNAL_HANDLERS = frozenset(
+        {"expire_order", "confirm_order", "auto_confirm_fulfillment", "refund_followup", "commission_settlement"}
+    )
 
     def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
         self._session_factory = session_factory
@@ -87,10 +89,20 @@ class DurableTaskRunner:
             async with self._session_factory() as session:
                 await OrderService(session).expire_scheduled(order_id)
             return
+        if task.task_type == "confirm_order":
+            payment_attempt_id = self._payload_uuid(task, "payment_attempt_id")
+            async with self._session_factory() as session:
+                await LifecycleService(session).confirm_order_scheduled(payment_attempt_id)
+            return
         if task.task_type == "auto_confirm_fulfillment":
             fulfillment_id = self._payload_uuid(task, "fulfillment_id")
             async with self._session_factory() as session:
                 await LifecycleService(session).auto_confirm_scheduled(fulfillment_id)
+            return
+        if task.task_type == "refund_followup":
+            refund_attempt_id = self._payload_uuid(task, "refund_attempt_id")
+            async with self._session_factory() as session:
+                await LifecycleService(session).complete_refund_scheduled(refund_attempt_id)
             return
         order_id = self._payload_uuid(task, "order_id")
         async with self._session_factory() as session:

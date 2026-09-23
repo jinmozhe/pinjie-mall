@@ -20,6 +20,7 @@ from app.domains.distribution.service import DistributionService
 from app.domains.durable_tasks.service import DurableTaskService
 from app.domains.inventory.repository import InventoryRepository
 from app.domains.inventory.service import InventoryService
+from app.domains.lifecycle.repository import LifecycleRepository
 from app.domains.membership.repository import MembershipRepository
 from app.domains.membership.schemas import CommerceQuoteRequest, QuoteItemInput
 from app.domains.membership.service import MembershipService
@@ -404,6 +405,12 @@ class OrderService:
                 return await self._read(order)
             if order.status != "pending_payment":
                 raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前订单不能取消")
+            if await self._payment_blocks_release_in_open_transaction(order):
+                raise AppException(
+                    status_code=409,
+                    code=ErrorCode.ORDER_STATE_CONFLICT,
+                    message="存在已成功或待确认的支付，暂不能释放订单资源",
+                )
             await self._cancel(order, reason, "user", user_id)
             return await self._read(order)
 
@@ -438,14 +445,37 @@ class OrderService:
             )
         )
 
+    async def _payment_blocks_release_in_open_transaction(self, order: Order) -> bool:
+        attempts = await LifecycleRepository(self.session).payment_attempts_for_order(order.id, lock=True)
+        succeeded = [attempt for attempt in attempts if attempt.status == "succeeded"]
+        if succeeded:
+            tasks = DurableTaskService(self.session)
+            for attempt in succeeded:
+                await tasks.enqueue_in_open_transaction(
+                    task_type="confirm_order",
+                    business_key=f"confirm-order:{attempt.id}",
+                    payload={"schema_version": 1, "payment_attempt_id": str(attempt.id)},
+                )
+            return True
+        unresolved = [attempt for attempt in attempts if attempt.status in {"created", "pending", "unknown"}]
+        if unresolved:
+            tasks = DurableTaskService(self.session)
+            for attempt in unresolved:
+                await tasks.enqueue_in_open_transaction(
+                    task_type="payment_query",
+                    business_key=f"payment-query:{attempt.id}",
+                    payload={"schema_version": 1, "payment_attempt_id": str(attempt.id)},
+                )
+            return True
+        return False
+
     async def expire_due(self, limit: int = 100) -> int:
         completed, now = 0, datetime.now(UTC)
-        for _ in range(limit):
-            async with transaction_scope(self.session):
-                rows = await self.repository.expired_orders(now, 1)
-                if not rows:
-                    break
-                await self._cancel(rows[0], "待付款超时", "system", None)
+        async with transaction_scope(self.session):
+            for order in await self.repository.expired_orders(now, limit):
+                if await self._payment_blocks_release_in_open_transaction(order):
+                    continue
+                await self._cancel(order, "待付款超时", "system", None)
                 completed += 1
         return completed
 
@@ -455,6 +485,8 @@ class OrderService:
             if order is None:
                 raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="待过期订单不存在")
             if order.status != "pending_payment" or order.expires_at > datetime.now(UTC):
+                return False
+            if await self._payment_blocks_release_in_open_transaction(order):
                 return False
             await self._cancel(order, "待付款超时", "system", None)
             return True

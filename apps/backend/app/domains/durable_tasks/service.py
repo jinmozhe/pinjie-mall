@@ -146,6 +146,7 @@ class DurableTaskService:
             "auto_confirm_fulfillment": "fulfillment_id",
             "refund_submit": "refund_attempt_id",
             "refund_query": "refund_attempt_id",
+            "refund_followup": "refund_attempt_id",
             "commission_settlement": "order_id",
             "withdrawal_submit": "withdrawal_request_id",
             "withdrawal_query": "withdrawal_request_id",
