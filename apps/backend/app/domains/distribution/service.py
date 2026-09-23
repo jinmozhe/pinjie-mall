@@ -174,6 +174,10 @@ class DistributionService:
             raise AppException(status_code=503, code=ErrorCode.SERVICE_UNAVAILABLE, message="佣金钱包初始化失败")
         return wallet
 
+    async def ensure_profile_in_open_transaction(self, user_id: UUID) -> MemberProfile:
+        """确保订单等上层用例已持有事务时可记录会员资格事实。"""
+        return await self._ensure_profile(user_id)
+
     async def activate_profile(self, user_id: UUID) -> MemberProfileRead:
         async with transaction_scope(self.session):
             await self.access.require_active_user(user_id)

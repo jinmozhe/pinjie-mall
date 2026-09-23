@@ -1632,9 +1632,9 @@ erDiagram
 
 #### 4.15.8 会员资格贡献事件表 `membership_qualification_events`
 
-实现标记：目标新增，`20260922_06` 已有 Model 和迁移，并已完成本机开发与隔离测试库升级及动态验证。
+实现标记：目标新增，`20260922_06` 已有 Model 和迁移，并已完成本机开发与隔离测试库升级及动态验证；阶段 F 已接入成交消费贡献与整单退款冲销，实际本轮动态验证未执行。
 
-用途：后续专项规划，按单笔消费或邀请行为记录可撤销的资格事实。
+用途：按单笔成交消费、整单退款、积分或后续已定义有效邀请记录可撤销的资格事实。
 
 | 字段名 | 数据类型 | 可空 | 默认值/生成方式 | 业务含义与约束规则 |
 | --- | --- | --- | --- | --- |
@@ -1644,10 +1644,10 @@ erDiagram
 | `source_type` | VARCHAR(24) | 否 | 系统写入 | 事件来源：`order_confirm`, `refund`, `invite_validated`, `points_grant` 等 |
 | `source_id` | UUID | 否 | 系统写入 | 关联业务 ID |
 | `order_id` | UUID | 是 | NULL | 关联订单 ID |
-| `amount_delta` | NUMERIC(15,2) | 是 | NULL | 消费变动金额（退款时为负数） |
+| `amount_delta` | NUMERIC(15,2) | 是 | NULL | 阶段 F 成交按 order.items_amount 记录正消费金额，整单退款按原贡献等额冲销为负数，不含运费 |
 | `count_delta` | BIGINT | 是 | NULL | 人数或积分变动值 |
 | `reverses_event_id` | UUID | 是 | NULL | 冲销事件关联原事件 ID |
-| `occurred_at` | TIMESTAMPTZ | 否 | 发生时间 | 实际业务时间点 |
+| `occurred_at` | TIMESTAMPTZ | 否 | 发生时间 | 使用成交确认或退款完成的实际业务时点 |
 | `idempotency_key` | VARCHAR(160) | 否 | 系统生成 | 全局去重键 |
 | `created_at` | TIMESTAMPTZ | 否 | 应用当前 UTC 时间 | 创建时间 |
 | `updated_at` | TIMESTAMPTZ | 否 | 系统写入 | 最近更新时间 |
@@ -1784,7 +1784,7 @@ erDiagram
 | reconciliation_records | U(channel,record_type,channel_transaction_id)；原始金额正数、CNY；类型与匹配目标互斥；resolved 有操作者、意见及时间 | (occurred_at,id)、(resolution_status,id)；账单导入按完整摘要防重，处置仅加审计不伪造渠道成功 |
 | shipping_templates | 现有主键、类型、JSON 和 revision 约束保留 | 存量入口停止后只读，不作为目标新单来源，不自动 DROP |
 | member_level_conditions | U(level_id,metric,aggregation)；FK 等级；阈值随 consumption 或 invite_count/points 严格互斥 | (level_id,is_active,id)；资格事件触发自动评估，条件修改不回写历史事件 |
-| membership_qualification_events | U(idempotency_key)、U(user_id,source_type,source_id,metric)；FK user/order/原冲销事件；金额或计数增量恰一非空且非零 | (user_id,metric,id)；只能冲销本人同指标原事件，累计不能超原额 |
+| membership_qualification_events | U(idempotency_key)、U(user_id,source_type,source_id,metric)；FK user/order/原冲销事件；金额或计数增量恰一非空且非零 | (user_id,metric,id)；阶段 F 成交按订单商品金额写 order_confirm，整单退款只冲销同一用户同一订单的原贡献；历史无原事实不补造；有效邀请待产品规则定义后接入 |
 | member_level_events | U(idempotency_key)、U(user_id,profile_revision)；FK 用户、前后等级及人工操作者 | (user_id,id)；与档案 revision 同事务；条件快照不可变 |
 | points_accounts | U(user_id)、FK 用户；三项积分非负，revision > 0 | user_id；积分不是人民币钱包 |
 | points_ledgers | U(idempotency_key)；FK 账户及原冲销流水；至少一个增量非零；冲销不得跨账户或超过原可冲销额 | (account_id,id)；只追加；到期批次、兑换及积分入金政策未启用，不用此表假装已有完整积分系统 |

@@ -184,6 +184,7 @@ class MembershipService:
         order_id: UUID | None = None,
         reverses_event_id: UUID | None = None,
         trigger_type: Literal["order", "refund", "invite", "points", "policy_reassessment"] = "policy_reassessment",
+        occurred_at: datetime | None = None,
     ) -> MembershipQualificationEvent:
         if (
             (amount_delta is None) == (count_delta is None)
@@ -247,6 +248,9 @@ class MembershipService:
                 and -count_delta > original.count_delta + sum(event.count_delta or 0 for event in reversals)
             ):
                 raise AppException(status_code=409, code=ErrorCode.STATE_CONFLICT, message="资格冲销超过原贡献")
+        event_time = occurred_at or datetime.now(UTC)
+        if event_time.tzinfo is None:
+            raise AppException(status_code=422, code=ErrorCode.VALIDATION_ERROR, message="资格事件发生时间必须包含时区")
         event = MembershipQualificationEvent(
             id=new_uuid7(),
             user_id=user_id,
@@ -257,13 +261,55 @@ class MembershipService:
             amount_delta=amount_delta,
             count_delta=count_delta,
             reverses_event_id=reverses_event_id,
-            occurred_at=datetime.now(UTC),
+            occurred_at=event_time.astimezone(UTC),
             idempotency_key=idempotency_key,
         )
         self._session.add(event)
         await self._repository.flush()
         await self._reassess_profile(profile, trigger_type=trigger_type, trigger_id=event.id)
         return event
+
+    async def record_order_consumption(
+        self, *, user_id: UUID, order_id: UUID, amount: Decimal, confirmed_at: datetime
+    ) -> MembershipQualificationEvent:
+        return await self.record_qualification_event(
+            user_id=user_id,
+            metric="consumption",
+            source_type="order_confirm",
+            source_id=order_id,
+            order_id=order_id,
+            idempotency_key=f"qualification:order:{order_id}",
+            amount_delta=amount,
+            trigger_type="order",
+            occurred_at=confirmed_at,
+        )
+
+    async def reverse_order_consumption(
+        self, *, user_id: UUID, order_id: UUID, refund_id: UUID, completed_at: datetime
+    ) -> MembershipQualificationEvent | None:
+        original = await self.qualification_event_for_source(
+            user_id=user_id,
+            metric="consumption",
+            source_type="order_confirm",
+            source_id=order_id,
+        )
+        if original is None:
+            # 阶段 F 前成交订单没有资格事实，不能在退款时凭空补造或冲销。
+            return None
+        if original.order_id != order_id or original.amount_delta is None or original.amount_delta <= 0:
+            raise AppException(status_code=409, code=ErrorCode.STATE_CONFLICT, message="原订单资格贡献事实异常")
+        return await self.record_qualification_event(
+            user_id=user_id,
+            metric="consumption",
+            source_type="refund",
+            source_id=refund_id,
+            order_id=order_id,
+            idempotency_key=f"qualification:refund:{refund_id}",
+            amount_delta=-original.amount_delta,
+            reverses_event_id=original.id,
+            trigger_type="refund",
+            occurred_at=completed_at,
+        )
 
     async def _reassess_profile(
         self,

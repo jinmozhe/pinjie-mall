@@ -378,7 +378,16 @@ class OrderService:
             )
         )
         await self.session.flush()
-        await DistributionService(self.session).freeze_commissions_for_payment_in_open_transaction(
+        distribution = DistributionService(self.session)
+        if order.items_amount > 0:
+            await distribution.ensure_profile_in_open_transaction(order.user_id)
+            await MembershipService(session=self.session).record_order_consumption(
+                user_id=order.user_id,
+                order_id=order.id,
+                amount=order.items_amount,
+                confirmed_at=confirmed_at,
+            )
+        await distribution.freeze_commissions_for_payment_in_open_transaction(
             order_id=order.id, source_user_id=order.user_id, base_amount=order.items_amount, paid_at=confirmed_at
         )
         await self.repository.save(

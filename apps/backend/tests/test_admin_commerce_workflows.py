@@ -21,7 +21,7 @@ from app.core.identifiers import new_uuid7
 from app.core.request_metadata import RequestMetadata
 from app.db.models import Admin, AdminSession, Asset, AuditEvent, User
 from app.db.models.commerce_lifecycle import Fulfillment, PaymentAttempt, RefundAttempt
-from app.db.models.distribution import CommissionRecord, MemberLevel, MemberProfile
+from app.db.models.distribution import CommissionRecord, MemberLevel, MemberProfile, MembershipQualificationEvent
 from app.db.models.order import Order
 from app.db.repositories.commerce_access import CommerceAccessRepository
 from app.db.transaction import transaction_scope
@@ -419,6 +419,20 @@ async def test_catalog_operating_flow_and_atomic_batch_conflicts(shop):
 async def test_paid_delivery_refund_wallet_and_reporting_flow(shop, physical):
     order, product, confirmation = await prepare_paid_order(shop, physical)
     assert (await shop.orders.admin_read(order.id)).status == "paid"
+    consumption_event = await shop.session.scalar(
+        select(MembershipQualificationEvent).where(
+            MembershipQualificationEvent.user_id == shop.users[0],
+            MembershipQualificationEvent.metric == "consumption",
+            MembershipQualificationEvent.source_type == "order_confirm",
+            MembershipQualificationEvent.source_id == order.id,
+        )
+    )
+    assert consumption_event is not None
+    assert (consumption_event.order_id, consumption_event.amount_delta, consumption_event.reverses_event_id) == (
+        order.id,
+        order.items_amount,
+        None,
+    )
     await shop.admin_lifecycle.accept_order(
         order.id, OrderAcceptance(revision=(await shop.orders.admin_read(order.id)).revision)
     )
@@ -487,6 +501,28 @@ async def test_paid_delivery_refund_wallet_and_reporting_flow(shop, physical):
     assert (await shop.lifecycle.confirm_verified_refund(refund_confirmation)).id == refund_attempt.id
     await shop.lifecycle.complete_refund_scheduled(refund_attempt.id)
     assert (await shop.lifecycle.refunds_for_user(shop.users[0], refund_order.id))[0].status == "completed"
+    refund_consumption = await shop.session.scalar(
+        select(MembershipQualificationEvent).where(
+            MembershipQualificationEvent.user_id == shop.users[0],
+            MembershipQualificationEvent.metric == "consumption",
+            MembershipQualificationEvent.source_type == "refund",
+            MembershipQualificationEvent.source_id == refund.id,
+        )
+    )
+    original_refund_consumption = await shop.session.scalar(
+        select(MembershipQualificationEvent).where(
+            MembershipQualificationEvent.user_id == shop.users[0],
+            MembershipQualificationEvent.metric == "consumption",
+            MembershipQualificationEvent.source_type == "order_confirm",
+            MembershipQualificationEvent.source_id == refund_order.id,
+        )
+    )
+    assert refund_consumption is not None and original_refund_consumption is not None
+    assert (refund_consumption.order_id, refund_consumption.amount_delta, refund_consumption.reverses_event_id) == (
+        refund_order.id,
+        -refund_order.items_amount,
+        original_refund_consumption.id,
+    )
     completed = await shop.admin_distribution.complete_withdrawal_manually(
         withdrawal.id,
         WithdrawalManualCompletion(revision=approved.revision, note="已线下转账", payment_reference="OFFLINE-TEST-001"),
