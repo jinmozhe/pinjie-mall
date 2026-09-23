@@ -19,7 +19,7 @@ from app.core.request_metadata import request_metadata
 from app.core.response import ResponseModel, success_response
 from app.domains.admin.permissions import PermissionCode
 from app.domains.distribution import CommissionRead, MemberProfileRead, WithdrawalRead
-from app.domains.lifecycle import PaymentAttemptRead, ReconciliationRecordRead, RefundRequestRead
+from app.domains.lifecycle import PaymentAttemptRead, ReconciliationRecordRead, RefundAttemptRead, RefundRequestRead
 from app.domains.orders.schemas import AdminOrderSummary
 from app.services.commerce_reporting import (
     AdminWalletRead,
@@ -291,3 +291,15 @@ async def wallet_ledgers(
     page_size: Annotated[int, Query(ge=1, le=100)] = 20,
 ) -> ResponseModel[PageResult[WalletLedgerRead]]:
     return success_response(data=await service.ledgers(wallet_id, page, page_size), request_id=current_request_id())
+
+
+@router.get(
+    "/admin/refund-executions",
+    response_model=ResponseModel[PageResult[RefundAttemptRead]],
+    summary="查询退款执行列表",
+    dependencies=[Depends(require_permission(PermissionCode.REFUNDS_READ))],
+)
+async def refund_executions_page(service: Reporting, filters: Filters) -> ResponseModel[PageResult[RefundAttemptRead]]:
+    return success_response(
+        data=await service.page("refund-executions", RefundAttemptRead, filters), request_id=current_request_id()
+    )

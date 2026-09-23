@@ -125,7 +125,11 @@ class RefundAttemptRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
+    order_id: UUID | None = None
+    payment_attempt_id: UUID | None = None
     refund_request_id: UUID | None
+    purpose: str | None = None
+    attempt_no: int | None = None
     merchant_refund_reference: str
     channel: PaymentChannel
     amount: Decimal

@@ -17,11 +17,11 @@ from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.pagination import PageResult
 from app.db.models.base import Base
-from app.db.models.commerce_lifecycle import PaymentAttempt, ReconciliationRecord, RefundRequest
+from app.db.models.commerce_lifecycle import PaymentAttempt, ReconciliationRecord, RefundAttempt, RefundRequest
 from app.db.models.distribution import CommissionRecord, MemberProfile, WalletAccount, WalletLedger, WithdrawalRequest
 from app.db.models.order import Order
 from app.domains.distribution import CommissionRead, MemberProfileRead, WalletAccountRead, WithdrawalRead
-from app.domains.lifecycle import PaymentAttemptRead, ReconciliationRecordRead, RefundRequestRead
+from app.domains.lifecycle import PaymentAttemptRead, ReconciliationRecordRead, RefundAttemptRead, RefundRequestRead
 from app.domains.orders.schemas import AdminOrderSummary
 from app.services.security_events import AuditCoordinator
 
@@ -89,6 +89,7 @@ _RESOURCES: dict[str, tuple[type[Base], type[BaseModel]]] = {
     "members": (MemberProfile, MemberProfileRead),
     "commissions": (CommissionRecord, CommissionRead),
     "wallets": (WalletAccount, AdminWalletRead),
+    "refund-executions": (RefundAttempt, RefundAttemptRead),
 }
 _FILTERS = {
     "orders": {"user_id": "user_id", "status": "status", "product_type": "product_type"},
@@ -99,6 +100,7 @@ _FILTERS = {
     "members": {"user_id": "user_id", "inviter_id": "inviter_id"},
     "commissions": {"user_id": "beneficiary_user_id", "order_id": "order_id", "status": "status"},
     "wallets": {"user_id": "user_id", "wallet_type": "wallet_type"},
+    "refund-executions": {"order_id": "order_id", "status": "status", "channel": "channel"},
 }
 
 

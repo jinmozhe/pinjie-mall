@@ -12,6 +12,7 @@ const commerceDenied = {
   canDistribution: false, canWithdrawals: false,
   canMemberLevels: false, canMemberPrices: false, canPoints: false,
   canPolicies: false, canReferralNetwork: false,
+  canRefundRecords: false,
 };
 
 function state(permissions: string[] = [], isSuperuser = false): AdminInitialState {
@@ -79,6 +80,7 @@ describe("admin access mapping", () => {
       canDistribution: true, canWithdrawals: true,
       canMemberLevels: true, canMemberPrices: true, canPoints: true,
       canPolicies: true, canReferralNetwork: true,
+      canRefundRecords: true,
       canMembership: true,
       canFinance: true,
       canSystemMgmt: true,
