@@ -45,6 +45,7 @@ from app.domains.lifecycle.schemas import (
     VerifiedRefundConfirmation,
     VirtualDeliveryCreate,
 )
+from app.domains.membership.service import MembershipService
 from app.domains.orders import OrderAcceptance, OrderQueryService, OrderRead
 from app.domains.products import ProductService
 from app.domains.purchases import PurchaseLimitService
@@ -629,7 +630,7 @@ class LifecycleService:
         if order is None:
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款订单不存在")
         if refund.amount == 0:
-            await self._complete_refund_in_open_transaction(refund, order.id, now)
+            await self._complete_refund_in_open_transaction(refund, order.id, order.user_id, now)
             return
         if order.accepted_payment_attempt_id is None:
             raise AppException(
@@ -685,7 +686,7 @@ class LifecycleService:
         )
 
     async def _complete_refund_in_open_transaction(
-        self, refund: RefundRequest, order_id: UUID, completed_at: datetime
+        self, refund: RefundRequest, order_id: UUID, user_id: UUID, completed_at: datetime
     ) -> None:
         if refund.status == "completed":
             return
@@ -714,6 +715,12 @@ class LifecycleService:
             order_id=order_id,
             cumulative_refunded_amount=refund.items_amount,
             refunded_at=completed_at,
+        )
+        await MembershipService(session=self.session).reverse_order_consumption(
+            user_id=user_id,
+            order_id=order_id,
+            refund_id=refund.id,
+            completed_at=completed_at,
         )
         fulfillment = await self.repository.fulfillment(order_id, lock=True)
         if fulfillment is None or fulfillment.status not in {"awaiting_shipment", "awaiting_delivery"}:
@@ -852,7 +859,7 @@ class LifecycleService:
             refund = await self.repository.refund(attempt.refund_request_id, lock=True)
             if order is None or order.status != "paid" or refund is None:
                 raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款申请状态异常")
-            await self._complete_refund_in_open_transaction(refund, order.id, attempt.confirmed_at)
+            await self._complete_refund_in_open_transaction(refund, order.id, order.user_id, attempt.confirmed_at)
 
     async def refunds_for_user(self, user_id: UUID, order_id: UUID) -> list[RefundRequestRead]:
         order = await self.orders.user_order(user_id, order_id)

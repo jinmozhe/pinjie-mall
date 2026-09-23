@@ -1104,7 +1104,7 @@ async def test_existing_commerce_transaction_distribution_and_lifecycle_routers_
     await distribution_router.bind_referrer(payload, service, current)  # type: ignore[arg-type]
     await distribution_router.wallets_read(service, current)
     await distribution_router.commissions_read(service, current, 1, 20)
-    await distribution_router.withdrawal_create(payload, service, current)  # type: ignore[arg-type]
+    await distribution_router.withdrawal_create(payload, service)  # type: ignore[arg-type]
     await distribution_router.withdrawals_read(service, current, 1, 20)
     await distribution_router.admin_approve_withdrawal(first_id, payload, service)  # type: ignore[arg-type]
     await distribution_router.admin_reject_withdrawal(first_id, payload, service)  # type: ignore[arg-type]
