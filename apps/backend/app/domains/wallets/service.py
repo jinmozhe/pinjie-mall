@@ -30,7 +30,8 @@ class WalletLedgerService:
         reference_type: str,
         reference_id: UUID,
     ) -> WalletLedger:
-        existing = await self._ledger_by_key(idempotency_key, lock=True)
+        wallet = await self._wallet(wallet_id, lock=True)
+        existing = await self._ledger_by_key(idempotency_key, lock=False)
         if existing is not None:
             if (
                 existing.wallet_id != wallet_id
@@ -45,7 +46,6 @@ class WalletLedgerService:
                     status_code=409, code=ErrorCode.STATE_CONFLICT, message="钱包幂等键已用于其他记账内容"
                 )
             return existing
-        wallet = await self._wallet(wallet_id, lock=True)
         available = wallet.available_amount + amount
         frozen = wallet.frozen_amount + frozen_delta
         debt = wallet.debt_amount + debt_delta

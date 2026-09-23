@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.purchase import ProductPurchaseLimit, ProductPurchaseRecord
@@ -9,6 +9,13 @@ from app.db.models.purchase import ProductPurchaseLimit, ProductPurchaseRecord
 class PurchaseLimitRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
+
+    async def lock_account(self, user_id: UUID, product_id: UUID) -> None:
+        """对 (user_id, product_id) 组合加事务级 advisory lock，防止账户并发创建冲突。"""
+        # 取两个 UUID 整数值的低 32 位与高 32 位组合成两个 int4 作为锁键
+        key1 = (user_id.int ^ (product_id.int >> 64)) & 0x7FFFFFFF
+        key2 = (user_id.int ^ product_id.int) & 0x7FFFFFFF
+        await self.session.execute(text("SELECT pg_advisory_xact_lock(:k1, :k2)"), {"k1": key1, "k2": key2})
 
     async def records(self, order_id: UUID) -> list[ProductPurchaseRecord]:
         return list(

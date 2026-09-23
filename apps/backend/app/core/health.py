@@ -1,4 +1,5 @@
 import asyncio
+import functools
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -20,6 +21,7 @@ class ReadinessResult:
     checks: dict[str, str]
 
 
+@functools.lru_cache(maxsize=1)
 def alembic_heads() -> tuple[str, ...]:
     backend_root = Path(__file__).resolve().parents[2]
     config = Config(str(backend_root / "alembic.ini"))
