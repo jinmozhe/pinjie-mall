@@ -287,14 +287,14 @@ class DistributionService:
             {"amount": str(data.amount), "destination_reference": data.destination_reference}
         )
         await self.access.require_active_user(user_id)
-        existing = await self.repository.withdrawal_by_request(user_id, data.request_id, lock=True)
+        wallet = await self._commission_wallet(user_id, lock=True)
+        existing = await self.repository.withdrawal_by_request(user_id, data.request_id, lock=False)
         if existing is not None:
             if existing.amount != data.amount or existing.destination_reference != data.destination_reference:
                 raise AppException(
                     status_code=409, code=ErrorCode.WITHDRAWAL_REQUEST_CONFLICT, message="提现请求号已用于其他内容"
                 )
             return self._withdrawal_read(existing), False
-        wallet = await self._commission_wallet(user_id, lock=True)
         amount = self._money(data.amount)
         if wallet.debt_amount > 0 or wallet.available_amount < amount:
             raise AppException(
@@ -490,6 +490,10 @@ class DistributionService:
 
     async def settle_order_scheduled(self, order_id: UUID) -> int:
         async with transaction_scope(self.session):
+            # 先锁定 Order，与业务流（下单/发货先锁 Order）保持一致，防止与业务路径形成死锁
+            order = await self.session.get(Order, order_id, with_for_update=True)
+            if order is None:
+                return 0
             commissions = await self.repository.commissions_for_order(order_id, lock=True)
             due = [
                 item

@@ -17,9 +17,11 @@ class AppResources:
     settings_media_ready: bool = False
 
     async def close(self) -> None:
-        if self.redis is not None:
-            await self.redis.aclose()
-        await self.engine.dispose()
+        try:
+            if self.redis is not None:
+                await self.redis.aclose()
+        finally:
+            await self.engine.dispose()
 
 
 def create_resources(settings: Settings) -> AppResources:

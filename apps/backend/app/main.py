@@ -161,6 +161,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "X-Request-ID",
             "X-Trace-ID",
         ],
+        expose_headers=["X-Request-ID", "X-Trace-ID"],
     )
     if "*" not in app_settings.trusted_hosts:
         app.add_middleware(TrustedHostMiddleware, allowed_hosts=app_settings.trusted_hosts)

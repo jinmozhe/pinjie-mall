@@ -37,6 +37,8 @@ class PurchaseLimitService:
             return
         for product_id in sorted(grouped, key=lambda value: value.hex):
             quantity, limit = grouped[product_id], limits[product_id]
+            # 按 (user_id, product_id) 加行级咨询锁，防止账户不存在时并发创建触发唯一键冲突
+            await self._repository.lock_account(user_id, product_id)
             account = await self._repository.account(user_id, product_id)
             if account is None:
                 account = ProductPurchaseLimit(

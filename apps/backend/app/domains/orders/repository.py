@@ -36,8 +36,6 @@ class OrderRepository:
         return (await self.session.scalars(stmt)).one_or_none()
 
     async def count_expired(self, now: datetime) -> int:
-        from sqlalchemy import func
-
         return int(
             await self.session.scalar(
                 select(func.count())
