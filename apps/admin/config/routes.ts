@@ -104,6 +104,7 @@ export default [
       { path: "/ops", redirect: "/security" },
       { path: "/security", name: "安全日志", component: "../features/security/SecurityPage", access: "canSecurity" },
       { path: "/system", name: "系统状态", component: "../features/system/SystemStatusPage", access: "canSystem" },
+      { path: "/ops/durable-tasks", name: "异步任务", component: "../features/system/DurableTasksPage", access: "canDurableTasks" },
     ],
   },
   { path: "/account/settings", name: "个人设置", component: "../features/account/AccountSettingsPage", hideInMenu: true },

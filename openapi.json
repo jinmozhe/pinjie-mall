@@ -1202,6 +1202,46 @@
             "description": "钱包轨道"
           },
           {
+            "name": "task_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "任务类型",
+              "title": "Task Type"
+            },
+            "description": "任务类型"
+          },
+          {
+            "name": "business_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "业务键",
+              "title": "Business Key"
+            },
+            "description": "业务键"
+          },
+          {
             "name": "pinjie_admin_access",
             "in": "cookie",
             "required": false,
@@ -1498,6 +1538,46 @@
               "title": "Wallet Type"
             },
             "description": "钱包轨道"
+          },
+          {
+            "name": "task_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "任务类型",
+              "title": "Task Type"
+            },
+            "description": "任务类型"
+          },
+          {
+            "name": "business_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "业务键",
+              "title": "Business Key"
+            },
+            "description": "业务键"
           },
           {
             "name": "pinjie_admin_access",
@@ -1798,6 +1878,46 @@
             "description": "钱包轨道"
           },
           {
+            "name": "task_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "任务类型",
+              "title": "Task Type"
+            },
+            "description": "任务类型"
+          },
+          {
+            "name": "business_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "业务键",
+              "title": "Business Key"
+            },
+            "description": "业务键"
+          },
+          {
             "name": "pinjie_admin_access",
             "in": "cookie",
             "required": false,
@@ -2096,6 +2216,46 @@
             "description": "钱包轨道"
           },
           {
+            "name": "task_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "任务类型",
+              "title": "Task Type"
+            },
+            "description": "任务类型"
+          },
+          {
+            "name": "business_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "业务键",
+              "title": "Business Key"
+            },
+            "description": "业务键"
+          },
+          {
             "name": "pinjie_admin_access",
             "in": "cookie",
             "required": false,
@@ -2392,6 +2552,46 @@
               "title": "Wallet Type"
             },
             "description": "钱包轨道"
+          },
+          {
+            "name": "task_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "任务类型",
+              "title": "Task Type"
+            },
+            "description": "任务类型"
+          },
+          {
+            "name": "business_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "业务键",
+              "title": "Business Key"
+            },
+            "description": "业务键"
           },
           {
             "name": "pinjie_admin_access",
@@ -2749,6 +2949,46 @@
             "description": "钱包轨道"
           },
           {
+            "name": "task_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "任务类型",
+              "title": "Task Type"
+            },
+            "description": "任务类型"
+          },
+          {
+            "name": "business_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "业务键",
+              "title": "Business Key"
+            },
+            "description": "业务键"
+          },
+          {
             "name": "pinjie_admin_access",
             "in": "cookie",
             "required": false,
@@ -3047,6 +3287,46 @@
             "description": "钱包轨道"
           },
           {
+            "name": "task_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "任务类型",
+              "title": "Task Type"
+            },
+            "description": "任务类型"
+          },
+          {
+            "name": "business_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "业务键",
+              "title": "Business Key"
+            },
+            "description": "业务键"
+          },
+          {
             "name": "pinjie_admin_access",
             "in": "cookie",
             "required": false,
@@ -3343,6 +3623,46 @@
               "title": "Wallet Type"
             },
             "description": "钱包轨道"
+          },
+          {
+            "name": "task_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "任务类型",
+              "title": "Task Type"
+            },
+            "description": "任务类型"
+          },
+          {
+            "name": "business_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "业务键",
+              "title": "Business Key"
+            },
+            "description": "业务键"
           },
           {
             "name": "pinjie_admin_access",
@@ -3725,6 +4045,46 @@
             "description": "钱包轨道"
           },
           {
+            "name": "task_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "任务类型",
+              "title": "Task Type"
+            },
+            "description": "任务类型"
+          },
+          {
+            "name": "business_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "业务键",
+              "title": "Business Key"
+            },
+            "description": "业务键"
+          },
+          {
             "name": "pinjie_admin_access",
             "in": "cookie",
             "required": false,
@@ -3748,6 +4108,343 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseModel_PageResult_RefundAttemptRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/durable-tasks": {
+      "get": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "查询异步持久任务列表",
+        "operationId": "list_durable_tasks_api_v1_admin_durable_tasks_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "页码",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "页码"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "每页数量",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "每页数量"
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "记录标识，会员列表使用用户标识",
+              "title": "Record Id"
+            },
+            "description": "记录标识，会员列表使用用户标识"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "用户标识，佣金列表使用受益人标识",
+              "title": "User Id"
+            },
+            "description": "用户标识，佣金列表使用受益人标识"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "订单标识",
+              "title": "Order Id"
+            },
+            "description": "订单标识"
+          },
+          {
+            "name": "inviter_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "直接推荐人标识",
+              "title": "Inviter Id"
+            },
+            "description": "直接推荐人标识"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "状态代码",
+              "title": "Status"
+            },
+            "description": "状态代码"
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "wechat",
+                    "alipay"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "支付渠道",
+              "title": "Channel"
+            },
+            "description": "支付渠道"
+          },
+          {
+            "name": "product_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "physical",
+                    "virtual"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品类型",
+              "title": "Product Type"
+            },
+            "description": "商品类型"
+          },
+          {
+            "name": "wallet_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "commission",
+                    "consumption"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "钱包轨道",
+              "title": "Wallet Type"
+            },
+            "description": "钱包轨道"
+          },
+          {
+            "name": "task_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "任务类型",
+              "title": "Task Type"
+            },
+            "description": "任务类型"
+          },
+          {
+            "name": "business_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "业务键",
+              "title": "Business Key"
+            },
+            "description": "业务键"
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_DurableTaskRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/durable-tasks/export": {
+      "post": {
+        "tags": [
+          "商城运营查询"
+        ],
+        "summary": "导出选中异步持久任务",
+        "operationId": "export_durable_tasks_api_v1_admin_durable_tasks_export_post",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectedCommerceIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CommerceExportRead_"
                 }
               }
             }
@@ -18329,6 +19026,121 @@
         ],
         "title": "DescriptionUpdate"
       },
+      "DurableTaskRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "任务标识"
+          },
+          "task_type": {
+            "type": "string",
+            "title": "Task Type",
+            "description": "任务类型"
+          },
+          "business_key": {
+            "type": "string",
+            "title": "Business Key",
+            "description": "业务键"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "任务状态: pending/running/succeeded/attention"
+          },
+          "available_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Available At",
+            "description": "可用/计划执行时间"
+          },
+          "attempt_count": {
+            "type": "integer",
+            "title": "Attempt Count",
+            "description": "尝试执行次数"
+          },
+          "failure_count": {
+            "type": "integer",
+            "title": "Failure Count",
+            "description": "失败次数"
+          },
+          "max_failures": {
+            "type": "integer",
+            "title": "Max Failures",
+            "description": "最大重试失败上限"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "版本号"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "完成时间"
+          },
+          "last_error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error Code",
+            "description": "最近错误代码"
+          },
+          "last_error_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error Summary",
+            "description": "脱敏错误摘要"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "创建时间"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "更新时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "task_type",
+          "business_key",
+          "status",
+          "available_at",
+          "attempt_count",
+          "failure_count",
+          "max_failures",
+          "revision",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DurableTaskRead"
+      },
       "FreightQuote": {
         "properties": {
           "template_id": {
@@ -21012,6 +21824,53 @@
           "total_pages"
         ],
         "title": "PageResult[CommissionRead]"
+      },
+      "PageResult_DurableTaskRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DurableTaskRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[DurableTaskRead]"
       },
       "PageResult_InventoryMovementRead_": {
         "properties": {
@@ -25595,6 +26454,38 @@
           "request_id"
         ],
         "title": "ResponseModel[PageResult[CommissionRead]]"
+      },
+      "ResponseModel_PageResult_DurableTaskRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_DurableTaskRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[DurableTaskRead]]"
       },
       "ResponseModel_PageResult_InventoryMovementRead__": {
         "properties": {

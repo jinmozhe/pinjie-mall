@@ -26,6 +26,7 @@ from app.services.commerce_reporting import (
     CommerceExportRead,
     CommerceFilters,
     CommerceReportingService,
+    DurableTaskRead,
     SelectedCommerceIds,
     WalletLedgerRead,
 )
@@ -303,3 +304,28 @@ async def refund_executions_page(service: Reporting, filters: Filters) -> Respon
     return success_response(
         data=await service.page("refund-executions", RefundAttemptRead, filters), request_id=current_request_id()
     )
+
+
+@router.get(
+    "/admin/durable-tasks",
+    response_model=ResponseModel[PageResult[DurableTaskRead]],
+    summary="查询异步持久任务列表",
+    dependencies=[Depends(require_permission(PermissionCode.DURABLE_TASKS_READ))],
+)
+async def list_durable_tasks(service: Reporting, filters: Filters) -> ResponseModel[PageResult[DurableTaskRead]]:
+    return success_response(
+        data=await service.page("durable-tasks", DurableTaskRead, filters), request_id=current_request_id()
+    )
+
+
+@router.post(
+    "/admin/durable-tasks/export",
+    response_model=ResponseModel[CommerceExportRead],
+    summary="导出选中异步持久任务",
+    dependencies=[
+        Depends(require_permission(PermissionCode.DURABLE_TASKS_EXPORT)),
+        Depends(require_admin_csrf),
+    ],
+)
+async def export_durable_tasks(service: Reporting, payload: SelectedCommerceIds) -> ResponseModel[CommerceExportRead]:
+    return success_response(data=await service.export("durable-tasks", payload), request_id=current_request_id())
