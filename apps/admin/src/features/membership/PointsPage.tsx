@@ -167,13 +167,19 @@ export default function PointsPage() {
       title: "冻结变动",
       dataIndex: "frozen_delta",
       key: "frozen_delta",
-      render: (v: number) => (v !== 0 ? <Typography.Text type="warning">{v > 0 ? `+${v}` : v}</Typography.Text> : "-"),
+      render: (v: number) => {
+        if (v === 0) return "-";
+        return <Typography.Text type="warning">{v > 0 ? `+${v}` : v}</Typography.Text>;
+      },
     },
     {
       title: "欠额变动",
       dataIndex: "debt_delta",
       key: "debt_delta",
-      render: (v: number) => (v !== 0 ? <Typography.Text type="danger">{v > 0 ? `+${v}` : v}</Typography.Text> : "-"),
+      render: (v: number) => {
+        if (v === 0) return "-";
+        return <Typography.Text type="danger">{v > 0 ? `+${v}` : v}</Typography.Text>;
+      },
     },
     {
       title: "来源信息",

@@ -19,9 +19,11 @@ function ReviewEditor({ resource, target, close }: {
   const label = resource === "refunds" ? "退款" : "提现";
   return <EditorModal title={`${target.approve ? "通过" : "驳回"}${label}申请`} onClose={close} onSave={async () => {
     const { note } = await form.validateFields();
-    const execute = resource === "refunds"
-      ? (target.approve ? commerceApi.approveRefund : commerceApi.rejectRefund)
-      : (target.approve ? commerceApi.approveWithdrawal : commerceApi.rejectWithdrawal);
+    const executeMap = {
+      refunds: { approve: commerceApi.approveRefund, reject: commerceApi.rejectRefund },
+      withdrawals: { approve: commerceApi.approveWithdrawal, reject: commerceApi.rejectWithdrawal },
+    };
+    const execute = executeMap[resource][target.approve ? "approve" : "reject"];
     await execute(target.row.id, { note, revision: target.row.revision });
     message.success("审核结果已提交"); await client.invalidateQueries({ queryKey: [`commerce-${resource}`] }); close();
   }}>

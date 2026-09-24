@@ -42,7 +42,11 @@ function OrderDetail({ id, close }: { id: string; close: () => void }) {
   const [accepting, setAccepting] = useState(false);
   const refresh = async () => { await Promise.all([order.refetch(), fulfillment.refetch(), client.invalidateQueries({ queryKey: ["commerce-orders"] })]); };
   return <Drawer open width={900} title="订单详情" onClose={close}>
-    <QueryState loading={order.isLoading || fulfillment.isLoading} error={order.error ? errorMessage(order.error) : fulfillment.error ? errorMessage(fulfillment.error) : undefined} onRetry={() => { void order.refetch(); void fulfillment.refetch(); }} />
+    <QueryState loading={order.isLoading || fulfillment.isLoading} error={(() => {
+      if (order.error) return errorMessage(order.error);
+      if (fulfillment.error) return errorMessage(fulfillment.error);
+      return undefined;
+    })()} onRetry={() => { void order.refetch(); void fulfillment.refetch(); }} />
     {order.data && <>
       <Descriptions column={{ xs: 1, sm: 2 }} items={[{ key: "id", label: "订单号", children: order.data.id }, { key: "status", label: "状态", children: order.data.status }, { key: "type", label: "类型", children: order.data.product_type === "physical" ? "实物" : "虚拟" }, { key: "amount", label: "应付金额", children: `¥${order.data.total_amount}` }, { key: "created", label: "创建时间", children: formatTime(order.data.created_at) }, { key: "address", label: "收货快照", children: order.data.address_snapshot ? JSON.stringify(order.data.address_snapshot) : "虚拟订单无地址" }]} />
       {order.data && order.data.status === "paid" && order.data.acceptance_status === "pending" && canAccess(admin, "orders:accept") && (

@@ -29,6 +29,10 @@ const auditResultLabels: Record<string, string> = {
   denied: "拒绝",
   failed: "失败",
 };
+const auditResultColorMap: Record<string, string> = {
+  succeeded: "success",
+  started: "processing",
+};
 
 function translatedLabel(labels: Record<string, string>, value: string) {
   return labels[value] ?? `其他（${value}）`;
@@ -89,7 +93,7 @@ function AuditEvents() {
             { title: "主体", dataIndex: "actor_type", width: 90 },
             { title: "目标", key: "target", render: (_, row) => `${row.target_type}:${row.target_id || "-"}` },
             { title: "目标版本", dataIndex: "target_revision", width: 100, render: (_, row) => row.target_revision ?? "-" },
-            { title: "结果", dataIndex: "result", width: 100, render: (_, row) => <Tag color={row.result === "succeeded" ? "success" : row.result === "started" ? "processing" : "error"}>{translatedLabel(auditResultLabels, row.result)}</Tag> },
+            { title: "结果", dataIndex: "result", width: 100, render: (_, row) => <Tag color={auditResultColorMap[row.result] ?? "error"}>{translatedLabel(auditResultLabels, row.result)}</Tag> },
             { title: "Request ID", dataIndex: "request_id", width: "1%", onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }), onCell: () => ({ style: { whiteSpace: "nowrap" } }), render: (_, row) => <Typography.Text code copyable>{row.request_id}</Typography.Text> },
           ]}
         />

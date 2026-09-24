@@ -25,7 +25,7 @@ export function EditorModal({ title, children, onSave, onClose, width = 640 }: {
   return <Modal open title={title} width={width} okText="保存" cancelText="取消" confirmLoading={busy}
     closable={!busy} keyboard={!busy} maskClosable={false} okButtonProps={{ disabled: busy }} cancelButtonProps={{ disabled: busy }}
     onCancel={() => { if (!lock.current) onClose(); }} onOk={() => void submit()}>
-    {error && <Alert type="error" showIcon title={error} style={{ marginBottom: 16 }} />}
-    <fieldset disabled={busy} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>{children}</fieldset>
+    {error && <Alert type="error" showIcon title={error} className="mb-16" />}
+    <fieldset disabled={busy} className="editor-fieldset-reset">{children}</fieldset>
   </Modal>;
 }

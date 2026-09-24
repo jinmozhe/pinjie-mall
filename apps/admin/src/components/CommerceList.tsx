@@ -19,12 +19,11 @@ export function CommerceList<T extends object>({ resource, title, load, columns,
   columns: ProColumns<T>[]; fields: CommerceFilterField[]; rowKey?: string; toolbar?: ReactNode[];
 }) {
   const admin = useCurrentAdmin();
-  const permission =
-    resource === "reconciliation-records"
-      ? "reconciliation"
-      : resource === "refund-executions"
-      ? "refunds"
-      : resource;
+  const permissionMap: Record<string, string> = {
+    "reconciliation-records": "reconciliation",
+    "refund-executions": "refunds",
+  };
+  const permission = permissionMap[resource] ?? resource;
   const allowed = canAccess(admin, `${permission}:read`);
   const canExport = canAccess(admin, `${permission}:export`);
   const [form] = Form.useForm<CommerceFilters>();
@@ -54,14 +53,14 @@ export function CommerceList<T extends object>({ resource, title, load, columns,
   };
   if (!allowed) return <Alert type="warning" title={`无权查看${title}`} />;
   return <>
-    <Form form={form} layout="inline" disabled={busy} style={{ gap: 12, marginBottom: 16 }} onFinish={(values) => change({ ...values, page: 1, page_size: 20 })}>
+    <Form form={form} layout="inline" disabled={busy} className="commerce-filter-form" onFinish={(values) => change({ ...values, page: 1, page_size: 20 })}>
       {fields.map((field) => <Form.Item key={field.name} name={field.name} label={field.label}
         rules={field.name.endsWith("_id") ? [{ pattern: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, message: "请输入完整 UUID" }] : undefined}>
         {field.options ? <Select allowClear style={{ width: 150 }} options={field.options} /> : <Input allowClear style={{ width: 220 }} />}
       </Form.Item>)}
       <Space><Button htmlType="submit" type="primary" icon={<SearchOutlined />}>查询</Button><Button icon={<ReloadOutlined />} onClick={() => { form.resetFields(); change({ page: 1, page_size: 20 }); }}>重置</Button></Space>
     </Form>
-    {exportError && <Alert type="error" showIcon title={exportError} style={{ marginBottom: 12 }} />}
+    {exportError && <Alert type="error" showIcon title={exportError} className="mb-12" />}
     <ResourceTable title={title} rows={query.data?.items ?? []} rowKey={rowKey} columns={columns}
       loading={query.isLoading} fetching={query.isFetching} error={query.error} retry={query.refetch}
       page={filters.page ?? 1} total={query.data?.total} onPage={(page) => { if (!lock.current) change({ ...filters, page }); }}

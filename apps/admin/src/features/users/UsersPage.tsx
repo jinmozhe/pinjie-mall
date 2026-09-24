@@ -329,9 +329,12 @@ export function UsersPage() {
           columns={[
             { title: "用户", dataIndex: "username", render: (_, row) => <div className="table-primary-cell"><Typography.Text strong>{row.display_name || row.username}</Typography.Text><Typography.Text type="secondary">{row.username}</Typography.Text></div> },
             { title: "邮箱", dataIndex: "email", responsive: ["lg"], render: (value) => value || "-" },
-            { title: "状态", dataIndex: "is_active", width: 110, render: (_value, row) => lifecycle === "deleted"
-              ? row.can_restore ? <Tag color="warning">可恢复</Tag> : <Tag>不可恢复</Tag>
-              : (
+            { title: "状态", dataIndex: "is_active", width: 110, render: (_value, row) => {
+              if (lifecycle === "deleted") {
+                if (row.can_restore) return <Tag color="warning">可恢复</Tag>;
+                return <Tag>不可恢复</Tag>;
+              }
+              return (
                 <StatusToggleTag
                   active={row.is_active}
                   ariaLabel={`${row.is_active ? "停用" : "启用"}用户：${row.username}`}
@@ -340,7 +343,8 @@ export function UsersPage() {
                   readOnlyReason="没有修改用户的权限"
                   onToggle={() => statusMutation.mutate({ userId: row.id, isActive: !row.is_active })}
                 />
-              ) },
+              );
+            } },
             { title: "创建时间", dataIndex: "created_at", width: 170, responsive: ["xl"], render: (_, row) => formatTime(row.created_at) },
             ...(lifecycle === "deleted" ? [
               { title: "删除时间", dataIndex: "deleted_at", width: 170, render: (_: unknown, row: AdminUserRead) => formatTime(row.deleted_at) },

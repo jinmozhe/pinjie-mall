@@ -157,13 +157,13 @@ function ValuesDrawer({
       <Alert
         type="info"
         title="标准候选值供商品在建档时快速选择采用，避免不同商品书写歧义。"
-        style={{ marginBottom: 16 }}
+        className="mb-16"
       />
       {canUpdate && (
         <Form
           form={form}
           layout="inline"
-          style={{ marginBottom: 16 }}
+          className="mb-16"
           initialValues={{ sort_order: null, is_active: true }}
         >
           <Form.Item

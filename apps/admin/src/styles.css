@@ -36,40 +36,6 @@ textarea {
   vertical-align: middle;
 }
 
-.brand-mark {
-  display: flex;
-  height: 56px;
-  min-width: 0;
-  align-items: center;
-  gap: 10px;
-  overflow: hidden;
-  color: #101828;
-  font-size: 16px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.brand-mark__symbol {
-  display: inline-grid;
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
-  place-items: center;
-  border-radius: 6px;
-  color: #ffffff;
-  background: linear-gradient(135deg, #1677ff 0%, #0958d9 100%);
-  box-shadow: 0 2px 6px rgba(22, 119, 255, 0.28);
-  font-weight: 700;
-  font-size: 16px;
-}
-
-.brand-mark__title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: #101828;
-  letter-spacing: -0.2px;
-}
-
 /* 顶部账号菜单触发器 */
 .account-trigger {
   display: inline-flex;
@@ -415,9 +381,33 @@ textarea {
   font-weight: 400;
 }
 
-.modal-copy {
-  color: #475467;
-  line-height: 1.6;
+/* 编辑弹窗 fieldset 重置（移除浏览器默认的 border/padding） */
+.editor-fieldset-reset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+/* 表单/Alert 等组件间距 */
+.mb-16 {
+  margin-bottom: 16px;
+}
+
+.mb-12 {
+  margin-bottom: 12px;
+}
+
+/* 头像预览边框 */
+.avatar-preview {
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 筛选表单行（CommerceList 等公共列表筛选栏） */
+.commerce-filter-form {
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 /* 页脚 */

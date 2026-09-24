@@ -9,6 +9,12 @@ import { commerceApi } from "@/lib/api/commerce";
 export default function DurableTasksPage() {
   const [selectedTask, setSelectedTask] = useState<DurableTaskRead | null>(null);
 
+  const taskStatusColorMap: Record<string, string> = {
+    succeeded: "success",
+    attention: "error",
+    running: "processing",
+  };
+
   return (
     <PageFrame
       title="异步任务诊断"
@@ -146,15 +152,7 @@ export default function DurableTasksPage() {
             </Descriptions.Item>
             <Descriptions.Item label="执行状态">
               <Tag
-                color={
-                  selectedTask.status === "succeeded"
-                    ? "success"
-                    : selectedTask.status === "attention"
-                    ? "error"
-                    : selectedTask.status === "running"
-                    ? "processing"
-                    : "default"
-                }
+                color={taskStatusColorMap[selectedTask.status] ?? "default"}
               >
                 {selectedTask.status}
               </Tag>

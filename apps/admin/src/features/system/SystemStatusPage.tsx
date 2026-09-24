@@ -54,6 +54,36 @@ function securityStrategyLabel(value: string): string {
   return labels[value] ?? value;
 }
 
+const GLOBAL_STATUS_MAP = {
+  healthy: {
+    bg: "linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%)",
+    border: "#b7eb8f",
+    icon: <CheckCircleFilled style={{ fontSize: 32, color: "#52c41a" }} />,
+    title: "所有系统组件运行正常",
+    tagColor: "success",
+  },
+  degraded: {
+    bg: "linear-gradient(135deg, #fffbe6 0%, #fff7e6 100%)",
+    border: "#ffe58f",
+    icon: <ExclamationCircleFilled style={{ fontSize: 32, color: "#faad14" }} />,
+    title: "部分系统组件处于降级状态",
+    tagColor: "warning",
+  },
+  unhealthy: {
+    bg: "linear-gradient(135deg, #fff2f0 0%, #fff1f0 100%)",
+    border: "#ffa39e",
+    icon: <CloseCircleFilled style={{ fontSize: 32, color: "#ff4d4f" }} />,
+    title: "核心基础设施不可用",
+    tagColor: "error",
+  },
+} as const;
+
+const REDIS_STATUS_MAP: Record<string, { color: string; text: string }> = {
+  ok: { color: "success", text: "就绪" },
+  disabled: { color: "default", text: "未启用" },
+  error: { color: "error", text: "异常" },
+};
+
 export function SystemStatusPage() {
   const [pollInterval, setPollInterval] = useState<number>(0);
 
@@ -64,8 +94,8 @@ export function SystemStatusPage() {
   });
 
   const data = query.data;
-  const isHealthy = data?.status === "healthy";
-  const isDegraded = data?.status === "degraded";
+  const globalStatusKey = data?.status === "healthy" ? "healthy" : data?.status === "degraded" ? "degraded" : "unhealthy";
+  const globalStatus = GLOBAL_STATUS_MAP[globalStatusKey];
 
   return (
     <PageFrame
@@ -141,30 +171,20 @@ export function SystemStatusPage() {
             style={{
               padding: "20px 24px",
               borderRadius: 8,
-              background: isHealthy
-                ? "linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%)"
-                : isDegraded
-                  ? "linear-gradient(135deg, #fffbe6 0%, #fff7e6 100%)"
-                  : "linear-gradient(135deg, #fff2f0 0%, #fff1f0 100%)",
-              border: `1px solid ${isHealthy ? "#b7eb8f" : isDegraded ? "#ffe58f" : "#ffa39e"}`,
+              background: globalStatus.bg,
+              border: `1px solid ${globalStatus.border}`,
             }}
           >
             <Row gutter={[24, 16]} align="middle">
               <Col xs={24} md={12}>
                 <Space align="center" size={12}>
-                  {isHealthy ? (
-                    <CheckCircleFilled style={{ fontSize: 32, color: "#52c41a" }} />
-                  ) : isDegraded ? (
-                    <ExclamationCircleFilled style={{ fontSize: 32, color: "#faad14" }} />
-                  ) : (
-                    <CloseCircleFilled style={{ fontSize: 32, color: "#ff4d4f" }} />
-                  )}
+                  {globalStatus.icon}
                   <div>
                     <Space align="center" wrap size={8}>
                       <Typography.Title level={4} style={{ margin: 0, color: "#101828" }}>
-                        {isHealthy ? "所有系统组件运行正常" : isDegraded ? "部分系统组件处于降级状态" : "核心基础设施不可用"}
+                        {globalStatus.title}
                       </Typography.Title>
-                      <Tag color={isHealthy ? "success" : isDegraded ? "warning" : "error"}>
+                      <Tag color={globalStatus.tagColor}>
                         {data.status.toUpperCase()}
                       </Tag>
                     </Space>
@@ -258,8 +278,8 @@ export function SystemStatusPage() {
                   </Space>
                 }
                 extra={
-                  <Tag color={data.infrastructure.redis.status === "ok" ? "success" : data.infrastructure.redis.status === "disabled" ? "default" : "error"}>
-                    {data.infrastructure.redis.status === "ok" ? "就绪" : data.infrastructure.redis.status === "disabled" ? "未启用" : "异常"}
+                  <Tag color={REDIS_STATUS_MAP[data.infrastructure.redis.status]?.color || "error"}>
+                    {REDIS_STATUS_MAP[data.infrastructure.redis.status]?.text || "异常"}
                   </Tag>
                 }
                 style={{ height: "100%" }}
