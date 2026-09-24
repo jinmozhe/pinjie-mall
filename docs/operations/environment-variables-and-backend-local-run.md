@@ -60,6 +60,22 @@ pnpm --filter @pinjie/admin dev
 
 Admin 默认使用 3001。启动后检查 `http://127.0.0.1:18168/health/live` 与 `http://127.0.0.1:18168/health/ready`。实际数据库升级和权限写入会改变本地数据库，只在确认目标环境后执行。
 
+### 4.1 一键启动本地 Backend
+
+仓库根目录提供 `scripts/start-local.ps1`，会启动或等待 Docker Desktop，启动并验证 Redis，执行数据库迁移和权限目录检查，然后启动 Backend：
+
+```powershell
+pnpm dev:backend
+```
+
+权限目录需要写入本地开发库时，显式追加 `-ApplyPermissions`：
+
+```powershell
+pnpm dev:backend -- -ApplyPermissions
+```
+
+脚本以前台方式运行 Uvicorn，使用 `Ctrl+C` 停止 Backend；Redis 容器继续由 Docker Desktop 管理。
+
 ## 5. 生产配置
 
 生产根 `.env` 使用来自商城独立 CNB/TCR 发布清单的完整 digest：
