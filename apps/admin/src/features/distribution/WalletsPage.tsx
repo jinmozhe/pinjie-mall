@@ -11,7 +11,7 @@ import { commerceApi } from "@/lib/api/commerce";
 function LedgerDrawer({ id, close }: { id: string; close: () => void }) {
   const [page, setPage] = useState(1);
   const query = useQuery({ queryKey: ["wallet-ledgers", id, page], queryFn: () => commerceApi.ledgers(id, page) });
-  return <Drawer open title="钱包不可变流水" width={1000} onClose={close}>
+  return <Drawer open title="钱包不可变流水" size={1000} onClose={close}>
     <ResourceTable title="钱包流水" rows={query.data?.items ?? []} loading={query.isLoading} fetching={query.isFetching}
       error={query.error} retry={query.refetch} page={page} total={query.data?.total} onPage={setPage} columns={[
         { title: "流水号", dataIndex: "id", ellipsis: true }, { title: "类型", dataIndex: "entry_type" },

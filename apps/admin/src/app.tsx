@@ -12,7 +12,7 @@ import {
   Dropdown,
   Result,
   Typography,
-  message,
+  App,
   theme,
 } from "antd";
 import zhCN from "antd/locale/zh_CN";
@@ -80,6 +80,7 @@ export async function getInitialState(): Promise<AdminInitialState> {
 }
 
 function AccountMenu({ admin }: { admin: AdminRead }) {
+  const { message } = App.useApp();
   const logout = useMutation({
     mutationFn: adminApi.logout,
     onSuccess: () => {
@@ -256,9 +257,11 @@ export function rootContainer(container: ReactNode) {
         },
       }}
     >
-      <QueryClientProvider client={queryClient}>
-        {container}
-      </QueryClientProvider>
+      <App>
+        <QueryClientProvider client={queryClient}>
+          {container}
+        </QueryClientProvider>
+      </App>
     </ConfigProvider>
   );
 }

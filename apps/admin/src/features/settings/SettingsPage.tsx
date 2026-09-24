@@ -24,7 +24,7 @@ import {
   Tabs,
   Typography,
   Upload,
-  message,
+  App,
 } from "antd";
 import { useEffect, useMemo, useState } from "react";
 
@@ -73,6 +73,7 @@ function RevisionConflict({ onReload }: { onReload: () => void }) {
 }
 
 function SiteSettingsTab({ canUpdate }: { canUpdate: boolean }) {
+  const { message } = App.useApp();
   const [form] = Form.useForm<SiteFormValues>();
   const queryClient = useQueryClient();
   const [dirty, setDirty] = useState(false);
@@ -299,6 +300,7 @@ function SiteSettingsTab({ canUpdate }: { canUpdate: boolean }) {
 }
 
 function RegistrationSettingsTab({ canUpdate }: { canUpdate: boolean }) {
+  const { message } = App.useApp();
   const [form] = Form.useForm<RegistrationFormValues>();
   const queryClient = useQueryClient();
   const [dirty, setDirty] = useState(false);

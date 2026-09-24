@@ -23,7 +23,7 @@ export function EditorModal({ title, children, onSave, onClose, width = 640, blo
     finally { lock.current = false; setBusy(false); }
   };
   return <Modal open title={title} width={width} okText="保存" cancelText="取消" confirmLoading={busy}
-    closable={!busy && !blocked} keyboard={!busy && !blocked} maskClosable={false} okButtonProps={{ disabled: busy || blocked }} cancelButtonProps={{ disabled: busy || blocked }}
+    closable={!busy && !blocked} keyboard={!busy && !blocked} mask={{ closable: false }} okButtonProps={{ disabled: busy || blocked }} cancelButtonProps={{ disabled: busy || blocked }}
     onCancel={() => { if (!lock.current && !blocked) onClose(); }} onOk={() => void submit()}>
     {error && <Alert type="error" showIcon title={error} className="mb-16" />}
     <fieldset disabled={busy} className="editor-fieldset-reset">{children}</fieldset>

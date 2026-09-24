@@ -19,7 +19,7 @@ import {
   Space,
   Table,
   Tag,
-  message,
+  App,
 } from "antd";
 import { useState } from "react";
 import type { ColumnsType } from "antd/es/table";
@@ -34,6 +34,7 @@ import { InventoryPanel } from "./InventoryPanel";
 import { ProductEditor } from "./ProductEditor";
 
 export function ProductsPage() {
+  const { message } = App.useApp();
   const admin = useCurrentAdmin();
   const client = useQueryClient();
   const [page, setPage] = useState(1);
@@ -106,7 +107,7 @@ export function ProductsPage() {
       {!allowed ? (
         <Alert type="warning" title="无权查看商品管理" />
       ) : (
-        <Space direction="vertical" size="large" style={{ width: "100%" }}>
+        <Space orientation="vertical" size="large" style={{ width: "100%" }}>
           <Card size="small">
             <Form
               layout="inline"
@@ -303,7 +304,7 @@ export function ProductsPage() {
         <Drawer
           title={`【${inspectProduct.name}】货品变体列表`}
           open
-          width={760}
+          size={760}
           onClose={() => setInspectProduct(null)}
         >
           <Table

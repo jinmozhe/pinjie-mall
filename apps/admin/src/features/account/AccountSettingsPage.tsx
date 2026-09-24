@@ -1,7 +1,7 @@
 import type { AdminProfileUpdateIn } from "@pinjie/api-client";
 import { KeyOutlined, SafetyCertificateOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Card, Descriptions, Divider, Form, Input, Space, Tabs, Tag, Typography, message } from "antd";
+import { Alert, Button, Card, Descriptions, Divider, Form, Input, Space, Tabs, Tag, Typography, App } from "antd";
 import { useRef, useState } from "react";
 
 import { PageFrame, formatTime } from "@/components/PageFrame";
@@ -12,6 +12,7 @@ import { errorMessage } from "@/lib/api/http";
 import { useLockedMutation } from "@/lib/useLockedMutation";
 
 export function AccountSettingsPage() {
+  const { message } = App.useApp();
   const current = useCurrentAdmin();
   const queryClient = useQueryClient();
   const [profileForm] = Form.useForm<AdminProfileUpdateIn>();
@@ -185,32 +186,26 @@ export function AccountSettingsPage() {
                   <Typography.Title level={5} style={{ marginBottom: 12 }}>
                     账号身份与安全信息
                   </Typography.Title>
-                  <Descriptions column={1} size="small" bordered>
-                    <Descriptions.Item label="账号身份">
-                      {current.is_superuser ? (
-                        <Tag color="blue" icon={<SafetyCertificateOutlined />}>
-                          超级管理员
-                        </Tag>
-                      ) : (
-                        <Tag>普通管理员</Tag>
-                      )}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="所属角色">
-                      <Space wrap size={[4, 4]}>
+                  <Descriptions column={1} size="small" bordered items={[
+                    {
+                      key: "identity", label: "账号身份",
+                      children: current.is_superuser ? (
+                        <Tag color="blue" icon={<SafetyCertificateOutlined />}>超级管理员</Tag>
+                      ) : <Tag>普通管理员</Tag>,
+                    },
+                    {
+                      key: "roles", label: "所属角色",
+                      children: <Space wrap size={[4, 4]}>
                         {current.roles.length > 0 ? (
                           current.roles.map((role) => <Tag key={role.id}>{role.name}</Tag>)
                         ) : (
                           <Typography.Text type="secondary">-</Typography.Text>
                         )}
-                      </Space>
-                    </Descriptions.Item>
-                    <Descriptions.Item label="拥有权限数">
-                      <Tag color="cyan">{current.permissions.length} 项有效权限</Tag>
-                    </Descriptions.Item>
-                    <Descriptions.Item label="注册时间">
-                      {formatTime(current.created_at)}
-                    </Descriptions.Item>
-                  </Descriptions>
+                      </Space>,
+                    },
+                    { key: "permissions", label: "拥有权限数", children: <Tag color="cyan">{current.permissions.length} 项有效权限</Tag> },
+                    { key: "created_at", label: "注册时间", children: formatTime(current.created_at) },
+                  ]} />
                 </div>
               ),
             },

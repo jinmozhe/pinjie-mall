@@ -1,7 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 
 import { cleanup } from "@testing-library/react";
-import { message } from "antd";
 import { afterAll, afterEach, beforeAll } from "vitest";
 import { setupServer } from "msw/node";
 
@@ -40,7 +39,7 @@ Object.defineProperty(window, "getComputedStyle", {
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
-  message.destroy();
+  // App 上下文中的通知随组件树卸载，不保留静态消息实例。
   cleanup();
   server.resetHandlers();
 });

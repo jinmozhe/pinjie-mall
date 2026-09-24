@@ -12,7 +12,7 @@ import {
   Tabs,
   Tag,
   Typography,
-  message,
+  App,
 } from "antd";
 import { PlusOutlined, EditOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -31,6 +31,7 @@ import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi } from "@/lib/api/commerce";
 
 export default function MemberLevelsPage() {
+  const { message } = App.useApp();
   const admin = useCurrentAdmin();
   const queryClient = useQueryClient();
   const canLevelsRead = canAccess(admin, "member-levels:read");
@@ -366,7 +367,7 @@ export default function MemberLevelsPage() {
       <Modal
         title={editingLevel ? "编辑会员等级" : "新建会员等级"}
         open={levelModalOpen}
-        maskClosable={false} closable={!saveLevelMutation.isPending} keyboard={!saveLevelMutation.isPending}
+        mask={{ closable: false }} closable={!saveLevelMutation.isPending} keyboard={!saveLevelMutation.isPending}
         cancelButtonProps={{ disabled: saveLevelMutation.isPending }}
         onCancel={() => {
           if (saveLevelMutation.isPending) return;
@@ -416,7 +417,7 @@ export default function MemberLevelsPage() {
       <Modal
         title={editingCond ? "编辑资格条件" : "新建晋升资格条件"}
         open={condModalOpen}
-        maskClosable={false} closable={!saveCondMutation.isPending} keyboard={!saveCondMutation.isPending}
+        mask={{ closable: false }} closable={!saveCondMutation.isPending} keyboard={!saveCondMutation.isPending}
         cancelButtonProps={{ disabled: saveCondMutation.isPending }}
         onCancel={() => {
           if (saveCondMutation.isPending) return;

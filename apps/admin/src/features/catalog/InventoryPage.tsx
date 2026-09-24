@@ -45,7 +45,7 @@ export function InventoryPage() {
       {!allowed ? (
         <Alert type="warning" title="库存列表需要库存查看和商品查看权限" />
       ) : (
-        <Space direction="vertical" size="large" style={{ width: "100%" }}>
+        <Space orientation="vertical" size="large" style={{ width: "100%" }}>
           <Card title="快捷定位 SKU" size="small">
             <Form layout="inline" onFinish={(values: { search?: string }) => {
               setSearch(values.search?.trim() || "");

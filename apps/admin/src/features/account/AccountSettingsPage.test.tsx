@@ -2,7 +2,7 @@ import type { AdminRead } from "@pinjie/api-client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ConfigProvider } from "antd";
+import { App, ConfigProvider } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import { http, HttpResponse } from "msw";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -29,11 +29,13 @@ function renderAccountSettingsPage(principal: AdminRead = mockAdmin) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   return render(
     <ConfigProvider locale={zhCN}>
-      <QueryClientProvider client={client}>
-        <AdminContext.Provider value={principal}>
-          <AccountSettingsPage />
-        </AdminContext.Provider>
-      </QueryClientProvider>
+      <App>
+        <QueryClientProvider client={client}>
+          <AdminContext.Provider value={principal}>
+            <AccountSettingsPage />
+          </AdminContext.Provider>
+        </QueryClientProvider>
+      </App>
     </ConfigProvider>,
   );
 }

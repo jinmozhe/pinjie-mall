@@ -23,7 +23,7 @@ export function WelcomePage() {
       title="欢迎使用 Pinjie Mall 管理后台"
       description="独立商城的运营管理控制台，当前阶段聚焦后端领域模型与后台管理能力。"
     >
-      <Space direction="vertical" size={24} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={24} style={{ width: "100%" }}>
         {/* 顶部主横幅 Hero Card */}
         <div
           style={{
@@ -36,7 +36,7 @@ export function WelcomePage() {
         >
           <Row gutter={[24, 24]} align="middle">
             <Col xs={24} md={16}>
-              <Space direction="vertical" size={8}>
+              <Space orientation="vertical" size={8}>
                 <Space wrap>
                   <Tag style={{ background: "rgba(255,255,255,0.2)", color: "#ffffff", border: "none" }}>
                     独立商城基线

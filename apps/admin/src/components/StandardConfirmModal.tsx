@@ -47,7 +47,7 @@ export function StandardConfirmModal({ children, description, loading, open, tit
       confirmLoading={busy}
       destroyOnHidden
       keyboard={!busy}
-      maskClosable={!busy}
+      mask={{ closable: !busy }}
       okButtonProps={{ danger: true, disabled: busy }}
       okText="确定"
       open={open}

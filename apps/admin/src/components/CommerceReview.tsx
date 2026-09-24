@@ -1,7 +1,7 @@
 import type { RefundRequestRead, WithdrawalRead } from "@pinjie/api-client";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import { useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Form, Input, Space, message } from "antd";
+import { Alert, Button, Form, Input, Space, App } from "antd";
 import { useState } from "react";
 
 import { CommerceList } from "./CommerceList";
@@ -14,6 +14,7 @@ type ReviewRow = RefundRequestRead | WithdrawalRead;
 function ReviewEditor({ resource, target, close }: {
   resource: "refunds" | "withdrawals"; target: { row: ReviewRow; approve: boolean }; close: () => void;
 }) {
+  const { message } = App.useApp();
   const [form] = Form.useForm<{ note: string }>();
   const client = useQueryClient();
   const label = resource === "refunds" ? "退款" : "提现";

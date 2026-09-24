@@ -1,6 +1,6 @@
 import type { CategoryRead, ProductCreate, ProductRead, ProductUpdate } from "@pinjie/api-client";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Divider, Form, Input, InputNumber, Radio, Select, Space, message } from "antd";
+import { Alert, Divider, Form, Input, InputNumber, Radio, Select, Space, App } from "antd";
 import { useRef, useState } from "react";
 
 import { EditorModal } from "@/components/EditorModal";
@@ -17,6 +17,7 @@ export function ProductEditor({
   close: () => void;
   done: () => Promise<void>;
 }) {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   const [images, setImages] = useState<string[]>(target?.image_asset_ids ?? []);
   const uploadingRef = useRef(false);
@@ -111,7 +112,7 @@ export function ProductEditor({
           <Input maxLength={200} placeholder="例如：品界特级有机绿茶 250g" />
         </Form.Item>
 
-        <Space size="middle" style={{ width: "100%" }}>
+        <Space size="medium" style={{ width: "100%" }}>
           <Form.Item
             name="category_id"
             label="所属分类"
@@ -159,7 +160,7 @@ export function ProductEditor({
               title="新建商品时创建首个标准货品，后续可在商品列表中新增变体或进行多规格转换。"
               className="mb-16"
             />
-            <Space size="middle" style={{ width: "100%" }}>
+            <Space size="medium" style={{ width: "100%" }}>
               <Form.Item
                 name="sku_code"
                 label="SKU 编码"

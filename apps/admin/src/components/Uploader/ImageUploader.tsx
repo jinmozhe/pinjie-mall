@@ -1,6 +1,6 @@
 import type { UploadScene } from "@pinjie/api-client";
 import { UploadOutlined } from "@ant-design/icons";
-import { Alert, Button, Upload, message } from "antd";
+import { Alert, Button, Upload, App } from "antd";
 import type { UploadProps } from "antd";
 import { useState } from "react";
 
@@ -25,6 +25,7 @@ export function ImageUploader({
   disabled = false,
   maxSizeMb = 2,
 }: ImageUploaderProps) {
+  const { message } = App.useApp();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string>();
 

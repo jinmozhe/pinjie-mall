@@ -11,7 +11,7 @@ import {
   Table,
   Tag,
   Typography,
-  message,
+  App,
 } from "antd";
 import { PlusOutlined, EditOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +28,7 @@ import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi } from "@/lib/api/commerce";
 
 export default function MemberPricesPage() {
+  const { message } = App.useApp();
   const admin = useCurrentAdmin();
   const queryClient = useQueryClient();
   const canPricesRead = canAccess(admin, "member-price-rules:read");
@@ -238,7 +239,7 @@ export default function MemberPricesPage() {
       <Modal
         title={editingRule ? "编辑会员价格规则" : "新建会员价格规则"}
         open={modalOpen}
-        maskClosable={false} closable={!saveMutation.isPending} keyboard={!saveMutation.isPending}
+        mask={{ closable: false }} closable={!saveMutation.isPending} keyboard={!saveMutation.isPending}
         cancelButtonProps={{ disabled: saveMutation.isPending }}
         onCancel={() => {
           if (saveMutation.isPending) return;

@@ -1,7 +1,7 @@
 import type { BrandInput, BrandRead, BrandUpdate } from "@pinjie/api-client";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Form, Input, Switch, Tag, message } from "antd";
+import { Alert, Button, Form, Input, Switch, Tag, App } from "antd";
 import { useState } from "react";
 
 import { EditorModal } from "@/components/EditorModal";
@@ -19,6 +19,7 @@ function BrandEditor({
   done: () => Promise<void>;
   close: () => void;
 }) {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   return (
     <EditorModal

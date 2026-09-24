@@ -165,7 +165,7 @@ export function SystemStatusPage() {
       ) : null}
 
       {data ? (
-        <Space direction="vertical" size={20} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={20} style={{ width: "100%" }}>
           {/* 板块 1：全局健康总览横幅 */}
           <div
             style={{
@@ -202,7 +202,7 @@ export function SystemStatusPage() {
                       title={<span style={{ fontSize: 12 }}>数据库延迟</span>}
                       value={data.infrastructure.database.latency_ms}
                       suffix="ms"
-                      valueStyle={{ fontSize: 18, color: "#1677ff", fontWeight: 600 }}
+                      styles={{ content: { fontSize: 18, color: "#1677ff", fontWeight: 600 } }}
                     />
                   </Col>
                   <Col span={8} style={{ textAlign: "center" }}>
@@ -210,18 +210,18 @@ export function SystemStatusPage() {
                       title={<span style={{ fontSize: 12 }}>Redis 延迟</span>}
                       value={data.infrastructure.redis.latency_ms}
                       suffix="ms"
-                      valueStyle={{
+                      styles={{ content: {
                         fontSize: 18,
                         color: data.infrastructure.redis.status === "ok" ? "#52c41a" : "#ff4d4f",
                         fontWeight: 600,
-                      }}
+                      } }}
                     />
                   </Col>
                   <Col span={8} style={{ textAlign: "center" }}>
                     <Statistic
                       title={<span style={{ fontSize: 12 }}>稳定运行时长</span>}
                       value={formatUptime(data.uptime_seconds)}
-                      valueStyle={{ fontSize: 16, color: "#722ed1", fontWeight: 600 }}
+                      styles={{ content: { fontSize: 16, color: "#722ed1", fontWeight: 600 } }}
                     />
                   </Col>
                 </Row>
@@ -252,7 +252,7 @@ export function SystemStatusPage() {
                 }
                 style={{ height: "100%" }}
               >
-                <Space direction="vertical" size={6} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={6} style={{ width: "100%" }}>
                   <Flex justify="space-between">
                     <Typography.Text type="secondary">探针耗时：</Typography.Text>
                     <Typography.Text strong>{data.infrastructure.database.latency_ms} ms</Typography.Text>
@@ -284,7 +284,7 @@ export function SystemStatusPage() {
                 }
                 style={{ height: "100%" }}
               >
-                <Space direction="vertical" size={6} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={6} style={{ width: "100%" }}>
                   <Flex justify="space-between">
                     <Typography.Text type="secondary">探针耗时：</Typography.Text>
                     <Typography.Text strong>{data.infrastructure.redis.latency_ms} ms</Typography.Text>
@@ -310,7 +310,7 @@ export function SystemStatusPage() {
                 extra={<Tag color="processing">已配置 ({data.infrastructure.storage.driver})</Tag>}
                 style={{ height: "100%" }}
               >
-                <Space direction="vertical" size={6} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={6} style={{ width: "100%" }}>
                   <Flex justify="space-between">
                     <Typography.Text type="secondary">公开访问路径：</Typography.Text>
                     <Typography.Text code copyable>{data.infrastructure.storage.public_base_url}</Typography.Text>
@@ -332,7 +332,7 @@ export function SystemStatusPage() {
                 extra={<Tag color="purple">配置摘要</Tag>}
                 style={{ height: "100%" }}
               >
-                <Space direction="vertical" size={6} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={6} style={{ width: "100%" }}>
                   <Flex justify="space-between">
                     <Typography.Text type="secondary">C/B 会话：</Typography.Text>
                     <Tag>{securityStrategyLabel(data.infrastructure.security.session_isolation)}</Tag>

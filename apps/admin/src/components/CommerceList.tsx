@@ -1,7 +1,7 @@
 import { DownloadOutlined, ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import type { ProColumns } from "@ant-design/pro-components";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Button, Form, Input, Select, Space, message } from "antd";
+import { Alert, Button, Form, Input, Select, Space, App } from "antd";
 import { useRef, useState, type Key, type ReactNode } from "react";
 
 import { ResourceTable } from "./ResourceTable";
@@ -19,6 +19,7 @@ export function CommerceList<T extends object>({ resource, title, load, columns,
   columns: ProColumns<T>[]; fields: CommerceFilterField[]; rowKey?: string; toolbar?: ReactNode[];
   fixedFilters?: CommerceFilters;
 }) {
+  const { message } = App.useApp();
   const admin = useCurrentAdmin();
   const permissionMap: Record<string, string> = {
     "reconciliation-records": "reconciliation",

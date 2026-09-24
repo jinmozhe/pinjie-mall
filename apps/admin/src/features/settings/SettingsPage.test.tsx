@@ -2,7 +2,7 @@ import type { AdminRead, AdminSiteSettingRead } from "@pinjie/api-client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ConfigProvider, message } from "antd";
+import { App, ConfigProvider } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import { http, HttpResponse } from "msw";
 
@@ -48,11 +48,13 @@ function renderSettingsPage(principal: AdminRead = admin, client = new QueryClie
   })) {
   return render(
     <ConfigProvider locale={zhCN}>
-      <QueryClientProvider client={client}>
-        <AdminContext.Provider value={principal}>
-          <SettingsPage />
-        </AdminContext.Provider>
-      </QueryClientProvider>
+      <App>
+        <QueryClientProvider client={client}>
+          <AdminContext.Provider value={principal}>
+            <SettingsPage />
+          </AdminContext.Provider>
+        </QueryClientProvider>
+      </App>
     </ConfigProvider>,
   );
 }
@@ -252,7 +254,6 @@ describe("SettingsPage", () => {
 
   it("rejects unsupported and oversized logo files before upload", async () => {
     const upload = vi.spyOn(adminApi, "uploadSiteLogo");
-    const error = vi.spyOn(message, "error");
     const { container } = renderSettingsPage();
 
     await screen.findByLabelText("站点名称");
@@ -261,7 +262,7 @@ describe("SettingsPage", () => {
     fireEvent.change(fileInput!, {
       target: { files: [new globalThis.File(["text"], "logo.txt", { type: "text/plain" })] },
     });
-    await waitFor(() => expect(error).toHaveBeenCalledWith("仅支持 PNG、JPEG 或 WebP 图片"));
+    expect(await screen.findByText("仅支持 PNG、JPEG 或 WebP 图片")).toBeInTheDocument();
 
     const oversized = new globalThis.File([new Uint8Array(2 * 1024 * 1024 + 1)], "large.png", {
       type: "image/png",
@@ -269,7 +270,7 @@ describe("SettingsPage", () => {
     const currentFileInput = container.querySelector<globalThis.HTMLInputElement>('input[type="file"]');
     expect(currentFileInput).not.toBeNull();
     fireEvent.change(currentFileInput!, { target: { files: [oversized] } });
-    await waitFor(() => expect(error).toHaveBeenCalledWith("站点 LOGO 不能超过 2 MB"));
+    expect(await screen.findByText("站点 LOGO 不能超过 2 MB")).toBeInTheDocument();
     expect(upload).not.toHaveBeenCalled();
   });
 

@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Drawer, Image, Input, Select, Space, Tag, Tooltip, Typography, message } from "antd";
+import { Button, Drawer, Image, Input, Select, Space, Tag, Tooltip, Typography, App } from "antd";
 import { useState } from "react";
 
 import { PageFrame, QueryState, formatTime } from "@/components/PageFrame";
@@ -46,6 +46,7 @@ function isImage(asset: AssetRead): boolean {
 }
 
 export function AssetsPage() {
+  const { message } = App.useApp();
   const current = useCurrentAdmin();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -334,7 +335,7 @@ export function AssetsPage() {
         className="asset-filter-drawer"
         destroyOnHidden
         extra={<Button type="primary" onClick={() => setFilterDrawerOpen(false)}>完成</Button>}
-        height={360}
+        size={360}
         open={filterDrawerOpen}
         placement="bottom"
         title="筛选文件资产"

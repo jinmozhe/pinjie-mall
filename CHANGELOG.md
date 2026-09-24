@@ -6,6 +6,14 @@
 
 ### Added
 
+- 补齐 Admin 推荐 API 接入：24 个业务文件的消息调用改用 Ant Design App 上下文，增加静态消息导入限制并同步相关组件测试装配。通过精确 pnpm 补丁修复 Umi 布局使用旧版图标、ProComponents 移动菜单使用弃用遮罩属性的问题；组件版本保持不变，补丁随根锁文件安装，开发进程需重启载入。
+
+- 完成 Admin 源码中的 Ant Design 弃用用法迁移：统一 Space 方向与尺寸、Alert 标题、弹窗和抽屉遮罩关闭配置、Drawer 尺寸、Statistic 内容样式、Tag 样式及 Descriptions 数据项；商品图片列表采用当前依赖已提供的 Listy，保留选择、上传、分页和状态反馈。同步 Admin 推荐 API 对照表与排障说明，未升级依赖；浏览器、Vitest 和 production build 未执行。
+
+- 将 Admin `/welcome` 调整为顶级“工作台”，移除 `/workbench` 菜单层级与二级“工作首页”；根路径和无指定回跳地址的登录成功默认进入 `/welcome`。
+
+- 修复 Admin 本地启动白屏：将不共享 URL 前缀的五个菜单组改为无路径分组，消除十三处绝对子路由与父路径不匹配，保留页面地址、菜单和 Access。缺少 CSRF Cookie 时不再发起 Refresh，直接按原始未登录结果返回登录页；新增 Cookie 缺失与空值回归用例。Admin typecheck、lint 及桌面和移动登录入口浏览器冒烟通过；Vitest、production build 和完整跨栈 E2E 未执行。
+
 - 新增根目录 `pnpm dev:backend` 本地启动入口：自动等待 Docker Desktop、启动并检查 Redis、执行 Backend 数据库迁移与权限目录检查，再以前台 Uvicorn 运行服务；权限写入需显式追加 `-ApplyPermissions`。
 
 - 修复 Backend 登录安全事件写入失败被吞掉的问题：安全事件存储不可用时认证按失败关闭并返回 `503 / SERVICE_UNAVAILABLE`，新增回归测试；统一身份、资产和财务报告分页按 UUID v7 `id` 倒序，移除冗余 `created_at` 排序。Backend Ruff、格式、Mypy 和编译检查通过；pytest 未执行。

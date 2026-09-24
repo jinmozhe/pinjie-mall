@@ -1,7 +1,7 @@
 import { CheckOutlined, PlusOutlined } from "@ant-design/icons";
 import type { ReconciliationRecordCreate, ReconciliationRecordRead, ReconciliationResolve } from "@pinjie/api-client";
 import { useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Form, Input, InputNumber, Select, message } from "antd";
+import { Alert, Button, Form, Input, InputNumber, Select, App } from "antd";
 import { useState } from "react";
 
 import { CommerceList } from "@/components/CommerceList";
@@ -11,6 +11,7 @@ import { canAccess, useCurrentAdmin } from "@/features/auth";
 import { commerceApi } from "@/lib/api/commerce";
 
 function ReconciliationEditor({ close }: { close: () => void }) {
+  const { message } = App.useApp();
   const [form] = Form.useForm<ReconciliationRecordCreate>();
   const client = useQueryClient();
 
@@ -64,6 +65,7 @@ function ReconciliationEditor({ close }: { close: () => void }) {
 }
 
 function ReconciliationResolveModal({ record, close }: { record: ReconciliationRecordRead; close: () => void }) {
+  const { message } = App.useApp();
   const [form] = Form.useForm<ReconciliationResolve>();
   const client = useQueryClient();
 
