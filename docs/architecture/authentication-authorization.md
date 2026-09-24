@@ -68,7 +68,7 @@
 
 公共端点 `GET /api/v1/system/capabilities` 只返回 `registration_enabled`。Web 在能力关闭时隐藏注册入口并把 `/register` 重定向到登录页；查询失败时按未知且不开放处理，并显示服务不可用状态。Backend 的公开注册端点始终执行权威开关校验，前端隐藏不承担安全控制。
 
-系统设置使用四项独立权限：`settings:site:read`、`settings:site:update`、`settings:registration:read` 和 `settings:registration:update`。Admin 设置写接口同时要求管理员会话、准确权限、CSRF、revision 校验和审计；LOGO 上传与删除归站点更新权限，不复用文件资产权限。
+系统设置使用八项独立权限：`settings:site:read`、`settings:site:update`、`settings:registration:read`、`settings:registration:update`、`settings:order-shipping:read`、`settings:order-shipping:update`，以及分佣总开关对应的 `settings:commission-control:read` 和 `settings:commission-control:update`。Admin 设置写接口同时要求管理员会话、准确权限、CSRF、revision 校验和审计；LOGO 上传与删除归站点更新权限，不复用文件资产权限。平台运费和分佣总开关分别由商品运费页、分佣政策页的独立受控区域维护。
 
 站点 LOGO 使用每次操作独立且不可变的 UUID 文件键。数据库提交失败时只补偿本次操作创建的临时对象，不覆盖或删除已有目标文件；并发更新依靠修订号和进程内串行化保护，避免旧操作回滚新提交的媒体。
 

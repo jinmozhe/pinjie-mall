@@ -2,12 +2,13 @@
 
 ## 1. 范围
 
-系统设置提供跨业务可复用的运行时配置。第一阶段包含：
-
-本页描述现行实现。目标新增 miniapp_registration、order_shipping 与 commission_control 固定分组，字段、初始化及失败语义见[全域数据库字典](database-schema-guide.md)。当前尚无这些分组的迁移/接口；不得由运行时自动补行。下述 Web 消费机制仅保留历史说明，Web 已永久冻结，不得恢复运行。
+系统设置提供跨业务可复用的运行时配置。本页描述现行实现与仍待接入的消费者边界。固定分组、字段、初始化及失败语义见[全域数据库字典](database-schema-guide.md)。所有分组都通过显式迁移初始化，运行时缺行、类型错误或 Schema 校验失败均视为不可用，不自动补行或猜测默认值。下述 Web 消费机制仅保留历史说明，Web 已永久冻结，不得恢复运行。
 
 - `site`：Web 站点名称、LOGO、标题、关键词和描述。
 - `registration`：Web 是否允许公开注册。
+- `miniapp_registration`：小程序首次建号开关，当前仅完成配置行和迁移，消费者身份交换接口仍待专项接入。
+- `order_shipping`：统一平台运费规则，按省级规则和整单优惠后商品金额计算，供报价、结算和订单快照使用。
+- `commission_control`：全平台分佣总开关，关闭时新的支付确认不产生佣金，历史已确认权益不重算。
 
 Admin 的 `Pinjie Console` 名称、登录页与控制台 LOGO 不读取站点设置。
 
@@ -25,13 +26,19 @@ Admin 的 `Pinjie Console` 名称、登录页与控制台 LOGO 不读取站点�
 | `created_at` | 带时区 | 创建时间 |
 | `updated_at` | 带时区 | 最近更新时间 |
 
-迁移固定创建 `site` 和 `registration` 两行。注册初始值为关闭。缺行、JSON 类型错误或 Schema 校验失败统一视为服务不可用，不在运行时补行或猜测默认值。
+迁移按阶段固定创建 `site`、`registration`、`miniapp_registration`、`order_shipping` 和 `commission_control` 五行。公开注册、小程序首次建号和分佣开关初始关闭；平台运费按迁移提供的默认规则初始化。缺行、JSON 类型错误或 Schema 校验失败统一视为服务不可用，不在运行时补行或猜测默认值。
 
 ## 3. 强类型值
 
 `site` 值固定包含 `name`、`logo`、`title`、`keywords`、`description`。关键词按 NFC 归一、去空、保持顺序去重，最多 20 项，每项最多 64 个字符。LOGO 元数据只保存相对路径、服务端确认 MIME、大小和 SHA-256。
 
 `registration` 值只包含严格布尔值 `enabled`。公开注册 POST 在创建用户的同一数据库事务中对该行取得共享锁并检查开关；Admin 写入取得排他锁，因此关闭操作与并发注册具有明确顺序。
+
+`miniapp_registration` 值包含 `schema_version=1` 和严格布尔值 `enabled`，只控制首次创建消费者主体，已绑定用户不因开关关闭而被停用。当前没有公开小程序身份交换端点，配置行由迁移保留给后续专项。
+
+`order_shipping` 值包含 `schema_version=1`、`region_level=province`、`default_rule` 和 `region_rules`。默认规则保存固定运费与包邮门槛，省级规则保存不重复的六位行政区编码、固定运费和包邮门槛；Admin 通过带 revision 的 GET/PUT 接口维护，报价和下单在事务内读取权威配置。
+
+`commission_control` 值包含 `schema_version=1` 和 `commissions_enabled`。Admin 通过带 revision 的 GET/PUT 接口维护，支付确认在同一控制行上读取并锁定分佣决策；配置缺失或损坏时拒绝完成新的分佣决策。
 
 ## 4. 接口
 
@@ -50,9 +57,11 @@ Admin 接口：
 GET/PATCH /api/v1/admin/settings/site
 PUT/DELETE /api/v1/admin/settings/site/logo
 GET/PATCH /api/v1/admin/settings/registration
+GET/PUT /api/v1/admin/settings/order-shipping
+GET/PUT /api/v1/admin/settings/commission-control
 ```
 
-每个端点分别声明 `settings:site:*` 或 `settings:registration:*` 权限。写操作还要求 Admin Session、准确 Origin、CSRF 和审计。PATCH 为局部合并，未提交字段保持不变；请求必须携带读取时获得的 revision。
+每个端点分别声明对应分组的精确权限。写操作还要求 Admin Session、准确 Origin、CSRF 和审计。站点 PATCH 为局部合并，未提交字段保持不变；平台运费和分佣总开关使用完整版本化载荷；所有写请求必须携带读取时获得的 revision。
 
 ## 5. 配置媒体
 
@@ -71,7 +80,7 @@ GET/PATCH /api/v1/admin/settings/registration
 
 ## 6. Admin 与 Web
 
-Admin `/settings` 固定显示“站点设置”和“注册设置”两个 Tab。至少拥有一项读取权限才显示菜单；Tab、只读状态和写按钮按精确权限控制。revision 冲突保留当前草稿，由管理员明确加载最新配置。
+Admin `/settings` 固定显示“站点设置”和“注册设置”两个 Tab。至少拥有一项读取权限才显示菜单；Tab、只读状态和写按钮按精确权限控制。平台运费配置位于商品中心的“平台运费”页面，分佣总开关位于分销政策页的独立受控区域；两者都按各自设置权限控制。revision 冲突保留当前草稿，由管理员明确加载最新配置。
 
 移除站点 LOGO 必须先显示统一标准警告弹窗，说明移除影响和重新上传的恢复方式，取消不请求接口。确认固定打开弹窗时的 revision，提交期间禁止重复确认及关闭，并阻止同组保存或上传。失败保留 LOGO、站点草稿和确认框并显示错误；发生 revision 冲突后必须取消、加载最新配置并重新确认，不自动用新 revision 重试删除。成功后才更新预览并关闭弹窗，完整交互约束见 [Admin 工程实施标准](admin-engineering-standard.md)。
 
