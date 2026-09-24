@@ -159,7 +159,7 @@ class CommerceReportingService:
         rows = await self.session.scalars(
             select(model)
             .where(*predicates)
-            .order_by(getattr(model, "created_at").desc(), getattr(model, "id").desc())
+            .order_by(getattr(model, "id").desc())
             .offset((filters.page - 1) * filters.page_size)
             .limit(filters.page_size)
         )
@@ -201,7 +201,7 @@ class CommerceReportingService:
         rows = await self.session.scalars(
             select(WalletLedger)
             .where(predicate)
-            .order_by(WalletLedger.created_at.desc(), WalletLedger.id.desc())
+            .order_by(WalletLedger.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )

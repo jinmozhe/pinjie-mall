@@ -62,15 +62,18 @@ class SecurityEventWriter:
             async with self._session_factory() as session, transaction_scope(session):
                 SecurityRepository(session).add_login_event(event)
         except Exception as exc:
-            # 安全审计写入降级：存储故障不阻断主业务流程（如认证失败 401）。
-            # 只记录 critical 告警，不向上传播异常，保证可用性与审计完整性分离。
             from loguru import logger
 
             logger.opt(exception=exc).critical(
-                "security login event write failed, event dropped: type={} principal={}",
+                "security login event write failed: type={} principal={}",
                 event.event_type,
                 event.principal_id,
             )
+            raise AppException(
+                status_code=503,
+                code=ErrorCode.SERVICE_UNAVAILABLE,
+                message="安全事件存储暂时不可用",
+            ) from exc
 
 
 class AuditCoordinator:

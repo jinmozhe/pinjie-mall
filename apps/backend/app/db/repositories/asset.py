@@ -69,11 +69,7 @@ class AssetRepository:
         total = await self._session.scalar(select(func.count()).select_from(Asset).where(*filters))
         items = list(
             await self._session.scalars(
-                select(Asset)
-                .where(*filters)
-                .order_by(Asset.created_at.desc(), Asset.id.desc())
-                .offset((page - 1) * page_size)
-                .limit(page_size)
+                select(Asset).where(*filters).order_by(Asset.id.desc()).offset((page - 1) * page_size).limit(page_size)
             )
         )
         return items, int(total or 0)
