@@ -79,11 +79,7 @@ class UserRepository:
             )
         total = int((await self.session.scalar(select(func.count()).select_from(User).where(*filters))) or 0)
         statement = (
-            select(User)
-            .where(*filters)
-            .order_by(User.created_at.desc(), User.id.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            select(User).where(*filters).order_by(User.id.desc()).offset((page - 1) * page_size).limit(page_size)
         )
         return list((await self.session.scalars(statement)).all()), total
 
@@ -129,7 +125,7 @@ class AdminRepository:
         statement = (
             select(Admin)
             .options(self._with_permissions())
-            .order_by(Admin.created_at.desc(), Admin.id.desc())
+            .order_by(Admin.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )
@@ -182,7 +178,7 @@ class AdminRepository:
         statement = (
             select(Role)
             .options(selectinload(Role.permissions))
-            .order_by(Role.created_at.desc(), Role.id.desc())
+            .order_by(Role.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )
@@ -299,7 +295,7 @@ class SessionRepository:
         statement = (
             select(UserSession)
             .where(predicate)
-            .order_by(UserSession.created_at.desc(), UserSession.id.desc())
+            .order_by(UserSession.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )
@@ -311,7 +307,7 @@ class SessionRepository:
         statement = (
             select(AdminSession)
             .where(predicate)
-            .order_by(AdminSession.created_at.desc(), AdminSession.id.desc())
+            .order_by(AdminSession.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )

@@ -31,6 +31,7 @@ from app.core.security import new_opaque_token, token_digest
 from app.domains.admin.schemas import AdminLoginIn
 from app.domains.auth.schemas import UserLoginIn, UserRegisterIn
 from app.services.authentication import AdminAuthService, WebAuthService
+from app.services.security_events import SecurityEventWriter, login_event
 from tests.conftest import TEST_SECRETS
 
 DATABASE_URL = "postgresql+asyncpg://u:p@localhost:5432/app"
@@ -318,6 +319,32 @@ async def test_web_login_raises_when_account_disabled() -> None:
             await svc.login(UserLoginIn(username="browser-user", password="password"))
         assert exc.value.code == ErrorCode.AUTH_ACCOUNT_DISABLED
         assert exc.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_security_event_writer_fails_closed_on_storage_error() -> None:
+    """安全事件无法写入时，应返回服务不可用并保留失败关闭语义。"""
+    session = AsyncMock()
+    session_context = AsyncMock()
+    session_context.__aenter__.return_value = session
+    session_factory = MagicMock(return_value=session_context)
+    writer = SecurityEventWriter(session_factory)
+    event = login_event(
+        principal_type="user",
+        principal_id=None,
+        identifier_digest="a" * 64,
+        event_type="login",
+        succeeded=False,
+        reason_code="INVALID_CREDENTIALS",
+        metadata=_meta(),
+    )
+
+    with patch("app.services.security_events.SecurityRepository.add_login_event", side_effect=RuntimeError("db")):
+        with pytest.raises(AppException) as exc:
+            await writer.record_login(event)
+
+    assert exc.value.code == ErrorCode.SERVICE_UNAVAILABLE
+    assert exc.value.status_code == 503
 
 
 @pytest.mark.asyncio
