@@ -64,7 +64,7 @@ export function ProductsPage() {
   const categoriesQuery = useQuery({
     queryKey: ["commerce-categories-map"],
     queryFn: commerceApi.categories,
-    enabled: allowed,
+    enabled: allowed && canAccess(admin, "product-categories:read"),
   });
 
   const categoryMap = new Map((categoriesQuery.data ?? []).map((cat) => [cat.id, cat.name]));
@@ -87,18 +87,16 @@ export function ProductsPage() {
     onError: (error) => message.error(errorMessage(error)),
   });
 
-  const setSingleStatus = async (product: ProductRead, newStatus: "on_sale" | "off_sale") => {
-    try {
-      await commerceApi.productStatus(product.id, {
-        status: newStatus,
-        revision: product.revision,
-      });
-      message.success(`商品已${newStatus === "on_sale" ? "上架" : "下架"}`);
+  const singleStatus = useLockedMutation({
+    mutationFn: ({ product, status }: { product: ProductRead; status: "on_sale" | "off_sale" }) =>
+      commerceApi.productStatus(product.id, { status, revision: product.revision }),
+    onSuccess: async () => {
+      message.success("商品状态已更新");
+      setSelected([]);
       await refresh();
-    } catch (err) {
-      message.error(errorMessage(err));
-    }
-  };
+    },
+    onError: (error) => message.error(errorMessage(error)),
+  });
 
   return (
     <PageFrame
@@ -112,6 +110,7 @@ export function ProductsPage() {
           <Card size="small">
             <Form
               layout="inline"
+              disabled={batchStatusMutation.isPending || singleStatus.isPending}
               onFinish={(values: {
                 search?: string;
                 status?: ProductRead["status"];
@@ -121,6 +120,7 @@ export function ProductsPage() {
                 setStatusFilter(values.status || undefined);
                 setTypeFilter(values.product_type || undefined);
                 setPage(1);
+                setSelected([]);
               }}
             >
               <Form.Item name="search">
@@ -160,6 +160,7 @@ export function ProductsPage() {
             </Form>
           </Card>
 
+          {categoriesQuery.error && <Alert type="error" title="商品分类加载失败" description={categoriesQuery.error.message} action={<Button onClick={() => void categoriesQuery.refetch()}>重试</Button>} />}
           <ResourceTable
             title="商品列表"
             rows={query.data?.items ?? []}
@@ -169,7 +170,7 @@ export function ProductsPage() {
             retry={query.refetch}
             page={page}
             total={query.data?.total}
-            onPage={setPage}
+            onPage={(next) => { if (!batchStatusMutation.isPending && !singleStatus.isPending) { setSelected([]); setPage(next); } }}
             selection={
               canUpdate
                 ? {
@@ -218,7 +219,7 @@ export function ProductsPage() {
               {
                 title: "所属分类",
                 dataIndex: "category_id",
-                render: (id: unknown) => (typeof id === "string" ? categoryMap.get(id) : undefined) || "-",
+                render: (id: unknown) => (typeof id === "string" ? categoryMap.get(id) ?? id : "-"),
               },
               {
                 title: "类型",
@@ -273,7 +274,8 @@ export function ProductsPage() {
                       <Button
                         type="link"
                         size="small"
-                        onClick={() => setSingleStatus(row, "on_sale")}
+                        disabled={singleStatus.isPending || batchStatusMutation.isPending}
+                        onClick={() => singleStatus.mutate({ product: row, status: "on_sale" })}
                       >
                         上架
                       </Button>
@@ -283,7 +285,8 @@ export function ProductsPage() {
                         type="link"
                         size="small"
                         danger
-                        onClick={() => setSingleStatus(row, "off_sale")}
+                        disabled={singleStatus.isPending || batchStatusMutation.isPending}
+                        onClick={() => singleStatus.mutate({ product: row, status: "off_sale" })}
                       >
                         下架
                       </Button>
@@ -335,6 +338,7 @@ export function ProductsPage() {
                 render: (_, row: SkuRead) => (
                   <Button
                     size="small"
+                    disabled={!canAccess(admin, "inventory:read")}
                     onClick={() => setInventorySku(row)}
                   >
                     库存详情 / 盘点

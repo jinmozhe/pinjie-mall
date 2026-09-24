@@ -29,8 +29,15 @@ function getSafeRedirectTarget(): string {
   const redirect = params.get("redirect");
   if (!redirect) return "/welcome";
   // 仅允许以单个斜杠开头的站内相对路径，防止开放重定向漏洞
-  if (redirect.startsWith("/") && !redirect.startsWith("//")) {
-    return redirect;
+  const hasUnsafeCharacter = [...redirect].some((character) => {
+    const code = character.charCodeAt(0);
+    return character === "\\" || code < 32 || code === 127;
+  });
+  if (redirect.startsWith("/") && !redirect.startsWith("//") && !hasUnsafeCharacter) {
+    try {
+      const target = new globalThis.URL(redirect, window.location.origin);
+      if (target.origin === window.location.origin && target.pathname.startsWith("/")) return `${target.pathname}${target.search}${target.hash}`;
+    } catch { /* fall through to the safe default */ }
   }
   return "/welcome";
 }

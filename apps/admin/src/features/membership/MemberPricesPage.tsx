@@ -14,7 +14,7 @@ import {
   message,
 } from "antd";
 import { PlusOutlined, EditOutlined } from "@ant-design/icons";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnsType } from "antd/es/table";
 import type {
   MemberPriceRuleRead,
@@ -22,7 +22,8 @@ import type {
   MemberPriceRuleUpdate,
   MemberLevelRead,
 } from "@pinjie/api-client";
-import { PageFrame } from "@/components/PageFrame";
+import { PageFrame, QueryState } from "@/components/PageFrame";
+import { useLockedMutation } from "@/lib/useLockedMutation";
 import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi } from "@/lib/api/commerce";
 
@@ -40,40 +41,37 @@ export default function MemberPricesPage() {
   const scopeType = Form.useWatch("scope_type", form);
   const priceMode = Form.useWatch("price_mode", form);
 
-  const { data: levelsData } = useQuery({
+  const { data: levelsData, error: levelsError, refetch: reloadLevels } = useQuery({
     queryKey: ["admin-member-levels-all"],
-    queryFn: () => commerceApi.memberLevels(1, 100),
-    enabled: canPricesRead,
+    queryFn: commerceApi.memberLevelOptions,
+    enabled: canAccess(admin, "member-levels:read"),
   });
 
-  const { data: rulesData, isLoading } = useQuery({
+  const { data: rulesData, isLoading, error: rulesError, refetch: reloadRules } = useQuery({
     queryKey: ["admin-member-price-rules", page],
     queryFn: () => commerceApi.memberPriceRules(page),
     enabled: canPricesRead,
   });
 
-  const saveMutation = useMutation({
+  const saveMutation = useLockedMutation({
     mutationFn: async (values: MemberPriceRuleCreate) => {
+      if (values.scope_type === "category" && values.price_mode === "fixed") throw new Error("分类规则只支持折扣或排除会员价");
+      const payload: MemberPriceRuleCreate = {
+        ...values,
+        sku_id: values.scope_type === "sku" ? values.sku_id : null,
+        product_id: values.scope_type === "product" ? values.product_id : null,
+        category_id: values.scope_type === "category" ? values.category_id : null,
+        fixed_price: values.price_mode === "fixed" && values.fixed_price != null ? String(values.fixed_price) : null,
+        discount_factor: values.price_mode === "discount" && values.discount_factor != null ? String(values.discount_factor) : null,
+      };
       if (editingRule) {
         const updatePayload: MemberPriceRuleUpdate = {
-          member_level_id: values.member_level_id,
-          scope_type: values.scope_type,
-          sku_id: values.scope_type === "sku" ? values.sku_id : null,
-          product_id: values.scope_type === "product" ? values.product_id : null,
-          category_id: values.scope_type === "category" ? values.category_id : null,
-          price_mode: values.price_mode,
-          fixed_price: values.price_mode === "fixed" && values.fixed_price ? String(values.fixed_price) : null,
-          discount_factor: values.price_mode === "discount" && values.discount_factor ? String(values.discount_factor) : null,
-          is_active: values.is_active,
+          ...payload,
           revision: editingRule.revision,
         };
         return commerceApi.updateMemberPriceRule(editingRule.id, updatePayload);
       }
-      return commerceApi.createMemberPriceRule({
-        ...values,
-        fixed_price: values.fixed_price ? String(values.fixed_price) : null,
-        discount_factor: values.discount_factor ? String(values.discount_factor) : null,
-      });
+      return commerceApi.createMemberPriceRule(payload);
     },
     onSuccess: () => {
       message.success(editingRule ? "价格规则更新成功" : "价格规则创建成功");
@@ -93,7 +91,7 @@ export default function MemberPricesPage() {
       dataIndex: "member_level_id",
       key: "member_level_id",
       render: (levelId) => {
-        const found = levelsData?.items?.find((l: MemberLevelRead) => l.id === levelId);
+        const found = levelsData?.find((l: MemberLevelRead) => l.id === levelId);
         return found ? <Tag color="gold">{found.name}</Tag> : levelId;
       },
     },
@@ -172,8 +170,8 @@ export default function MemberPricesPage() {
                 product_id: row.product_id,
                 category_id: row.category_id,
                 price_mode: row.price_mode,
-                fixed_price: row.fixed_price ? Number(row.fixed_price) : undefined,
-                discount_factor: row.discount_factor ? Number(row.discount_factor) : undefined,
+                fixed_price: row.fixed_price,
+                discount_factor: row.discount_factor,
                 is_active: row.is_active ?? true,
               });
               setModalOpen(true);
@@ -213,6 +211,8 @@ export default function MemberPricesPage() {
 
       {!canPricesRead ? (
         <Alert type="warning" title="无权查看会员价格规则列表" />
+      ) : rulesError ? (
+        <QueryState loading={false} error={rulesError.message} onRetry={() => void reloadRules()} />
       ) : (
         <Table<MemberPriceRuleRead>
           rowKey="id"
@@ -227,6 +227,7 @@ export default function MemberPricesPage() {
           pagination={{
             current: page,
             pageSize: 20,
+            showSizeChanger: false,
             total: rulesData?.total ?? 0,
             onChange: (p) => setPage(p),
             showTotal: (total) => `共 ${total} 条规则`,
@@ -237,28 +238,32 @@ export default function MemberPricesPage() {
       <Modal
         title={editingRule ? "编辑会员价格规则" : "新建会员价格规则"}
         open={modalOpen}
+        maskClosable={false} closable={!saveMutation.isPending} keyboard={!saveMutation.isPending}
+        cancelButtonProps={{ disabled: saveMutation.isPending }}
         onCancel={() => {
+          if (saveMutation.isPending) return;
           setModalOpen(false);
           setEditingRule(null);
         }}
         onOk={() => form.submit()}
         confirmLoading={saveMutation.isPending}
       >
-        <Form form={form} layout="vertical" onFinish={saveMutation.mutate}>
+        <QueryState loading={false} error={levelsError?.message} onRetry={() => void reloadLevels()} />
+        <Form form={form} layout="vertical" disabled={saveMutation.isPending} onFinish={saveMutation.mutate}>
           <Form.Item
             name="member_level_id"
             label="适用会员等级"
             rules={[{ required: true, message: "请选择会员等级" }]}
           >
-            <Select
+            {!canAccess(admin, "member-levels:read") ? <Input placeholder="输入会员等级 UUID" /> : <Select
               placeholder="选择会员等级"
               options={
-                levelsData?.items?.map((l: MemberLevelRead) => ({
+                levelsData?.map((l: MemberLevelRead) => ({
                   value: l.id,
                   label: `${l.name} (${l.code})`,
                 })) ?? []
               }
-            />
+            />}
           </Form.Item>
           <Form.Item name="scope_type" label="规则适用范围" rules={[{ required: true }]}>
             <Select
@@ -291,7 +296,7 @@ export default function MemberPricesPage() {
           <Form.Item name="price_mode" label="价格模式" rules={[{ required: true }]}>
             <Select
               options={[
-                { value: "fixed", label: "一口价 (固定会员专属优惠价)" },
+                { value: "fixed", label: "一口价 (固定会员专属优惠价)", disabled: scopeType === "category" },
                 { value: "discount", label: "特定折扣率 (按标价折算)" },
                 { value: "exclude", label: "排除规则 (该目标不参与任何会员特价)" },
               ]}
@@ -304,7 +309,7 @@ export default function MemberPricesPage() {
               label="会员一口价金额 (元)"
               rules={[{ required: true, message: "请输入一口价金额" }]}
             >
-              <InputNumber min={0.01} step={0.01} style={{ width: "100%" }} placeholder="如 88.00" />
+              <InputNumber stringMode min="0" precision={2} step="0.01" style={{ width: "100%" }} placeholder="如 88.00" />
             </Form.Item>
           )}
 
@@ -312,10 +317,10 @@ export default function MemberPricesPage() {
             <Form.Item
               name="discount_factor"
               label="特定折扣率"
-              tooltip="例如 0.85 代表 85折"
+              tooltip="例如 0.85 代表 8.5 折"
               rules={[{ required: true, message: "请输入折扣率" }]}
             >
-              <InputNumber min={0.01} max={1.0} step={0.01} style={{ width: "100%" }} placeholder="如 0.85" />
+              <InputNumber stringMode min="0" max="1" precision={6} step="0.01" style={{ width: "100%" }} placeholder="如 0.85" />
             </Form.Item>
           )}
 

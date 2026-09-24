@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Alert,
   Button,
@@ -15,14 +15,15 @@ import {
   message,
 } from "antd";
 import { PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnsType } from "antd/es/table";
 import type {
   PointsAccountRead,
   PointsLedgerRead,
   PointsManualAdjustment,
 } from "@pinjie/api-client";
-import { PageFrame } from "@/components/PageFrame";
+import { PageFrame, QueryState } from "@/components/PageFrame";
+import { useLockedMutation } from "@/lib/useLockedMutation";
 import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi } from "@/lib/api/commerce";
 
@@ -42,40 +43,36 @@ export default function PointsPage() {
   const [adjustModalOpen, setAdjustModalOpen] = useState(false);
   const [adjustForm] = Form.useForm();
   const currentOp = Form.useWatch("operation", adjustForm);
+  const submitted = useRef<PointsManualAdjustment | null>(null);
 
-  const { data: accountsData, isLoading } = useQuery({
+  const { data: accountsData, isLoading, error: accountsError, refetch: reloadAccounts } = useQuery({
     queryKey: ["admin-points-accounts", page],
     queryFn: () => commerceApi.pointsAccounts(page),
     enabled: canRead,
   });
 
-  const { data: ledgersData, isLoading: ledgersLoading } = useQuery({
+  const { data: ledgersData, isLoading: ledgersLoading, error: ledgersError, refetch: reloadLedgers } = useQuery({
     queryKey: ["admin-points-ledgers", selectedAccount?.id, ledgerPage],
     queryFn: () => commerceApi.pointsLedgers(selectedAccount!.id, ledgerPage),
     enabled: Boolean(selectedAccount) && canRead,
   });
 
-  const adjustMutation = useMutation({
-    mutationFn: (values: {
-      user_id: string;
-      operation: "grant" | "reverse";
-      points: number;
-      reverses_ledger_id?: string;
-      note: string;
-    }) => {
-      const payload: PointsManualAdjustment = {
+  const adjustMutation = useLockedMutation({
+    mutationFn: (values: PointsManualAdjustment) => {
+      submitted.current ??= {
         user_id: values.user_id,
         operation: values.operation,
         points: values.points,
-        reverses_ledger_id: values.reverses_ledger_id || null,
+        reverses_ledger_id: values.operation === "reverse" ? values.reverses_ledger_id || null : null,
         note: values.note,
-        idempotency_key: `adj_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+        idempotency_key: globalThis.crypto.randomUUID(),
       };
-      return commerceApi.adjustPoints(payload);
+      return commerceApi.adjustPoints(submitted.current);
     },
     onSuccess: () => {
       message.success("积分人工调整成功");
       setAdjustModalOpen(false);
+      submitted.current = null;
       adjustForm.resetFields();
       queryClient.invalidateQueries({ queryKey: ["admin-points-accounts"] });
       if (selectedAccount) {
@@ -220,6 +217,8 @@ export default function PointsPage() {
 
       {!canRead ? (
         <Alert type="warning" title="无权查看积分账户列表" />
+      ) : accountsError ? (
+        <QueryState loading={false} error={accountsError.message} onRetry={() => void reloadAccounts()} />
       ) : (
         <Table<PointsAccountRead>
           rowKey="id"
@@ -234,6 +233,7 @@ export default function PointsPage() {
           pagination={{
             current: page,
             pageSize: 20,
+            showSizeChanger: false,
             total: accountsData?.total ?? 0,
             onChange: (p) => setPage(p),
             showTotal: (total) => `共 ${total} 个积分账户`,
@@ -252,7 +252,8 @@ export default function PointsPage() {
         onClose={() => setSelectedAccount(null)}
         width={800}
       >
-        <Table<PointsLedgerRead>
+        <QueryState loading={false} error={ledgersError?.message} onRetry={() => void reloadLedgers()} />
+        {!ledgersError && <Table<PointsLedgerRead>
           rowKey="id"
           loading={ledgersLoading}
           dataSource={ledgersData?.items ?? []}
@@ -265,25 +266,34 @@ export default function PointsPage() {
           pagination={{
             current: ledgerPage,
             pageSize: 20,
+            showSizeChanger: false,
             total: ledgersData?.total ?? 0,
             onChange: (p) => setLedgerPage(p),
             showTotal: (total) => `共 ${total} 条积分流水`,
           }}
-        />
+        />}
       </Drawer>
 
       {/* Adjust Points Modal */}
       <Modal
         title="人工授予或冲销积分"
         open={adjustModalOpen}
+        maskClosable={false}
+        closable={!adjustMutation.isPending}
+        keyboard={!adjustMutation.isPending}
+        cancelButtonProps={{ disabled: adjustMutation.isPending }}
         onCancel={() => {
+          if (adjustMutation.isPending) return;
           setAdjustModalOpen(false);
           adjustForm.resetFields();
+          submitted.current = null;
+          adjustMutation.reset();
         }}
-        onOk={() => adjustForm.submit()}
+        onOk={() => { if (submitted.current) adjustMutation.mutate(submitted.current); else adjustForm.submit(); }}
         confirmLoading={adjustMutation.isPending}
       >
-        <Form form={adjustForm} layout="vertical" onFinish={adjustMutation.mutate}>
+        {adjustMutation.error && <Alert type="error" showIcon title={adjustMutation.error.message} description="重试将沿用同一请求及幂等键。取消前请核对积分流水，避免重复发起调整。" />}
+        <Form form={adjustForm} layout="vertical" disabled={adjustMutation.isPending || Boolean(submitted.current)} onFinish={adjustMutation.mutate}>
           <Form.Item
             name="user_id"
             label="目标用户 ID (UUID)"
@@ -304,7 +314,7 @@ export default function PointsPage() {
             label="积分点数"
             rules={[{ required: true, message: "请输入积分数量" }]}
           >
-            <InputNumber min={1} step={1} style={{ width: "100%" }} placeholder="输入整数积分数量" />
+            <InputNumber min={1} step={1} precision={0} style={{ width: "100%" }} placeholder="输入整数积分数量" />
           </Form.Item>
           {currentOp === "reverse" && (
             <Form.Item

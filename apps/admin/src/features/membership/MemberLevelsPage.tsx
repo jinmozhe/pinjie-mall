@@ -15,7 +15,7 @@ import {
   message,
 } from "antd";
 import { PlusOutlined, EditOutlined } from "@ant-design/icons";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnsType } from "antd/es/table";
 import type {
   MemberLevelRead,
@@ -25,7 +25,8 @@ import type {
   MemberLevelConditionCreate,
   MemberLevelConditionUpdate,
 } from "@pinjie/api-client";
-import { PageFrame } from "@/components/PageFrame";
+import { PageFrame, QueryState } from "@/components/PageFrame";
+import { useLockedMutation } from "@/lib/useLockedMutation";
 import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi } from "@/lib/api/commerce";
 
@@ -51,29 +52,31 @@ export default function MemberLevelsPage() {
   const [condModalOpen, setCondModalOpen] = useState(false);
   const [editingCond, setEditingCond] = useState<MemberLevelConditionRead | null>(null);
   const [condForm] = Form.useForm();
+  const metric = Form.useWatch("metric", condForm);
+  const levelOptions = useQuery({ queryKey: ["admin-member-levels-all"], queryFn: commerceApi.memberLevelOptions, enabled: canLevelsRead && condModalOpen });
 
   // Queries
-  const { data: levelsData, isLoading: levelsLoading } = useQuery({
+  const { data: levelsData, isLoading: levelsLoading, error: levelsError, refetch: reloadLevels } = useQuery({
     queryKey: ["admin-member-levels", levelPage],
     queryFn: () => commerceApi.memberLevels(levelPage),
     enabled: canLevelsRead,
   });
 
-  const { data: conditionsData, isLoading: condsLoading } = useQuery({
+  const { data: conditionsData, isLoading: condsLoading, error: condsError, refetch: reloadConds } = useQuery({
     queryKey: ["admin-member-level-conditions", condPage],
     queryFn: () => commerceApi.memberLevelConditions(condPage),
     enabled: canCondsRead,
   });
 
   // Mutations
-  const saveLevelMutation = useMutation({
+  const saveLevelMutation = useLockedMutation({
     mutationFn: async (values: MemberLevelCreate) => {
       if (editingLevel) {
         const updatePayload: MemberLevelUpdate = {
           code: values.code,
           name: values.name,
           level_rank: values.level_rank,
-          discount_factor: values.discount_factor ? String(values.discount_factor) : undefined,
+          discount_factor: String(values.discount_factor),
           sort_order: values.sort_order,
           is_active: values.is_active,
           revision: editingLevel.revision,
@@ -88,28 +91,28 @@ export default function MemberLevelsPage() {
       setEditingLevel(null);
       levelForm.resetFields();
       queryClient.invalidateQueries({ queryKey: ["admin-member-levels"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-member-levels-all"] });
     },
     onError: (err: Error) => {
       message.error(err.message || "保存等级失败");
     },
   });
 
-  const saveCondMutation = useMutation({
+  const saveCondMutation = useLockedMutation({
     mutationFn: async (values: MemberLevelConditionCreate) => {
+      const payload: MemberLevelConditionCreate = {
+        ...values,
+        amount_threshold: values.metric === "consumption" && values.amount_threshold != null ? String(values.amount_threshold) : null,
+        count_threshold: values.metric !== "consumption" ? values.count_threshold : null,
+      };
       if (editingCond) {
         const updatePayload: MemberLevelConditionUpdate = {
-          level_id: values.level_id,
-          metric: values.metric,
-          aggregation: values.aggregation,
-          amount_threshold: values.amount_threshold ? String(values.amount_threshold) : null,
-          count_threshold: values.count_threshold ?? null,
-          is_active: values.is_active,
-          effective_at: values.effective_at,
+          ...payload,
           revision: editingCond.revision,
         };
         return commerceApi.updateMemberLevelCondition(editingCond.id, updatePayload);
       }
-      return commerceApi.createMemberLevelCondition(values);
+      return commerceApi.createMemberLevelCondition(payload);
     },
     onSuccess: () => {
       message.success(editingCond ? "资格条件更新成功" : "资格条件创建成功");
@@ -156,7 +159,7 @@ export default function MemberLevelsPage() {
                 code: row.code,
                 name: row.name,
                 level_rank: row.level_rank,
-                discount_factor: row.discount_factor ? Number(row.discount_factor) : undefined,
+                discount_factor: row.discount_factor,
                 sort_order: row.sort_order,
                 is_active: row.is_active ?? true,
               });
@@ -231,7 +234,7 @@ export default function MemberLevelsPage() {
                 level_id: row.level_id,
                 metric: row.metric,
                 aggregation: row.aggregation,
-                amount_threshold: row.amount_threshold ? Number(row.amount_threshold) : undefined,
+                amount_threshold: row.amount_threshold,
                 count_threshold: row.count_threshold ?? undefined,
                 effective_at: row.effective_at,
                 is_active: row.is_active ?? true,
@@ -266,7 +269,7 @@ export default function MemberLevelsPage() {
                       onClick={() => {
                         setEditingLevel(null);
                         levelForm.resetFields();
-                        levelForm.setFieldsValue({ is_active: true, level_rank: 1 });
+                        levelForm.setFieldsValue({ is_active: true, level_rank: 1, discount_factor: "1" });
                         setLevelModalOpen(true);
                       }}
                     >
@@ -276,6 +279,8 @@ export default function MemberLevelsPage() {
                 )}
                 {!canLevelsRead ? (
                   <Alert type="warning" title="无权查看会员等级列表" />
+                ) : levelsError ? (
+                  <QueryState loading={false} error={levelsError.message} onRetry={() => void reloadLevels()} />
                 ) : (
                   <Table<MemberLevelRead>
                     rowKey="id"
@@ -290,6 +295,7 @@ export default function MemberLevelsPage() {
                     pagination={{
                       current: levelPage,
                       pageSize: 20,
+                      showSizeChanger: false,
                       total: levelsData?.total ?? 0,
                       onChange: (p) => setLevelPage(p),
                       showTotal: (total) => `共 ${total} 个等级`,
@@ -327,6 +333,8 @@ export default function MemberLevelsPage() {
                 )}
                 {!canCondsRead ? (
                   <Alert type="warning" title="无权查看会员资格条件列表" />
+                ) : condsError ? (
+                  <QueryState loading={false} error={condsError.message} onRetry={() => void reloadConds()} />
                 ) : (
                   <Table<MemberLevelConditionRead>
                     rowKey="id"
@@ -341,6 +349,7 @@ export default function MemberLevelsPage() {
                     pagination={{
                       current: condPage,
                       pageSize: 20,
+                      showSizeChanger: false,
                       total: conditionsData?.total ?? 0,
                       onChange: (p) => setCondPage(p),
                       showTotal: (total) => `共 ${total} 条资格条件`,
@@ -357,20 +366,23 @@ export default function MemberLevelsPage() {
       <Modal
         title={editingLevel ? "编辑会员等级" : "新建会员等级"}
         open={levelModalOpen}
+        maskClosable={false} closable={!saveLevelMutation.isPending} keyboard={!saveLevelMutation.isPending}
+        cancelButtonProps={{ disabled: saveLevelMutation.isPending }}
         onCancel={() => {
+          if (saveLevelMutation.isPending) return;
           setLevelModalOpen(false);
           setEditingLevel(null);
         }}
         onOk={() => levelForm.submit()}
         confirmLoading={saveLevelMutation.isPending}
       >
-        <Form form={levelForm} layout="vertical" onFinish={saveLevelMutation.mutate}>
+        <Form form={levelForm} layout="vertical" disabled={saveLevelMutation.isPending} onFinish={saveLevelMutation.mutate}>
           <Form.Item
             name="code"
             label="等级代码 (Code)"
-            rules={[{ required: true, message: "请输入稳定代码如 VIP1, GOLD" }]}
+            rules={[{ required: true, pattern: /^[a-z][a-z0-9_]*$/, max: 32, message: "使用小写字母开头的字母、数字或下划线，最长 32 位" }]}
           >
-            <Input disabled={Boolean(editingLevel)} placeholder="例如：VIP1" />
+            <Input maxLength={32} disabled={Boolean(editingLevel)} placeholder="例如：vip1" />
           </Form.Item>
           <Form.Item name="name" label="等级名称" rules={[{ required: true, message: "请输入等级名称" }]}>
             <Input placeholder="例如：黄金会员" />
@@ -386,12 +398,13 @@ export default function MemberLevelsPage() {
           <Form.Item
             name="discount_factor"
             label="默认折扣系数"
-            tooltip="例如 0.95 代表 95折；1 代表不打折"
+            tooltip="例如 0.95 代表 9.5 折；1 代表不打折"
+            rules={[{ required: true, message: "请输入默认折扣系数" }]}
           >
-            <InputNumber min={0.01} max={1.0} step={0.01} style={{ width: "100%" }} placeholder="0.95" />
+            <InputNumber stringMode min="0" max="1" precision={6} step="0.01" style={{ width: "100%" }} placeholder="0.95" />
           </Form.Item>
           <Form.Item name="sort_order" label="展示顺序">
-            <InputNumber style={{ width: "100%" }} />
+            <InputNumber min={0} precision={0} style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item name="is_active" label="是否启用" valuePropName="checked">
             <Switch />
@@ -403,24 +416,28 @@ export default function MemberLevelsPage() {
       <Modal
         title={editingCond ? "编辑资格条件" : "新建晋升资格条件"}
         open={condModalOpen}
+        maskClosable={false} closable={!saveCondMutation.isPending} keyboard={!saveCondMutation.isPending}
+        cancelButtonProps={{ disabled: saveCondMutation.isPending }}
         onCancel={() => {
+          if (saveCondMutation.isPending) return;
           setCondModalOpen(false);
           setEditingCond(null);
         }}
         onOk={() => condForm.submit()}
         confirmLoading={saveCondMutation.isPending}
       >
-        <Form form={condForm} layout="vertical" onFinish={saveCondMutation.mutate}>
+        <QueryState loading={levelOptions.isLoading} error={levelOptions.error?.message} onRetry={() => void levelOptions.refetch()} />
+        <Form form={condForm} layout="vertical" disabled={saveCondMutation.isPending} onFinish={saveCondMutation.mutate}>
           <Form.Item name="level_id" label="目标晋升等级" rules={[{ required: true, message: "请选择目标等级" }]}>
-            <Select
+            {!canLevelsRead ? <Input placeholder="输入会员等级 UUID" /> : <Select
               placeholder="选择会员等级"
               options={
-                levelsData?.items?.map((l: MemberLevelRead) => ({
+                levelOptions.data?.map((l: MemberLevelRead) => ({
                   value: l.id,
                   label: `${l.name} (${l.code})`,
                 })) ?? []
               }
-            />
+            />}
           </Form.Item>
           <Form.Item name="metric" label="指标类型" rules={[{ required: true }]}>
             <Select
@@ -439,12 +456,11 @@ export default function MemberLevelsPage() {
               ]}
             />
           </Form.Item>
-          <Form.Item name="amount_threshold" label="金额门槛 (元)">
-            <InputNumber min={0} step={0.01} style={{ width: "100%" }} placeholder="如 1000.00" />
-          </Form.Item>
-          <Form.Item name="count_threshold" label="次数/人数门槛">
-            <InputNumber min={0} step={1} style={{ width: "100%" }} placeholder="如 10" />
-          </Form.Item>
+          {metric === "consumption" ? <Form.Item name="amount_threshold" label="金额门槛 (元)" rules={[{ required: true }]}>
+            <InputNumber stringMode min="0" precision={2} step="0.01" style={{ width: "100%" }} placeholder="如 1000.00" />
+          </Form.Item> : <Form.Item name="count_threshold" label="次数/人数/积分门槛" rules={[{ required: true }]}>
+            <InputNumber min={0} precision={0} step={1} style={{ width: "100%" }} placeholder="如 10" />
+          </Form.Item>}
           <Form.Item name="effective_at" label="生效时间 (ISO 8601)" rules={[{ required: true }]}>
             <Input placeholder="例如：2026-01-01T00:00:00Z" />
           </Form.Item>

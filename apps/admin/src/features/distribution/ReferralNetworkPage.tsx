@@ -30,15 +30,11 @@ export default function ReferralNetworkPage() {
         resource="members"
         title="推荐关系"
         rowKey="user_id"
-        load={(filters) =>
-          commerceApi.members({
-            ...filters,
-            inviter_id: currentInviterFilter ?? filters.inviter_id,
-          })
-        }
+        load={commerceApi.members}
+        fixedFilters={currentInviterFilter ? { inviter_id: currentInviterFilter } : {}}
         fields={[
           { name: "user_id", label: "会员用户号" },
-          { name: "inviter_id", label: "直接推荐人用户号" },
+          ...(!currentInviterFilter ? [{ name: "inviter_id" as const, label: "直接推荐人用户号" }] : []),
         ]}
         columns={[
           { title: "会员用户号", dataIndex: "user_id", ellipsis: true },

@@ -12,7 +12,7 @@ const commerceDenied = {
   canDistribution: false, canWithdrawals: false,
   canMemberLevels: false, canMemberPrices: false, canPoints: false,
   canPolicies: false, canReferralNetwork: false,
-  canRefundRecords: false,
+  canRefundRecords: false, canDurableTasks: false,
 };
 
 function state(permissions: string[] = [], isSuperuser = false): AdminInitialState {
@@ -33,6 +33,9 @@ function state(permissions: string[] = [], isSuperuser = false): AdminInitialSta
 }
 
 describe("admin access mapping", () => {
+  it("exposes the membership parent for condition-only readers", () => {
+    expect(access(state(["member-level-conditions:read"]))).toMatchObject({ canMembership: true, canMemberLevels: true });
+  });
   it("denies every protected area without a current administrator", () => {
     expect(access({ settings })).toEqual({
       ...commerceDenied,
@@ -81,6 +84,7 @@ describe("admin access mapping", () => {
       canMemberLevels: true, canMemberPrices: true, canPoints: true,
       canPolicies: true, canReferralNetwork: true,
       canRefundRecords: true,
+      canDurableTasks: true,
       canMembership: true,
       canFinance: true,
       canSystemMgmt: true,

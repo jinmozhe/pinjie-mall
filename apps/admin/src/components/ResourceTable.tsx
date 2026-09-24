@@ -7,7 +7,7 @@ import { errorMessage } from "@/lib/api/http";
 
 type Props<T extends object> = {
   title: string; rows: T[]; columns: ProColumns<T>[];
-  rowKey?: string; loading: boolean; fetching?: boolean; error?: Error | null;
+  rowKey?: string | ((row: T) => Key); loading: boolean; fetching?: boolean; error?: Error | null;
   retry: () => unknown; toolbar?: ReactNode[];
   page?: number; total?: number; onPage?: (page: number) => void;
   selection?: { keys: Key[]; onChange: (keys: Key[], rows: T[]) => void; disabled?: boolean };
@@ -17,7 +17,7 @@ export function ResourceTable<T extends object>({ title, rows, columns, rowKey =
   return <>
     <QueryState loading={loading} error={error ? errorMessage(error) : undefined} onRetry={() => { retry(); }} />
     {!loading && !error && <ProTable<T>
-      className="responsive-data-table" rowKey={rowKey} headerTitle={`${title}列表`}
+      className="responsive-data-table" rowKey={rowKey} headerTitle={title.endsWith("列表") ? title : `${title}列表`}
       dataSource={rows} search={false} loading={fetching} toolBarRender={() => toolbar ?? []}
       columns={columns.map((column) => ({ ...column,
         onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
