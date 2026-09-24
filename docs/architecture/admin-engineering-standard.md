@@ -72,6 +72,40 @@ ProComponents 是提高标准管理场景效率的首选，不是形式上的强
 
 桌面展开态由 Umi Max ProLayout 统一使用 `256px` 侧栏，PageContainer 保持流式内容区，不设置固定最大宽度。`1440px` 及以上视口使用 `40px` 页面水平内边距，较窄桌面回落为 `24px`，移动端回落为 `16px`；标题区与正文使用同一水平边界。移动端侧栏折叠和抽屉继续使用 ProLayout 官方响应式行为，页面不得产生 document 级横向溢出。
 
+## Ant Design 推荐 API
+
+组件属性以当前锁定版本的类型定义和 [Ant Design v6 迁移指南](https://ant.design/docs/react/migration-v6)为准。修复弃用警告时保持原有样式数值、加载状态、权限、关闭条件和业务回调；不通过关闭警告或手工修改生成目录、依赖安装目录来隐藏问题。上游内部缺陷通过精确版本的 pnpm 补丁修复，并同步锁文件及安装验证。
+
+| 组件与旧用法 | 当前推荐用法 | 迁移要求 |
+| --- | --- | --- |
+| 静态 `message`、`notification` | `App.useApp()` 返回的实例 | 根 `ConfigProvider` 下放置 `App`，后代组件在函数顶部取得实例；保留原通知文案和业务回调 |
+| `Space.direction` | `orientation` | 保留原排列方向和间距 |
+| 组件尺寸 `size="middle"` | `size="medium"` | 按组件类型确认支持，保留实际尺寸 |
+| `Alert.message` | `title` | 保留错误文案、详情与提示类型 |
+| `Modal.maskClosable`、`Drawer.maskClosable` | `mask={{ closable: 条件 }}` | 原样保留提交和上传期间禁止关闭的条件，继续配合 `closable`、`keyboard` 和关闭回调保护 |
+| `Drawer.width`、`Drawer.height` | `size` | 左右抽屉设置原宽度，上下抽屉设置原高度；`Modal.width` 和 `Image.width/height` 不属于这项迁移 |
+| `Statistic.valueStyle` | `styles.content` | 保留字号、颜色及状态表达式 |
+| `Tag.bordered={false}` | `variant="filled"` | 保留标签颜色和内容；`Descriptions.bordered` 继续有效 |
+| `Descriptions.Item` 子节点 | `Descriptions.items` | 每项使用稳定 `key`，保留字段顺序、空值、复制功能与条件展示 |
+| `List`、`List.Item` | `Listy` 与 `itemRender` | 使用稳定 `rowKey`；外部保留加载、失败、空态和分页，按原尺寸设置样式与操作区 |
+
+`Listy` 从 Ant Design 6.6.0 起提供，接入方式见 [List 迁移说明](https://ant.design/components/list#faq-migrate-from-list)和 [Listy 文档](https://ant.design/components/listy)。项目商品图片选择器使用 `Listy` 承载候选图片，行内容由 `Flex`、`Space` 和按钮组成；空结果使用 `Empty`，请求失败继续由 `QueryState` 展示，不改变图片选择上限和上传互锁。
+
+类型检查不一定拒绝尚未移除的弃用属性。排查时同时搜索源码、检查当前依赖的弃用声明与运行时警告，并区分项目调用和上游组件内部调用；浏览器复测仍遵守项目的单独授权范围。
+
+### 消息上下文与依赖内部修复
+
+`src/app.tsx` 的装配顺序为 `ConfigProvider > App > QueryClientProvider > 页面和布局`。`App` 保留默认 DOM 容器，承载 Ant Design 6 的样式与 CSS 变量；组件使用 `const { message } = App.useApp()`，不得在模块顶层调用 Hook 或缓存全局消息实例。接入说明见 [Ant Design App 文档](https://ant.design/components/app)。Admin ESLint 限制从 `antd` 导入静态 `message`、`notification`，防止重新引入脱离主题与语言上下文的通知。独立组件测试也需要挂载 `App`，消息反馈通过可见内容断言。
+
+当前有两项与推荐 API 相关的依赖补丁，均在根 `pnpm-workspace.yaml` 登记并由 `pnpm-lock.yaml` 锁定：
+
+| 精确补丁 | 修复范围 | 升级核对 |
+| --- | --- | --- |
+| `patches/@umijs__plugins@4.7.5.patch` | 布局图标通过 Umi 现有 `resolveProjectDep` 解析项目声明的 icons，图标名称检查、菜单与退出图标使用同一来源 | 检查上游布局是否已采用项目图标依赖，重新生成后核对实际导入路径；已修复才移除补丁 |
+| `patches/@ant-design__pro-components@3.1.14-6.patch` | 移动菜单 Drawer 的 ESM 与 CommonJS 实现使用 `mask.closable`，保留遮罩点击关闭和响应式菜单行为 | 检查两种模块产物均已迁移，已修复才移除补丁 |
+
+这些补丁不升级组件版本，也不接管 Umi 路由或 Bundler。Umi 的传递依赖仍可能包含旧版 AntD、ProComponents 和 icons；是否进入页面以项目别名、生成导入和实际解析为准，不能仅凭依赖树中存在旧版本判断页面组件版本。安装采用 `pnpm install --frozen-lockfile`，补丁失效必须修复，不能放宽安装检查。
+
 ## 页面容器与间距
 
 - 标准管理列表页复用 `src/components/PageFrame.tsx`，统一接入 `workspace-page` 与 `workspace-panel`。当前接口要求传入 description；页面没有说明需求时，不为满足展示形式增加空区块或间距占位，需要调整可选性时在后续实现中同步组件类型与调用方。

@@ -2,13 +2,10 @@ export default [
   { path: "/login", component: "../features/auth/LoginPage", layout: false },
   { path: "/", redirect: "/welcome" },
   {
-    path: "/workbench",
+    path: "/welcome",
     name: "工作台",
     icon: "HomeOutlined",
-    routes: [
-      { path: "/workbench", redirect: "/welcome" },
-      { path: "/welcome", name: "工作首页", component: "../features/welcome/WelcomePage" },
-    ],
+    component: "../features/welcome/WelcomePage",
   },
   {
     path: "/catalog",
@@ -37,7 +34,7 @@ export default [
     ],
   },
   {
-    path: "/membership",
+    key: "membership",
     name: "会员中心",
     icon: "UserOutlined",
     access: "canMembership",
@@ -65,7 +62,7 @@ export default [
     ],
   },
   {
-    path: "/finance",
+    key: "finance",
     name: "财务中心",
     icon: "AccountBookOutlined",
     access: "canFinance",
@@ -83,7 +80,7 @@ export default [
     ],
   },
   {
-    path: "/system-mgmt",
+    key: "system-mgmt",
     name: "系统管理",
     icon: "SettingOutlined",
     access: "canSystemMgmt",
@@ -96,7 +93,7 @@ export default [
     ],
   },
   {
-    path: "/ops",
+    key: "ops",
     name: "安全运维",
     icon: "SafetyCertificateOutlined",
     access: "canOps",

@@ -1,7 +1,7 @@
 import type { FulfillmentRead, OrderRead } from "@pinjie/api-client";
 import { EyeOutlined, SendOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Descriptions, Drawer, Form, Input, Tag, message } from "antd";
+import { Alert, Button, Descriptions, Drawer, Form, Input, Tag, App } from "antd";
 import { useState } from "react";
 
 import { EditorModal } from "@/components/EditorModal";
@@ -13,6 +13,7 @@ import { commerceApi } from "@/lib/api/commerce";
 import { errorMessage } from "@/lib/api/http";
 
 function FulfillmentEditor({ order, current, close, done }: { order: OrderRead; current: FulfillmentRead; close: () => void; done: () => Promise<void> }) {
+  const { message } = App.useApp();
   const [form] = Form.useForm<{ carrier?: string; tracking_number?: string; delivery_reference?: string }>();
   const physical = current.product_type === "physical";
   return <EditorModal title={physical ? "管理员发货" : "完成虚拟交付"} onClose={close} onSave={async () => {
@@ -34,6 +35,7 @@ function FulfillmentEditor({ order, current, close, done }: { order: OrderRead; 
 }
 
 function OrderDetail({ id, close }: { id: string; close: () => void }) {
+  const { message } = App.useApp();
   const admin = useCurrentAdmin();
   const client = useQueryClient();
   const order = useQuery({ queryKey: ["commerce-order", id], queryFn: () => commerceApi.order(id) });
@@ -41,7 +43,7 @@ function OrderDetail({ id, close }: { id: string; close: () => void }) {
   const [edit, setEdit] = useState<{ order: OrderRead; current: FulfillmentRead }>();
   const [accepting, setAccepting] = useState(false);
   const refresh = async () => { await Promise.all([order.refetch(), fulfillment.refetch(), client.invalidateQueries({ queryKey: ["commerce-orders"] })]); };
-  return <Drawer open width={900} title="订单详情" onClose={close}>
+  return <Drawer open size={900} title="订单详情" onClose={close}>
     <QueryState loading={order.isLoading || fulfillment.isLoading} error={(() => {
       if (order.error) return errorMessage(order.error);
       if (fulfillment.error) return errorMessage(fulfillment.error);

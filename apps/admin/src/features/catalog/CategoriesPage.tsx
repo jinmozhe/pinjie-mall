@@ -1,7 +1,7 @@
 import type { CategoryInput, CategoryRead } from "@pinjie/api-client";
 import { EditOutlined, PlusOutlined, PoweroffOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Form, Input, InputNumber, Select, Space, Switch, Tag, message } from "antd";
+import { Alert, Button, Form, Input, InputNumber, Select, Space, Switch, Tag, App } from "antd";
 import { useState } from "react";
 
 import { PageFrame } from "@/components/PageFrame";
@@ -13,6 +13,7 @@ import { errorMessage } from "@/lib/api/http";
 import { useLockedMutation } from "@/lib/useLockedMutation";
 
 function CategoryEditor({ target, rows, done, close }: { target: CategoryRead | null; rows: CategoryRead[]; done: () => Promise<void>; close: () => void }) {
+  const { message } = App.useApp();
   const [form] = Form.useForm<CategoryInput>();
   return <EditorModal title={target ? "编辑商品分类" : "新建商品分类"} onClose={close} onSave={async () => {
     const values = await form.validateFields();
@@ -32,6 +33,7 @@ function CategoryEditor({ target, rows, done, close }: { target: CategoryRead | 
 }
 
 export function CategoriesPage() {
+  const { message } = App.useApp();
   const admin = useCurrentAdmin();
   const client = useQueryClient();
   const allowed = canAccess(admin, "product-categories:read");

@@ -1,0 +1,28 @@
+diff --git a/es/layout/components/SiderMenu/index.js b/es/layout/components/SiderMenu/index.js
+--- a/es/layout/components/SiderMenu/index.js
++++ b/es/layout/components/SiderMenu/index.js
+@@ -61,7 +61,9 @@ const SiderMenuWrapper = props => {
+     onClose: () => {
+       onCollapse?.(true);
+     },
+-    maskClosable: true,
++    mask: {
++      closable: true
++    },
+     closable: false,
+     getContainer: getContainer || false,
+     size: siderWidth,
+diff --git a/lib/layout/components/SiderMenu/index.js b/lib/layout/components/SiderMenu/index.js
+--- a/lib/layout/components/SiderMenu/index.js
++++ b/lib/layout/components/SiderMenu/index.js
+@@ -68,7 +68,9 @@ const SiderMenuWrapper = props => {
+     onClose: () => {
+       onCollapse?.(true);
+     },
+-    maskClosable: true,
++    mask: {
++      closable: true
++    },
+     closable: false,
+     getContainer: getContainer || false,
+     size: siderWidth,

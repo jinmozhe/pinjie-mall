@@ -29,8 +29,12 @@ pnpm --filter @pinjie/admin build
 - 浏览器运行时代码不能直接依赖 Vite 专属的 `import.meta.env`。Admin 统一读取 `process.env.VITE_API_URL`，并由 `apps/admin/config/config.ts` 注入。
 - Admin 当前固定使用 Umi 默认 Webpack。`@umijs/preset-umi@4.7.5` 支持的 Vite 4 存在 High 漏洞，根 `.pnpmfile.cjs`、`patchedDependencies` 和 `scripts/ci/check-umi-vite-security.mjs` 会移除未使用的 Vite bundler 并拒绝未经复核的 Umi 升级。只有上游稳定版支持安全 Vite 或新的框架迁移计划完成后才能删除补丁。
 - 使用 Umi 的 `getInitialState` 时必须启用 `initialState: {}`。否则插件注册阶段会报 `register failed, invalid key getInitialState from plugin`。
+- 工作台是顶级菜单，直接使用 `/welcome`，不设置 `/workbench` 分组或二级工作首页。根路径及无指定回跳地址的登录成功默认进入 `/welcome`。
+- 嵌套绝对子路由必须包含完整父路径前缀。会员中心、财务中心、系统管理和安全运维包含不共享前缀的现有地址，使用无 `path`、有稳定 `key` 的菜单分组；分组入口跳转继续放在子路由中。不要为菜单分组添加与子页面不匹配的 `path`，否则整个路由树会初始化失败并白屏。
 - `src/.umi` 和 `src/.umi-production` 是 Umi 生成目录，不能提交，也不应纳入 ESLint 扫描。修改路由、插件或配置后如遇到旧缓存行为，停止服务后删除这两个目录，再重新运行命令。
-- Ant Design 6 的弃用警告应在代码中处理。当前迁移中已将 Alert 的 `message` 调整为 `title`、Space 的 `direction` 调整为 `orientation`，Drawer 宽度使用 `styles.wrapper` 保留。
+- Ant Design 6 的弃用警告按 [Admin 工程标准的推荐 API 对照表](../architecture/admin-engineering-standard.md#ant-design-推荐-api)处理，同时检查登录失败、弹窗、抽屉、详情及空列表等条件渲染分支。修改组件属性后运行 Admin typecheck 和 lint；获授权的浏览器复测需实际进入对应状态，登录页正常不能证明登录后的全部组件无警告。
+- 出现 `Static function can not consume context` 时，检查消息是否来自组件内的 `App.useApp()`，以及根 `ConfigProvider > App` 是否完整；不要通过屏蔽 console 或静态全局实例隐藏警告。
+- 菜单图标与移动端菜单的上游修复由根 workspace 中两个精确补丁管理，详见[工程标准](../architecture/admin-engineering-standard.md#消息上下文与依赖内部修复)。安装后重启原 Admin 开发终端，确保载入新的插件与 ProComponents；仅刷新浏览器不能清除进程内模块缓存。需要只生成入口时可从根目录运行 `pnpm --filter @pinjie/admin exec max setup`，该命令不等同于构建或浏览器验收。检查 `.umi/plugin-layout/icons.tsx` 与 `rightRender.tsx` 应指向 Admin 自己的 `@ant-design/icons`，禁止手改生成文件。
 
 ## 3. 单元和组件测试
 
@@ -68,6 +72,8 @@ Admin 默认只自动执行 typecheck 和 lint。Vitest、production build、局
 | `max dev --port 3001` 未按预期固定端口 | Umi Max 读取 `PORT` 环境变量，CLI 参数不能作为本项目端口契约 | 统一通过 `run-umi.mjs` 设置 `PORT=3001` |
 | 登录页读取到空 API 地址 | Umi 浏览器运行时没有 Vite 的 `import.meta.env` | 改用 `process.env.VITE_API_URL` 并在 Umi 配置中注入 |
 | 启动时报 `invalid key getInitialState` | Umi initial-state 插件未启用 | 在配置中启用 `initialState: {}` |
+| 白屏并报 `Absolute route path ... nested under path ... is not valid` | 菜单父路径与绝对子路由前缀不匹配 | 将不共享 URL 前缀的菜单父节点设为无 `path` 的分组，保留稳定 `key`、Access 和现有页面地址 |
+| 首次访问显示“管理服务暂不可用 / CSRF 校验失败” | 没有 CSRF Cookie 时仍尝试 Refresh，原始未登录 401 被刷新 403 覆盖 | HTTP 管道缺少刷新所需的 CSRF Cookie 时直接传播原始会话错误，由启动流程跳转登录页；保留后端 CSRF 校验 |
 | jsdom 测试在登录后挂起 | 测试环境执行了真实 `window.location.reload()` | 测试模式下跳过真实 reload，浏览器 E2E 仍覆盖真实跳转 |
 | ESLint 扫描生成文件 | Umi 生成目录不在忽略列表 | 忽略 `src/.umi` 和 `src/.umi-production` |
 | Ant Design 6 控制台出现弃用警告 | 使用了 v6 已迁移的组件属性 | 按 v6 API 替换属性并复测 |

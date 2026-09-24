@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { server } from "@/test/setup";
 
@@ -8,7 +8,33 @@ import { ApiError, apiRequest, errorMessage, jsonBody, setSessionExpiredHandler 
 const ok = <T>(data: T) => HttpResponse.json({ code: "OK", message: "操作成功", data, request_id: "request" });
 
 describe("admin HTTP authentication boundary", () => {
-  afterEach(() => setSessionExpiredHandler(undefined));
+  beforeEach(() => {
+    document.cookie = "pinjie_admin_csrf=csrf-value; path=/";
+  });
+  afterEach(() => {
+    setSessionExpiredHandler(undefined);
+    document.cookie = "pinjie_admin_csrf=; Max-Age=0; path=/";
+  });
+
+  it.each(["missing", "empty"])("preserves the original session error without refreshing when the CSRF cookie is %s", async (state) => {
+    document.cookie = state === "missing"
+      ? "pinjie_admin_csrf=; Max-Age=0; path=/"
+      : "pinjie_admin_csrf=; path=/";
+    const expired = vi.fn();
+    const refresh = vi.fn(() => ok({}));
+    setSessionExpiredHandler(expired);
+    server.use(
+      http.get("http://localhost:3000/api/v1/admin/auth/me", () =>
+        HttpResponse.json({ code: "AUTH_REQUIRED", message: "需要登录", request_id: "auth-request" }, { status: 401 })),
+      http.post("http://localhost:3000/api/v1/admin/auth/refresh", refresh),
+    );
+
+    await expect(apiRequest("/api/v1/admin/auth/me")).rejects.toEqual(
+      new ApiError(401, "AUTH_REQUIRED", "需要登录", "auth-request"),
+    );
+    expect(refresh).not.toHaveBeenCalled();
+    expect(expired).toHaveBeenCalledTimes(1);
+  });
 
   it.each(["refresh", "replay"])("reports terminal session failure from %s", async (failureAt) => {
     const expired = vi.fn();

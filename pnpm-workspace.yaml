@@ -38,6 +38,8 @@ allowBuilds:
   msw: true
   sharp: true
 patchedDependencies:
+  '@umijs/plugins@4.7.5': patches/@umijs__plugins@4.7.5.patch
+  '@ant-design/pro-components@3.1.14-6': patches/@ant-design__pro-components@3.1.14-6.patch
   '@umijs/bundler-webpack@4.7.5': patches/@umijs__bundler-webpack@4.7.5.patch
   '@umijs/preset-umi@4.7.5': patches/@umijs__preset-umi@4.7.5.patch
   query-string@6.14.1: patches/query-string@6.14.1.patch

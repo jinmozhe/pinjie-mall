@@ -12,7 +12,7 @@ import {
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Checkbox, Drawer, Flex, Form, Input, Modal, Pagination, Segmented, Select, Space, Tag, Typography, message } from "antd";
+import { Alert, Button, Checkbox, Drawer, Flex, Form, Input, Modal, Pagination, Segmented, Select, Space, Tag, Typography, App } from "antd";
 import { useState } from "react";
 
 import { PageFrame, QueryState, formatTime } from "@/components/PageFrame";
@@ -39,6 +39,7 @@ function deletionActorLabel(actorType: string | null): string {
 }
 
 export function UsersPage() {
+  const { message } = App.useApp();
   const current = useCurrentAdmin();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);

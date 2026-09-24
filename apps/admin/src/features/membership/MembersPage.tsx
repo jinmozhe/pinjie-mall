@@ -140,7 +140,7 @@ export default function MembersPage() {
         title={<Typography.Text strong>会员资格贡献流水 - {selectedUserForQualification}</Typography.Text>}
         open={Boolean(selectedUserForQualification)}
         onClose={() => setSelectedUserForQualification(null)}
-        width={720}
+        size={720}
       >
         <Table<MembershipQualificationEventRead>
           rowKey="id"
@@ -166,7 +166,7 @@ export default function MembersPage() {
         title={<Typography.Text strong>会员等级变更记录 - {selectedUserForLevels}</Typography.Text>}
         open={Boolean(selectedUserForLevels)}
         onClose={() => setSelectedUserForLevels(null)}
-        width={720}
+        size={720}
       >
         <Table<MemberLevelEventRead>
           rowKey="id"

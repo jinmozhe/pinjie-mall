@@ -118,6 +118,11 @@ export async function apiRequest<T>(
   if (!response.ok) {
     const error = await parseError(response);
     if (isSessionError(error) && options.retryAuth !== false && !AUTH_RETRY_EXCLUDED.has(path)) {
+      // 首次访问或 Cookie 已清理时无法刷新，保留服务端的未登录结果。
+      if (!readCookie("pinjie_admin_csrf")) {
+        reportSessionExpired(error);
+        throw error;
+      }
       try {
         await refreshSession();
       } catch (refreshError) {

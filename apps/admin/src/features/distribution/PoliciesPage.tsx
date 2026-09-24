@@ -16,7 +16,7 @@ import {
   Tabs,
   Tag,
   Typography,
-  message,
+  App,
 } from "antd";
 import {
   PlusOutlined,
@@ -44,6 +44,7 @@ import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi } from "@/lib/api/commerce";
 
 export default function PoliciesPage() {
+  const { message } = App.useApp();
   const admin = useCurrentAdmin();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -433,7 +434,7 @@ export default function PoliciesPage() {
       <Modal
         title={editingPolicy ? "编辑分佣政策草稿" : "新建分佣政策草稿"}
         open={policyModalOpen}
-        maskClosable={false} closable={!savePolicyMutation.isPending} keyboard={!savePolicyMutation.isPending}
+        mask={{ closable: false }} closable={!savePolicyMutation.isPending} keyboard={!savePolicyMutation.isPending}
         cancelButtonProps={{ disabled: savePolicyMutation.isPending }}
         onCancel={() => {
           if (savePolicyMutation.isPending) return;
@@ -484,13 +485,13 @@ export default function PoliciesPage() {
         }
         open={Boolean(detailPolicy)}
         closable={!amountModalOpen && !distModalOpen && !deleteTarget}
-        maskClosable={false} keyboard={!amountModalOpen && !distModalOpen && !deleteTarget}
+        mask={{ closable: false }} keyboard={!amountModalOpen && !distModalOpen && !deleteTarget}
         onClose={() => { if (!amountModalOpen && !distModalOpen && !deleteTarget) setDetailPolicy(null); }}
-        width={860}
+        size={860}
       >
         {!isDraft && (
           <Alert
-            message="只读不可变政策"
+            title="只读不可变政策"
             description="当前政策处于 active 或 retired 状态，所有来源规则与分配矩阵已冻结，不开放修改。"
             type="info"
             showIcon
@@ -643,7 +644,7 @@ export default function PoliciesPage() {
       <Modal
         title="新增佣金来源规则"
         open={amountModalOpen}
-        maskClosable={false} closable={!addAmountRuleMutation.isPending} keyboard={!addAmountRuleMutation.isPending}
+        mask={{ closable: false }} closable={!addAmountRuleMutation.isPending} keyboard={!addAmountRuleMutation.isPending}
         cancelButtonProps={{ disabled: addAmountRuleMutation.isPending }}
         onCancel={() => { if (!addAmountRuleMutation.isPending) setAmountModalOpen(false); }}
         onOk={() => amountForm.submit()}
@@ -687,7 +688,7 @@ export default function PoliciesPage() {
       <Modal
         title="新增三级分配矩阵规则"
         open={distModalOpen}
-        maskClosable={false} closable={!addDistRuleMutation.isPending} keyboard={!addDistRuleMutation.isPending}
+        mask={{ closable: false }} closable={!addDistRuleMutation.isPending} keyboard={!addDistRuleMutation.isPending}
         cancelButtonProps={{ disabled: addDistRuleMutation.isPending }}
         onCancel={() => { if (!addDistRuleMutation.isPending) setDistModalOpen(false); }}
         onOk={() => distForm.submit()}

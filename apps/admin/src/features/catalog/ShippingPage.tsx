@@ -1,7 +1,7 @@
 import type { FreightQuoteInput, ShippingTemplateInput, ShippingTemplateRead } from "@pinjie/api-client";
 import { CalculatorOutlined, DeleteOutlined, EditOutlined, PlusOutlined, PoweroffOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Divider, Form, Input, InputNumber, Select, Space, Switch, Tag, message } from "antd";
+import { Alert, Button, Divider, Form, Input, InputNumber, Select, Space, Switch, Tag, App } from "antd";
 import { useState } from "react";
 
 import { EditorModal } from "@/components/EditorModal";
@@ -15,6 +15,7 @@ import { useLockedMutation } from "@/lib/useLockedMutation";
 import { provinces } from "./provinces";
 
 function ShippingEditor({ target, close, done }: { target: ShippingTemplateRead | null; close: () => void; done: () => Promise<void> }) {
+  const { message } = App.useApp();
   const [form] = Form.useForm<ShippingTemplateInput>();
   const [remove, setRemove] = useState<(() => void)>();
   const method = Form.useWatch("pricing_method", form);
@@ -72,6 +73,7 @@ function QuoteEditor({ target, close }: { target: ShippingTemplateRead; close: (
 }
 
 export function ShippingPage() {
+  const { message } = App.useApp();
   const admin = useCurrentAdmin();
   const client = useQueryClient();
   const allowed = canAccess(admin, "shipping:read");

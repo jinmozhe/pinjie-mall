@@ -135,71 +135,41 @@ export default function DurableTasksPage() {
       <Drawer
         title="异步任务诊断详情"
         placement="right"
-        width={600}
+        size={600}
         open={selectedTask !== null}
         onClose={() => setSelectedTask(null)}
       >
         {selectedTask && (
-          <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="任务标识">
-              <Typography.Text copyable>{selectedTask.id}</Typography.Text>
-            </Descriptions.Item>
-            <Descriptions.Item label="任务类型">
-              <Tag color="geekblue">{selectedTask.task_type}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="业务键">
-              <Typography.Text copyable>{selectedTask.business_key}</Typography.Text>
-            </Descriptions.Item>
-            <Descriptions.Item label="执行状态">
-              <Tag
-                color={taskStatusColorMap[selectedTask.status] ?? "default"}
-              >
-                {selectedTask.status}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="状态版本 (revision)">
-              {selectedTask.revision}
-            </Descriptions.Item>
-            <Descriptions.Item label="尝试次数">
-              {selectedTask.attempt_count}
-            </Descriptions.Item>
-            <Descriptions.Item label="失败次数">
-              <Typography.Text type={selectedTask.failure_count > 0 ? "danger" : undefined}>
-                {selectedTask.failure_count}
-              </Typography.Text>
-            </Descriptions.Item>
-            <Descriptions.Item label="最大重试失败上限">
-              {selectedTask.max_failures}
-            </Descriptions.Item>
-            <Descriptions.Item label="就绪可用时间">
-              {selectedTask.available_at}
-            </Descriptions.Item>
-            <Descriptions.Item label="完成时间">
-              {selectedTask.completed_at || "尚未完成"}
-            </Descriptions.Item>
-            <Descriptions.Item label="创建时间">
-              {selectedTask.created_at}
-            </Descriptions.Item>
-            <Descriptions.Item label="最近更新时间">
-              {selectedTask.updated_at}
-            </Descriptions.Item>
-            <Descriptions.Item label="最近错误代码">
-              {selectedTask.last_error_code ? (
-                <Tag color="volcano">{selectedTask.last_error_code}</Tag>
-              ) : (
-                "无"
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item label="脱敏错误摘要">
-              {selectedTask.last_error_summary ? (
-                <Typography.Paragraph type="danger" copyable>
-                  {selectedTask.last_error_summary}
-                </Typography.Paragraph>
-              ) : (
-                "无异常记录"
-              )}
-            </Descriptions.Item>
-          </Descriptions>
+          <Descriptions column={1} bordered size="small" items={[
+            { key: "id", label: "任务标识", children: <Typography.Text copyable>{selectedTask.id}</Typography.Text> },
+            { key: "task_type", label: "任务类型", children: <Tag color="geekblue">{selectedTask.task_type}</Tag> },
+            { key: "business_key", label: "业务键", children: <Typography.Text copyable>{selectedTask.business_key}</Typography.Text> },
+            {
+              key: "status", label: "执行状态",
+              children: <Tag color={taskStatusColorMap[selectedTask.status] ?? "default"}>{selectedTask.status}</Tag>,
+            },
+            { key: "revision", label: "状态版本 (revision)", children: selectedTask.revision },
+            { key: "attempt_count", label: "尝试次数", children: selectedTask.attempt_count },
+            {
+              key: "failure_count", label: "失败次数",
+              children: <Typography.Text type={selectedTask.failure_count > 0 ? "danger" : undefined}>{selectedTask.failure_count}</Typography.Text>,
+            },
+            { key: "max_failures", label: "最大重试失败上限", children: selectedTask.max_failures },
+            { key: "available_at", label: "就绪可用时间", children: selectedTask.available_at },
+            { key: "completed_at", label: "完成时间", children: selectedTask.completed_at || "尚未完成" },
+            { key: "created_at", label: "创建时间", children: selectedTask.created_at },
+            { key: "updated_at", label: "最近更新时间", children: selectedTask.updated_at },
+            {
+              key: "last_error_code", label: "最近错误代码",
+              children: selectedTask.last_error_code ? <Tag color="volcano">{selectedTask.last_error_code}</Tag> : "无",
+            },
+            {
+              key: "last_error_summary", label: "脱敏错误摘要",
+              children: selectedTask.last_error_summary ? (
+                <Typography.Paragraph type="danger" copyable>{selectedTask.last_error_summary}</Typography.Paragraph>
+              ) : "无异常记录",
+            },
+          ]} />
         )}
       </Drawer>
     </PageFrame>

@@ -15,7 +15,7 @@ import {
 } from "@ant-design/icons";
 import { ProTable } from "@ant-design/pro-components";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Badge, Button, Checkbox, Empty, Form, Input, Modal, Space, Tag, Tooltip, Tree, Typography, message } from "antd";
+import { Alert, Badge, Button, Checkbox, Empty, Form, Input, Modal, Space, Tag, Tooltip, Tree, Typography, App } from "antd";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -53,8 +53,8 @@ function permissionTitle(permission: PermissionRead) {
     <span className="permission-tree-node">
       <span className="permission-tree-name">{permission.name}</span>
       <span className="permission-tree-code">{permission.code}</span>
-      {!permission.is_active && <Tag bordered={false}>停用</Tag>}
-      {!permission.assignable_to_roles && <Tag bordered={false} color="blue">仅超级管理员</Tag>}
+      {!permission.is_active && <Tag variant="filled">停用</Tag>}
+      {!permission.assignable_to_roles && <Tag variant="filled" color="blue">仅超级管理员</Tag>}
     </span>
   );
 }
@@ -142,6 +142,7 @@ export function mergeVisiblePermissionSelection(
 }
 
 export function RolesPage() {
+  const { message } = App.useApp();
   const current = useCurrentAdmin();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -404,7 +405,7 @@ export function RolesPage() {
         </Form>
       </Modal>
 
-      <Modal width={820} open={Boolean(permissionTarget)} title={permissionTarget ? `配置 ${permissionTarget.name} 的权限` : "配置权限"} okText="保存" confirmLoading={assignPermissionsMutation.isPending} okButtonProps={{ disabled: !permissions.isSuccess || assignPermissionsMutation.isPending }} cancelButtonProps={{ disabled: assignPermissionsMutation.isPending }} closable={!assignPermissionsMutation.isPending} maskClosable={!assignPermissionsMutation.isPending} keyboard={!assignPermissionsMutation.isPending} onCancel={() => { if (!assignPermissionsMutation.isPending) setPermissionTarget(null); }} onOk={() => permissionForm.submit()}>
+      <Modal width={820} open={Boolean(permissionTarget)} title={permissionTarget ? `配置 ${permissionTarget.name} 的权限` : "配置权限"} okText="保存" confirmLoading={assignPermissionsMutation.isPending} okButtonProps={{ disabled: !permissions.isSuccess || assignPermissionsMutation.isPending }} cancelButtonProps={{ disabled: assignPermissionsMutation.isPending }} closable={!assignPermissionsMutation.isPending} mask={{ closable: !assignPermissionsMutation.isPending }} keyboard={!assignPermissionsMutation.isPending} onCancel={() => { if (!assignPermissionsMutation.isPending) setPermissionTarget(null); }} onOk={() => permissionForm.submit()}>
         <QueryState loading={permissions.isLoading} error={permissions.isError ? errorMessage(permissions.error) : undefined} empty={permissions.data?.length === 0} onRetry={() => void permissions.refetch()} />
         {assignPermissionsMutation.isError && <Alert showIcon type="error" title={errorMessage(assignPermissionsMutation.error)} />}
         <Form form={permissionForm} layout="vertical" onFinish={({ permission_codes }) => {

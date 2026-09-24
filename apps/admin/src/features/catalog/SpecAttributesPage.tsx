@@ -8,7 +8,7 @@ import type {
 } from "@pinjie/api-client";
 import { EditOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Drawer, Form, Input, InputNumber, Radio, Space, Switch, Tag, message } from "antd";
+import { Alert, Button, Drawer, Form, Input, InputNumber, Radio, Space, Switch, Tag, App } from "antd";
 import { useState } from "react";
 
 import { EditorModal } from "@/components/EditorModal";
@@ -27,6 +27,7 @@ function AttributeEditor({
   done: () => Promise<void>;
   close: () => void;
 }) {
+  const { message } = App.useApp();
   const [form] = Form.useForm();
   return (
     <EditorModal
@@ -107,6 +108,7 @@ function ValuesDrawer({
   attribute: AttributeRead;
   close: () => void;
 }) {
+  const { message } = App.useApp();
   const admin = useCurrentAdmin();
   const client = useQueryClient();
   const canUpdate = canAccess(admin, "spec-attributes:update");
@@ -159,10 +161,10 @@ function ValuesDrawer({
     <Drawer
       title={`【${attribute.name}】候选值管理`}
       open
-      width={720}
+      size={720}
       closable={!save.isPending}
       keyboard={!save.isPending}
-      maskClosable={false}
+      mask={{ closable: false }}
       onClose={() => { if (!save.isPending) close(); }}
     >
       <Alert

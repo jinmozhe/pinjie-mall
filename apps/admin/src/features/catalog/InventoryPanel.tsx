@@ -1,7 +1,7 @@
 import type { InventoryAdjustment, InventoryRead, SkuRead } from "@pinjie/api-client";
 import { EditOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Descriptions, Drawer, Form, Input, InputNumber, message } from "antd";
+import { Alert, Button, Descriptions, Drawer, Form, Input, InputNumber, App } from "antd";
 import { useRef, useState } from "react";
 
 import { EditorModal } from "@/components/EditorModal";
@@ -12,6 +12,7 @@ import { commerceApi } from "@/lib/api/commerce";
 import { errorMessage } from "@/lib/api/http";
 
 function AdjustmentEditor({ inventory, done, close }: { inventory: InventoryRead; done: () => Promise<void>; close: () => void }) {
+  const { message } = App.useApp();
   const [form] = Form.useForm<Pick<InventoryAdjustment, "quantity_delta" | "reason">>();
   const request = useRef<InventoryAdjustment | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -36,7 +37,7 @@ export function InventoryPanel({ sku, close }: { sku: SkuRead; close: () => void
   const inventory = useQuery({ queryKey: ["commerce-inventory", sku.id], queryFn: () => commerceApi.inventory(sku.id) });
   const movements = useQuery({ queryKey: ["commerce-movements", sku.id, page], queryFn: () => commerceApi.movements(sku.id, page) });
   const refresh = async () => { await Promise.all([client.invalidateQueries({ queryKey: ["commerce-inventory", sku.id] }), client.invalidateQueries({ queryKey: ["commerce-movements", sku.id] })]); };
-  return <Drawer open title={`库存：${sku.code}`} width={900} onClose={close}>
+  return <Drawer open title={`库存：${sku.code}`} size={900} onClose={close}>
     <QueryState loading={inventory.isLoading} error={inventory.error ? errorMessage(inventory.error) : undefined} onRetry={() => void inventory.refetch()} />
     {inventory.data && <Descriptions items={[
       { key: "available", label: "可售库存", children: inventory.data.available }, { key: "reserved", label: "占用库存", children: inventory.data.reserved },

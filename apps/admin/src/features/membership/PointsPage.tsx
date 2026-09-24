@@ -12,7 +12,7 @@ import {
   Table,
   Tag,
   Typography,
-  message,
+  App,
 } from "antd";
 import { PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +28,7 @@ import { canAccess, useCurrentAdmin } from "@/lib/auth-context";
 import { commerceApi } from "@/lib/api/commerce";
 
 export default function PointsPage() {
+  const { message } = App.useApp();
   const admin = useCurrentAdmin();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -250,7 +251,7 @@ export default function PointsPage() {
         }
         open={Boolean(selectedAccount)}
         onClose={() => setSelectedAccount(null)}
-        width={800}
+        size={800}
       >
         <QueryState loading={false} error={ledgersError?.message} onRetry={() => void reloadLedgers()} />
         {!ledgersError && <Table<PointsLedgerRead>
@@ -278,7 +279,7 @@ export default function PointsPage() {
       <Modal
         title="人工授予或冲销积分"
         open={adjustModalOpen}
-        maskClosable={false}
+        mask={{ closable: false }}
         closable={!adjustMutation.isPending}
         keyboard={!adjustMutation.isPending}
         cancelButtonProps={{ disabled: adjustMutation.isPending }}

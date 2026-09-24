@@ -1,0 +1,37 @@
+diff --git a/dist/layout.js b/dist/layout.js
+--- a/dist/layout.js
++++ b/dist/layout.js
+@@ -39,10 +39,7 @@ var import_plugin_utils = require("umi/plugin-utils");
+ var import_npmClient = require("./utils/npmClient");
+ var import_resolveProjectDep = require("./utils/resolveProjectDep");
+ var import_withTmpPath = require("./utils/withTmpPath");
+-var antIconsPath = (0, import_plugin_utils.winPath)(
+-  (0, import_path.dirname)(require.resolve("@ant-design/icons/package.json"))
+-);
+-var getAllIcons = () => {
++var getAllIcons = (antIconsPath) => {
+   const iconTypePath = (0, import_path.join)(antIconsPath, "./lib/icons/index.d.ts");
+   const iconTypeContent = (0, import_fs.readFileSync)(iconTypePath, "utf-8");
+   return [...iconTypeContent.matchAll(/default as (\w+)/g)].reduce(
+@@ -55,6 +52,13 @@ var getAllIcons = () => {
+ };
+ var ANT_PRO_COMPONENT = "@ant-design/pro-components";
+ var layout_default = (api) => {
++  const antIconsPath = (0, import_plugin_utils.winPath)(
++    (0, import_resolveProjectDep.resolveProjectDep)({
++      pkg: api.pkg,
++      cwd: api.cwd,
++      dep: "@ant-design/icons"
++    }) || (0, import_path.dirname)(require.resolve("@ant-design/icons/package.json"))
++  );
+   let antdVersion = "4.0.0";
+   try {
+     const pkgPath2 = (0, import_resolveProjectDep.resolveProjectDep)({
+@@ -370,6 +374,6 @@ export interface IRuntimeConfig {
+       `
+     });
+-    const allIcons = getAllIcons();
++    const allIcons = getAllIcons(antIconsPath);
+     const iconsMap = Object.keys(api.appData.routes).reduce((memo, id) => {
+       const { icon } = api.appData.routes[id];
+       if (icon) {

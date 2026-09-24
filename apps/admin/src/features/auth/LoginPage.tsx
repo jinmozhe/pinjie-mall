@@ -107,7 +107,7 @@ export function LoginPage({
             {login.isError && (
               <Alert
                 className="login-alert"
-                message={errorMessage(login.error)}
+                title={errorMessage(login.error)}
                 showIcon
                 type="error"
               />

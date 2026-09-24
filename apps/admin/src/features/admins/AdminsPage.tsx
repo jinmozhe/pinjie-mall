@@ -29,7 +29,7 @@ import {
   Tag,
   Tooltip,
   Typography,
-  message,
+  App,
 } from "antd";
 import type { MenuProps } from "antd";
 import { useRef, useState } from "react";
@@ -46,6 +46,7 @@ import { errorMessage } from "@/lib/api/http";
 type PasswordFormValues = { new_password: string; confirm_password: string };
 
 export function AdminsPage() {
+  const { message } = App.useApp();
   const current = useCurrentAdmin();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -454,7 +455,7 @@ export function AdminsPage() {
         </Form>
       </Modal>
 
-      <Drawer open={Boolean(editTarget)} title={editTarget ? `编辑管理员：${editTarget.username}` : "编辑管理员"} size={480} destroyOnHidden closable={!edit.isPending && !uploadingAvatar} maskClosable={!edit.isPending && !uploadingAvatar} keyboard={!edit.isPending && !uploadingAvatar} onClose={closeEdit} extra={<Space><Button disabled={edit.isPending || uploadingAvatar} onClick={closeEdit}>取消</Button><Button type="primary" disabled={removingAvatar || uploadingAvatar} loading={edit.isPending} onClick={() => editForm.submit()}>保存</Button></Space>}>
+      <Drawer open={Boolean(editTarget)} title={editTarget ? `编辑管理员：${editTarget.username}` : "编辑管理员"} size={480} destroyOnHidden closable={!edit.isPending && !uploadingAvatar} mask={{ closable: !edit.isPending && !uploadingAvatar }} keyboard={!edit.isPending && !uploadingAvatar} onClose={closeEdit} extra={<Space><Button disabled={edit.isPending || uploadingAvatar} onClick={closeEdit}>取消</Button><Button type="primary" disabled={removingAvatar || uploadingAvatar} loading={edit.isPending} onClick={() => editForm.submit()}>保存</Button></Space>}>
         {edit.isError && <Alert type="error" showIcon title={errorMessage(edit.error)} className="mb-16" />}
         <Form<AdminUpdateIn> form={editForm} layout="vertical" disabled={edit.isPending || removingAvatar} onFinish={(values) => {
           if (editSubmittingRef.current || removingAvatar || uploadingAvatar) return;
@@ -462,7 +463,7 @@ export function AdminsPage() {
           edit.mutate(values, { onSettled: () => { editSubmittingRef.current = false; } });
         }}>
           <Form.Item label="头像">
-            <Space direction="vertical" size={4}>
+            <Space orientation="vertical" size={4}>
               <Form.Item name="avatar" noStyle><AvatarUploader disabled={edit.isPending || removingAvatar} onUploadingChange={setUploadingAvatar} /></Form.Item>
               {editAvatar ? <Button type="link" size="small" danger icon={<DeleteOutlined />} disabled={edit.isPending || removingAvatar || uploadingAvatar} onClick={() => setRemovingAvatar(true)}>移除头像</Button> : null}
             </Space>
