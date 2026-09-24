@@ -1,9 +1,10 @@
 import type { CategoryRead, ProductCreate, ProductRead, ProductUpdate } from "@pinjie/api-client";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, Divider, Form, Input, InputNumber, Radio, Select, Space, message } from "antd";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { EditorModal } from "@/components/EditorModal";
+import { QueryState } from "@/components/PageFrame";
 import { commerceApi } from "@/lib/api/commerce";
 import { ProductImages } from "./ProductImages";
 
@@ -18,6 +19,8 @@ export function ProductEditor({
 }) {
   const [form] = Form.useForm();
   const [images, setImages] = useState<string[]>(target?.image_asset_ids ?? []);
+  const uploadingRef = useRef(false);
+  const [uploading, setUploading] = useState(false);
 
   const categoriesQuery = useQuery({
     queryKey: ["commerce-categories-options"],
@@ -30,12 +33,15 @@ export function ProductEditor({
   }));
 
   const onSave = async () => {
+    if (uploadingRef.current) throw new Error("商品图片正在上传，请完成后再保存");
     const values = await form.validateFields();
     if (target) {
       const updatePayload: ProductUpdate = {
         name: values.name.trim(),
         category_id: values.category_id,
         product_type: target.product_type,
+        brand_id: target.brand_id,
+        purchase_limit_quantity: target.purchase_limit_quantity,
         description: values.description?.trim() || "",
         image_asset_ids: images,
         revision: target.revision,
@@ -44,10 +50,11 @@ export function ProductEditor({
       message.success("商品信息已更新");
     } else {
       const selectedCategory = categoriesQuery.data?.find((c) => c.id === values.category_id);
+      if (!selectedCategory || categoriesQuery.isError) throw new Error("请成功加载并选择商品分类后保存");
       const payload: ProductCreate = {
         name: values.name.trim(),
         category_id: values.category_id,
-        category_revision: selectedCategory?.revision ?? 1,
+        category_revision: selectedCategory.revision,
         product_type: values.product_type,
         description: values.description?.trim() || "",
         image_asset_ids: images,
@@ -56,7 +63,7 @@ export function ProductEditor({
           {
             code: values.sku_code.trim(),
             price: String(values.sku_price),
-            market_price: values.sku_origin_price ? String(values.sku_origin_price) : null,
+            market_price: values.sku_origin_price != null ? String(values.sku_origin_price) : null,
             initial_quantity: Number(values.initial_quantity || 0),
             is_active: true,
             selections: {},
@@ -74,9 +81,11 @@ export function ProductEditor({
     <EditorModal
       title={target ? `编辑商品：${target.name}` : "新建商品"}
       width={720}
-      onClose={close}
+      blocked={uploading}
+      onClose={() => { if (!uploadingRef.current) close(); }}
       onSave={onSave}
     >
+      <QueryState loading={categoriesQuery.isLoading} error={categoriesQuery.error?.message} onRetry={() => void categoriesQuery.refetch()} />
       <Form
         form={form}
         layout="vertical"
@@ -131,13 +140,14 @@ export function ProductEditor({
         </Space>
 
         <Form.Item name="description" label="商品描述">
-          <Input.TextArea rows={3} maxLength={1000} placeholder="商品简要说明（选填）" />
+          <Input.TextArea rows={3} maxLength={20000} placeholder="商品简要说明（选填）" />
         </Form.Item>
 
         <Form.Item label="商品主图与轮播图">
           <ProductImages
             value={images}
             onChange={setImages}
+            onUploading={(value) => { uploadingRef.current = value; setUploading(value); }}
           />
         </Form.Item>
 
@@ -165,7 +175,7 @@ export function ProductEditor({
                 rules={[{ required: true }]}
                 style={{ width: 140 }}
               >
-                <InputNumber min={0.01} precision={2} style={{ width: "100%" }} />
+                <InputNumber min={0} precision={2} stringMode style={{ width: "100%" }} />
               </Form.Item>
 
               <Form.Item
@@ -173,7 +183,7 @@ export function ProductEditor({
                 label="划线原价 (元)"
                 style={{ width: 140 }}
               >
-                <InputNumber min={0.01} precision={2} style={{ width: "100%" }} />
+                <InputNumber min={0} precision={2} stringMode style={{ width: "100%" }} />
               </Form.Item>
 
               <Form.Item

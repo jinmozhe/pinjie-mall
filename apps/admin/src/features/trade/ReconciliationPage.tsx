@@ -29,7 +29,10 @@ function ReconciliationEditor({ close }: { close: () => void }) {
       }}
     >
       <Alert type="info" title="请根据可信渠道账单录入。匹配结果仅用于对账，不改变支付或订单状态。" />
-      <Form form={form} layout="vertical" initialValues={{ currency: "CNY" }}>
+      <Form form={form} layout="vertical" initialValues={{ currency: "CNY", record_type: "payment" }}>
+        <Form.Item name="record_type" label="交易类型" rules={[{ required: true }]}>
+          <Select options={[{ label: "支付", value: "payment" }, { label: "退款", value: "refund" }, { label: "提现", value: "withdrawal" }]} />
+        </Form.Item>
         <Form.Item name="channel" label="渠道" rules={[{ required: true }]}>
           <Select options={[{ label: "微信", value: "wechat" }, { label: "支付宝", value: "alipay" }]} />
         </Form.Item>
@@ -119,6 +122,7 @@ export default function ReconciliationPage() {
         columns={[
           { title: "记录号", dataIndex: "id", ellipsis: true },
           { title: "渠道", dataIndex: "channel" },
+          { title: "交易类型", dataIndex: "record_type" },
           { title: "渠道交易号", dataIndex: "channel_transaction_id", ellipsis: true },
           { title: "账单来源", dataIndex: "source_reference", ellipsis: true },
           { title: "金额", dataIndex: "amount" },

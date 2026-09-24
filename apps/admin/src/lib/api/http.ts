@@ -61,7 +61,15 @@ function readCookie(name: string): string | undefined {
 async function parseError(response: Response, source: ApiError["source"] = "request"): Promise<ApiError> {
   let body: ApiErrorBody = {};
   try {
-    body = (await response.json()) as ApiErrorBody;
+    const parsed: unknown = await response.json();
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const candidate = parsed as Record<string, unknown>;
+      body = {
+        code: typeof candidate.code === "string" ? candidate.code : undefined,
+        message: typeof candidate.message === "string" ? candidate.message : undefined,
+        request_id: typeof candidate.request_id === "string" ? candidate.request_id : undefined,
+      };
+    }
   } catch {
     body = {};
   }
@@ -121,8 +129,11 @@ export async function apiRequest<T>(
     if (path !== "/api/v1/admin/auth/login") reportSessionExpired(error);
     throw error;
   }
-  const payload = (await response.json()) as ApiEnvelope<T>;
-  return payload.data;
+  const parsed: unknown = await response.json();
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || !("data" in parsed)) {
+    throw new ApiError(response.status, "INVALID_RESPONSE", "服务返回了无效响应");
+  }
+  return (parsed as ApiEnvelope<T>).data;
 }
 
 export function jsonBody(value: unknown): string {

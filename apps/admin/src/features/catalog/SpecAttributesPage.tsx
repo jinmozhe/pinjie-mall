@@ -16,6 +16,7 @@ import { PageFrame } from "@/components/PageFrame";
 import { ResourceTable } from "@/components/ResourceTable";
 import { canAccess, useCurrentAdmin } from "@/features/auth";
 import { commerceApi } from "@/lib/api/commerce";
+import { useLockedMutation } from "@/lib/useLockedMutation";
 
 function AttributeEditor({
   target,
@@ -37,7 +38,9 @@ function AttributeEditor({
           name: values.name.trim(),
           code: values.code.trim(),
           value_type: values.value_type,
-          validation: { schema_version: 1 as const },
+          validation: target?.validation ?? { schema_version: 1 as const },
+          unit: target?.unit ?? null,
+          sort_order: target?.sort_order ?? null,
           is_active: values.is_active ?? true,
         };
         if (target) {
@@ -84,6 +87,7 @@ function AttributeEditor({
         <Form.Item name="value_type" label="属性类型" rules={[{ required: true }]}>
           <Radio.Group disabled={Boolean(target)}>
             <Radio value="select">下拉单选 (select)</Radio>
+            <Radio value="multi_select">下拉多选 (multi_select)</Radio>
             <Radio value="text">自由文本 (text)</Radio>
             <Radio value="number">数值 (number)</Radio>
           </Radio.Group>
@@ -108,6 +112,7 @@ function ValuesDrawer({
   const canUpdate = canAccess(admin, "spec-attributes:update");
   const [form] = Form.useForm();
   const [editingValue, setEditingValue] = useState<StandardValueRead | null>(null);
+  const [attributeRevision, setAttributeRevision] = useState(attribute.revision);
 
   const query = useQuery({
     queryKey: ["attribute-values", attribute.id],
@@ -116,13 +121,14 @@ function ValuesDrawer({
 
   const refresh = async () => {
     await client.invalidateQueries({ queryKey: ["attribute-values", attribute.id] });
+    await client.invalidateQueries({ queryKey: ["commerce-spec-attributes"] });
   };
 
   const onSave = async () => {
     const values = await form.validateFields();
     if (editingValue) {
       const updatePayload: StandardValueUpdate = {
-        attribute_revision: attribute.revision,
+        attribute_revision: attributeRevision,
         code: values.code.trim(),
         name: values.name.trim(),
         sort_order: values.sort_order ?? null,
@@ -133,7 +139,7 @@ function ValuesDrawer({
       message.success("候选值已更新");
     } else {
       const createPayload: StandardValueInput = {
-        attribute_revision: attribute.revision,
+        attribute_revision: attributeRevision,
         code: values.code.trim(),
         name: values.name.trim(),
         sort_order: values.sort_order ?? null,
@@ -142,17 +148,22 @@ function ValuesDrawer({
       await commerceApi.createAttributeValue(attribute.id, createPayload);
       message.success("候选值已添加");
     }
+    setAttributeRevision((revision) => revision + 1);
     form.resetFields();
     setEditingValue(null);
     await refresh();
   };
+  const save = useLockedMutation({ mutationFn: onSave });
 
   return (
     <Drawer
       title={`【${attribute.name}】候选值管理`}
       open
       width={720}
-      onClose={close}
+      closable={!save.isPending}
+      keyboard={!save.isPending}
+      maskClosable={false}
+      onClose={() => { if (!save.isPending) close(); }}
     >
       <Alert
         type="info"
@@ -161,6 +172,7 @@ function ValuesDrawer({
       />
       {canUpdate && (
         <Form
+          disabled={save.isPending}
           form={form}
           layout="inline"
           className="mb-16"
@@ -186,7 +198,7 @@ function ValuesDrawer({
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type="primary" onClick={onSave}>
+              <Button type="primary" loading={save.isPending} onClick={() => save.mutate(undefined)}>
                 {editingValue ? "保存修改" : "添加候选值"}
               </Button>
               {editingValue && (
@@ -203,6 +215,7 @@ function ValuesDrawer({
           </Form.Item>
         </Form>
       )}
+      {save.error && <Alert type="error" showIcon title={save.error.message || "请检查表单字段"} className="mb-16" />}
       <ResourceTable
         title="标准候选值列表"
         rows={query.data ?? []}
@@ -238,6 +251,7 @@ function ValuesDrawer({
               canUpdate ? (
                 <Button
                   size="small"
+                  disabled={save.isPending}
                   icon={<EditOutlined />}
                   onClick={() => {
                     setEditingValue(row);
@@ -318,6 +332,7 @@ export function SpecAttributesPage() {
               dataIndex: "value_type",
               render: (v) => {
                 if (v === "select") return <Tag color="blue">下拉选择</Tag>;
+                if (v === "multi_select") return <Tag color="blue">下拉多选</Tag>;
                 if (v === "number") return <Tag color="purple">数值</Tag>;
                 return <Tag color="cyan">文本</Tag>;
               },
@@ -340,7 +355,7 @@ export function SpecAttributesPage() {
               width: "1%",
               render: (_, row) => (
                 <Space>
-                  {row.value_type === "select" && (
+                  {(row.value_type === "select" || row.value_type === "multi_select") && (
                     <Button
                       icon={<UnorderedListOutlined />}
                       onClick={() => setManageValues(row)}

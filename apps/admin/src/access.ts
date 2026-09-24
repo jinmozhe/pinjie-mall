@@ -26,6 +26,7 @@ export default function access(initialState?: AdminInitialState) {
       "users:read",
       "members:read",
       "member-levels:read",
+      "member-level-conditions:read",
       "member-price-rules:read",
       "points:read",
     ].some(has),

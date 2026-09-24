@@ -33,6 +33,7 @@ function BrandEditor({
             logo_asset_id: values.logo_asset_id?.trim() || null,
             is_active: values.is_active ?? true,
             revision: target.revision,
+            sort_order: target.sort_order,
           };
           await commerceApi.updateBrand(target.id, updatePayload);
         } else {

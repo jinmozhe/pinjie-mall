@@ -14,9 +14,10 @@ export type CommerceFilterField = {
   options?: { label: string; value: string }[];
 };
 
-export function CommerceList<T extends object>({ resource, title, load, columns, fields, rowKey = "id", toolbar = [] }: {
+export function CommerceList<T extends object>({ resource, title, load, columns, fields, rowKey = "id", toolbar = [], fixedFilters = {} }: {
   resource: CommerceResource; title: string; load: (filters: CommerceFilters) => Promise<{ items: T[]; total: number }>;
   columns: ProColumns<T>[]; fields: CommerceFilterField[]; rowKey?: string; toolbar?: ReactNode[];
+  fixedFilters?: CommerceFilters;
 }) {
   const admin = useCurrentAdmin();
   const permissionMap: Record<string, string> = {
@@ -32,7 +33,8 @@ export function CommerceList<T extends object>({ resource, title, load, columns,
   const [busy, setBusy] = useState(false);
   const [exportError, setExportError] = useState<string>();
   const lock = useRef(false);
-  const query = useQuery({ queryKey: [`commerce-${resource}`, filters], queryFn: () => load(filters), enabled: allowed });
+  const requestFilters = { ...filters, ...fixedFilters };
+  const query = useQuery({ queryKey: [`commerce-${resource}`, requestFilters], queryFn: () => load(requestFilters), enabled: allowed });
   const change = (next: CommerceFilters) => { setKeys([]); setExportError(undefined); setFilters(next); };
   const download = async () => {
     if (lock.current) return;

@@ -1,7 +1,7 @@
 import type { ProductRead, SkuRead } from "@pinjie/api-client";
 import { EditOutlined, SearchOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Button, Card, Form, Input, Space, Tag } from "antd";
+import { Alert, Button, Card, Form, Input, Pagination, Space, Tag } from "antd";
 import { useState } from "react";
 
 import { PageFrame } from "@/components/PageFrame";
@@ -16,7 +16,7 @@ export function InventoryPage() {
   const [search, setSearch] = useState("");
   const [activeSku, setActiveSku] = useState<SkuRead | null>(null);
 
-  const allowed = canAccess(admin, "inventory:read");
+  const allowed = canAccess(admin, "inventory:read") && canAccess(admin, "products:read");
   const canAdjust = canAccess(admin, "inventory:adjust");
 
   const query = useQuery({
@@ -43,7 +43,7 @@ export function InventoryPage() {
       description="查询货品 SKU 实时库存、订单预占追踪与幂等盘点调整流水。"
     >
       {!allowed ? (
-        <Alert type="warning" title="无权查看库存数据" />
+        <Alert type="warning" title="库存列表需要库存查看和商品查看权限" />
       ) : (
         <Space direction="vertical" size="large" style={{ width: "100%" }}>
           <Card title="快捷定位 SKU" size="small">
@@ -70,13 +70,11 @@ export function InventoryPage() {
           <ResourceTable
             title="货品库存列表"
             rows={flatSkus}
+            rowKey={(row) => row.sku.id}
             loading={query.isLoading}
             fetching={query.isFetching}
             error={query.error}
             retry={query.refetch}
-            page={page}
-            total={query.data?.total}
-            onPage={setPage}
             columns={[
               {
                 title: "SKU 编码",
@@ -121,6 +119,7 @@ export function InventoryPage() {
               },
             ]}
           />
+          {!query.isError && <Pagination current={page} total={query.data?.total ?? 0} pageSize={20} showSizeChanger={false} onChange={setPage} showTotal={(total) => `共 ${total} 个商品，每页展示所含的全部 SKU`} />}
         </Space>
       )}
 

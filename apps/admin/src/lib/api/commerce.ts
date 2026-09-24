@@ -105,6 +105,15 @@ export const commerceApi = {
   updateCategoryTemplate: (categoryId: string, input: TemplateUpdate) => apiRequest<TemplateRead>(`/api/v1/admin/product-categories/${categoryId}/attributes`, { method: "PUT", body: jsonBody(input) }),
   convertSpecifications: (productId: string, input: SpecificationConversion) => apiRequest<ProductRead>(`/api/v1/admin/products/${productId}/specification-conversions`, { method: "POST", body: jsonBody(input) }),
   memberLevels: (page: number, pageSize: number = 20) => apiRequest<PageResultMemberLevelRead>(`/api/v1/admin/member-levels?page=${page}&page_size=${pageSize}`),
+  memberLevelOptions: async () => {
+    const first = await commerceApi.memberLevels(1, 100);
+    const items = [...first.items];
+    for (let page = 2; page <= first.total_pages; page += 1) {
+      const next = await commerceApi.memberLevels(page, 100);
+      items.push(...next.items);
+    }
+    return items;
+  },
   createMemberLevel: (input: MemberLevelCreate) => apiRequest<MemberLevelRead>("/api/v1/admin/member-levels", { method: "POST", body: jsonBody(input) }),
   updateMemberLevel: (id: string, input: MemberLevelUpdate) => apiRequest<MemberLevelRead>(`/api/v1/admin/member-levels/${id}`, { method: "PUT", body: jsonBody(input) }),
   memberLevelConditions: (page: number, pageSize: number = 20) => apiRequest<PageResultMemberLevelConditionRead>(`/api/v1/admin/member-level-conditions?page=${page}&page_size=${pageSize}`),
