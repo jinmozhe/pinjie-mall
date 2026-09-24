@@ -147,7 +147,7 @@ export function ProductEditor({
             <Alert
               type="info"
               title="新建商品时创建首个标准货品，后续可在商品列表中新增变体或进行多规格转换。"
-              style={{ marginBottom: 16 }}
+              className="mb-16"
             />
             <Space size="middle" style={{ width: "100%" }}>
               <Form.Item

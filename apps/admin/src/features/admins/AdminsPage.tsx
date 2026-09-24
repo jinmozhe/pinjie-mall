@@ -264,11 +264,11 @@ export function AdminsPage() {
                   onChange: (keys) => setSelectedRowKeys(keys.map(String)),
                   getCheckboxProps: (admin) => ({
                     disabled: admin.id === current.id || !canOperateAdmin(admin),
-                    title: admin.id === current.id
-                      ? "不能批量修改自己的启用状态"
-                      : !canOperateAdmin(admin)
-                        ? "只有超级管理员可以操作超级管理员"
-                        : undefined,
+                    title: (() => {
+                      if (admin.id === current.id) return "不能批量修改自己的启用状态";
+                      if (!canOperateAdmin(admin)) return "只有超级管理员可以操作超级管理员";
+                      return undefined;
+                    })(),
                   }),
                 }
               : false
@@ -346,13 +346,11 @@ export function AdminsPage() {
                   ariaLabel={`${admin.is_active ? "停用" : "启用"}管理员：${admin.username}`}
                   interactive={canUpdate && admin.id !== current.id && canOperateAdmin(admin)}
                   loading={statusMutation.isPending && statusMutation.variables?.adminId === admin.id}
-                  readOnlyReason={
-                    admin.id === current.id
-                      ? "不能修改自己的启用状态"
-                      : !canOperateAdmin(admin)
-                        ? "只有超级管理员可以操作超级管理员"
-                        : "没有修改管理员的权限"
-                  }
+                  readOnlyReason={(() => {
+                    if (admin.id === current.id) return "不能修改自己的启用状态";
+                    if (!canOperateAdmin(admin)) return "只有超级管理员可以操作超级管理员";
+                    return "没有修改管理员的权限";
+                  })()}
                   onToggle={() => statusMutation.mutate({ adminId: admin.id, isActive: !admin.is_active })}
                 />
               ),
@@ -384,7 +382,11 @@ export function AdminsPage() {
                       </Tooltip>
                     )}
                     {canAssignRoles && (
-                      <Tooltip title={admin.id === current.id ? "不能修改自己的角色" : !canOperateAdmin(admin) ? "只有超级管理员可以修改超级管理员角色" : undefined}>
+                      <Tooltip title={(() => {
+                        if (admin.id === current.id) return "不能修改自己的角色";
+                        if (!canOperateAdmin(admin)) return "只有超级管理员可以修改超级管理员角色";
+                        return undefined;
+                      })()}>
                         <span>
                           <Button
                             type="link"
@@ -453,7 +455,7 @@ export function AdminsPage() {
       </Modal>
 
       <Drawer open={Boolean(editTarget)} title={editTarget ? `编辑管理员：${editTarget.username}` : "编辑管理员"} size={480} destroyOnHidden closable={!edit.isPending && !uploadingAvatar} maskClosable={!edit.isPending && !uploadingAvatar} keyboard={!edit.isPending && !uploadingAvatar} onClose={closeEdit} extra={<Space><Button disabled={edit.isPending || uploadingAvatar} onClick={closeEdit}>取消</Button><Button type="primary" disabled={removingAvatar || uploadingAvatar} loading={edit.isPending} onClick={() => editForm.submit()}>保存</Button></Space>}>
-        {edit.isError && <Alert type="error" showIcon title={errorMessage(edit.error)} style={{ marginBottom: 16 }} />}
+        {edit.isError && <Alert type="error" showIcon title={errorMessage(edit.error)} className="mb-16" />}
         <Form<AdminUpdateIn> form={editForm} layout="vertical" disabled={edit.isPending || removingAvatar} onFinish={(values) => {
           if (editSubmittingRef.current || removingAvatar || uploadingAvatar) return;
           editSubmittingRef.current = true;

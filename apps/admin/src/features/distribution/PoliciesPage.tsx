@@ -333,7 +333,7 @@ export default function PoliciesPage() {
       {/* Global switch card */}
       <Card
         size="small"
-        style={{ marginBottom: 16 }}
+        className="mb-16"
         title={
           <Space>
             <SettingOutlined />
@@ -373,7 +373,7 @@ export default function PoliciesPage() {
 
       {/* Policy list */}
       {canPoliciesCreate && (
-        <div style={{ marginBottom: 16 }}>
+        <div className="mb-16">
           <Button
             type="primary"
             icon={<PlusOutlined />}
@@ -477,7 +477,7 @@ export default function PoliciesPage() {
             description="当前政策处于 active 或 retired 状态，所有来源规则与分配矩阵已冻结，不开放修改。"
             type="info"
             showIcon
-            style={{ marginBottom: 16 }}
+            className="mb-16"
           />
         )}
 
@@ -490,7 +490,7 @@ export default function PoliciesPage() {
               children: (
                 <div>
                   {canEditDraft && (
-                    <div style={{ marginBottom: 16 }}>
+                    <div className="mb-16">
                       <Button
                         type="primary"
                         icon={<PlusOutlined />}
@@ -561,7 +561,7 @@ export default function PoliciesPage() {
               children: (
                 <div>
                   {canEditDraft && (
-                    <div style={{ marginBottom: 16 }}>
+                    <div className="mb-16">
                       <Button
                         type="primary"
                         icon={<PlusOutlined />}
