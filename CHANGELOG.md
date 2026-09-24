@@ -6,6 +6,8 @@
 
 ### Added
 
+- 新增根目录 `pnpm dev:backend` 本地启动入口：自动等待 Docker Desktop、启动并检查 Redis、执行 Backend 数据库迁移与权限目录检查，再以前台 Uvicorn 运行服务；权限写入需显式追加 `-ApplyPermissions`。
+
 - 修复 Backend 登录安全事件写入失败被吞掉的问题：安全事件存储不可用时认证按失败关闭并返回 `503 / SERVICE_UNAVAILABLE`，新增回归测试；统一身份、资产和财务报告分页按 UUID v7 `id` 倒序，移除冗余 `created_at` 排序。Backend Ruff、格式、Mypy 和编译检查通过；pytest 未执行。
 
 - 完成 Admin 管理端 OCR 全量静态审查修复：覆盖 93 个选中文件，修复商品字段保留、图片上传竞态、库存分页、目录版本、积分幂等、对账类型、推荐网络缓存、会员与分佣条件数据、查询错误展示及登录跳转边界；Admin typecheck、lint 和文档治理轻量检查通过。Vitest、pytest、production build、Playwright、浏览器自动化和数据库迁移未执行。
