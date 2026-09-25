@@ -355,7 +355,9 @@ export const ProductSpecificationForm = forwardRef<ProductSpecificationFormHandl
   useImperativeHandle(ref, () => ({
     validate: async () => {
       if (!categoryId || !template || !allDefinitionsLoaded) throw new Error("请等待分类模板与公共属性加载完成");
-      const values = await form.validateFields();
+      await form.validateFields();
+      // 校验结果只包含注册字段，完整 store 才保留 SKU 的规格映射及转换元数据。
+      const values: FormValues = form.getFieldsValue(true);
       const attributesPayload: AdoptionInput[] = [];
       const activeDimensions: DraftDimension[] = [];
       for (const { item, attribute } of templateRows) {
@@ -428,6 +430,13 @@ export const ProductSpecificationForm = forwardRef<ProductSpecificationFormHandl
         if (!/^[A-Za-z0-9_-]+$/.test(code)) throw new Error(`第 ${index + 1} 个 SKU 编码只能包含字母、数字、下划线和连字符`);
         if (skuCodes.has(code)) throw new Error("SKU 编码不能重复");
         skuCodes.add(code);
+        if (
+          !row.selections
+          || Object.keys(row.selections).length !== activeDimensions.length
+          || activeDimensions.some((dimension) => !dimension.candidates.some((candidate) => candidate.key === row.selections[dimension.key]))
+        ) {
+          throw new Error(`第 ${index + 1} 个 SKU 规格组合不完整或已失效，请重新选择销售规格`);
+        }
         const key = selectionKey(row.selections);
         if (seenCombinations.has(key)) throw new Error("SKU 规格组合不能重复");
         seenCombinations.add(key);
