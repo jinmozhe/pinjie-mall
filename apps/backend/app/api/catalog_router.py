@@ -1,12 +1,14 @@
 """商品目标模型的品牌、属性、模板与规格转换接口。"""
 
+from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from app.api.commerce_dependencies import AdminCommerce
 from app.api.commerce_router import Page, PageSize
 from app.api.dependencies import require_admin_csrf, require_permission
+from app.core.batch import ActiveStatusBatch, BatchCompleted
 from app.core.context import current_request_id
 from app.core.pagination import PageResult
 from app.core.response import ResponseModel, success_response
@@ -18,6 +20,8 @@ from app.domains.products.catalog_schemas import (
     BrandInput,
     BrandRead,
     BrandUpdate,
+    CandidateAppend,
+    DescriptionSet,
     DescriptionUpdate,
     SpecificationConversion,
     StandardValueInput,
@@ -81,9 +85,69 @@ async def update_brand(brand_id: UUID, payload: BrandUpdate, service: AdminComme
     dependencies=[Depends(require_permission(PermissionCode.SPEC_ATTRIBUTES_READ))],
 )
 async def attributes(
-    service: AdminCommerce, page: Page = 1, page_size: PageSize = 20
+    service: AdminCommerce,
+    page: Page = 1,
+    page_size: PageSize = 20,
+    search: Annotated[str | None, Query(max_length=100)] = None,
+    value_type: Literal["text", "number", "select", "multi_select"] | None = None,
+    is_active: bool | None = None,
 ) -> ResponseModel[PageResult[AttributeRead]]:
-    return success_response(data=await service.attributes(page, page_size), request_id=current_request_id())
+    return success_response(
+        data=await service.attributes(
+            page, page_size, search=search.strip() if search else None, value_type=value_type, is_active=is_active
+        ),
+        request_id=current_request_id(),
+    )
+
+
+@router.patch(
+    "/admin/spec-attributes/status/batch",
+    response_model=ResponseModel[BatchCompleted],
+    summary="批量启停公共属性，停用影响引用商品可售性",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.SPEC_ATTRIBUTES_UPDATE))],
+)
+async def attributes_status(payload: ActiveStatusBatch, service: AdminCommerce) -> ResponseModel[BatchCompleted]:
+    return success_response(data=await service.set_attributes_active(payload), request_id=current_request_id())
+
+
+@router.patch(
+    "/admin/spec-attributes/{attribute_id}/values/status/batch",
+    response_model=ResponseModel[BatchCompleted],
+    summary="批量启停标准候选值，停用影响引用 SKU 可售性",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.SPEC_ATTRIBUTES_UPDATE))],
+)
+async def values_status(
+    attribute_id: UUID, payload: ActiveStatusBatch, service: AdminCommerce
+) -> ResponseModel[BatchCompleted]:
+    return success_response(
+        data=await service.set_values_active(attribute_id, payload), request_id=current_request_id()
+    )
+
+
+@router.put(
+    "/admin/products/{product_id}/description-attributes",
+    response_model=ResponseModel[ProductRead],
+    summary="原子维护描述属性集合，保留历史且不改变 SKU 或库存",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.PRODUCTS_UPDATE))],
+)
+async def descriptions_set(
+    product_id: UUID, payload: DescriptionSet, service: AdminCommerce
+) -> ResponseModel[ProductRead]:
+    return success_response(data=await service.save_descriptions(product_id, payload), request_id=current_request_id())
+
+
+@router.post(
+    "/admin/products/{product_id}/spec-attributes/{adoption_id}/values",
+    response_model=ResponseModel[ProductRead],
+    summary="向当前商品销售维度追加候选值，不重建 SKU",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.PRODUCTS_UPDATE))],
+)
+async def candidates_append(
+    product_id: UUID, adoption_id: UUID, payload: CandidateAppend, service: AdminCommerce
+) -> ResponseModel[ProductRead]:
+    return success_response(
+        data=await service.add_candidates(product_id, adoption_id, payload), request_id=current_request_id()
+    )
 
 
 @router.get(

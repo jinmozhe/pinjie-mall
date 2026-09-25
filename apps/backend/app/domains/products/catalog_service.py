@@ -2,6 +2,7 @@ from decimal import Decimal, InvalidOperation
 from unicodedata import normalize
 from uuid import UUID
 
+from app.core.batch import ActiveStatusBatch, BatchCompleted
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
@@ -91,8 +92,18 @@ class CatalogService:
         await self.repository.save_entity(row)
         return BrandRead.model_validate(row)
 
-    async def attributes(self, page: int, page_size: int) -> PageResult[AttributeRead]:
-        rows, total = await self.repository.attribute_page(page, page_size)
+    async def attributes(
+        self,
+        page: int,
+        page_size: int,
+        *,
+        search: str | None = None,
+        value_type: str | None = None,
+        is_active: bool | None = None,
+    ) -> PageResult[AttributeRead]:
+        rows, total = await self.repository.attribute_page(
+            page, page_size, search=search, value_type=value_type, is_active=is_active
+        )
         return PageResult[AttributeRead].create(
             items=[AttributeRead.model_validate(row) for row in rows], total=total, page=page, page_size=page_size
         )
@@ -102,6 +113,31 @@ class CatalogService:
         if row is None:
             raise AppException(status_code=404, code=ErrorCode.NOT_FOUND, message="公共属性不存在")
         return row
+
+    async def set_attributes_active(self, data: ActiveStatusBatch) -> BatchCompleted:
+        await self.repository.lock_catalog()
+        for target in sorted(data.targets, key=lambda item: item.id):
+            row = await self.require_attribute(target.id)
+            if row.revision != target.revision:
+                raise catalog_conflict("公共属性版本已变更，请刷新")
+            row.is_active = data.is_active
+            row.revision += 1
+            await self.repository.save_entity(row)
+        return BatchCompleted(completed_count=len(data.targets))
+
+    async def set_values_active(self, attribute_id: UUID, data: ActiveStatusBatch) -> BatchCompleted:
+        await self.repository.lock_catalog()
+        attribute = await self.require_attribute(attribute_id)
+        for target in sorted(data.targets, key=lambda item: item.id):
+            row = await self.repository.standard_value(target.id)
+            if row is None or row.attribute_id != attribute_id or row.revision != target.revision:
+                raise catalog_conflict("候选值归属或版本已变更，请刷新")
+            row.is_active = data.is_active
+            row.revision += 1
+            await self.repository.save_entity(row)
+        attribute.revision += 1
+        await self.repository.save_entity(attribute)
+        return BatchCompleted(completed_count=len(data.targets))
 
     async def read_attribute(self, attribute_id: UUID) -> AttributeRead:
         return AttributeRead.model_validate(await self.require_attribute(attribute_id))

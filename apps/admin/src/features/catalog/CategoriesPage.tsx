@@ -1,9 +1,10 @@
 import type { CategoryInput, CategoryRead } from "@pinjie/api-client";
-import { EditOutlined, PlusOutlined, PoweroffOutlined } from "@ant-design/icons";
+import { EditOutlined, PlusOutlined, PoweroffOutlined, SettingOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Form, Input, InputNumber, Select, Space, Switch, Tag, App } from "antd";
+import { Alert, Button, Form, Input, InputNumber, Select, Space, Switch, Tag, Tooltip, App } from "antd";
 import { useState } from "react";
 
+import { CategoryTemplateDrawer } from "./CategoryTemplateDrawer";
 import { PageFrame } from "@/components/PageFrame";
 import { ResourceTable } from "@/components/ResourceTable";
 import { EditorModal } from "@/components/EditorModal";
@@ -38,8 +39,10 @@ export function CategoriesPage() {
   const client = useQueryClient();
   const allowed = canAccess(admin, "product-categories:read");
   const write = canAccess(admin, "product-categories:update");
+  const canReadAttributes = canAccess(admin, "spec-attributes:read");
   const query = useQuery({ queryKey: ["commerce-categories"], queryFn: commerceApi.categories, enabled: allowed });
   const [edit, setEdit] = useState<{ target: CategoryRead | null }>();
+  const [templateCategory, setTemplateCategory] = useState<CategoryRead>();
   const [selected, setSelected] = useState<CategoryRead[]>([]);
   const refresh = async () => { await client.invalidateQueries({ queryKey: ["commerce-categories"] }); };
   const batch = useLockedMutation({ mutationFn: (active: boolean) => commerceApi.categoriesStatus({ targets: selected.map(({ id, revision }) => ({ id, revision })), is_active: active }),
@@ -55,9 +58,13 @@ export function CategoriesPage() {
         { title: "上级分类", render: (_, row) => query.data?.find((item) => item.id === row.parent_id)?.name ?? "顶级分类" },
         { title: "排序", render: (_: unknown, row: CategoryRead) => row.sort_order ?? "-" },
         { title: "状态", render: (_, row) => <Tag color={row.is_active ? "success" : "default"}>{row.is_active ? "启用" : "停用"}</Tag> },
-        { title: "操作", width: "1%", render: (_, row) => (write ? <Button icon={<EditOutlined />} disabled={batch.isPending} onClick={() => setEdit({ target: row })}>编辑</Button> : null) },
+        { title: "操作", width: "1%", render: (_, row) => <Space size={4}>
+          {canReadAttributes ? <Button icon={<SettingOutlined />} disabled={batch.isPending} onClick={() => setTemplateCategory(row)}>属性模板</Button> : <Tooltip title="需要规格属性库查看权限"><span><Button icon={<SettingOutlined />} disabled>属性模板</Button></span></Tooltip>}
+          {write && <Button icon={<EditOutlined />} disabled={batch.isPending} onClick={() => setEdit({ target: row })}>编辑</Button>}
+        </Space> },
       ]} />}
     {edit && <CategoryEditor target={edit.target} rows={query.data ?? []} close={() => setEdit(undefined)} done={refresh} />}
+    {templateCategory && <CategoryTemplateDrawer category={templateCategory} canUpdate={write} close={() => setTemplateCategory(undefined)} done={refresh} />}
   </PageFrame>;
 }
 

@@ -1703,6 +1703,30 @@ export type BrandUpdate = {
 };
 
 /**
+ * CandidateAppend
+ */
+export type CandidateAppend = {
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Source Attribute Revision
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    source_attribute_revision?: number | null;
+    /**
+     * Candidates
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    candidates: Array<CandidateInput>;
+};
+
+/**
  * CandidateInput
  */
 export type CandidateInput = {
@@ -2812,6 +2836,36 @@ export type DatabaseHealthRead = {
 };
 
 /**
+ * DescriptionSet
+ */
+export type DescriptionSet = {
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Category Revision
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    category_revision: number;
+    /**
+     * Existing
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    existing?: Array<ExistingDescription>;
+    /**
+     * Added
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    added?: Array<AdoptionInput>;
+};
+
+/**
  * DescriptionUpdate
  */
 export type DescriptionUpdate = {
@@ -2826,7 +2880,7 @@ export type DescriptionUpdate = {
      *
      * 当前业务字段，具体语义由所属请求或响应模型定义
      */
-    value: string | Array<string>;
+    value: string | Array<string> | null;
 };
 
 /**
@@ -2917,6 +2971,24 @@ export type DurableTaskRead = {
      * 更新时间
      */
     updated_at: string;
+};
+
+/**
+ * ExistingDescription
+ */
+export type ExistingDescription = {
+    /**
+     * Adoption Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    adoption_id: string;
+    /**
+     * Value
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    value: string | Array<string> | null;
 };
 
 /**
@@ -11976,6 +12048,18 @@ export type AttributesApiV1AdminSpecAttributesGetData = {
          * 每页数量
          */
         page_size?: number;
+        /**
+         * Search
+         */
+        search?: string | null;
+        /**
+         * Value Type
+         */
+        value_type?: 'text' | 'number' | 'select' | 'multi_select' | null;
+        /**
+         * Is Active
+         */
+        is_active?: boolean | null;
     };
     url: '/api/v1/admin/spec-attributes';
 };
@@ -12022,6 +12106,125 @@ export type CreateAttributeApiV1AdminSpecAttributesPostResponses = {
 };
 
 export type CreateAttributeApiV1AdminSpecAttributesPostResponse = CreateAttributeApiV1AdminSpecAttributesPostResponses[keyof CreateAttributeApiV1AdminSpecAttributesPostResponses];
+
+export type AttributesStatusApiV1AdminSpecAttributesStatusBatchPatchData = {
+    body: ActiveStatusBatch;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/spec-attributes/status/batch';
+};
+
+export type AttributesStatusApiV1AdminSpecAttributesStatusBatchPatchErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AttributesStatusApiV1AdminSpecAttributesStatusBatchPatchError = AttributesStatusApiV1AdminSpecAttributesStatusBatchPatchErrors[keyof AttributesStatusApiV1AdminSpecAttributesStatusBatchPatchErrors];
+
+export type AttributesStatusApiV1AdminSpecAttributesStatusBatchPatchResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelBatchCompleted;
+};
+
+export type AttributesStatusApiV1AdminSpecAttributesStatusBatchPatchResponse = AttributesStatusApiV1AdminSpecAttributesStatusBatchPatchResponses[keyof AttributesStatusApiV1AdminSpecAttributesStatusBatchPatchResponses];
+
+export type ValuesStatusApiV1AdminSpecAttributesAttributeIdValuesStatusBatchPatchData = {
+    body: ActiveStatusBatch;
+    path: {
+        /**
+         * Attribute Id
+         */
+        attribute_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/spec-attributes/{attribute_id}/values/status/batch';
+};
+
+export type ValuesStatusApiV1AdminSpecAttributesAttributeIdValuesStatusBatchPatchErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ValuesStatusApiV1AdminSpecAttributesAttributeIdValuesStatusBatchPatchError = ValuesStatusApiV1AdminSpecAttributesAttributeIdValuesStatusBatchPatchErrors[keyof ValuesStatusApiV1AdminSpecAttributesAttributeIdValuesStatusBatchPatchErrors];
+
+export type ValuesStatusApiV1AdminSpecAttributesAttributeIdValuesStatusBatchPatchResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelBatchCompleted;
+};
+
+export type ValuesStatusApiV1AdminSpecAttributesAttributeIdValuesStatusBatchPatchResponse = ValuesStatusApiV1AdminSpecAttributesAttributeIdValuesStatusBatchPatchResponses[keyof ValuesStatusApiV1AdminSpecAttributesAttributeIdValuesStatusBatchPatchResponses];
+
+export type DescriptionsSetApiV1AdminProductsProductIdDescriptionAttributesPutData = {
+    body: DescriptionSet;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/products/{product_id}/description-attributes';
+};
+
+export type DescriptionsSetApiV1AdminProductsProductIdDescriptionAttributesPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type DescriptionsSetApiV1AdminProductsProductIdDescriptionAttributesPutError = DescriptionsSetApiV1AdminProductsProductIdDescriptionAttributesPutErrors[keyof DescriptionsSetApiV1AdminProductsProductIdDescriptionAttributesPutErrors];
+
+export type DescriptionsSetApiV1AdminProductsProductIdDescriptionAttributesPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelProductRead;
+};
+
+export type DescriptionsSetApiV1AdminProductsProductIdDescriptionAttributesPutResponse = DescriptionsSetApiV1AdminProductsProductIdDescriptionAttributesPutResponses[keyof DescriptionsSetApiV1AdminProductsProductIdDescriptionAttributesPutResponses];
+
+export type CandidatesAppendApiV1AdminProductsProductIdSpecAttributesAdoptionIdValuesPostData = {
+    body: CandidateAppend;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+        /**
+         * Adoption Id
+         */
+        adoption_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/products/{product_id}/spec-attributes/{adoption_id}/values';
+};
+
+export type CandidatesAppendApiV1AdminProductsProductIdSpecAttributesAdoptionIdValuesPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CandidatesAppendApiV1AdminProductsProductIdSpecAttributesAdoptionIdValuesPostError = CandidatesAppendApiV1AdminProductsProductIdSpecAttributesAdoptionIdValuesPostErrors[keyof CandidatesAppendApiV1AdminProductsProductIdSpecAttributesAdoptionIdValuesPostErrors];
+
+export type CandidatesAppendApiV1AdminProductsProductIdSpecAttributesAdoptionIdValuesPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelProductRead;
+};
+
+export type CandidatesAppendApiV1AdminProductsProductIdSpecAttributesAdoptionIdValuesPostResponse = CandidatesAppendApiV1AdminProductsProductIdSpecAttributesAdoptionIdValuesPostResponses[keyof CandidatesAppendApiV1AdminProductsProductIdSpecAttributesAdoptionIdValuesPostResponses];
 
 export type AttributeApiV1AdminSpecAttributesAttributeIdGetData = {
     body?: never;

@@ -100,6 +100,7 @@
 | [tencent-tcr-personal-cam-accounts.md](operations/tencent-tcr-personal-cam-accounts.md) | TCR 发布与拉取身份隔离、CAM 单项目与命名空间共享范围、可选本机及服务器登录、验证、轮换和排障 |
 | [1panel-production-runbook.md](operations/1panel-production-runbook.md) | 1Panel 单机生产配置、迁移、OpenResty、日志、备份、恢复和回滚步骤 |
 | [database-backup-restore.md](operations/database-backup-restore.md) | 备份参数、本地恢复演练、生产恢复和数据库迁移保护步骤 |
+| [spec-library-initialization.md](operations/spec-library-initialization.md) | 电商公共规格属性库的本机开发库检查、备份、清空重建、提交后核验和恢复边界 |
 | [incident-response.md](operations/incident-response.md) | 事故分级、角色、止损、恢复验证、状态沟通和复盘步骤 |
 | [docker-desktop-redis使用指南.md](operations/docker-desktop-redis使用指南.md) | Docker Desktop Redis 架构选型、日常启停、会话限流关键依赖、多项目数据隔离与生产建议 |
 

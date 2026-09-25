@@ -287,4 +287,38 @@ class SpecificationConversion(SpecificationSet):
 
 class DescriptionUpdate(CatalogInput):
     revision: int = Field(gt=0, description="商品当前版本")
-    value: str | list[UUID]
+    value: str | list[UUID] | None
+
+
+class ExistingDescription(CatalogInput):
+    adoption_id: UUID
+    value: str | list[UUID] | None
+
+
+class DescriptionSet(CatalogInput):
+    revision: int = Field(gt=0)
+    category_revision: int = Field(gt=0)
+    existing: list[ExistingDescription] = Field(default_factory=list, max_length=50)
+    added: list[AdoptionInput] = Field(default_factory=list, max_length=50)
+
+    @model_validator(mode="after")
+    def descriptions_only(self) -> Self:
+        if len({row.adoption_id for row in self.existing}) != len(self.existing):
+            raise ValueError("描述采用不能重复")
+        if any(row.is_variant for row in self.added):
+            raise ValueError("描述集合不能包含销售规格")
+        if len(self.existing) + len(self.added) > 50:
+            raise ValueError("商品属性最多五十项")
+        return self
+
+
+class CandidateAppend(CatalogInput):
+    revision: int = Field(gt=0)
+    source_attribute_revision: int | None = Field(default=None, gt=0)
+    candidates: list[CandidateInput] = Field(min_length=1, max_length=100)
+
+    @model_validator(mode="after")
+    def unique_keys(self) -> Self:
+        if len({row.key for row in self.candidates}) != len(self.candidates):
+            raise ValueError("候选引用键不能重复")
+        return self

@@ -301,6 +301,61 @@
             "description": "每页数量"
           },
           {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "value_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "text",
+                    "number",
+                    "select",
+                    "multi_select"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Value Type"
+            }
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Is Active"
+            }
+          },
+          {
             "name": "pinjie_admin_access",
             "in": "cookie",
             "required": false,
@@ -381,6 +436,282 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseModel_AttributeRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/spec-attributes/status/batch": {
+      "patch": {
+        "tags": [
+          "商品属性与品牌"
+        ],
+        "summary": "批量启停公共属性，停用影响引用商品可售性",
+        "operationId": "attributes_status_api_v1_admin_spec_attributes_status_batch_patch",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActiveStatusBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_BatchCompleted_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/spec-attributes/{attribute_id}/values/status/batch": {
+      "patch": {
+        "tags": [
+          "商品属性与品牌"
+        ],
+        "summary": "批量启停标准候选值，停用影响引用 SKU 可售性",
+        "operationId": "values_status_api_v1_admin_spec_attributes__attribute_id__values_status_batch_patch",
+        "parameters": [
+          {
+            "name": "attribute_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Attribute Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActiveStatusBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_BatchCompleted_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/products/{product_id}/description-attributes": {
+      "put": {
+        "tags": [
+          "商品属性与品牌"
+        ],
+        "summary": "原子维护描述属性集合，保留历史且不改变 SKU 或库存",
+        "operationId": "descriptions_set_api_v1_admin_products__product_id__description_attributes_put",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DescriptionSet"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ProductRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/products/{product_id}/spec-attributes/{adoption_id}/values": {
+      "post": {
+        "tags": [
+          "商品属性与品牌"
+        ],
+        "summary": "向当前商品销售维度追加候选值，不重建 SKU",
+        "operationId": "candidates_append_api_v1_admin_products__product_id__spec_attributes__adoption_id__values_post",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "adoption_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Adoption Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateAppend"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ProductRead_"
                 }
               }
             }
@@ -17253,6 +17584,46 @@
         ],
         "title": "BrandUpdate"
       },
+      "CandidateAppend": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          },
+          "source_attribute_revision": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Attribute Revision",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateInput"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Candidates",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "candidates"
+        ],
+        "title": "CandidateAppend"
+      },
       "CandidateInput": {
         "properties": {
           "key": {
@@ -18993,6 +19364,47 @@
         ],
         "title": "DatabaseHealthRead"
       },
+      "DescriptionSet": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          },
+          "category_revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Category Revision",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "existing": {
+            "items": {
+              "$ref": "#/components/schemas/ExistingDescription"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Existing",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "added": {
+            "items": {
+              "$ref": "#/components/schemas/AdoptionInput"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Added",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "category_revision"
+        ],
+        "title": "DescriptionSet"
+      },
       "DescriptionUpdate": {
         "properties": {
           "revision": {
@@ -19012,6 +19424,9 @@
                   "format": "uuid"
                 },
                 "type": "array"
+              },
+              {
+                "type": "null"
               }
             ],
             "title": "Value",
@@ -19140,6 +19555,42 @@
           "updated_at"
         ],
         "title": "DurableTaskRead"
+      },
+      "ExistingDescription": {
+        "properties": {
+          "adoption_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Adoption Id",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "adoption_id",
+          "value"
+        ],
+        "title": "ExistingDescription"
       },
       "FreightQuote": {
         "properties": {
