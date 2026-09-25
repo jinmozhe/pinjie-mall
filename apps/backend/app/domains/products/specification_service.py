@@ -2,14 +2,178 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from app.core.identifiers import new_uuid7
-from app.db.models.catalog import ProductAttributeValue, ProductSkuSpecValue, ProductSpecAttribute, ProductSpecValue
+from app.db.models.catalog import (
+    CategorySpecAttribute,
+    ProductAttributeValue,
+    ProductSkuSpecValue,
+    ProductSpecAttribute,
+    ProductSpecValue,
+)
 from app.db.models.product import Product, ProductSku
 
-from .catalog_schemas import DescriptionUpdate, SkuFields, SpecificationSet
+from .catalog_schemas import CandidateAppend, DescriptionSet, DescriptionUpdate, SkuFields, SpecificationSet
 from .catalog_service import CatalogService, catalog_conflict, normalized_text, specification_key
 
 
 class SpecificationService(CatalogService):
+    async def require_current_template_match(
+        self,
+        product: Product,
+        adoption: ProductSpecAttribute,
+        templates: dict[UUID, CategorySpecAttribute] | None = None,
+    ) -> None:
+        if adoption.attribute_id is None or adoption.source_category_id is None:
+            return
+        if adoption.source_category_id != product.category_id:
+            raise catalog_conflict("当前商品采用的来源分类已变更，请重新采用或使用规格转换")
+        current_templates = (
+            {row.attribute_id: row for row in await self.repository.template(product.category_id)}
+            if templates is None
+            else templates
+        )
+        template = current_templates.get(adoption.attribute_id)
+        if template is None:
+            raise catalog_conflict("当前商品采用已不在分类模板中，请重新采用或使用规格转换")
+        if (
+            adoption.is_variant != template.is_variant
+            or adoption.is_required != template.is_required
+            or adoption.allow_custom_value != template.allow_custom_value
+        ):
+            raise catalog_conflict("当前商品采用已与分类模板用途、必填或局部候选规则不一致，请重新采用或使用规格转换")
+
+    async def append_candidates(self, product: Product, adoption_id: UUID, data: CandidateAppend) -> None:
+        adoption = next(
+            (
+                row
+                for row in await self.repository.adoptions(product.id)
+                if row.id == adoption_id and row.is_current and row.is_variant
+            ),
+            None,
+        )
+        if adoption is None:
+            raise catalog_conflict("销售采用不属于当前商品")
+        await self.require_current_template_match(product, adoption)
+        if adoption.attribute_id is not None:
+            attribute = await self.require_attribute(adoption.attribute_id)
+            if not attribute.is_active or attribute.revision != data.source_attribute_revision:
+                raise catalog_conflict("公共属性已变更或停用，请重新读取")
+        elif data.source_attribute_revision is not None:
+            raise catalog_conflict("商品独有规格没有公共来源版本")
+        existing = [
+            row
+            for row in await self.repository.candidates(product.id)
+            if row.adoption_id == adoption.id and row.is_current
+        ]
+        if len(existing) + len(data.candidates) > 100:
+            raise catalog_conflict("每个销售维度最多一百个候选值")
+        texts = {row.normalized_value for row in existing}
+        standards = {row.value_id for row in existing if row.value_id is not None}
+        for item in data.candidates:
+            if item.value_id is not None:
+                standard = await self.repository.standard_value(item.value_id)
+                if standard is None or standard.attribute_id != adoption.attribute_id or not standard.is_active:
+                    raise catalog_conflict("标准值归属错误或已停用")
+                if standard.id in standards:
+                    raise catalog_conflict("标准候选值重复")
+                standards.add(standard.id)
+                display = standard.name
+            else:
+                if not adoption.allow_custom_value or item.display_value is None:
+                    raise catalog_conflict("当前采用不允许局部候选值")
+                display = item.display_value
+            normalized = normalized_text(display)
+            if not normalized or normalized in texts:
+                raise catalog_conflict("候选文本重复或为空")
+            texts.add(normalized)
+            await self.repository.save_entity(
+                ProductSpecValue(
+                    id=new_uuid7(),
+                    adoption_id=adoption.id,
+                    product_id=product.id,
+                    attribute_id=adoption.attribute_id,
+                    value_id=item.value_id,
+                    display_value=display,
+                    normalized_value=normalized,
+                    is_current=True,
+                )
+            )
+
+    async def set_descriptions(self, product: Product, data: DescriptionSet) -> None:
+        category = next((row for row in await self.repository.categories() if row.id == product.category_id), None)
+        if category is None or category.revision != data.category_revision:
+            raise catalog_conflict("分类模板版本已变更，请重新读取")
+        previous = await self.repository.adoptions(product.id)
+        current = [row for row in previous if row.is_current]
+        descriptions = {row.id: row for row in current if not row.is_variant}
+        variants = [row for row in current if row.is_variant]
+        keep_ids = {row.adoption_id for row in data.existing}
+        if not keep_ids <= descriptions.keys():
+            raise catalog_conflict("描述采用不属于当前商品")
+        if len(variants) + len(data.existing) + len(data.added) > 50:
+            raise catalog_conflict("商品属性最多五十项")
+        templates = {row.attribute_id: row for row in await self.repository.template(product.category_id)}
+        retained = variants + [descriptions[key] for key in keep_ids]
+        for adoption in retained:
+            await self.require_current_template_match(product, adoption, templates)
+        supplied = {row.attribute_id for row in retained} | {row.attribute_id for row in data.added}
+        if any(row.is_required and row.attribute_id not in supplied for row in templates.values()):
+            raise catalog_conflict("不能移除分类模板必填属性")
+        if any(row.is_required and row.id not in keep_ids for row in descriptions.values()):
+            raise catalog_conflict("不能移除已冻结的必填描述属性")
+        version = max((row.adoption_version for row in previous), default=0) + 1
+        additions: list[tuple[ProductSpecAttribute, str | list[str] | None, dict[str, str]]] = []
+        names = {row.name_snapshot for row in retained}
+        public_ids = {row.attribute_id for row in retained if row.attribute_id is not None}
+        for definition in data.added:
+            adoption = await self.make_adoption(
+                product.id,
+                product.category_id,
+                category.revision,
+                version,
+                definition,
+                templates.get(definition.attribute_id) if definition.attribute_id is not None else None,
+            )
+            if adoption.name_snapshot in names or (
+                adoption.attribute_id is not None and adoption.attribute_id in public_ids
+            ):
+                raise catalog_conflict("商品当前属性名称或公共属性不能重复")
+            names.add(adoption.name_snapshot)
+            if adoption.attribute_id is not None:
+                public_ids.add(adoption.attribute_id)
+            value, display = await self.description_value(adoption, definition.value)
+            additions.append((adoption, value, display))
+        for row in descriptions.values():
+            if row.id not in keep_ids:
+                row.is_current = False
+                await self.repository.save_entity(row)
+        saved = {row.adoption_id: row for row in await self.repository.descriptions(product.id)}
+        for item in data.existing:
+            old = saved.get(item.adoption_id)
+            serialized = [str(value) for value in item.value] if isinstance(item.value, list) else item.value
+            if serialized != (old.value if old is not None else None):
+                await self.replace_description(
+                    product,
+                    item.adoption_id,
+                    DescriptionUpdate(revision=data.revision, value=item.value),
+                    templates,
+                )
+        # Existing edits may have advanced the adoption version. New definitions share a fresh version.
+        version = max((row.adoption_version for row in await self.repository.adoptions(product.id)), default=0) + 1
+        for adoption, value, display in additions:
+            adoption.adoption_version = version
+            await self.repository.save_entity(adoption)
+            if value is not None:
+                await self.repository.save_entity(
+                    ProductAttributeValue(
+                        adoption_id=adoption.id,
+                        product_id=product.id,
+                        attribute_id=adoption.attribute_id,
+                        value=value,
+                        display_snapshot=display,
+                        schema_version=1,
+                    )
+                )
+
     async def build_specifications(self, product: Product, data: SpecificationSet) -> None:
         category = next((row for row in await self.repository.categories() if row.id == product.category_id), None)
         if category is None or category.revision != data.category_revision:
@@ -180,13 +344,20 @@ class SpecificationService(CatalogService):
                     return False
         return True
 
-    async def replace_description(self, product: Product, adoption_id: UUID, data: DescriptionUpdate) -> None:
+    async def replace_description(
+        self,
+        product: Product,
+        adoption_id: UUID,
+        data: DescriptionUpdate,
+        templates: dict[UUID, CategorySpecAttribute] | None = None,
+    ) -> None:
         all_adoptions = await self.repository.adoptions(product.id)
         previous = next(
             (row for row in all_adoptions if row.id == adoption_id and row.is_current and not row.is_variant), None
         )
         if previous is None:
             raise catalog_conflict("描述属性不属于当前商品采用")
+        await self.require_current_template_match(product, previous, templates)
         # 更新生成新采用，原定义和原值保留，不覆盖历史快照。
         copied = {
             column.name: getattr(previous, column.name)
@@ -203,13 +374,14 @@ class SpecificationService(CatalogService):
         previous.is_current = False
         await self.repository.save_entity(previous)
         await self.repository.save_entity(new)
-        await self.repository.save_entity(
-            ProductAttributeValue(
-                adoption_id=new.id,
-                product_id=product.id,
-                attribute_id=new.attribute_id,
-                value=value,
-                display_snapshot=display,
-                schema_version=1,
+        if value is not None:
+            await self.repository.save_entity(
+                ProductAttributeValue(
+                    adoption_id=new.id,
+                    product_id=product.id,
+                    attribute_id=new.attribute_id,
+                    value=value,
+                    display_snapshot=display,
+                    schema_version=1,
+                )
             )
-        )

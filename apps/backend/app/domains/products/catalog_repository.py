@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.base import Base
@@ -54,11 +54,30 @@ class CatalogRepository:
     async def attribute_by_code(self, code: str) -> SpecAttribute | None:
         return (await self.session.scalars(select(SpecAttribute).where(SpecAttribute.code == code))).one_or_none()
 
-    async def attribute_page(self, page: int, page_size: int) -> tuple[list[SpecAttribute], int]:
-        total = int(await self.session.scalar(select(func.count()).select_from(SpecAttribute)) or 0)
+    async def attribute_page(
+        self,
+        page: int,
+        page_size: int,
+        *,
+        search: str | None = None,
+        value_type: str | None = None,
+        is_active: bool | None = None,
+    ) -> tuple[list[SpecAttribute], int]:
+        query = select(SpecAttribute)
+        if search:
+            query = query.where(
+                or_(
+                    SpecAttribute.name.icontains(search, autoescape=True),
+                    SpecAttribute.code.icontains(search, autoescape=True),
+                )
+            )
+        if value_type is not None:
+            query = query.where(SpecAttribute.value_type == value_type)
+        if is_active is not None:
+            query = query.where(SpecAttribute.is_active == is_active)
+        total = int(await self.session.scalar(select(func.count()).select_from(query.subquery())) or 0)
         rows = await self.session.scalars(
-            select(SpecAttribute)
-            .order_by(SpecAttribute.sort_order.asc().nulls_last(), SpecAttribute.id.desc())
+            query.order_by(SpecAttribute.sort_order.asc().nulls_last(), SpecAttribute.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )

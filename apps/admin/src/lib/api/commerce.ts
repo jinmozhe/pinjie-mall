@@ -14,6 +14,7 @@ import type {
   AttributeInput, AttributeRead, AttributeUpdate, PageResultAttributeRead,
   StandardValueInput, StandardValueRead, StandardValueUpdate,
   TemplateRead, TemplateUpdate, SpecificationConversion,
+  DescriptionSet, CandidateAppend,
   MemberLevelCreate, MemberLevelRead, MemberLevelUpdate, PageResultMemberLevelRead,
   MemberLevelConditionCreate, MemberLevelConditionRead, MemberLevelConditionUpdate, PageResultMemberLevelConditionRead,
   MemberPriceRuleCreate, MemberPriceRuleRead, MemberPriceRuleUpdate, PageResultMemberPriceRuleRead,
@@ -37,7 +38,7 @@ export type ProductFilters = {
 export type CommerceFilters = NonNullable<OrdersPageApiV1AdminOrdersGetData["query"]>;
 export type CommerceResource = "orders" | "refunds" | "withdrawals" | "payments" | "reconciliation-records" | "members" | "commissions" | "wallets" | "refund-executions" | "durable-tasks";
 
-export function queryString(values: Record<string, string | number | null | undefined>): string {
+export function queryString(values: Record<string, string | number | boolean | null | undefined>): string {
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(values)) {
     if (value !== undefined && value !== null && value !== "") query.set(key, String(value));
@@ -94,7 +95,9 @@ export const commerceApi = {
   brand: (id: string) => apiRequest<BrandRead>(`/api/v1/admin/brands/${id}`),
   createBrand: (input: BrandInput) => apiRequest<BrandRead>("/api/v1/admin/brands", { method: "POST", body: jsonBody(input) }),
   updateBrand: (id: string, input: BrandUpdate) => apiRequest<BrandRead>(`/api/v1/admin/brands/${id}`, { method: "PUT", body: jsonBody(input) }),
-  attributes: (page: number, pageSize: number = 20) => apiRequest<PageResultAttributeRead>(`/api/v1/admin/spec-attributes?page=${page}&page_size=${pageSize}`),
+  attributes: (page: number, pageSize: number = 20, filters: { search?: string; value_type?: AttributeRead["value_type"]; is_active?: boolean } = {}) => apiRequest<PageResultAttributeRead>(`/api/v1/admin/spec-attributes?${queryString({ page, page_size: pageSize, ...filters })}`),
+  attributesStatus: (input: ActiveStatusBatch) => apiRequest<BatchCompleted>("/api/v1/admin/spec-attributes/status/batch", { method: "PATCH", body: jsonBody(input) }),
+  attributeValuesStatus: (id: string, input: ActiveStatusBatch) => apiRequest<BatchCompleted>(`/api/v1/admin/spec-attributes/${id}/values/status/batch`, { method: "PATCH", body: jsonBody(input) }),
   attribute: (id: string) => apiRequest<AttributeRead>(`/api/v1/admin/spec-attributes/${id}`),
   createAttribute: (input: AttributeInput) => apiRequest<AttributeRead>("/api/v1/admin/spec-attributes", { method: "POST", body: jsonBody(input) }),
   updateAttribute: (id: string, input: AttributeUpdate) => apiRequest<AttributeRead>(`/api/v1/admin/spec-attributes/${id}`, { method: "PUT", body: jsonBody(input) }),
@@ -104,6 +107,8 @@ export const commerceApi = {
   categoryTemplate: (categoryId: string) => apiRequest<TemplateRead>(`/api/v1/admin/product-categories/${categoryId}/attributes`),
   updateCategoryTemplate: (categoryId: string, input: TemplateUpdate) => apiRequest<TemplateRead>(`/api/v1/admin/product-categories/${categoryId}/attributes`, { method: "PUT", body: jsonBody(input) }),
   convertSpecifications: (productId: string, input: SpecificationConversion) => apiRequest<ProductRead>(`/api/v1/admin/products/${productId}/specification-conversions`, { method: "POST", body: jsonBody(input) }),
+  saveDescriptions: (productId: string, input: DescriptionSet) => apiRequest<ProductRead>(`/api/v1/admin/products/${productId}/description-attributes`, { method: "PUT", body: jsonBody(input) }),
+  appendCandidates: (productId: string, adoptionId: string, input: CandidateAppend) => apiRequest<ProductRead>(`/api/v1/admin/products/${productId}/spec-attributes/${adoptionId}/values`, { method: "POST", body: jsonBody(input) }),
   memberLevels: (page: number, pageSize: number = 20) => apiRequest<PageResultMemberLevelRead>(`/api/v1/admin/member-levels?page=${page}&page_size=${pageSize}`),
   memberLevelOptions: async () => {
     const first = await commerceApi.memberLevels(1, 100);

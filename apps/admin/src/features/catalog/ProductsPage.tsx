@@ -5,6 +5,7 @@ import {
   MinusCircleOutlined,
   PlusOutlined,
   SearchOutlined,
+  TagsOutlined,
   UnorderedListOutlined,
 } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -32,6 +33,7 @@ import { errorMessage } from "@/lib/api/http";
 import { useLockedMutation } from "@/lib/useLockedMutation";
 import { InventoryPanel } from "./InventoryPanel";
 import { ProductEditor } from "./ProductEditor";
+import { ProductSpecificationsPanel } from "./ProductSpecificationsPanel";
 
 export function ProductsPage() {
   const { message } = App.useApp();
@@ -45,6 +47,7 @@ export function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<ProductRead | null | undefined>(undefined);
   const [inspectProduct, setInspectProduct] = useState<ProductRead | null>(null);
   const [inventorySku, setInventorySku] = useState<SkuRead | null>(null);
+  const [specificationProductId, setSpecificationProductId] = useState<string>();
 
   const allowed = canAccess(admin, "products:read");
   const canCreate = canAccess(admin, "products:create");
@@ -271,6 +274,14 @@ export function ProductsPage() {
                         编辑
                       </Button>
                     )}
+                    {canUpdate && (
+                      <Button
+                        icon={<TagsOutlined />}
+                        onClick={() => setSpecificationProductId(row.id)}
+                      >
+                        规格维护
+                      </Button>
+                    )}
                     {canUpdate && row.status === "off_sale" && (
                       <Button
                         type="link"
@@ -359,6 +370,15 @@ export function ProductsPage() {
         <ProductEditor
           target={editingProduct}
           close={() => setEditingProduct(undefined)}
+          done={refresh}
+        />
+      )}
+
+      {specificationProductId && (
+        <ProductSpecificationsPanel
+          productId={specificationProductId}
+          canUpdate={canUpdate}
+          close={() => setSpecificationProductId(undefined)}
           done={refresh}
         />
       )}

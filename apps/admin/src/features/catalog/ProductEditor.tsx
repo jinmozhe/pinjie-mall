@@ -1,12 +1,13 @@
 import type { CategoryRead, ProductCreate, ProductRead, ProductUpdate } from "@pinjie/api-client";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Divider, Form, Input, InputNumber, Radio, Select, Space, App } from "antd";
+import { Form, Input, Radio, Select, Space, App } from "antd";
 import { useRef, useState } from "react";
 
 import { EditorModal } from "@/components/EditorModal";
 import { QueryState } from "@/components/PageFrame";
 import { commerceApi } from "@/lib/api/commerce";
 import { ProductImages } from "./ProductImages";
+import { ProductSpecificationForm, type ProductSpecificationFormHandle } from "./ProductSpecificationForm";
 
 export function ProductEditor({
   target,
@@ -19,8 +20,10 @@ export function ProductEditor({
 }) {
   const { message } = App.useApp();
   const [form] = Form.useForm();
+  const selectedCategoryId = Form.useWatch("category_id", form);
   const [images, setImages] = useState<string[]>(target?.image_asset_ids ?? []);
   const uploadingRef = useRef(false);
+  const specificationFormRef = useRef<ProductSpecificationFormHandle>(null);
   const [uploading, setUploading] = useState(false);
 
   const categoriesQuery = useQuery({
@@ -50,26 +53,18 @@ export function ProductEditor({
       await commerceApi.updateProduct(target.id, updatePayload);
       message.success("商品信息已更新");
     } else {
-      const selectedCategory = categoriesQuery.data?.find((c) => c.id === values.category_id);
-      if (!selectedCategory || categoriesQuery.isError) throw new Error("请成功加载并选择商品分类后保存");
+      if (categoriesQuery.isError) throw new Error("商品分类加载失败，请恢复后再保存");
+      const specification = await specificationFormRef.current?.validate();
+      if (!specification) throw new Error("请选择商品分类后加载规格模板");
       const payload: ProductCreate = {
         name: values.name.trim(),
         category_id: values.category_id,
-        category_revision: selectedCategory.revision,
+        category_revision: specification.categoryRevision,
         product_type: values.product_type,
         description: values.description?.trim() || "",
         image_asset_ids: images,
-        attributes: [],
-        skus: [
-          {
-            code: values.sku_code.trim(),
-            price: String(values.sku_price),
-            market_price: values.sku_origin_price != null ? String(values.sku_origin_price) : null,
-            initial_quantity: Number(values.initial_quantity || 0),
-            is_active: true,
-            selections: {},
-          },
-        ],
+        attributes: specification.attributes,
+        skus: specification.skus,
       };
       await commerceApi.createProduct(payload);
       message.success("商品已成功创建");
@@ -90,6 +85,7 @@ export function ProductEditor({
       <Form
         form={form}
         layout="vertical"
+        requiredMark="optional"
         initialValues={
           target
             ? {
@@ -99,8 +95,6 @@ export function ProductEditor({
               }
             : {
                 product_type: "physical",
-                initial_quantity: 100,
-                sku_price: 99.0,
               }
         }
       >
@@ -152,52 +146,7 @@ export function ProductEditor({
           />
         </Form.Item>
 
-        {!target && (
-          <>
-            <Divider>初始货品规格 (SKU)</Divider>
-            <Alert
-              type="info"
-              title="新建商品时创建首个标准货品，后续可在商品列表中新增变体或进行多规格转换。"
-              className="mb-16"
-            />
-            <Space size="medium" style={{ width: "100%" }}>
-              <Form.Item
-                name="sku_code"
-                label="SKU 编码"
-                rules={[{ required: true, whitespace: true, max: 64 }]}
-                style={{ width: 220 }}
-              >
-                <Input maxLength={64} placeholder="例如：TEA-GRN-250G" />
-              </Form.Item>
-
-              <Form.Item
-                name="sku_price"
-                label="售卖价格 (元)"
-                rules={[{ required: true }]}
-                style={{ width: 140 }}
-              >
-                <InputNumber min={0} precision={2} stringMode style={{ width: "100%" }} />
-              </Form.Item>
-
-              <Form.Item
-                name="sku_origin_price"
-                label="划线原价 (元)"
-                style={{ width: 140 }}
-              >
-                <InputNumber min={0} precision={2} stringMode style={{ width: "100%" }} />
-              </Form.Item>
-
-              <Form.Item
-                name="initial_quantity"
-                label="初始库存量"
-                rules={[{ required: true }]}
-                style={{ width: 120 }}
-              >
-                <InputNumber min={0} max={1000000} precision={0} style={{ width: "100%" }} />
-              </Form.Item>
-            </Space>
-          </>
-        )}
+        {!target && <ProductSpecificationForm ref={specificationFormRef} categoryId={selectedCategoryId} mode="create" />}
       </Form>
     </EditorModal>
   );

@@ -33,6 +33,8 @@ from app.domains.products.catalog_schemas import (
     BrandInput,
     BrandRead,
     BrandUpdate,
+    CandidateAppend,
+    DescriptionSet,
     DescriptionUpdate,
     SpecificationConversion,
     StandardValueInput,
@@ -309,8 +311,42 @@ class CommerceService:
 
         return await self._write(PermissionCode.BRANDS_UPDATE, brand_id, operation)
 
-    async def attributes(self, page: int, page_size: int) -> PageResult[AttributeRead]:
-        return await self.products.attributes(page, page_size)
+    async def attributes(
+        self,
+        page: int,
+        page_size: int,
+        *,
+        search: str | None = None,
+        value_type: str | None = None,
+        is_active: bool | None = None,
+    ) -> PageResult[AttributeRead]:
+        return await self.products.attributes(
+            page, page_size, search=search, value_type=value_type, is_active=is_active
+        )
+
+    async def set_attributes_active(self, data: ActiveStatusBatch) -> BatchCompleted:
+        return await self._write(
+            PermissionCode.SPEC_ATTRIBUTES_UPDATE, None, lambda: self.products.set_attributes_active(data)
+        )
+
+    async def set_values_active(self, attribute_id: UUID, data: ActiveStatusBatch) -> BatchCompleted:
+        return await self._write(
+            PermissionCode.SPEC_ATTRIBUTES_UPDATE,
+            attribute_id,
+            lambda: self.products.set_values_active(attribute_id, data),
+        )
+
+    async def save_descriptions(self, product_id: UUID, data: DescriptionSet) -> ProductRead:
+        return await self._write(
+            PermissionCode.PRODUCTS_UPDATE, product_id, lambda: self.products.save_descriptions(product_id, data)
+        )
+
+    async def add_candidates(self, product_id: UUID, adoption_id: UUID, data: CandidateAppend) -> ProductRead:
+        return await self._write(
+            PermissionCode.PRODUCTS_UPDATE,
+            product_id,
+            lambda: self.products.add_candidates(product_id, adoption_id, data),
+        )
 
     async def read_attribute(self, attribute_id: UUID) -> AttributeRead:
         return await self.products.read_attribute(attribute_id)

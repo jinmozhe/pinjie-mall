@@ -10,7 +10,7 @@ from app.core.identifiers import new_uuid7
 from app.core.pagination import PageResult
 from app.db.models.product import Category, Product
 
-from .catalog_schemas import DescriptionUpdate, SpecificationConversion
+from .catalog_schemas import CandidateAppend, DescriptionSet, DescriptionUpdate, SpecificationConversion
 from .catalog_service import catalog_conflict
 from .repository import ProductRepository
 from .schemas import (
@@ -412,6 +412,26 @@ class ProductService(SpecificationService):
         if product.status == "on_sale":
             await self.validate_publish(product_id)
         return await self.read(product_id), retired
+
+    async def save_descriptions(self, product_id: UUID, data: DescriptionSet) -> ProductRead:
+        await self.repository.lock_catalog()
+        product = await self._get(product_id, lock=True)
+        self._check_revision(product, data.revision)
+        await self.set_descriptions(product, data)
+        product.revision += 1
+        await self.repository.save(product)
+        if product.status == "on_sale":
+            await self.validate_publish(product_id)
+        return await self.read(product_id)
+
+    async def add_candidates(self, product_id: UUID, adoption_id: UUID, data: CandidateAppend) -> ProductRead:
+        await self.repository.lock_catalog()
+        product = await self._get(product_id, lock=True)
+        self._check_revision(product, data.revision)
+        await self.append_candidates(product, adoption_id, data)
+        product.revision += 1
+        await self.repository.save(product)
+        return await self.read(product_id)
 
     async def update_description(self, product_id: UUID, adoption_id: UUID, data: DescriptionUpdate) -> ProductRead:
         await self.repository.lock_catalog()
