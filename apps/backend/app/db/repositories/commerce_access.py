@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models.asset import Asset
 from app.db.models.catalog import Brand
 from app.db.models.identity import Admin, AdminSession, User
-from app.db.models.product import ProductImage
+from app.db.models.product import ProductDetailImage, ProductImage
 from app.db.repositories.identity import AdminRepository
 
 
@@ -54,6 +54,10 @@ class CommerceAccessRepository:
     async def asset_is_product_image(self, asset_id: UUID) -> bool:
         return (
             await self.session.scalar(select(ProductImage.product_id).where(ProductImage.asset_id == asset_id).limit(1))
+            is not None
+            or await self.session.scalar(
+                select(ProductDetailImage.product_id).where(ProductDetailImage.asset_id == asset_id).limit(1)
+            )
             is not None
         )
 

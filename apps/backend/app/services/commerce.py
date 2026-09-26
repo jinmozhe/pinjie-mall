@@ -10,6 +10,7 @@ from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
 from app.core.pagination import PageResult
+from app.db.models.asset import Asset
 from app.db.repositories.commerce_access import CommerceAccessRepository
 from app.db.transaction import transaction_scope
 from app.domains.addresses import AddressInput, AddressRead, AddressService, AddressUpdate
@@ -43,7 +44,15 @@ from app.domains.products.catalog_schemas import (
     TemplateRead,
     TemplateUpdate,
 )
-from app.domains.products.schemas import ProductStatusBatch, PublicProductRead, SkuStatusBatch
+from app.domains.products.image_policy import validate_detail_images
+from app.domains.products.schemas import (
+    ProductDetailRead,
+    ProductImageRead,
+    ProductStatusBatch,
+    PublicProductDetailRead,
+    PublicProductRead,
+    SkuStatusBatch,
+)
 from app.domains.shipping import ShippingService, ShippingTemplateInput, ShippingTemplateRead
 from app.domains.shipping.schemas import FreightQuote, FreightQuoteInput, ShippingTemplateUpdate
 from app.services.security_events import AuditCoordinator
@@ -161,11 +170,20 @@ class CommerceService:
         async def operation() -> BatchCompleted:
             await self.products.lock_changes()
             products = [
-                await self.products.read(target.id) for target in sorted(data.targets, key=lambda item: item.id)
+                await self.products.detail_read(target.id) for target in sorted(data.targets, key=lambda item: item.id)
             ]
             if data.status == "on_sale":
+                assets = await self.access.get_images_for_update(
+                    sorted(
+                        {
+                            asset_id
+                            for product in products
+                            for asset_id in [*product.image_asset_ids, *product.detail_image_asset_ids]
+                        }
+                    )
+                )
                 for product in products:
-                    await self._product_dependencies(product.image_asset_ids)
+                    self._validate_product_dependencies(product.image_asset_ids, product.detail_image_asset_ids, assets)
             for target in sorted(data.targets, key=lambda item: item.id):
                 await self.products.set_status(
                     target.id, ProductStatusUpdate(revision=target.revision, status=data.status)
@@ -174,31 +192,59 @@ class CommerceService:
 
         return await self._write(PermissionCode.PRODUCTS_UPDATE, None, operation)
 
-    async def product_read(self, product_id: UUID) -> ProductRead:
-        return await self.products.read(product_id)
+    async def product_read(self, product_id: UUID) -> ProductDetailRead:
+        return await self.products.detail_read(product_id)
 
     async def public_product_page(self, page: int, page_size: int) -> PageResult[PublicProductRead]:
         return await self.products.public_page(page, page_size)
 
-    async def public_product_read(self, product_id: UUID) -> PublicProductRead:
-        return await self.products.public_read(product_id)
+    async def public_product_read(self, product_id: UUID) -> PublicProductDetailRead:
+        return await self.products.public_detail_read(product_id)
 
-    async def _product_dependencies(self, image_ids: list[UUID]) -> None:
+    async def _product_dependencies(self, image_ids: list[UUID], detail_ids: list[UUID] | None = None) -> None:
         await self.products.lock_changes()
-        assets = await self.access.get_images_for_update(image_ids)
-        if len(assets) != len(image_ids) or any(
+        combined_ids = sorted(set(image_ids) | set(detail_ids or []))
+        assets = await self.access.get_images_for_update(combined_ids)
+        self._validate_product_dependencies(image_ids, detail_ids or [], assets)
+
+    def _validate_product_dependencies(
+        self, image_ids: list[UUID], detail_ids: list[UUID], assets: list[Asset]
+    ) -> None:
+        combined_ids = sorted(set(image_ids) | set(detail_ids))
+        assets_by_id = {asset.id: asset for asset in assets}
+        selected_assets = [assets_by_id[asset_id] for asset_id in combined_ids if asset_id in assets_by_id]
+        if len(selected_assets) != len(combined_ids) or any(
             asset.uploader_type not in {"admin", "system"}
             or asset.scene != "product"
             or asset.mime_type not in {"image/jpeg", "image/png", "image/webp"}
-            for asset in assets
+            for asset in selected_assets
         ):
             raise AppException(
                 status_code=409, code=ErrorCode.PRODUCT_IMAGE_REJECTED, message="商品图片必须为现存管理端图片资产"
             )
 
+        if detail_ids:
+            try:
+                validate_detail_images(
+                    [
+                        ProductImageRead(
+                            asset_id=asset.id,
+                            url=asset.url,
+                            original_name=asset.original_name,
+                            file_size=asset.file_size,
+                            width=asset.width,
+                            height=asset.height,
+                            frame_count=asset.frame_count,
+                        )
+                        for asset in (assets_by_id[asset_id] for asset_id in detail_ids)
+                    ]
+                )
+            except ValueError as exc:
+                raise AppException(status_code=409, code=ErrorCode.PRODUCT_IMAGE_REJECTED, message=str(exc)) from exc
+
     async def create_product(self, data: ProductCreate) -> ProductRead:
         async def operation() -> ProductRead:
-            await self._product_dependencies(data.image_asset_ids)
+            await self._product_dependencies(data.image_asset_ids, data.detail_image_asset_ids)
             result = await self.products.create(data)
             quantities = {item.code: item.initial_quantity for item in data.skus}
             for sku in sorted(result.skus, key=lambda item: item.id):
@@ -220,7 +266,7 @@ class CommerceService:
 
     async def update_product(self, product_id: UUID, data: ProductUpdate) -> ProductRead:
         async def operation() -> ProductRead:
-            await self._product_dependencies(data.image_asset_ids)
+            await self._product_dependencies(data.image_asset_ids, data.detail_image_asset_ids)
             return await self.products.update(product_id, data)
 
         return await self._write(PermissionCode.PRODUCTS_UPDATE, product_id, operation)
@@ -242,8 +288,8 @@ class CommerceService:
         async def operation() -> ProductRead:
             await self.products.lock_changes()
             if data.status == "on_sale":
-                product = await self.products.read(product_id)
-                await self._product_dependencies(product.image_asset_ids)
+                product = await self.products.detail_read(product_id)
+                await self._product_dependencies(product.image_asset_ids, product.detail_image_asset_ids)
             return await self.products.set_status(product_id, data)
 
         return await self._write(PermissionCode.PRODUCTS_UPDATE, product_id, operation)

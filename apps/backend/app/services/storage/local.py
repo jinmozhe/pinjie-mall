@@ -10,8 +10,11 @@ from pathlib import Path
 from typing import BinaryIO
 
 from .base import StagedDeletion, StagedFile
+from .images import ImageMetadata, inspect_image_bytes
 
 _CHUNK_SIZE = 64 * 1024
+_IMAGE_DECODE_CONCURRENCY = 1
+_IMAGE_DECODE_QUEUE_TIMEOUT_SECONDS = 10
 
 
 def _detected_mime(header: bytes, path: Path, extension: str) -> str | None:
@@ -48,12 +51,37 @@ class LocalStorageProvider:
     def __init__(self, root: Path, *, io_concurrency: int) -> None:
         self._root = root.resolve()
         self._semaphore = asyncio.Semaphore(io_concurrency)
+        self._image_decode_semaphore = asyncio.Semaphore(_IMAGE_DECODE_CONCURRENCY)
 
-    async def stage(self, source: BinaryIO, *, extension: str, max_bytes: int) -> StagedFile:
+    async def stage(
+        self, source: BinaryIO, *, extension: str, max_bytes: int, inspect_image: bool = False
+    ) -> StagedFile:
+        if not inspect_image:
+            return await self._stage(source, extension=extension, max_bytes=max_bytes, inspect_image=False)
+        try:
+            await asyncio.wait_for(self._image_decode_semaphore.acquire(), timeout=_IMAGE_DECODE_QUEUE_TIMEOUT_SECONDS)
+        except TimeoutError as exc:
+            raise ValueError("image_decode_busy") from exc
+        try:
+            return await self._stage(source, extension=extension, max_bytes=max_bytes, inspect_image=True)
+        finally:
+            self._image_decode_semaphore.release()
+
+    async def _stage(self, source: BinaryIO, *, extension: str, max_bytes: int, inspect_image: bool) -> StagedFile:
         async with self._semaphore:
-            return await asyncio.to_thread(self._stage_sync, source, extension, max_bytes)
+            task = asyncio.create_task(asyncio.to_thread(self._stage_sync, source, extension, max_bytes, inspect_image))
+            try:
+                return await asyncio.shield(task)
+            except asyncio.CancelledError:
+                # Keep the IO slot until the worker finishes; reclaim its unpublished file.
+                try:
+                    staged = await task
+                except Exception:
+                    raise
+                await asyncio.to_thread(Path(staged.token).unlink, missing_ok=True)
+                raise
 
-    def _stage_sync(self, source: BinaryIO, extension: str, max_bytes: int) -> StagedFile:
+    def _stage_sync(self, source: BinaryIO, extension: str, max_bytes: int, inspect_image: bool = False) -> StagedFile:
         staging_root = self._root.parent / f".{self._root.name}-staging"
         staging_root.mkdir(parents=True, exist_ok=True)
         digest = hashlib.sha256()
@@ -78,10 +106,42 @@ class LocalStorageProvider:
             mime_type = _detected_mime(bytes(header), path, extension)
             if mime_type is None:
                 raise ValueError("file_type_mismatch")
-            return StagedFile(token=str(path), file_size=size, file_hash=digest.hexdigest(), mime_type=mime_type)
+            image = inspect_image_bytes(path.read_bytes(), mime_type) if inspect_image else None
+            return StagedFile(
+                token=str(path), file_size=size, file_hash=digest.hexdigest(), mime_type=mime_type, image=image
+            )
         except BaseException:
             path.unlink(missing_ok=True)
             raise
+
+    async def inspect_image(
+        self, file_key: str, *, expected_hash: str, mime_type: str, max_bytes: int
+    ) -> ImageMetadata:
+        try:
+            await asyncio.wait_for(self._image_decode_semaphore.acquire(), timeout=_IMAGE_DECODE_QUEUE_TIMEOUT_SECONDS)
+        except TimeoutError as exc:
+            raise ValueError("image_decode_busy") from exc
+        try:
+            async with self._semaphore:
+                task = asyncio.create_task(
+                    asyncio.to_thread(self._inspect_image_sync, file_key, expected_hash, mime_type, max_bytes)
+                )
+                try:
+                    return await asyncio.shield(task)
+                except asyncio.CancelledError:
+                    await task
+                    raise
+        finally:
+            self._image_decode_semaphore.release()
+
+    def _inspect_image_sync(self, file_key: str, expected_hash: str, mime_type: str, max_bytes: int) -> ImageMetadata:
+        with self._safe_path(file_key).open("rb") as source:
+            payload = source.read(max_bytes + 1)
+        if len(payload) != max_bytes:
+            raise ValueError("image_size_mismatch")
+        if hashlib.sha256(payload).hexdigest() != expected_hash:
+            raise ValueError("image_hash_mismatch")
+        return inspect_image_bytes(payload, mime_type)
 
     async def commit(self, staged: StagedFile, *, file_key: str) -> None:
         async with self._semaphore:

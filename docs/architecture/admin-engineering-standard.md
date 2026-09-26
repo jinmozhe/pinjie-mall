@@ -89,7 +89,7 @@ ProComponents 是提高标准管理场景效率的首选，不是形式上的强
 | `Descriptions.Item` 子节点 | `Descriptions.items` | 每项使用稳定 `key`，保留字段顺序、空值、复制功能与条件展示 |
 | `List`、`List.Item` | `Listy` 与 `itemRender` | 使用稳定 `rowKey`；外部保留加载、失败、空态和分页，按原尺寸设置样式与操作区 |
 
-`Listy` 从 Ant Design 6.6.0 起提供，接入方式见 [List 迁移说明](https://ant.design/components/list#faq-migrate-from-list)和 [Listy 文档](https://ant.design/components/listy)。项目商品图片选择器使用 `Listy` 承载候选图片，行内容由 `Flex`、`Space` 和按钮组成；空结果使用 `Empty`，请求失败继续由 `QueryState` 展示，不改变图片选择上限和上传互锁。
+`Listy` 从 Ant Design 6.6.0 起提供，接入方式见 [List 迁移说明](https://ant.design/components/list#faq-migrate-from-list)和 [Listy 文档](https://ant.design/components/listy)。商品编辑使用 `ProductImageGallery`，轮播与详情分别复用 `Listy` 承载候选资产，行内容由 `Flex`、`Space` 和按钮组成；空结果使用 `Empty`，请求失败由 `QueryState` 展示。组件支持多选加入、串行上传队列、保序重试、上下移及置顶置底、标准确认后的批量移除。上传中和未处理失败项阻断保存，手机预览复用原生文本及图片 DOM，不引入富文本或拖拽依赖。详情数据在打开编辑器时重新读取并固定 revision，后台查询刷新不覆盖草稿；已选素材展示不依赖资产分页，资产库查询继续要求 `assets:read`。Admin 预览不代表小程序真机验收。
 
 类型检查不一定拒绝尚未移除的弃用属性。排查时同时搜索源码、检查当前依赖的弃用声明与运行时警告，并区分项目调用和上游组件内部调用；浏览器复测仍遵守项目的单独授权范围。
 

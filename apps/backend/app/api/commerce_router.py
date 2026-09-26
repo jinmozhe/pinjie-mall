@@ -22,7 +22,13 @@ from app.domains.products import (
     ProductUpdate,
     SkuUpdate,
 )
-from app.domains.products.schemas import ProductStatusBatch, PublicProductRead, SkuStatusBatch
+from app.domains.products.schemas import (
+    ProductDetailRead,
+    ProductStatusBatch,
+    PublicProductDetailRead,
+    PublicProductRead,
+    SkuStatusBatch,
+)
 from app.domains.shipping import ShippingTemplateInput, ShippingTemplateRead
 from app.domains.shipping.schemas import FreightQuote, FreightQuoteInput, ShippingTemplateUpdate
 
@@ -124,11 +130,11 @@ async def shipping_status_batch(payload: ActiveStatusBatch, service: AdminCommer
 
 @router.get(
     "/admin/products/{product_id}",
-    response_model=ResponseModel[ProductRead],
+    response_model=ResponseModel[ProductDetailRead],
     summary="查看商品及全部变体",
     dependencies=[Depends(require_permission(PermissionCode.PRODUCTS_READ))],
 )
-async def admin_product(product_id: UUID, service: AdminCommerce) -> ResponseModel[ProductRead]:
+async def admin_product(product_id: UUID, service: AdminCommerce) -> ResponseModel[ProductDetailRead]:
     return success_response(data=await service.product_read(product_id), request_id=current_request_id())
 
 
@@ -309,8 +315,8 @@ async def public_products(
     return success_response(data=await service.public_product_page(page, page_size), request_id=current_request_id())
 
 
-@router.get("/products/{product_id}", response_model=ResponseModel[PublicProductRead], summary="查看上架商品详情")
-async def public_product(product_id: UUID, service: PublicCommerce) -> ResponseModel[PublicProductRead]:
+@router.get("/products/{product_id}", response_model=ResponseModel[PublicProductDetailRead], summary="查看上架商品详情")
+async def public_product(product_id: UUID, service: PublicCommerce) -> ResponseModel[PublicProductDetailRead]:
     return success_response(data=await service.public_product_read(product_id), request_id=current_request_id())
 
 

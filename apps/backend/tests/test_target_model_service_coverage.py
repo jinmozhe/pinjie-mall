@@ -2200,13 +2200,24 @@ async def test_product_service_rejects_unavailable_catalog_and_invalid_sku_opera
     with pytest.raises(AppException):
         await service.update(
             store.product.id,
-            ProductUpdate(name="类型冲突", product_type="physical", category_id=store.category_id, revision=1),
+            ProductUpdate(
+                name="类型冲突",
+                product_type="physical",
+                category_id=store.category_id,
+                revision=1,
+                detail_image_asset_ids=[],
+            ),
         )
     with pytest.raises(AppException):
         await service.update(
             store.product.id,
             ProductUpdate(
-                name="品牌冲突", product_type="virtual", category_id=store.category_id, brand_id=uuid7(), revision=1
+                name="品牌冲突",
+                product_type="virtual",
+                category_id=store.category_id,
+                brand_id=uuid7(),
+                revision=1,
+                detail_image_asset_ids=[],
             ),
         )
     next_category_id = uuid7()
@@ -2216,7 +2227,13 @@ async def test_product_service_rejects_unavailable_catalog_and_invalid_sku_opera
     with pytest.raises(AppException):
         await service.update(
             store.product.id,
-            ProductUpdate(name="模板冲突", product_type="virtual", category_id=next_category_id, revision=1),
+            ProductUpdate(
+                name="模板冲突",
+                product_type="virtual",
+                category_id=next_category_id,
+                revision=1,
+                detail_image_asset_ids=[],
+            ),
         )
 
 

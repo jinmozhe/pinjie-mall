@@ -1163,6 +1163,24 @@ export type AssetRead = {
      */
     file_size: number;
     /**
+     * Width
+     *
+     * 服务端确认的展示宽度，历史未处理或非图片为空
+     */
+    width?: number | null;
+    /**
+     * Height
+     *
+     * 服务端确认的展示高度，历史未处理或非图片为空
+     */
+    height?: number | null;
+    /**
+     * Frame Count
+     *
+     * 服务端完整解码确认的帧数，未处理为空
+     */
+    frame_count?: number | null;
+    /**
      * File Hash
      *
      * 文件内容的 SHA-256 哈希值
@@ -6105,6 +6123,156 @@ export type ProductCreate = {
      * 有序图片资产 ID，首张为主图
      */
     image_asset_ids?: Array<string>;
+    /**
+     * Detail Image Asset Ids
+     *
+     * 有序详情图资产 ID
+     */
+    detail_image_asset_ids?: Array<string>;
+};
+
+/**
+ * ProductDetailRead
+ */
+export type ProductDetailRead = {
+    /**
+     * Name
+     *
+     * 商品名称
+     */
+    name: string;
+    /**
+     * Description
+     *
+     * 纯文本商品说明
+     */
+    description?: string;
+    /**
+     * Product Type
+     *
+     * 实物或虚拟商品
+     */
+    product_type: 'physical' | 'virtual';
+    /**
+     * Category Id
+     *
+     * 所属分类 ID
+     */
+    category_id: string;
+    /**
+     * Brand Id
+     *
+     * 可选品牌
+     */
+    brand_id?: string | null;
+    /**
+     * Purchase Limit Quantity
+     *
+     * 每用户累计限购配置，交易阶段实施计数
+     */
+    purchase_limit_quantity?: number;
+    /**
+     * Image Asset Ids
+     *
+     * 有序图片资产 ID，首张为主图
+     */
+    image_asset_ids?: Array<string>;
+    /**
+     * Id
+     *
+     * 商品 ID
+     */
+    id: string;
+    /**
+     * Status
+     *
+     * 商品状态
+     */
+    status: 'draft' | 'on_sale' | 'off_sale';
+    /**
+     * Revision
+     *
+     * 商品版本
+     */
+    revision: number;
+    /**
+     * Skus
+     *
+     * 商品全部 SKU
+     */
+    skus: Array<SkuRead>;
+    /**
+     * Attributes
+     *
+     * 当前及历史属性采用
+     */
+    attributes: Array<AdoptionRead>;
+    /**
+     * Image Assets
+     *
+     * 已绑定轮播图片元数据，不依赖资产列表分页
+     */
+    image_assets: Array<ProductImageRead>;
+    /**
+     * Detail Image Asset Ids
+     *
+     * 有序详情图资产 ID
+     */
+    detail_image_asset_ids: Array<string>;
+    /**
+     * Detail Images
+     *
+     * 已绑定详情图片元数据
+     */
+    detail_images: Array<ProductImageRead>;
+};
+
+/**
+ * ProductImageRead
+ */
+export type ProductImageRead = {
+    /**
+     * Asset Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    asset_id: string;
+    /**
+     * Url
+     *
+     * 文件的公开访问 URL 或站内路径
+     */
+    url: string;
+    /**
+     * Original Name
+     *
+     * 上传时经过路径剥离的原始文件名
+     */
+    original_name: string;
+    /**
+     * File Size
+     *
+     * 文件大小，单位为字节
+     */
+    file_size: number;
+    /**
+     * Width
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    width?: number | null;
+    /**
+     * Height
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    height?: number | null;
+    /**
+     * Frame Count
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    frame_count?: number | null;
 };
 
 /**
@@ -6322,11 +6490,107 @@ export type ProductUpdate = {
      */
     image_asset_ids?: Array<string>;
     /**
+     * Detail Image Asset Ids
+     *
+     * 完整有序详情图资产 ID，空数组解除全部关联
+     */
+    detail_image_asset_ids: Array<string>;
+    /**
      * Revision
      *
      * 读取商品时获得的版本
      */
     revision: number;
+};
+
+/**
+ * PublicDetailImageRead
+ */
+export type PublicDetailImageRead = {
+    /**
+     * Url
+     *
+     * 文件的公开访问 URL 或站内路径
+     */
+    url: string;
+    /**
+     * Width
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    width: number;
+    /**
+     * Height
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    height: number;
+};
+
+/**
+ * PublicProductDetailRead
+ */
+export type PublicProductDetailRead = {
+    /**
+     * Id
+     *
+     * 商品 ID
+     */
+    id: string;
+    /**
+     * Name
+     *
+     * 商品名称
+     */
+    name: string;
+    /**
+     * Description
+     *
+     * 商品纯文本说明
+     */
+    description: string;
+    /**
+     * Product Type
+     *
+     * 商品类型
+     */
+    product_type: 'physical' | 'virtual';
+    /**
+     * Category Id
+     *
+     * 分类 ID
+     */
+    category_id: string;
+    /**
+     * Brand Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    brand_id: string | null;
+    /**
+     * Images
+     *
+     * 图片公开地址
+     */
+    images: Array<string>;
+    /**
+     * Skus
+     *
+     * 启用且未归档的商品变体，无成本字段
+     */
+    skus: Array<PublicSkuRead>;
+    /**
+     * Attributes
+     *
+     * 当前采用定义及描述值
+     */
+    attributes: Array<AdoptionRead>;
+    /**
+     * Detail Images
+     *
+     * 按展示顺序排列的详情切片，含可信图片尺寸
+     */
+    detail_images: Array<PublicDetailImageRead>;
 };
 
 /**
@@ -9190,6 +9454,34 @@ export type ResponseModelPointsAccountRead = {
 };
 
 /**
+ * ResponseModel[ProductDetailRead]
+ */
+export type ResponseModelProductDetailRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: ProductDetailRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[ProductRead]
  */
 export type ResponseModelProductRead = {
@@ -9246,9 +9538,9 @@ export type ResponseModelProductReviewRead = {
 };
 
 /**
- * ResponseModel[PublicProductRead]
+ * ResponseModel[PublicProductDetailRead]
  */
-export type ResponseModelPublicProductRead = {
+export type ResponseModelPublicProductDetailRead = {
     /**
      * Code
      *
@@ -9264,7 +9556,7 @@ export type ResponseModelPublicProductRead = {
     /**
      * 响应业务数据
      */
-    data: PublicProductRead;
+    data: PublicProductDetailRead;
     /**
      * Request Id
      *
@@ -14040,7 +14332,7 @@ export type AdminProductApiV1AdminProductsProductIdGetResponses = {
     /**
      * 请求成功
      */
-    200: ResponseModelProductRead;
+    200: ResponseModelProductDetailRead;
 };
 
 export type AdminProductApiV1AdminProductsProductIdGetResponse = AdminProductApiV1AdminProductsProductIdGetResponses[keyof AdminProductApiV1AdminProductsProductIdGetResponses];
@@ -14534,7 +14826,7 @@ export type PublicProductApiV1ProductsProductIdGetResponses = {
     /**
      * 请求成功
      */
-    200: ResponseModelPublicProductRead;
+    200: ResponseModelPublicProductDetailRead;
 };
 
 export type PublicProductApiV1ProductsProductIdGetResponse = PublicProductApiV1ProductsProductIdGetResponses[keyof PublicProductApiV1ProductsProductIdGetResponses];

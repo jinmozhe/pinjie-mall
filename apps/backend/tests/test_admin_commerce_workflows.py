@@ -179,6 +179,8 @@ async def shop():
             distribution = DistributionService(session)
             context = SimpleNamespace(
                 session=session,
+                factory=factory,
+                settings=settings,
                 commerce=commerce,
                 products=products,
                 actor=actor,
@@ -341,6 +343,132 @@ async def prepare_paid_order(shop, physical=False):
     assert (await shop.lifecycle.confirm_verified_payment(confirmation)).id == attempt.id
     await shop.lifecycle.confirm_order_scheduled(attempt.id)
     return order, product, confirmation
+
+
+@pytest.mark.integration
+async def test_product_detail_order_public_projection_and_revision(shop, tmp_path):
+    product, category, shipping, data = await prepare_product(shop)
+    ids = [new_uuid7(), new_uuid7()]
+    async with transaction_scope(shop.session):
+        for index, asset_id in enumerate(ids):
+            shop.session.add(
+                Asset(
+                    id=asset_id,
+                    uploader_type="admin",
+                    uploader_id=shop.actor,
+                    storage_driver="local",
+                    file_key=f"product/{asset_id}.png",
+                    original_name=f"detail-{index}.png",
+                    mime_type="image/png",
+                    file_size=100,
+                    file_hash=str(index + 1) * 64,
+                    url=f"/static/uploads/product/{asset_id}.png",
+                    scene="product",
+                    width=750,
+                    height=1000,
+                    frame_count=1,
+                )
+            )
+    payload = ProductUpdate(
+        **data.model_dump(exclude={"skus", "attributes", "category_revision", "detail_image_asset_ids"}),
+        detail_image_asset_ids=list(reversed(ids)),
+        revision=product.revision,
+    )
+    updated = await shop.commerce.update_product(product.id, payload)
+    detail = await shop.commerce.product_read(product.id)
+    assert detail.detail_image_asset_ids == list(reversed(ids))
+    assert detail.image_asset_ids == [shop.image]
+    assert [item.asset_id for item in detail.detail_images] == list(reversed(ids))
+    public = await shop.commerce.public_product_read(product.id)
+    assert [item.url for item in public.detail_images] == [item.url for item in detail.detail_images]
+    assert all(set(item.model_dump()) == {"url", "width", "height"} for item in public.detail_images)
+    assert "detail_images" not in (await shop.commerce.product_page(1, 20)).items[0].model_dump()
+    await shop.session.commit()
+    with pytest.raises(AppException) as conflict:
+        await shop.commerce.update_product(product.id, payload.model_copy(update={"detail_image_asset_ids": []}))
+    assert conflict.value.code == "PRODUCT_REVISION_CONFLICT"
+    assert (await shop.commerce.product_read(product.id)).detail_image_asset_ids == list(reversed(ids))
+    await shop.session.commit()
+
+    # Real AssetService checks all references before touching any file in a bulk request.
+    from app.services.assets import AssetService
+    from app.services.storage import LocalStorageProvider
+
+    storage = LocalStorageProvider(tmp_path / "uploads", io_concurrency=1)
+    service = AssetService(
+        session=shop.session,
+        session_factory=shop.factory,
+        settings=shop.settings,
+        storage=storage,
+        metadata=RequestMetadata(str(new_uuid7()), str(new_uuid7()), "127.0.0.1", "pytest", "test"),
+    )
+    for bulk in (False, True):
+        with pytest.raises(AppException) as referenced:
+            if bulk:
+                await service.delete_bulk(asset_ids=ids, actor_id=shop.actor)
+            else:
+                await service.delete(asset_id=ids[0], actor_id=shop.actor)
+        assert referenced.value.status_code == 409
+        assert not (tmp_path / ".uploads-trash").exists()
+    cleared = payload.model_copy(update={"detail_image_asset_ids": [], "revision": updated.revision})
+    await shop.commerce.update_product(product.id, cleared)
+    assert (await shop.commerce.product_read(product.id)).detail_images == []
+    assert await shop.session.get(Asset, ids[0]) is not None
+
+
+@pytest.mark.integration
+async def test_product_detail_invalid_metadata_rolls_back_other_fields(shop):
+    product, category, shipping, data = await prepare_product(shop)
+    payload = ProductUpdate(
+        **data.model_dump(exclude={"name", "skus", "attributes", "category_revision", "detail_image_asset_ids"}),
+        name="不得写入",
+        detail_image_asset_ids=[shop.image],
+        revision=product.revision,
+    )
+    with pytest.raises(AppException) as rejected:
+        await shop.commerce.update_product(product.id, payload)
+    assert rejected.value.code == "PRODUCT_IMAGE_REJECTED"
+    actual = await shop.commerce.product_read(product.id)
+    assert actual.name == product.name and actual.revision == product.revision
+    assert actual.detail_images == []
+
+
+@pytest.mark.integration
+async def test_backfill_check_apply_and_corruption(shop, tmp_path):
+    import hashlib
+    import io
+
+    from PIL import Image
+
+    from app.services.asset_image_backfill import AssetImageBackfill
+    from app.services.storage import LocalStorageProvider
+
+    output = io.BytesIO()
+    Image.new("RGB", (750, 1000), "red").save(output, format="PNG")
+    payload = output.getvalue()
+    storage = LocalStorageProvider(tmp_path / "uploads", io_concurrency=1)
+    staged = await storage.stage(io.BytesIO(payload), extension="png", max_bytes=len(payload))
+    key = f"product/{shop.image}.png"
+    await storage.commit(staged, file_key=key)
+    async with transaction_scope(shop.session):
+        asset = await shop.session.get(Asset, shop.image)
+        asset.file_key, asset.file_size, asset.file_hash = key, len(payload), hashlib.sha256(payload).hexdigest()
+    backfill = AssetImageBackfill(shop.factory, storage)
+    assert (await backfill.run_one(shop.image, apply=False)).status == "ready"
+    await shop.session.refresh(asset)
+    assert asset.width is None
+    await shop.session.commit()
+    assert (await backfill.run_one(shop.image, apply=True)).status == "updated"
+    await shop.session.refresh(asset)
+    assert (asset.width, asset.height, asset.frame_count) == (750, 1000, 1)
+    await shop.session.commit()
+    assert (await backfill.run_one(shop.image, apply=True)).status == "already_complete"
+    async with transaction_scope(shop.session):
+        asset.width = asset.height = asset.frame_count = None
+        asset.file_hash = "0" * 64
+    assert (await backfill.run_one(shop.image, apply=True)).status == "invalid_image_or_hash"
+    await shop.session.refresh(asset)
+    assert asset.width is None
 
 
 @pytest.mark.integration

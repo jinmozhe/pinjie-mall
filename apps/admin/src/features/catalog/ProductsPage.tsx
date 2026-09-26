@@ -368,6 +368,7 @@ export function ProductsPage() {
 
       {editingProduct !== undefined && (
         <ProductEditor
+          key={editingProduct?.id ?? "new"}
           target={editingProduct}
           close={() => setEditingProduct(undefined)}
           done={refresh}

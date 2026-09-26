@@ -119,6 +119,23 @@ class ProductSku(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
 
+class ProductDetailImage(Base):
+    __tablename__ = "product_detail_images"
+    __table_args__ = (
+        UniqueConstraint("product_id", "position", name="uq_product_detail_image_position"),
+        CheckConstraint("position >= 0", name="ck_product_detail_image_position"),
+        Index("ix_product_detail_images_asset", "asset_id"),
+        {"comment": "商品详情切片图片的独立有序资产引用"},
+    )
+    product_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("products.id", ondelete="RESTRICT"), primary_key=True, comment="所属商品"
+    )
+    asset_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("assets.id", ondelete="RESTRICT"), primary_key=True, comment="引用图片资产"
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False, comment="详情集合内连续展示序号")
+
+
 class ProductImage(Base):
     __tablename__ = "product_images"
     __table_args__ = (

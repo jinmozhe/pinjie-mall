@@ -5402,7 +5402,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ResponseModel_ProductRead_"
+                  "$ref": "#/components/schemas/ResponseModel_ProductDetailRead_"
                 }
               }
             }
@@ -6421,7 +6421,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ResponseModel_PublicProductRead_"
+                  "$ref": "#/components/schemas/ResponseModel_PublicProductDetailRead_"
                 }
               }
             }
@@ -16733,6 +16733,45 @@
             "title": "File Size",
             "description": "文件大小，单位为字节"
           },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width",
+            "description": "服务端确认的展示宽度，历史未处理或非图片为空"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height",
+            "description": "服务端确认的展示高度，历史未处理或非图片为空"
+          },
+          "frame_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frame Count",
+            "description": "服务端完整解码确认的帧数，未处理为空"
+          },
           "file_hash": {
             "type": "string",
             "title": "File Hash",
@@ -23929,6 +23968,16 @@
             "maxItems": 20,
             "title": "Image Asset Ids",
             "description": "有序图片资产 ID，首张为主图"
+          },
+          "detail_image_asset_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Detail Image Asset Ids",
+            "description": "有序详情图资产 ID"
           }
         },
         "additionalProperties": false,
@@ -23941,6 +23990,221 @@
           "category_id"
         ],
         "title": "ProductCreate"
+      },
+      "ProductDetailRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "description": "商品名称"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 20000,
+            "title": "Description",
+            "description": "纯文本商品说明",
+            "default": ""
+          },
+          "product_type": {
+            "type": "string",
+            "enum": [
+              "physical",
+              "virtual"
+            ],
+            "title": "Product Type",
+            "description": "实物或虚拟商品"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id",
+            "description": "所属分类 ID"
+          },
+          "brand_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brand Id",
+            "description": "可选品牌"
+          },
+          "purchase_limit_quantity": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Purchase Limit Quantity",
+            "description": "每用户累计限购配置，交易阶段实施计数",
+            "default": 0
+          },
+          "image_asset_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Image Asset Ids",
+            "description": "有序图片资产 ID，首张为主图"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "商品 ID"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "on_sale",
+              "off_sale"
+            ],
+            "title": "Status",
+            "description": "商品状态"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "商品版本"
+          },
+          "skus": {
+            "items": {
+              "$ref": "#/components/schemas/SkuRead"
+            },
+            "type": "array",
+            "title": "Skus",
+            "description": "商品全部 SKU"
+          },
+          "attributes": {
+            "items": {
+              "$ref": "#/components/schemas/AdoptionRead"
+            },
+            "type": "array",
+            "title": "Attributes",
+            "description": "当前及历史属性采用"
+          },
+          "image_assets": {
+            "items": {
+              "$ref": "#/components/schemas/ProductImageRead"
+            },
+            "type": "array",
+            "title": "Image Assets",
+            "description": "已绑定轮播图片元数据，不依赖资产列表分页"
+          },
+          "detail_image_asset_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Detail Image Asset Ids",
+            "description": "有序详情图资产 ID"
+          },
+          "detail_images": {
+            "items": {
+              "$ref": "#/components/schemas/ProductImageRead"
+            },
+            "type": "array",
+            "title": "Detail Images",
+            "description": "已绑定详情图片元数据"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "product_type",
+          "category_id",
+          "id",
+          "status",
+          "revision",
+          "skus",
+          "attributes",
+          "image_assets",
+          "detail_image_asset_ids",
+          "detail_images"
+        ],
+        "title": "ProductDetailRead"
+      },
+      "ProductImageRead": {
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Asset Id",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "文件的公开访问 URL 或站内路径"
+          },
+          "original_name": {
+            "type": "string",
+            "title": "Original Name",
+            "description": "上传时经过路径剥离的原始文件名"
+          },
+          "file_size": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "File Size",
+            "description": "文件大小，单位为字节"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "frame_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frame Count",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asset_id",
+          "url",
+          "original_name",
+          "file_size"
+        ],
+        "title": "ProductImageRead"
       },
       "ProductRead": {
         "properties": {
@@ -24239,6 +24503,16 @@
             "title": "Image Asset Ids",
             "description": "有序图片资产 ID，首张为主图"
           },
+          "detail_image_asset_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Detail Image Asset Ids",
+            "description": "完整有序详情图资产 ID，空数组解除全部关联"
+          },
           "revision": {
             "type": "integer",
             "exclusiveMinimum": 0.0,
@@ -24252,9 +24526,132 @@
           "name",
           "product_type",
           "category_id",
+          "detail_image_asset_ids",
           "revision"
         ],
         "title": "ProductUpdate"
+      },
+      "PublicDetailImageRead": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "文件的公开访问 URL 或站内路径"
+          },
+          "width": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Width",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "height": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Height",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "width",
+          "height"
+        ],
+        "title": "PublicDetailImageRead"
+      },
+      "PublicProductDetailRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "商品 ID"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "商品名称"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "商品纯文本说明"
+          },
+          "product_type": {
+            "type": "string",
+            "enum": [
+              "physical",
+              "virtual"
+            ],
+            "title": "Product Type",
+            "description": "商品类型"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Category Id",
+            "description": "分类 ID"
+          },
+          "brand_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brand Id",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "images": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Images",
+            "description": "图片公开地址"
+          },
+          "skus": {
+            "items": {
+              "$ref": "#/components/schemas/PublicSkuRead"
+            },
+            "type": "array",
+            "title": "Skus",
+            "description": "启用且未归档的商品变体，无成本字段"
+          },
+          "attributes": {
+            "items": {
+              "$ref": "#/components/schemas/AdoptionRead"
+            },
+            "type": "array",
+            "title": "Attributes",
+            "description": "当前采用定义及描述值"
+          },
+          "detail_images": {
+            "items": {
+              "$ref": "#/components/schemas/PublicDetailImageRead"
+            },
+            "type": "array",
+            "title": "Detail Images",
+            "description": "按展示顺序排列的详情切片，含可信图片尺寸"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "product_type",
+          "category_id",
+          "brand_id",
+          "images",
+          "skus",
+          "attributes",
+          "detail_images"
+        ],
+        "title": "PublicProductDetailRead"
       },
       "PublicProductRead": {
         "properties": {
@@ -27738,6 +28135,38 @@
         ],
         "title": "ResponseModel[PointsAccountRead]"
       },
+      "ResponseModel_ProductDetailRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/ProductDetailRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[ProductDetailRead]"
+      },
       "ResponseModel_ProductRead_": {
         "properties": {
           "code": {
@@ -27802,7 +28231,7 @@
         ],
         "title": "ResponseModel[ProductReviewRead]"
       },
-      "ResponseModel_PublicProductRead_": {
+      "ResponseModel_PublicProductDetailRead_": {
         "properties": {
           "code": {
             "type": "string",
@@ -27815,7 +28244,7 @@
             "description": "面向调用方的中文结果消息"
           },
           "data": {
-            "$ref": "#/components/schemas/PublicProductRead",
+            "$ref": "#/components/schemas/PublicProductDetailRead",
             "description": "响应业务数据"
           },
           "request_id": {
@@ -27832,7 +28261,7 @@
           "data",
           "request_id"
         ],
-        "title": "ResponseModel[PublicProductRead]"
+        "title": "ResponseModel[PublicProductDetailRead]"
       },
       "ResponseModel_ReconciliationRecordRead_": {
         "properties": {

@@ -99,6 +99,7 @@
 | [container-build-and-run.md](operations/container-build-and-run.md) | 三个应用镜像构建、TCR 远程缓存边界、系统包更新、迁移初始化、生产 Compose 和健康验证 |
 | [tencent-tcr-personal-cam-accounts.md](operations/tencent-tcr-personal-cam-accounts.md) | TCR 发布与拉取身份隔离、CAM 单项目与命名空间共享范围、可选本机及服务器登录、验证、轮换和排障 |
 | [1panel-production-runbook.md](operations/1panel-production-runbook.md) | 1Panel 单机生产配置、迁移、OpenResty、日志、备份、恢复和回滚步骤 |
+| [product-detail-images.md](operations/product-detail-images.md) | 商品详情图集的迁移、可信元数据回填、启用顺序与恢复边界 |
 | [database-backup-restore.md](operations/database-backup-restore.md) | 备份参数、本地恢复演练、生产恢复和数据库迁移保护步骤 |
 | [spec-library-initialization.md](operations/spec-library-initialization.md) | 电商公共规格属性库的本机开发库检查、备份、清空重建、提交后核验和恢复边界 |
 | [incident-response.md](operations/incident-response.md) | 事故分级、角色、止损、恢复验证、状态沟通和复盘步骤 |

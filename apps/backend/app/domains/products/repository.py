@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from app.db.models.asset import Asset
-from app.db.models.product import Category, Product, ProductImage, ProductSku
+from app.db.models.product import Category, Product, ProductDetailImage, ProductImage, ProductSku
 
 from .catalog_repository import CatalogRepository
 
@@ -77,6 +77,24 @@ class ProductRepository(CatalogRepository):
                 .order_by(ProductImage.position)
             )
         )
+
+    async def image_assets(self, product_id: UUID, *, detail: bool = False) -> list[Asset]:
+        """Read-only projection of images already bound to this product."""
+        relation = ProductDetailImage if detail else ProductImage
+        return list(
+            await self.session.scalars(
+                select(Asset)
+                .join(relation, relation.asset_id == Asset.id)
+                .where(relation.product_id == product_id)
+                .order_by(relation.position)
+            )
+        )
+
+    async def replace_detail_images(self, product_id: UUID, asset_ids: list[UUID]) -> None:
+        await self.session.execute(delete(ProductDetailImage).where(ProductDetailImage.product_id == product_id))
+        for position, asset_id in enumerate(asset_ids):
+            self.session.add(ProductDetailImage(product_id=product_id, asset_id=asset_id, position=position))
+        await self.session.flush()
 
     async def details(
         self, product_ids: list[UUID]

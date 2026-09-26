@@ -1,4 +1,20 @@
 {
   "schemaVersion": 1,
-  "exceptions": []
+  "exceptions": [
+    {
+      "id": "product-detail-images-required",
+      "plan": "plans/2026-09-26_商品详情图集与资产复用计划.md",
+      "owner": "@jinmozhe",
+      "approvedOn": "2026-09-25",
+      "expiresOn": "2026-10-10",
+      "reason": "用户已确认独立详情图集方案；更新必须明确提交完整详情集合，防止旧请求静默清空。",
+      "migration": "唯一活动消费者 Admin 已从商品详情读取有序资产并在每次更新提交 detail_image_asset_ids；生成客户端及旧测试请求同批迁移，Web 冻结、小程序未实施。",
+      "rollout": "维护窗口先备份并升级至 20260926_01，再协调切换 Backend 与 Admin；旧页面需刷新，旧请求明确 422，不提供隐式默认。",
+      "rollback": "停止新写入并优先前向修复；已生成详情或尺寸数据时禁止有损 downgrade，需独立授权的数据库及文件一致性恢复。",
+      "cleanup": "合并后比较基线已包含此字段时删除本条和计划标记，最迟于 2026-10-10 前移除；过期门禁失败，禁止默认延期。",
+      "method": "PUT",
+      "path": "/api/v1/admin/products/{product_id}",
+      "message": "added the new required request property `detail_image_asset_ids`"
+    }
+  ]
 }
