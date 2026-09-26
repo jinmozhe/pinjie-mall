@@ -109,8 +109,14 @@ class AssetService:
             )
         max_bytes = min(policy.max_bytes, self._settings.upload_max_file_size_mb * 1024 * 1024)
         try:
-            staged = await self._storage.stage(source, extension=extension, max_bytes=max_bytes)
+            staged = await self._storage.stage(
+                source, extension=extension, max_bytes=max_bytes, inspect_image=scene == UploadScene.PRODUCT
+            )
         except ValueError as exc:
+            if str(exc) == "image_decode_busy":
+                raise AppException(
+                    status_code=503, code=ErrorCode.ASSET_STORAGE_FAILED, message="图片处理繁忙，请稍后重试"
+                ) from exc
             code = ErrorCode.ASSET_FILE_TOO_LARGE if str(exc) == "file_too_large" else ErrorCode.ASSET_TYPE_NOT_ALLOWED
             message = "文件大小超过场景限制" if code == ErrorCode.ASSET_FILE_TOO_LARGE else "文件内容与声明类型不匹配"
             raise AppException(
@@ -159,6 +165,9 @@ class AssetService:
             original_name=safe_name,
             mime_type=staged.mime_type,
             file_size=staged.file_size,
+            width=staged.image.width if staged.image else None,
+            height=staged.image.height if staged.image else None,
+            frame_count=staged.image.frame_count if staged.image else None,
             file_hash=staged.file_hash,
             url=url,
             scene=scene.value,

@@ -105,10 +105,26 @@ class ProductInput(BaseModel):
 
 
 class ProductCreate(ProductInput, SpecificationSet):
-    pass
+    detail_image_asset_ids: list[UUID] = Field(default_factory=list, max_length=20, description="有序详情图资产 ID")
+
+    @field_validator("detail_image_asset_ids")
+    @classmethod
+    def unique_detail_images(cls, values: list[UUID]) -> list[UUID]:
+        if len(values) != len(set(values)):
+            raise ValueError("详情图片不能重复")
+        return values
 
 
 class ProductUpdate(ProductInput):
+    detail_image_asset_ids: list[UUID] = Field(max_length=20, description="完整有序详情图资产 ID，空数组解除全部关联")
+
+    @field_validator("detail_image_asset_ids")
+    @classmethod
+    def unique_detail_images(cls, values: list[UUID]) -> list[UUID]:
+        if len(values) != len(set(values)):
+            raise ValueError("详情图片不能重复")
+        return values
+
     revision: int = Field(gt=0, description="读取商品时获得的版本")
 
 
@@ -146,6 +162,28 @@ class ProductRead(ProductInput):
     attributes: list[AdoptionRead] = Field(description="当前及历史属性采用")
 
 
+class ProductImageRead(BaseModel):
+    asset_id: UUID
+    url: str
+    original_name: str
+    file_size: int = Field(gt=0)
+    width: int | None = Field(default=None, gt=0)
+    height: int | None = Field(default=None, gt=0)
+    frame_count: int | None = Field(default=None, gt=0)
+
+
+class ProductDetailRead(ProductRead):
+    image_assets: list[ProductImageRead] = Field(description="已绑定轮播图片元数据，不依赖资产列表分页")
+    detail_image_asset_ids: list[UUID] = Field(description="有序详情图资产 ID")
+    detail_images: list[ProductImageRead] = Field(description="已绑定详情图片元数据")
+
+
+class PublicDetailImageRead(BaseModel):
+    url: str
+    width: int = Field(gt=0)
+    height: int = Field(gt=0)
+
+
 class PublicProductRead(BaseModel):
     id: UUID = Field(description="商品 ID")
     name: str = Field(description="商品名称")
@@ -156,6 +194,10 @@ class PublicProductRead(BaseModel):
     images: list[str] = Field(description="图片公开地址")
     skus: list[PublicSkuRead] = Field(description="启用且未归档的商品变体，无成本字段")
     attributes: list[AdoptionRead] = Field(description="当前采用定义及描述值")
+
+
+class PublicProductDetailRead(PublicProductRead):
+    detail_images: list[PublicDetailImageRead] = Field(description="按展示顺序排列的详情切片，含可信图片尺寸")
 
 
 def validate_category_tree(parents: dict[UUID, UUID | None]) -> None:

@@ -133,6 +133,65 @@ async def commerce_database():
 
 
 @pytest.mark.integration
+async def test_detail_binding_lock_precedes_asset_deletion_check(commerce_database):
+    """Independent PostgreSQL connections verify the common asset lock protocol."""
+    from app.db.models import Asset, ProductDetailImage
+    from app.db.repositories.asset import AssetRepository
+    from app.db.repositories.commerce_access import CommerceAccessRepository
+
+    fixture = commerce_database
+    asset_id = new_uuid7()
+    reader_started = asyncio.Event()
+
+    async def deletion_guard():
+        async with fixture.factory() as session, transaction_scope(session):
+            reader_started.set()
+            asset = await AssetRepository(session).get(asset_id, for_update=True)
+            assert asset is not None
+            return await CommerceAccessRepository(session).asset_is_product_image(asset_id)
+
+    task = None
+    try:
+        async with fixture.factory() as session, transaction_scope(session):
+            product_id = await session.scalar(select(ProductSku.product_id).where(ProductSku.id == fixture.sku_id))
+            session.add(
+                Asset(
+                    id=asset_id,
+                    uploader_type="system",
+                    uploader_id=None,
+                    storage_driver="local",
+                    file_key=f"product/{asset_id}.png",
+                    original_name="detail.png",
+                    mime_type="image/png",
+                    file_size=100,
+                    file_hash=asset_id.hex * 2,
+                    url=f"/static/uploads/product/{asset_id}.png",
+                    scene="product",
+                    width=750,
+                    height=1000,
+                    frame_count=1,
+                )
+            )
+        async with fixture.factory() as writer, transaction_scope(writer):
+            await CommerceAccessRepository(writer).get_images_for_update([asset_id])
+            writer.add(ProductDetailImage(product_id=product_id, asset_id=asset_id, position=0))
+            await writer.flush()
+            task = asyncio.create_task(deletion_guard())
+            await asyncio.wait_for(reader_started.wait(), timeout=5)
+            # It must not observe "unreferenced" while the binding transaction is uncommitted.
+            with pytest.raises(TimeoutError):
+                await asyncio.wait_for(asyncio.shield(task), timeout=0.1)
+        assert await asyncio.wait_for(task, timeout=5) is True
+    finally:
+        if task is not None and not task.done():
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+        async with fixture.factory() as session, transaction_scope(session):
+            await session.execute(delete(ProductDetailImage).where(ProductDetailImage.asset_id == asset_id))
+            await session.execute(delete(Asset).where(Asset.id == asset_id))
+
+
+@pytest.mark.integration
 @pytest.mark.asyncio
 @pytest.mark.parametrize("shared_key", [True, False])
 async def test_concurrent_first_points_adjustments_preserve_idempotency_and_account(commerce_database, shared_key):

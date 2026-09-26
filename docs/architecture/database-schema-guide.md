@@ -2,7 +2,7 @@
 
 > 文档状态：长期目标设计基线；本机开发库与隔离测试库已升级至 `20260923_02`，最新修复的 Backend 动态验证记录见第 13.1 节；真实渠道、小程序和完整运营闭环仍有未完成项；更新日期：2026-09-24。
 >
-> 适用范围：15 个文档业务分组，67 张具名物理表设计，包含共用配置表、存量运费表及已落地的会员资格与积分表。
+> 适用范围：15 个文档业务分组，68 张具名物理表设计，包含共用配置表、存量运费表及已落地的会员资格与积分表。
 >
 > 文档定位：本文件是项目唯一维护的全域目标数据库字典。第 4 章定义字段，第 7 至 12 章定义使用契约与验收，第 13 章登记当前实现差异及演进门禁。表数量随经确认的产品范围演进，不作为固定配额。
 
@@ -13,8 +13,8 @@
 | 覆盖层级 | 本次核对结论 | 可以据此作出的判断 |
 | --- | --- | --- |
 | 两份原稿表名 | 第 4 章各有 65 张实体，共用 `system_settings` 另计，合计 66 张 | 原“50 张”统计错误；模块 06 实为 7 张、模块 15 实为 11 张；配置行不可重复计表 |
-| 本版目标表名 | 原有 66 张全部保留，补齐小程序身份映射 `user_external_identities`，合计 67 张 | 66 张目标运行表与 1 张存量运费表 |
-| 当前仓库表名 | ORM 共 67 张，本版均有字典条目 | 23 张目标新增运行表均已进入源码与 `20260922_01` 至 `20260922_06` 的 Alembic 图；`20260922_07`、`20260923_01` 和 `20260923_02` 继续补齐元数据、接单事件及财务完整性约束 |
+| 本版目标表名 | 原有 66 张全部保留，补齐小程序身份映射和独立详情图片关系，合计 68 张 | 67 张目标运行表与 1 张存量运费表 |
+| 当前仓库表名 | ORM 共 68 张，本版均有字典条目 | 23 张目标新增运行表均已进入源码与 `20260922_01` 至 `20260922_06` 的 Alembic 图；`20260922_07`、`20260923_01` 和 `20260923_02` 继续补齐元数据、接单事件及财务完整性约束；`20260926_01` 新增详情图片关系及图片元数据，已于 2026-09-26 升级至本机开发库 `pinjie_mall_dev` |
 | 字段与约束 | 23 张目标新增表及相应既有表改造已有 Model 和迁移；其余现行差异见第 13 章 | 静态清单与迁移图不代表实际数据库结构、并发行为或完整业务验收已经一致 |
 | 运行数据库 | 2026-09-23 本机 `pinjie_mall_dev` 和隔离 `_test` 库已升级至 `20260923_02`，空库、重复升级、恢复演练和 `alembic check` 通过 | 实际证据范围见第 13.1 节，不扩展为生产环境或真实渠道已验证 |
 | 项目闭环 | 主要内部业务已有源码、迁移和接口；真实渠道、小程序认证、常驻调度及部分 Admin 新模型适配尚未完成 | 整个项目尚未实现端到端闭环，表齐全和本地实现均不能代替最新动态验收 |
@@ -59,6 +59,8 @@ erDiagram
     ASSETS ||--o{ BRANDS : "品牌LOGO"
     ASSETS ||--o{ PRODUCT_IMAGES : "商品配图"
     PRODUCTS ||--o{ PRODUCT_IMAGES : "包含图片列表"
+    PRODUCTS ||--o{ PRODUCT_DETAIL_IMAGES : "包含详情切片"
+    ASSETS ||--o{ PRODUCT_DETAIL_IMAGES : "详情素材引用"
 
     BRANDS ||--o{ PRODUCTS : "品牌关联(可空)"
     PRODUCT_CATEGORIES ||--o{ PRODUCTS : "主分类归属"
@@ -133,14 +135,14 @@ erDiagram
 
 ## 3. 模块与数据表速查目录
 
-67 张表按以下 15 个文档分组登记。配置物理表只在 07 计数，09 复用其配置行；15 中包含 1 张存量运费表和 5 张已落地的会员资格与积分表，积分消费政策仍属后续范围。
+68 张表按以下 15 个文档分组登记。配置物理表只在 07 计数，09 复用其配置行；15 中包含 1 张存量运费表和 5 张已落地的会员资格与积分表，积分消费政策仍属后续范围。
 
 | 模块序号 | 业务模块 | 表数量 | 包含数据表 | 状态性质 |
 | --- | --- | --- | --- | --- |
 | 01 | 用户身份与前台认证 | 4 | `users`, `user_sessions`, `user_refresh_tokens`, `user_external_identities` | 4 表已有模型及迁移；小程序换码与 Bearer 会话未接入 |
 | 02 | 管理员与后台 RBAC 权限 | 7 | `admins`, `roles`, `permissions`, `admin_roles`, `role_permissions`, `admin_sessions`, `admin_refresh_tokens` | 运行基座 |
 | 03 | 审计事件与链路日志 | 3 | `security_login_events`, `audit_events`, `request_logs` | 运行基座 |
-| 04 | 统一文件与媒体资产 | 2 | `assets`, `product_images` | 运行基座 |
+| 04 | 统一文件与媒体资产 | 3 | `assets`, `product_images`, `product_detail_images` | 运行基座 |
 | 05 | 商品、品牌与基础分类 | 4 | `product_categories`, `brands`, `products`, `product_skus` | 核心业务 |
 | 06 | 规格属性库与分类模板 | 7 | `spec_attributes`, `spec_attribute_values`, `category_spec_attributes`, `product_spec_attributes`, `product_spec_values`, `product_sku_spec_values`, `product_attribute_values` | 商品首期已实现 |
 | 07 | 全局系统设置与平台运费 | 1 | `system_settings`（复用固定分组） | 现有物理表，新增目标分组 |
@@ -467,13 +469,16 @@ erDiagram
 | `original_name` | VARCHAR(255) | 否 | 原始上传名称 | 文件原始名称，去特殊字符 |
 | `mime_type` | VARCHAR(100) | 否 | 二进制嗅探 | 探测得到的真实 MIME 类型（例如 `image/jpeg`） |
 | `file_size` | BIGINT | 否 | 字节统计 | 文件物理大小（大于 0） |
+| `width` | INTEGER | 是 | 完整解码或显式回填 | EXIF 展示方向下的宽度，像素 |
+| `height` | INTEGER | 是 | 完整解码或显式回填 | EXIF 展示方向下的高度，像素 |
+| `frame_count` | INTEGER | 是 | 逐帧完整解码 | 可信帧数，详情只允许 1 |
 | `file_hash` | VARCHAR(64) | 否 | 计算生成 | SHA-256 内容哈希（固定 64 字符） |
 | `url` | VARCHAR(1000) | 否 | 服务端拼接 | 公开访问 URL 或站内绝对路径 |
-| `scene` | VARCHAR(50) | 否 | 业务声明 | 业务使用场景（例如 `product_image`, `brand_logo`） |
+| `scene` | VARCHAR(50) | 否 | 业务声明 | 受控场景（商品轮播、详情及品牌图片均使用 `product`） |
 | `created_at` | TIMESTAMPTZ | 否 | 应用当前 UTC 时间 | 创建时间 |
 | `updated_at` | TIMESTAMPTZ | 否 | 系统写入 | 最近更新时间 |
 
-- 约束：唯一约束 `UNIQUE(uploader_type, uploader_id, scene, file_hash)` 防止同一主体重复上传相同文件。
+- 约束：唯一约束 `UNIQUE(uploader_type, uploader_id, scene, file_hash)` 防止同一主体重复上传相同文件。width、height、frame_count 必须三者同时为空或同时大于 0；历史资产通过显式工具回填，查询不猜测元数据。
 
 #### 4.04.2 商品图片关联表 `product_images`
 
@@ -488,6 +493,22 @@ erDiagram
 | `position` | INTEGER | 否 | 运营排序 | 图片展示顺序（大于等于 0，数字最小者作为列表主图） |
 
 - 约束：复合主键 `(product_id, asset_id)`，唯一约束 `UNIQUE(product_id, position)` 保证同商品下位置不重叠。
+
+---
+
+#### 4.04.3 商品详情图片关联表 `product_detail_images`
+
+实现标记：模型与迁移 `20260926_01` 已提供；2026-09-26 本机开发库 `pinjie_mall_dev` 已升级至该版本，隔离测试库升级和降级保护验证仍未执行。
+
+用途：保存独立于主图轮播的详情切片顺序，允许跨商品复用统一资产。
+
+| 字段名 | 数据类型 | 可空 | 默认值/生成方式 | 业务含义与约束规则 |
+| --- | --- | --- | --- | --- |
+| `product_id` | UUID | 否 | 关联商品 | FK products.id，RESTRICT |
+| `asset_id` | UUID | 否 | 引用资产 | FK assets.id，RESTRICT |
+| `position` | INTEGER | 否 | 应用按完整集合生成 | 从 0 连续排列，CHECK >= 0 |
+
+复合主键 `(product_id, asset_id)`，唯一约束 `(product_id, position)`，asset_id 查询索引。详情数量、静态帧、字节和像素预算由服务端绑定与上架校验执行，见[文件资产架构](file-asset-storage.md#8-商品详情图片与历史元数据)。商品及两套关系与 revision、审计同事务写入；引用存在时资产删除返回 409，双外键继续兜底。
 
 ---
 
@@ -1739,6 +1760,7 @@ erDiagram
 | request_logs | U(request_id)；duration_ms >= 0；不保存秘密和敏感路径请求体 | occurred_at；运维日志保留策略独立于交易流水 |
 | assets | U(file_key)；主体/驱动枚举、file_size > 0、64 位哈希；普通上传 U(uploader_type,uploader_id,scene,file_hash) | scene/id、主体/id；系统主体 NULL 另建 U(scene,file_hash) WHERE uploader_type='system'，避免 NULL 绕过原去重 |
 | product_images | PK(product_id,asset_id)、U(product_id,position)、position >= 0；双 FK RESTRICT | asset_id；图片媒体类型、上传主体、场景由资产服务校验 |
+| product_detail_images | PK(product_id,asset_id)、U(product_id,position)、position >= 0；双 FK RESTRICT | asset_id；独立详情预算由绑定及上架用例校验 |
 | product_categories | FK parent_id RESTRICT；parent_id <> id；revision > 0 | (parent_id,sort_order,id)；结构锁保证深度不超过 3、整树无环 |
 | brands | FK logo_asset_id RESTRICT；非空 name；revision > 0 | (is_active,sort_order,id)、logo_asset_id；停用只阻止新关联 |
 | products | FK 分类/品牌 RESTRICT；状态/类型枚举；purchase_limit_quantity >= 0；revision > 0 | (category_id,status,id)、brand_id；商品聚合根写入 |
@@ -2358,7 +2380,7 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 | DB-37 | 迁移与存量 | 原 44 表基线及后继新增表的存量数据可解释；旧两级整单佣金、部分退款、模板快照不伪造成新行级事实 |
 | DB-38 | 全项目验收 | Backend/契约/Admin/小程序、真实 PostgreSQL 并发、渠道、调度告警及恢复全部有适用证据 |
 
-“100%”只允许带分母和证据描述：表名登记覆盖当前仓库 67/67，原稿 66/66；本版 67/67 目标表有字典条目。字段级现行一致性、真实运行结构一致性、完整业务验收均不能由这些表名比例推导。
+“100%”只允许带分母和证据描述：表名登记覆盖当前仓库 68/68，原稿 66/66；本版 68/68 目标表有字典条目。字段级现行一致性、真实运行结构一致性、完整业务验收均不能由这些表名比例推导。
 
 ---
 
@@ -2366,11 +2388,11 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 
 ### 13.1 当前源码及迁移盘点
 
-盘点基于 `app/db/models` 的显式列、继承字段及两张关联表，并核对 Alembic 建表与后继变更；当前源码共 67 张。Alembic 自身版本表 `alembic_version` 属于迁移工具元数据，不计入业务实体数。
+盘点基于 `app/db/models` 的显式列、继承字段及两张关联表，并核对 Alembic 建表与后继变更；当前源码共 68 张。Alembic 自身版本表 `alembic_version` 属于迁移工具元数据，不计入业务实体数。
 
 | 证据范围 | 已确认事实 | 不能据此推断 |
 | --- | --- | --- |
-| 当前源码与迁移图 | 67 张表均有模型；23 张目标新增运行表已有迁移，当前源码 head 为 `20260923_02` | 数据库已经升级至源码 head、所有目标字段和业务约束均已符合 |
+| 当前源码与迁移图 | 68 张表均有模型；原 23 张目标新增运行表及详情图片关系已有迁移源码，当前源码 head 为 `20260926_01`；2026-09-26 本机开发库已升级至该版本，2 条历史图片元数据已回填并复核无待处理项 | 隔离测试库或其他环境已升级，所有目标字段、业务约束和完整业务验收均已符合 |
 | 2026-09-22 历史动态验证 | [迁移与动态验证记录](../../plans/2026-09-22_后端目标模型开发库迁移与动态验证计划.md)确认本机开发库和隔离 `_test` 库升至 `20260922_07`，空库、重复升级、恢复演练、`alembic check` 和 398 项 Backend pytest 通过，覆盖率为 90.00% | 后续修改已通过相同测试，或生产、真实渠道已验证 |
 | 2026-09-23 符合性修复 | [阶段 A 至 F 修复记录](../../plans/2026-09-23_后端数据规划符合性分阶段修复计划.md)确认当时本地实现及适用轻量门禁完成，新增两项迁移；当时未运行重型验证，后续执行结果由下列专项记录 | 仅凭当时轻量门禁推断迁移和动态测试通过 |
 | 2026-09-23 本机迁移 | [最新修复迁移与动态验收记录](../../plans/2026-09-23_后端最新修复迁移与动态验收计划.md)确认开发库和隔离测试库升至 `20260923_02`，已有库、空库、重复升级、恢复及无漂移检查通过；67 张业务表，1075 个约束且均已验证，迁移前后行数与未改造表摘要一致 | 其他环境已升级，或迁移能自动解释未知历史财务事实 |
@@ -2387,13 +2409,13 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 | [identity.py](../../apps/backend/app/db/models/identity.py) | 14 | `admin_refresh_tokens`、`admin_roles`、`admin_sessions`、`admins`、`audit_events`、`permissions`、`request_logs`、`role_permissions`、`roles`、`security_login_events`、`user_external_identities`、`user_refresh_tokens`、`user_sessions`、`users` |
 | [inventory.py](../../apps/backend/app/db/models/inventory.py) | 2 | `inventory_accounts`、`inventory_movements` |
 | [order.py](../../apps/backend/app/db/models/order.py) | 3 | `order_events`、`order_items`、`orders` |
-| [product.py](../../apps/backend/app/db/models/product.py) | 4 | `product_categories`、`product_images`、`product_skus`、`products` |
+| [product.py](../../apps/backend/app/db/models/product.py) | 5 | `product_categories`、`product_images`、`product_detail_images`、`product_skus`、`products` |
 | [purchase.py](../../apps/backend/app/db/models/purchase.py) | 2 | `product_purchase_limits`、`product_purchase_records` |
 | [reservation.py](../../apps/backend/app/db/models/reservation.py) | 2 | `inventory_reservation_events`、`inventory_reservations` |
 | [shipping.py](../../apps/backend/app/db/models/shipping.py) | 1 | `shipping_templates` |
 | [system_setting.py](../../apps/backend/app/db/models/system_setting.py) | 1 | `system_settings` |
 
-目标新增运行表现为 23 张，均已有源码和迁移：此前 18 张，以及 `member_level_conditions`、`membership_qualification_events`、`member_level_events`、`points_accounts`、`points_ledgers`。当前 67 张中 `shipping_templates` 单独列为存量，故目标运行范围为 66 张，总登记为 67 张。
+目标新增运行表现为 23 张，均已有源码和迁移：此前 18 张，以及 `member_level_conditions`、`membership_qualification_events`、`member_level_events`、`points_accounts`、`points_ledgers`。2026-09-26 新增详情图片关系后共 68 张；`shipping_templates` 单独列为存量，故目标运行范围为 67 张，总登记为 68 张。历史动态验证仍只覆盖当时 67 张，新增表、元数据和回填尚无运行验证证据。
 
 ### 13.2 现行字段的保留、迁移与退役映射
 

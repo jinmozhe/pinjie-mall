@@ -17,13 +17,13 @@ class AssetRepository:
     async def get(self, asset_id: uuid.UUID, *, for_update: bool = False) -> Asset | None:
         statement = select(Asset).where(Asset.id == asset_id)
         if for_update:
-            statement = statement.with_for_update()
+            statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self._session.execute(statement)).scalar_one_or_none()
 
     async def get_by_file_key(self, file_key: str, *, for_update: bool = False) -> Asset | None:
         statement = select(Asset).where(Asset.file_key == file_key)
         if for_update:
-            statement = statement.with_for_update()
+            statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self._session.execute(statement)).scalar_one_or_none()
 
     async def get_many(self, asset_ids: list[uuid.UUID], *, for_update: bool = False) -> list[Asset]:
@@ -31,8 +31,18 @@ class AssetRepository:
             return []
         statement = select(Asset).where(Asset.id.in_(asset_ids)).order_by(Asset.id)
         if for_update:
-            statement = statement.with_for_update()
+            statement = statement.with_for_update().execution_options(populate_existing=True)
         return list((await self._session.scalars(statement)).all())
+
+    async def images_missing_metadata(self, *, asset_ids: list[uuid.UUID], limit: int) -> list[Asset]:
+        statement = select(Asset).where(
+            Asset.scene == "product",
+            Asset.width.is_(None),
+            Asset.mime_type.in_(["image/jpeg", "image/png", "image/webp"]),
+        )
+        if asset_ids:
+            statement = statement.where(Asset.id.in_(asset_ids))
+        return list(await self._session.scalars(statement.order_by(Asset.id).limit(limit)))
 
     async def find_duplicate(
         self,

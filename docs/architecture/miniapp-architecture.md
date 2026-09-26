@@ -175,6 +175,10 @@ catalog 向外输出商品展示和 SKU 选择能力，cart 输出加购能力�
 
 ## 5. 商品详情、选规格与加购完整链路
 
+商品内容采用纯文本说明与独立详情图集。Backend 详情契约已有 `detail_images` 有序 URL、width、height；列表不携带详情切片。后续小程序使用原生 Text/Image，文本保留换行，图片等宽并使用 widthFix、按尺寸预留比例、下方懒加载、失败反馈和点击预览，切片间默认无缝连续。不共享 Admin DOM 组件，不引入 HTML/Markdown 解析器。
+
+站内资源路径必须通过配置的可信 HTTPS 资源基址解析，不能依赖 Admin Origin 或本机地址；绝对 URL 受同一可信域名策略约束。微信资源域名配置、WebP、EXIF 方向、长图内存及弱网表现均需后续 iOS/Android 真机验证，本轮未初始化小程序工程。
+
 关联 PRD：`MP-CAT-002`、`MP-CAT-003`、`MP-CART-001`、`MP-CART-002`、`MP-AUTH-003`、`MP-UX-002`。
 
 1. 商品卡片通过导航能力进入 `pages/product/detail/index.tsx`。页面解析并校验商品标识，调用 catalog 公开的 `useProductDetail`；非法参数不发起无意义请求。

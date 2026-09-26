@@ -63,7 +63,7 @@ from .identity import (
 )
 from .inventory import InventoryAccount, InventoryMovement
 from .order import Order, OrderEvent, OrderItem
-from .product import Category, Product, ProductImage, ProductSku
+from .product import Category, Product, ProductDetailImage, ProductImage, ProductSku
 from .purchase import ProductPurchaseLimit, ProductPurchaseRecord
 from .reservation import InventoryReservation, InventoryReservationEvent
 from .shipping import ShippingTemplate
@@ -116,6 +116,7 @@ __all__ = [
     "OrderItem",
     "Product",
     "ProductImage",
+    "ProductDetailImage",
     "ProductSku",
     "ProductPurchaseLimit",
     "ProductPurchaseRecord",

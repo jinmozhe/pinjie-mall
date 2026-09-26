@@ -19,9 +19,13 @@ from .schemas import (
     CategoryUpdate,
     CheckoutSku,
     ProductCreate,
+    ProductDetailRead,
+    ProductImageRead,
     ProductRead,
     ProductStatusUpdate,
     ProductUpdate,
+    PublicDetailImageRead,
+    PublicProductDetailRead,
     PublicProductRead,
     PublicSkuRead,
     SkuInput,
@@ -162,6 +166,45 @@ class ProductService(SpecificationService):
             attributes=await self.adoption_reads(row.id),
         )
 
+    async def detail_read(self, product_id: UUID) -> ProductDetailRead:
+        product = await self.read(product_id)
+        images = await self._image_reads(product_id, detail=False)
+        details = await self._image_reads(product_id, detail=True)
+        return ProductDetailRead(
+            **product.model_dump(),
+            image_assets=images,
+            detail_image_asset_ids=[image.asset_id for image in details],
+            detail_images=details,
+        )
+
+    async def _image_reads(self, product_id: UUID, *, detail: bool) -> list[ProductImageRead]:
+        return [
+            ProductImageRead(
+                asset_id=asset.id,
+                url=asset.url,
+                original_name=asset.original_name,
+                file_size=asset.file_size,
+                width=asset.width,
+                height=asset.height,
+                frame_count=asset.frame_count,
+            )
+            for asset in await self.repository.image_assets(product_id, detail=detail)
+        ]
+
+    async def public_detail_read(self, product_id: UUID) -> PublicProductDetailRead:
+        product = await self.public_read(product_id)
+        details = await self._image_reads(product_id, detail=True)
+        images: list[PublicDetailImageRead] = []
+        for image in details:
+            if image.width is None or image.height is None or image.frame_count != 1:
+                raise AppException(
+                    status_code=409,
+                    code=ErrorCode.PRODUCT_IMAGE_REJECTED,
+                    message="商品详情图片元数据无效，请联系管理员",
+                )
+            images.append(PublicDetailImageRead(url=image.url, width=image.width, height=image.height))
+        return PublicProductDetailRead(**product.model_dump(), detail_images=images)
+
     async def public_read(self, product_id: UUID) -> PublicProductRead:
         row = await self._get(product_id)
         if row.status != "on_sale":
@@ -228,13 +271,16 @@ class ProductService(SpecificationService):
         await self._brand(data.brand_id)
         row = Product(
             id=new_uuid7(),
-            **data.model_dump(exclude={"skus", "image_asset_ids", "attributes", "category_revision"}),
+            **data.model_dump(
+                exclude={"skus", "image_asset_ids", "detail_image_asset_ids", "attributes", "category_revision"}
+            ),
             status="draft",
             revision=1,
         )
         await self.repository.save(row)
         await self.build_specifications(row, data)
         await self.repository.replace_images(row.id, data.image_asset_ids)
+        await self.repository.replace_detail_images(row.id, data.detail_image_asset_ids)
         return await self.read(row.id)
 
     async def set_categories_active(self, data: ActiveStatusBatch) -> BatchCompleted:
@@ -283,6 +329,7 @@ class ProductService(SpecificationService):
         row.brand_id, row.purchase_limit_quantity = data.brand_id, data.purchase_limit_quantity
         row.revision += 1
         await self.repository.replace_images(product_id, data.image_asset_ids)
+        await self.repository.replace_detail_images(product_id, data.detail_image_asset_ids)
         await self.repository.save(row)
         if row.status == "on_sale":
             await self.validate_publish(product_id)
