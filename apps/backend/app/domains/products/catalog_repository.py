@@ -102,6 +102,18 @@ class CatalogRepository:
             )
         )
 
+    async def count_standard_value_adoptions(self, value_id: UUID) -> int:
+        return int(
+            await self.session.scalar(
+                select(func.count()).select_from(ProductSpecValue).where(ProductSpecValue.value_id == value_id)
+            )
+            or 0
+        )
+
+    async def delete_standard_value(self, row: SpecAttributeValue) -> None:
+        await self.session.delete(row)
+        await self.session.flush()
+
     async def template(self, category_id: UUID) -> list[CategorySpecAttribute]:
         return list(
             await self.session.scalars(

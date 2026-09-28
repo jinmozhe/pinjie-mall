@@ -193,6 +193,19 @@ class CatalogService:
         await self.repository.save_entity(row)
         return StandardValueRead.model_validate(row)
 
+    async def delete_value(self, attribute_id: UUID, value_id: UUID) -> None:
+        await self.repository.lock_catalog()
+        attribute = await self.require_attribute(attribute_id)
+        row = await self.repository.standard_value(value_id)
+        if row is None or row.attribute_id != attribute_id:
+            raise AppException(status_code=404, code=ErrorCode.NOT_FOUND, message="标准值不属于此属性")
+        adopted_count = await self.repository.count_standard_value_adoptions(value_id)
+        if adopted_count > 0:
+            raise catalog_conflict(f"候选值已被 {adopted_count} 个商品采用，不可删除，请使用停用")
+        await self.repository.delete_standard_value(row)
+        attribute.revision += 1
+        await self.repository.save_entity(attribute)
+
     async def read_template(self, category_id: UUID) -> TemplateRead:
         category = next((item for item in await self.repository.categories() if item.id == category_id), None)
         if category is None:

@@ -220,6 +220,17 @@ async def update_value(
     )
 
 
+@router.delete(
+    "/admin/spec-attributes/{attribute_id}/values/{value_id}",
+    response_model=ResponseModel[None],
+    summary="删除未被商品采用的标准候选值",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.SPEC_ATTRIBUTES_UPDATE))],
+)
+async def delete_value(attribute_id: UUID, value_id: UUID, service: AdminCommerce) -> ResponseModel[None]:
+    await service.delete_value(attribute_id, value_id)
+    return success_response(data=None, request_id=current_request_id())
+
+
 @router.get(
     "/admin/product-categories/{category_id}/attributes",
     response_model=ResponseModel[TemplateRead],

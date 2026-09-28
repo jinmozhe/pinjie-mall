@@ -39,7 +39,8 @@ BACKUP_TABLES = TABLES + ("product_categories",)
 EMPTY_TABLES = TABLES[:4] + ("products", "product_skus")
 LOCAL_DATABASE_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 LOCAL_SERVER_ADDRESSES = frozenset({"127.0.0.1", "::1"})
-SUPPORTED_REVISION = "20260923_02"
+SUPPORTED_REVISIONS = frozenset({"20260923_02", "20260926_01"})
+SUPPORTED_REVISION = "20260926_01"
 
 
 class CommittedVerificationError(RuntimeError):
@@ -358,7 +359,7 @@ async def verify_connected_target(connection: AsyncConnection, url: URL) -> None
 
 async def preflight(connection: AsyncConnection) -> None:
     revisions = list((await connection.execute(text("SELECT version_num FROM public.alembic_version"))).scalars())
-    if revisions != [SUPPORTED_REVISION]:
+    if not revisions or revisions[0] not in SUPPORTED_REVISIONS:
         raise ValueError("数据库迁移版本不在脚本明确支持范围")
     await connection.run_sync(validate_structure)
     for name in EMPTY_TABLES:

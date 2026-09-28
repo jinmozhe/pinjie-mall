@@ -7,8 +7,7 @@
 - 执行入口：[seed_spec_library.py](../../apps/backend/scripts/seed_spec_library.py)。
 - 版本化种子：[spec_library.v1.json](../../apps/backend/scripts/data/spec_library.v1.json)。
 - 原始资料为 `电商通用规格属性值库.xlsx`，其 SHA-256 在种子元数据中固定。
-- 种子记录 1,036 条原始来源映射，其中零售资料 963 条，本地生活资料 73 条均标记为排除且绝不入库。
-- 当前种子包含 104 个公共属性和 801 个标准候选值。公共属性默认启用，不自动创建商城分类、分类模板、商品、SKU 或库存。
+- 当前种子精简收敛为覆盖 4 种值类型的 5 项典型公共属性：“颜色”（`color`，3 个标准色候选值：黑、白、灰）、“尺寸”（`size`，7 个通用尺码候选值：XS、S、M、L、XL、XXL、均码）、“适用场景”（`occasion`，2 个 `occ_` 前缀候选值）、“执行标准”（`standard`，自由文本无预设值）以及“净重”（`net_weight`，数值单位 `kg` 无预设值），共 12 个标准候选值。公共属性默认启用，不自动创建商城分类、分类模板、商品、SKU 或库存。
 
 每条来源记录都保存行号、原始分类、处理结果、原因和目标编码。处理结果只有“保留、合并、拆分、自由录入、排除”；排除记录不得映射到任何属性或候选值。
 
@@ -18,7 +17,7 @@
 
 - Settings 中 `environment=local`，连接为本机 `localhost`、`127.0.0.1` 或 `::1` 的 PostgreSQL `asyncpg` URL，且 URL 不含查询参数。脚本以同一已解析连接目标打开应用连接和调用 `pg_dump`，连接后核验实际数据库、本机地址与端口。
 - 数据库名称与 `--confirm-database` 完全一致，且不是 `_test` 数据库。
-- Alembic 版本为 `20260923_02`，七张属性表、商品、SKU 和分类表的字段、主键、外键与当前模型一致。
+- Alembic 版本为 `20260926_01`（或 `20260923_02`），七张属性表、商品、SKU 和分类表的字段、主键、外键与当前模型一致。
 - `products`、`product_skus`、`product_spec_attributes`、`product_spec_values`、`product_sku_spec_values`、`product_attribute_values` 均为空。
 - 备份目录是仓库外的绝对路径，且运行用户可执行 `pg_dump` 与 `pg_restore`。
 

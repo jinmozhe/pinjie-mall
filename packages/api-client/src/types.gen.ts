@@ -12638,6 +12638,40 @@ export type CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostResponses = 
 
 export type CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostResponse = CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostResponses[keyof CreateValueApiV1AdminSpecAttributesAttributeIdValuesPostResponses];
 
+export type DeleteValueApiV1AdminSpecAttributesAttributeIdValuesValueIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Attribute Id
+         */
+        attribute_id: string;
+        /**
+         * Value Id
+         */
+        value_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/spec-attributes/{attribute_id}/values/{value_id}';
+};
+
+export type DeleteValueApiV1AdminSpecAttributesAttributeIdValuesValueIdDeleteErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type DeleteValueApiV1AdminSpecAttributesAttributeIdValuesValueIdDeleteError = DeleteValueApiV1AdminSpecAttributesAttributeIdValuesValueIdDeleteErrors[keyof DeleteValueApiV1AdminSpecAttributesAttributeIdValuesValueIdDeleteErrors];
+
+export type DeleteValueApiV1AdminSpecAttributesAttributeIdValuesValueIdDeleteResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelNoneType;
+};
+
+export type DeleteValueApiV1AdminSpecAttributesAttributeIdValuesValueIdDeleteResponse = DeleteValueApiV1AdminSpecAttributesAttributeIdValuesValueIdDeleteResponses[keyof DeleteValueApiV1AdminSpecAttributesAttributeIdValuesValueIdDeleteResponses];
+
 export type UpdateValueApiV1AdminSpecAttributesAttributeIdValuesValueIdPutData = {
     body: StandardValueUpdate;
     path: {
