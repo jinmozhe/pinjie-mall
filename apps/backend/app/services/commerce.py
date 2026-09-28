@@ -424,6 +424,13 @@ class CommerceService:
             lambda: self.products.save_value(attribute_id, data, value_id),
         )
 
+    async def delete_value(self, attribute_id: UUID, value_id: UUID) -> None:
+        await self._write(
+            PermissionCode.SPEC_ATTRIBUTES_UPDATE,
+            value_id,
+            lambda: self.products.delete_value(attribute_id, value_id),
+        )
+
     async def read_template(self, category_id: UUID) -> TemplateRead:
         return await self.products.read_template(category_id)
 

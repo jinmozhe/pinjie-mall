@@ -104,6 +104,7 @@ export const commerceApi = {
   attributeValues: (attributeId: string) => apiRequest<StandardValueRead[]>(`/api/v1/admin/spec-attributes/${attributeId}/values`),
   createAttributeValue: (attributeId: string, input: StandardValueInput) => apiRequest<StandardValueRead>(`/api/v1/admin/spec-attributes/${attributeId}/values`, { method: "POST", body: jsonBody(input) }),
   updateAttributeValue: (attributeId: string, valueId: string, input: StandardValueUpdate) => apiRequest<StandardValueRead>(`/api/v1/admin/spec-attributes/${attributeId}/values/${valueId}`, { method: "PUT", body: jsonBody(input) }),
+  deleteAttributeValue: (attributeId: string, valueId: string) => apiRequest<void>(`/api/v1/admin/spec-attributes/${attributeId}/values/${valueId}`, { method: "DELETE" }),
   categoryTemplate: (categoryId: string) => apiRequest<TemplateRead>(`/api/v1/admin/product-categories/${categoryId}/attributes`),
   updateCategoryTemplate: (categoryId: string, input: TemplateUpdate) => apiRequest<TemplateRead>(`/api/v1/admin/product-categories/${categoryId}/attributes`, { method: "PUT", body: jsonBody(input) }),
   convertSpecifications: (productId: string, input: SpecificationConversion) => apiRequest<ProductRead>(`/api/v1/admin/products/${productId}/specification-conversions`, { method: "POST", body: jsonBody(input) }),

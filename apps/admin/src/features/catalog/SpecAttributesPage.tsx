@@ -7,6 +7,7 @@ import type {
   StandardValueUpdate,
 } from "@pinjie/api-client";
 import {
+  DeleteOutlined,
   EditOutlined,
   PlusOutlined,
   PoweroffOutlined,
@@ -22,6 +23,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Popconfirm,
   Radio,
   Select,
   Space,
@@ -269,6 +271,110 @@ function AttributeEditor({
   );
 }
 
+function ValueEditorModal({
+  attribute,
+  attributeRevision,
+  target,
+  done,
+  close,
+}: {
+  attribute: AttributeRead;
+  attributeRevision: number;
+  target: StandardValueRead | null;
+  done: () => Promise<void>;
+  close: () => void;
+}) {
+  const { message } = App.useApp();
+  const [form] = Form.useForm<{
+    code: string;
+    name: string;
+    sort_order?: number | null;
+    is_active?: boolean;
+  }>();
+
+  return (
+    <EditorModal
+      title={target ? "编辑候选值" : "添加候选值"}
+      onClose={close}
+      onSave={async () => {
+        const values = await form.validateFields();
+        if (target) {
+          const updatePayload: StandardValueUpdate = {
+            attribute_revision: attributeRevision,
+            code: values.code.trim(),
+            name: values.name.trim(),
+            sort_order: values.sort_order ?? null,
+            is_active: values.is_active ?? true,
+            revision: target.revision,
+          };
+          await commerceApi.updateAttributeValue(attribute.id, target.id, updatePayload);
+          message.success("候选值已更新");
+        } else {
+          const createPayload: StandardValueInput = {
+            attribute_revision: attributeRevision,
+            code: values.code.trim(),
+            name: values.name.trim(),
+            sort_order: values.sort_order ?? null,
+            is_active: values.is_active ?? true,
+          };
+          await commerceApi.createAttributeValue(attribute.id, createPayload);
+          message.success("候选值已添加");
+        }
+        await done();
+        close();
+      }}
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={
+          target
+            ? {
+                code: target.code,
+                name: target.name,
+                sort_order: target.sort_order ?? null,
+                is_active: target.is_active,
+              }
+            : {
+                code: "",
+                name: "",
+                sort_order: null,
+                is_active: true,
+              }
+        }
+      >
+        <Form.Item
+          name="name"
+          label="候选值名称"
+          rules={[{ required: true, whitespace: true, max: 100, message: "请输入候选值名称" }]}
+        >
+          <Input maxLength={100} placeholder="例如：曜石黑、XL、休闲娱乐" />
+        </Form.Item>
+        <Form.Item
+          name="code"
+          label="候选值编码"
+          rules={[
+            { required: true, whitespace: true, max: 64, message: "请输入候选值编码" },
+            { pattern: /^[A-Za-z0-9_-]+$/, message: "只能使用字母、数字、下划线或连字符" },
+          ]}
+        >
+          <Input
+            maxLength={64}
+            placeholder="唯一英文编码，例如：color_obsidian_black、size_xl"
+            disabled={Boolean(target)}
+          />
+        </Form.Item>
+        <Form.Item name="sort_order" label="排序">
+          <InputNumber min={0} precision={0} style={{ width: "100%" }} placeholder="数值越小越靠前，默认置空" />
+        </Form.Item>
+        <Form.Item name="is_active" label="启用状态" valuePropName="checked">
+          <Switch checkedChildren="启用" unCheckedChildren="停用" />
+        </Form.Item>
+      </Form>
+    </EditorModal>
+  );
+}
+
 function ValuesDrawer({
   attribute,
   close,
@@ -280,10 +386,10 @@ function ValuesDrawer({
   const admin = useCurrentAdmin();
   const client = useQueryClient();
   const canUpdate = canAccess(admin, "spec-attributes:update");
-  const [form] = Form.useForm();
-  const [editingValue, setEditingValue] = useState<StandardValueRead | null>(null);
+  const [valueModal, setValueModal] = useState<{ target: StandardValueRead | null } | null>(null);
   const [attributeRevision, setAttributeRevision] = useState(attribute.revision);
   const [valueSearch, setValueSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<boolean | undefined>(undefined);
   const [selectedValues, setSelectedValues] = useState<StandardValueRead[]>([]);
 
   const query = useQuery({
@@ -298,46 +404,24 @@ function ValuesDrawer({
 
   useEffect(() => {
     setSelectedValues([]);
-  }, [valueSearch]);
+  }, [valueSearch, statusFilter]);
 
   const normalizedValueSearch = valueSearch.trim().toLocaleLowerCase();
-  const filteredValues = (query.data ?? []).filter((row) =>
-    !normalizedValueSearch
-    || row.code.toLocaleLowerCase().includes(normalizedValueSearch)
-    || row.name.toLocaleLowerCase().includes(normalizedValueSearch),
-  );
+  const filteredValues = (query.data ?? []).filter((row) => {
+    const matchesSearch =
+      !normalizedValueSearch
+      || row.code.toLocaleLowerCase().includes(normalizedValueSearch)
+      || row.name.toLocaleLowerCase().includes(normalizedValueSearch);
+    const matchesStatus = statusFilter === undefined || row.is_active === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-  const onSave = async () => {
-    const values = await form.validateFields();
-    if (editingValue) {
-      const updatePayload: StandardValueUpdate = {
-        attribute_revision: attributeRevision,
-        code: values.code.trim(),
-        name: values.name.trim(),
-        sort_order: values.sort_order ?? null,
-        is_active: values.is_active ?? true,
-        revision: editingValue.revision,
-      };
-      await commerceApi.updateAttributeValue(attribute.id, editingValue.id, updatePayload);
-      message.success("候选值已更新");
-    } else {
-      const createPayload: StandardValueInput = {
-        attribute_revision: attributeRevision,
-        code: values.code.trim(),
-        name: values.name.trim(),
-        sort_order: values.sort_order ?? null,
-        is_active: values.is_active ?? true,
-      };
-      await commerceApi.createAttributeValue(attribute.id, createPayload);
-      message.success("候选值已添加");
-    }
+  const onValueSaved = async () => {
     setAttributeRevision((revision) => revision + 1);
     setSelectedValues([]);
-    form.resetFields();
-    setEditingValue(null);
     await refresh();
   };
-  const save = useLockedMutation({ mutationFn: onSave });
+
   const batchStatus = useLockedMutation({
     mutationFn: (isActive: boolean) =>
       commerceApi.attributeValuesStatus(attribute.id, {
@@ -352,13 +436,38 @@ function ValuesDrawer({
     },
     onError: (error) => message.error(errorMessage(error)),
   });
-  const busy = save.isPending || batchStatus.isPending;
+
+  const toggleSingleStatus = async (row: StandardValueRead) => {
+    try {
+      const nextActive = !row.is_active;
+      await commerceApi.attributeValuesStatus(attribute.id, {
+        targets: [{ id: row.id, revision: row.revision }],
+        is_active: nextActive,
+      });
+      message.success(`候选值已${nextActive ? "启用" : "停用"}`);
+      await onValueSaved();
+    } catch (error) {
+      message.error(errorMessage(error));
+    }
+  };
+
+  const deleteSingleValue = async (row: StandardValueRead) => {
+    try {
+      await commerceApi.deleteAttributeValue(attribute.id, row.id);
+      message.success("候选值已删除");
+      await onValueSaved();
+    } catch (error) {
+      message.error(errorMessage(error));
+    }
+  };
+
+  const busy = batchStatus.isPending;
 
   return (
     <Drawer
       title={`【${attribute.name}】候选值管理`}
       open
-      size={720}
+      width={860}
       closable={!busy}
       keyboard={!busy}
       mask={{ closable: false }}
@@ -366,70 +475,31 @@ function ValuesDrawer({
     >
       <Alert
         type="info"
-        title="标准候选值供商品建档时快速采用；停用已引用的候选值会影响关联 SKU 的可售性。"
+        title="标准候选值供商品建档时快速采用；停用已引用的候选值会影响关联 SKU 的可售性；已被商品采用的候选值不可物理删除。"
         className="mb-16"
       />
-      {canUpdate && (
-        <Form
+      <Space className="mb-16" wrap>
+        <Input
+          allowClear
           disabled={busy}
-          form={form}
-          layout="inline"
-          className="mb-16"
-          initialValues={{ sort_order: null, is_active: true }}
-        >
-          <Form.Item
-            name="code"
-            rules={[{ required: true, whitespace: true, max: 64 }]}
-          >
-            <Input placeholder="编码 (如: BLK)" style={{ width: 140 }} disabled={Boolean(editingValue)} />
-          </Form.Item>
-          <Form.Item
-            name="name"
-            rules={[{ required: true, whitespace: true, max: 100 }]}
-          >
-            <Input placeholder="候选值名称 (如: 曜石黑)" style={{ width: 180 }} />
-          </Form.Item>
-          <Form.Item name="sort_order">
-            <InputNumber placeholder="排序" min={0} precision={0} style={{ width: 80 }} />
-          </Form.Item>
-          <Form.Item name="is_active" valuePropName="checked">
-            <Switch checkedChildren="启" unCheckedChildren="停" />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button
-                type="primary"
-                loading={save.isPending}
-                disabled={batchStatus.isPending}
-                onClick={() => save.mutate(undefined)}
-              >
-                {editingValue ? "保存修改" : "添加候选值"}
-              </Button>
-              {editingValue && (
-                <Button
-                  disabled={busy}
-                  onClick={() => {
-                    setEditingValue(null);
-                    form.resetFields();
-                  }}
-                >
-                  取消
-                </Button>
-              )}
-            </Space>
-          </Form.Item>
-        </Form>
-      )}
-      {save.error && <Alert type="error" showIcon title={save.error.message || "请检查表单字段"} className="mb-16" />}
-      <Input
-        allowClear
-        disabled={busy}
-        placeholder="按候选值名称或编码筛选"
-        prefix={<SearchOutlined />}
-        style={{ width: 300, marginBottom: 16 }}
-        value={valueSearch}
-        onChange={(event) => setValueSearch(event.target.value)}
-      />
+          placeholder="按候选值名称或编码筛选"
+          prefix={<SearchOutlined />}
+          style={{ width: 260 }}
+          value={valueSearch}
+          onChange={(event) => setValueSearch(event.target.value)}
+        />
+        <Select
+          disabled={busy}
+          style={{ width: 130 }}
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { label: "全部状态", value: undefined },
+            { label: "仅显示启用", value: true },
+            { label: "仅显示停用", value: false },
+          ]}
+        />
+      </Space>
       <ResourceTable
         title="标准候选值列表"
         rows={filteredValues}
@@ -449,6 +519,15 @@ function ValuesDrawer({
         toolbar={
           canUpdate
             ? [
+                <Button
+                  key="create"
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  disabled={busy}
+                  onClick={() => setValueModal({ target: null })}
+                >
+                  添加候选值
+                </Button>,
                 <Space key="batch">
                   <Button
                     icon={<PoweroffOutlined />}
@@ -495,27 +574,65 @@ function ValuesDrawer({
             title: "操作",
             width: "1%",
             render: (_, row) =>
-               canUpdate ? (
-                 <Button
-                   size="small"
-                   disabled={busy}
-                   icon={<EditOutlined />}
-                   onClick={() => {
-                    setEditingValue(row);
-                    form.setFieldsValue({
-                      code: row.code,
-                      name: row.name,
-                      sort_order: row.sort_order,
-                      is_active: row.is_active,
-                    });
-                  }}
-                >
-                  编辑
-                </Button>
+              canUpdate ? (
+                <Space size="small">
+                  <Button
+                    size="small"
+                    disabled={busy}
+                    icon={<EditOutlined />}
+                    onClick={() => setValueModal({ target: row })}
+                  >
+                    编辑
+                  </Button>
+                  {row.is_active ? (
+                    <Popconfirm
+                      title="确认停用候选值？"
+                      description="停用后新商品建档将无法选用，存量关联商品不受影响。"
+                      okText="确认停用"
+                      cancelText="取消"
+                      onConfirm={() => toggleSingleStatus(row)}
+                    >
+                      <Button size="small" disabled={busy}>
+                        停用
+                      </Button>
+                    </Popconfirm>
+                  ) : (
+                    <Button
+                      size="small"
+                      type="primary"
+                      ghost
+                      disabled={busy}
+                      onClick={() => toggleSingleStatus(row)}
+                    >
+                      启用
+                    </Button>
+                  )}
+                  <Popconfirm
+                    title="确认删除候选值？"
+                    description="仅未被任何商品采用的候选值允许物理删除；已采用的会被系统拦截并建议停用。"
+                    okText="确认删除"
+                    cancelText="取消"
+                    okButtonProps={{ danger: true }}
+                    onConfirm={() => deleteSingleValue(row)}
+                  >
+                    <Button size="small" danger disabled={busy} icon={<DeleteOutlined />}>
+                      删除
+                    </Button>
+                  </Popconfirm>
+                </Space>
               ) : null,
           },
         ]}
       />
+      {valueModal && (
+        <ValueEditorModal
+          attribute={attribute}
+          attributeRevision={attributeRevision}
+          target={valueModal.target}
+          done={onValueSaved}
+          close={() => setValueModal(null)}
+        />
+      )}
     </Drawer>
   );
 }
