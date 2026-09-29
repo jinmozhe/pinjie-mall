@@ -9,10 +9,11 @@ import type {
   SkuRead,
   TemplateItem,
 } from "@pinjie/api-client";
-import { MinusCircleOutlined, PlusOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { CloseCircleOutlined, MinusCircleOutlined, PlusOutlined, QuestionCircleOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import {
   Alert,
+  App,
   Button,
   Checkbox,
   Col,
@@ -24,14 +25,56 @@ import {
   Row,
   Select,
   Skeleton,
+  Space,
   Table,
   type TableColumnsType,
   Tag,
   Tooltip,
 } from "antd";
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 
 import { commerceApi } from "@/lib/api/commerce";
+
+// 记录同一客户端会话内上次生成的时间戳前缀，用于秒级防重顺延
+let lastGeneratedTimestamp = "";
+
+/**
+ * 获取 14 位年月日时分秒时间戳前缀，具备同一客户端会话秒级防重顺延机制
+ */
+function getUniqueTimestampPrefix(): string {
+  const format = (d: Date) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    const seconds = String(d.getSeconds()).padStart(2, "0");
+    return `${year}${month}${day}${hours}${minutes}${seconds}`;
+  };
+
+  let tsStr = format(new Date());
+  if (tsStr <= lastGeneratedTimestamp) {
+    const lastYear = Number(lastGeneratedTimestamp.slice(0, 4));
+    const lastMonth = Number(lastGeneratedTimestamp.slice(4, 6)) - 1;
+    const lastDay = Number(lastGeneratedTimestamp.slice(6, 8));
+    const lastHours = Number(lastGeneratedTimestamp.slice(8, 10));
+    const lastMinutes = Number(lastGeneratedTimestamp.slice(10, 12));
+    const lastSeconds = Number(lastGeneratedTimestamp.slice(12, 14));
+    const nextDate = new Date(lastYear, lastMonth, lastDay, lastHours, lastMinutes, lastSeconds + 1);
+    tsStr = format(nextDate);
+  }
+  lastGeneratedTimestamp = tsStr;
+  return tsStr;
+}
+
+/**
+ * 根据时间戳前缀与索引生成 16 位纯数字 SKU 编码（14位时间戳 + 2位序号）
+ */
+function generateSkuCode(index: number, timestampPrefix?: string): string {
+  const prefix = timestampPrefix ?? getUniqueTimestampPrefix();
+  const seq = String(index + 1).padStart(2, "0");
+  return `${prefix}${seq}`;
+}
 
 type DraftSku = {
   code?: string;
@@ -201,6 +244,7 @@ export const ProductSpecificationForm = forwardRef<ProductSpecificationFormHandl
 ) {
   // 规格字段属于外层商品表单，避免嵌套 HTML form 导致校验和提交状态分离。
   const form = Form.useFormInstance<FormValues>();
+  const { message } = App.useApp();
   const initialized = useRef<string | undefined>(undefined);
   const templateQuery = useQuery({
     queryKey: ["commerce-category-template", categoryId],
@@ -338,7 +382,8 @@ export const ProductSpecificationForm = forwardRef<ProductSpecificationFormHandl
   useEffect(() => {
     if (!initialized.current || draftCombinations.length > 100) return;
     const existingDrafts = new Map((form.getFieldValue("skus") ?? []).map((sku: DraftSku) => [selectionKey(sku.selections), sku]));
-    form.setFieldValue("skus", draftCombinations.map((selections) => {
+    const batchPrefix = getUniqueTimestampPrefix();
+    form.setFieldValue("skus", draftCombinations.map((selections, index) => {
       const key = selectionKey(selections);
       const retained = existingDrafts.get(key);
       if (retained) return { ...retained, selections };
@@ -346,7 +391,7 @@ export const ProductSpecificationForm = forwardRef<ProductSpecificationFormHandl
       return {
         selections,
         enabled: prior ? true : mode === "create",
-        code: prior?.code ?? "",
+        code: prior?.code || generateSkuCode(index, batchPrefix),
         price: prior?.price ?? "0",
         cost_price: prior?.cost_price ?? null,
         market_price: prior?.market_price ?? null,
@@ -356,6 +401,21 @@ export const ProductSpecificationForm = forwardRef<ProductSpecificationFormHandl
       };
     }));
   }, [combinationSignature, draftCombinations, existingSkuBySelection, form, mode]);
+
+  const handleRegenerateCodes = () => {
+    const currentSkus: DraftSku[] = form.getFieldValue("skus") ?? [];
+    if (!currentSkus.length) {
+      message.info("暂无可操作的 SKU 组合");
+      return;
+    }
+    const batchPrefix = getUniqueTimestampPrefix();
+    const updatedSkus = currentSkus.map((sku, index) => ({
+      ...sku,
+      code: generateSkuCode(index, batchPrefix),
+    }));
+    form.setFieldValue("skus", updatedSkus);
+    message.success(`已重新为全部 ${updatedSkus.length} 个 SKU 组合生成 16 位唯一编码`);
+  };
 
   useImperativeHandle(ref, () => ({
     validate: async () => {
@@ -473,10 +533,6 @@ export const ProductSpecificationForm = forwardRef<ProductSpecificationFormHandl
       <Flex vertical gap={12}>
         {templateRows.map(({ item, attribute }) => {
           const adopted = Boolean(selected[attribute.id]);
-          const options = (valuesByAttribute.get(attribute.id) ?? []).filter((value) => value.is_active).map((value) => ({
-            value: item.is_variant ? `std:${value.id}` : value.id,
-            label: value.name,
-          }));
           return (
             <div
               key={attribute.id}
@@ -506,11 +562,9 @@ export const ProductSpecificationForm = forwardRef<ProductSpecificationFormHandl
                       className="mb-0"
                       style={{ marginBottom: 0 }}
                     >
-                      <Select
-                        mode={item.allow_custom_value ? "tags" : "multiple"}
-                        options={options}
-                        placeholder={item.allow_custom_value ? "选择标准值，或输入允许的自定义值" : "选择标准候选值"}
-                        style={{ width: "100%" }}
+                      <VariantCheckboxGroup
+                        standardValues={valuesByAttribute.get(attribute.id) ?? []}
+                        allowCustomValue={Boolean(item.allow_custom_value)}
                       />
                     </Form.Item>
                   )}
@@ -545,7 +599,9 @@ export const ProductSpecificationForm = forwardRef<ProductSpecificationFormHandl
       ) : !draftCombinations.length ? (
         <Alert showIcon type="warning" title="每个已采用的销售规格至少选择一个候选值后，才能生成 SKU 组合。" />
       ) : (
-        <Form.List name="skus">
+        <>
+          <SkuBatchToolbar form={form} onRegenerateCodes={handleRegenerateCodes} />
+          <Form.List name="skus">
           {(fields) => {
             const columns: TableColumnsType<{ name: number; key: number }> = [
               {
@@ -694,6 +750,7 @@ export const ProductSpecificationForm = forwardRef<ProductSpecificationFormHandl
             );
           }}
         </Form.List>
+        </>
       )}
     </>
   );
@@ -870,6 +927,315 @@ function DescriptionField({ attribute, item, values }: { attribute: AttributeRea
     <Form.Item name={fieldName} rules={required ? [{ required: true, message: "请选择属性值" }] : undefined} className="mb-0" style={{ marginBottom: 0 }}>
       <Select mode={attribute.value_type === "multi_select" ? "multiple" : undefined} options={options} placeholder="请选择属性值" style={{ width: "100%" }} />
     </Form.Item>
+  );
+}
+
+type VariantCheckboxGroupProps = {
+  allowCustomValue: boolean;
+  onChange?: (vals: string[]) => void;
+  standardValues: Array<{ id: string; is_active?: boolean; name: string }>;
+  value?: string[];
+};
+
+function VariantCheckboxGroup({
+  value = [],
+  onChange,
+  standardValues,
+  allowCustomValue,
+}: VariantCheckboxGroupProps) {
+  const { message } = App.useApp();
+  const [customInputText, setCustomInputText] = useState("");
+
+  // 启用的标准候选值列表
+  const activeStandardValues = useMemo(
+    () => standardValues.filter((item) => item.is_active !== false),
+    [standardValues],
+  );
+
+  // 从当前已选值中提取所有自定义值（即不以 "std:" 开头的字符串）
+  const customValuesFromProps = useMemo(
+    () => value.filter((val) => typeof val === "string" && !val.startsWith("std:")),
+    [value],
+  );
+
+  // 本地记录所有已添加过的自定义项，防止取消勾选后复选框直接消失
+  const [knownCustomValues, setKnownCustomValues] = useState<string[]>(customValuesFromProps);
+
+  useEffect(() => {
+    setKnownCustomValues((prev) => {
+      const merged = new Set([...prev, ...customValuesFromProps]);
+      return Array.from(merged);
+    });
+  }, [customValuesFromProps]);
+
+  // 所有启用的标准值 key
+  const allStandardKeys = useMemo(
+    () => activeStandardValues.map((item) => `std:${item.id}`),
+    [activeStandardValues],
+  );
+
+  // 是否已全选当前标准值
+  const isAllChecked = useMemo(() => {
+    if (!allStandardKeys.length) return false;
+    return allStandardKeys.every((k) => value.includes(k));
+  }, [allStandardKeys, value]);
+
+  const handleToggle = (targetKey: string, checked: boolean) => {
+    let next: string[];
+    if (checked) {
+      next = [...value, targetKey];
+    } else {
+      next = value.filter((k) => k !== targetKey);
+    }
+    onChange?.(next);
+  };
+
+  const handleCheckAll = () => {
+    const combined = new Set([...value, ...allStandardKeys]);
+    onChange?.(Array.from(combined));
+  };
+
+  const handleUncheckAll = () => {
+    const next = value.filter((k) => !allStandardKeys.includes(k));
+    onChange?.(next);
+  };
+
+  const handleAddCustom = () => {
+    const trimmed = customInputText.trim();
+    if (!trimmed) return;
+
+    // 检查是否与标准值同名
+    const matchedStd = activeStandardValues.find((item) => item.name === trimmed);
+    if (matchedStd) {
+      const stdKey = `std:${matchedStd.id}`;
+      if (!value.includes(stdKey)) {
+        onChange?.([...value, stdKey]);
+      }
+      setCustomInputText("");
+      message.info(`已自动勾选已有标准值【${trimmed}】`);
+      return;
+    }
+
+    // 检查是否已有同名自定义值
+    const existing = knownCustomValues.find((c) => c.toLowerCase() === trimmed.toLowerCase());
+    if (existing) {
+      if (!value.includes(existing)) {
+        onChange?.([...value, existing]);
+      }
+      setCustomInputText("");
+      message.info(`已重新勾选自定义值【${existing}】`);
+      return;
+    }
+
+    setKnownCustomValues((prev) => [...prev, trimmed]);
+    onChange?.([...value, trimmed]);
+    setCustomInputText("");
+    message.success(`已添加并勾选自定义值【${trimmed}】`);
+  };
+
+  const handleRemoveCustom = (customName: string) => {
+    setKnownCustomValues((prev) => prev.filter((c) => c !== customName));
+    onChange?.(value.filter((k) => k !== customName));
+  };
+
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px 16px", minHeight: 32 }}>
+      {/* 快捷全选 / 取消全选 */}
+      {allStandardKeys.length > 1 && (
+        <Button
+          type="link"
+          size="small"
+          style={{ padding: 0, height: "auto", fontSize: 13 }}
+          onClick={isAllChecked ? handleUncheckAll : handleCheckAll}
+        >
+          {isAllChecked ? "取消全选" : "全选"}
+        </Button>
+      )}
+
+      {/* 标准候选值复选框 */}
+      {activeStandardValues.map((std) => {
+        const stdKey = `std:${std.id}`;
+        const isChecked = value.includes(stdKey);
+        return (
+          <Checkbox
+            key={std.id}
+            checked={isChecked}
+            onChange={(e) => handleToggle(stdKey, e.target.checked)}
+          >
+            {std.name}
+          </Checkbox>
+        );
+      })}
+
+      {/* 自定义候选值复选框（带可删除小图标） */}
+      {knownCustomValues.map((customName) => {
+        const isChecked = value.includes(customName);
+        return (
+          <div key={customName} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <Checkbox
+              checked={isChecked}
+              onChange={(e) => handleToggle(customName, e.target.checked)}
+            >
+              {customName}
+            </Checkbox>
+            <CloseCircleOutlined
+              style={{ color: "#8c8c8c", cursor: "pointer", fontSize: 13 }}
+              title="删除此自定义规格值"
+              onClick={() => handleRemoveCustom(customName)}
+            />
+          </div>
+        );
+      })}
+
+      {/* 自定义规格值添加输入框 */}
+      {allowCustomValue && (
+        <Input
+          size="small"
+          placeholder="+ 自定义值 (回车添加)"
+          style={{ width: 160 }}
+          value={customInputText}
+          maxLength={50}
+          onChange={(e) => setCustomInputText(e.target.value)}
+          onPressEnter={handleAddCustom}
+          suffix={
+            customInputText.trim() ? (
+              <PlusOutlined
+                style={{ color: "#1677ff", cursor: "pointer" }}
+                onClick={handleAddCustom}
+              />
+            ) : null
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+function SkuBatchToolbar({
+  form,
+  onRegenerateCodes,
+}: {
+  form: ReturnType<typeof Form.useFormInstance<FormValues>>;
+  onRegenerateCodes: () => void;
+}) {
+  const { message } = App.useApp();
+  const [batchPrice, setBatchPrice] = useState<string | number | null>(null);
+  const [batchMarketPrice, setBatchMarketPrice] = useState<string | number | null>(null);
+  const [batchQuantity, setBatchQuantity] = useState<number | null>(null);
+
+  const handleApply = () => {
+    const hasPrice = batchPrice !== null && batchPrice !== undefined && batchPrice !== "";
+    const hasMarketPrice = batchMarketPrice !== null && batchMarketPrice !== undefined && batchMarketPrice !== "";
+    const hasQuantity = batchQuantity !== null && batchQuantity !== undefined;
+
+    if (!hasPrice && !hasMarketPrice && !hasQuantity) {
+      message.warning("请至少输入一项要批量填充的数据（销售单价、划线原价或初始库存）");
+      return;
+    }
+
+    const currentSkus: DraftSku[] = form.getFieldValue("skus") ?? [];
+    if (!currentSkus.length) {
+      message.info("暂无可操作的 SKU 组合");
+      return;
+    }
+
+    const updatedSkus = currentSkus.map((sku) => {
+      const nextSku = { ...sku };
+      if (hasPrice) {
+        nextSku.price = String(batchPrice);
+      }
+      if (hasMarketPrice) {
+        nextSku.market_price = String(batchMarketPrice);
+      }
+      if (hasQuantity) {
+        nextSku.initial_quantity = batchQuantity;
+      }
+      return nextSku;
+    });
+
+    form.setFieldValue("skus", updatedSkus);
+    const appliedFields: string[] = [];
+    if (hasPrice) appliedFields.push("销售单价");
+    if (hasMarketPrice) appliedFields.push("划线原价");
+    if (hasQuantity) appliedFields.push("初始库存");
+    message.success(`已成功批量应用 ${updatedSkus.length} 个 SKU 的【${appliedFields.join("、")}】`);
+  };
+
+  const handleReset = () => {
+    setBatchPrice(null);
+    setBatchMarketPrice(null);
+    setBatchQuantity(null);
+  };
+
+  return (
+    <div
+      style={{
+        backgroundColor: "#f7f8fa",
+        border: "1px solid #ebeef5",
+        borderRadius: 6,
+        padding: "10px 14px",
+        marginBottom: 12,
+      }}
+    >
+      <Row gutter={[12, 8]} align="middle">
+        <Col flex="0 0 auto">
+          <span style={{ fontWeight: 500, color: "#262626", fontSize: 13 }}>
+            批量填充默认值：
+          </span>
+        </Col>
+        <Col flex="0 0 auto">
+          <InputNumber
+            style={{ width: 140 }}
+            placeholder="销售单价 (元)"
+            prefix="¥"
+            min={0}
+            precision={2}
+            stringMode
+            value={batchPrice ?? undefined}
+            onChange={(val) => setBatchPrice(val ?? null)}
+          />
+        </Col>
+        <Col flex="0 0 auto">
+          <InputNumber
+            style={{ width: 150 }}
+            placeholder="划线原价 (元)"
+            prefix="¥"
+            min={0}
+            precision={2}
+            stringMode
+            value={batchMarketPrice ?? undefined}
+            onChange={(val) => setBatchMarketPrice(val ?? null)}
+          />
+        </Col>
+        <Col flex="0 0 auto">
+          <InputNumber
+            style={{ width: 140 }}
+            placeholder="初始库存 (件)"
+            min={0}
+            max={1000000000}
+            precision={0}
+            value={batchQuantity ?? undefined}
+            onChange={(val) => setBatchQuantity(val ?? null)}
+          />
+        </Col>
+        <Col flex="auto">
+          <Space size={8}>
+            <Button type="primary" onClick={handleApply}>
+              批量应用
+            </Button>
+            <Button onClick={handleReset}>
+              清空输入
+            </Button>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={onRegenerateCodes}
+            >
+              重新生成编码
+            </Button>
+          </Space>
+        </Col>
+      </Row>
+    </div>
   );
 }
 
