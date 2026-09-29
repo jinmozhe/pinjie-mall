@@ -30,6 +30,7 @@ PRD 定义用户需要什么、业务边界和验收结果；本文定义代码�
 | 网络与契约 | Taro.request、Taro.uploadFile 与既有 OpenAPI 生成类型；不直接复用 Axios 请求运行时，不新增平行契约包 |
 | 工程与发布 | 沿用根 pnpm、Node 基线、唯一锁文件、依赖观察期与构建脚本白名单；miniprogram-ci 为专项预览上传工具候选 |
 | 测试 | Vitest 优先验证纯逻辑及传输边界；组件测试需验证运行环境兼容，微信开发者工具与真机提供平台证据 |
+| 富文本渲染 | `description` 字段由 Admin Tiptap 富文本编辑器生成，以 HTML 字符串存储于后端（无数据库迁移）；小程序端使用 [`mp-html`](https://github.com/jin-yufeng/mp-html) 组件渲染，接入时需核验标签白名单（`b`、`i`、`u`、`ul`、`ol`、`li`、`p`、`span`、`font`）与内联颜色样式的兼容性，不得自行构造解析逻辑替代 `mp-html` |
 
 截至核对日，Taro React 适配包的 peer 为 React `^18`；NutUI 的 latest 为 `3.0.23-cpp`，无后缀版本 `3.0.20` 也存在。版本标签和后缀不能独立证明微信生产适配，不把 `3.0.23-cpp` 直接固定为本项目基线。`@tarojs/test-utils-react@0.1.1` 的多个 peer 指向 Taro 3.6，不列入 Taro 4 默认测试依赖；不为 SKU 纯函数新增 Jest。
 
