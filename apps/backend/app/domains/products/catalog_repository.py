@@ -1,8 +1,10 @@
+from typing import cast
 from uuid import UUID
 
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.models.asset import Asset
 from app.db.models.base import Base
 from app.db.models.catalog import (
     Brand,
@@ -34,15 +36,22 @@ class CatalogRepository:
             )
         ).one_or_none()
 
-    async def brand_page(self, page: int, page_size: int) -> tuple[list[Brand], int]:
+    async def asset_url(self, asset_id: UUID | None) -> str | None:
+        if asset_id is None:
+            return None
+        return cast(str | None, await self.session.scalar(select(Asset.url).where(Asset.id == asset_id)))
+
+    async def brand_page(self, page: int, page_size: int) -> tuple[list[tuple[Brand, str | None]], int]:
         total = int(await self.session.scalar(select(func.count()).select_from(Brand)) or 0)
-        rows = await self.session.scalars(
-            select(Brand)
+        statement = (
+            select(Brand, Asset.url)
+            .outerjoin(Asset, Brand.logo_asset_id == Asset.id)
             .order_by(Brand.sort_order.asc().nulls_last(), Brand.id.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
         )
-        return list(rows), total
+        rows = (await self.session.execute(statement)).all()
+        return [(row[0], row[1]) for row in rows], total
 
     async def attribute(self, attribute_id: UUID) -> SpecAttribute | None:
         return (

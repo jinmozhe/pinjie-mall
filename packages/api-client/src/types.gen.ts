@@ -1676,6 +1676,12 @@ export type BrandRead = {
      * 资源并发控制版本
      */
     revision: number;
+    /**
+     * Logo Url
+     *
+     * 品牌 LOGO 公开访问 URL
+     */
+    logo_url?: string | null;
 };
 
 /**

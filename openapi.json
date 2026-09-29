@@ -17616,6 +17616,18 @@
             "type": "integer",
             "title": "Revision",
             "description": "资源并发控制版本"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url",
+            "description": "品牌 LOGO 公开访问 URL"
           }
         },
         "additionalProperties": false,
