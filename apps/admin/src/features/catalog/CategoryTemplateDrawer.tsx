@@ -194,7 +194,7 @@ export function CategoryTemplateDrawer({ category, canUpdate, close, done }: Pro
   const client = useQueryClient();
   const [items, setItems] = useState<TemplateDraftItem[]>([]);
   const [revision, setRevision] = useState<number>();
-  const [attributeToAdd, setAttributeToAdd] = useState<string>();
+  const [selectedAttributeIds, setSelectedAttributeIds] = useState<string[]>([]);
   const [removeItem, setRemoveItem] = useState<TemplateDraftItem>();
   const [initialized, setInitialized] = useState(false);
   const templateQuery = useQuery({
@@ -253,16 +253,35 @@ export function CategoryTemplateDrawer({ category, canUpdate, close, done }: Pro
       return current.map((item) => (item.attribute_id === attributeId ? nextItem : item));
     });
   };
-  const addAttribute = () => {
-    if (!attributeToAdd || items.length >= 50) return;
-    setItems((current) => current.length >= 50 || current.some((item) => item.attribute_id === attributeToAdd) ? current : [...current, {
-      attribute_id: attributeToAdd,
-      is_variant: false,
-      is_required: false,
-      sort_order: null,
-      allow_custom_value: false,
-    }]);
-    setAttributeToAdd(undefined);
+  const addAttributes = () => {
+    if (selectedAttributeIds.length === 0 || items.length >= 50) return;
+    const remainingCapacity = 50 - items.length;
+    const idsToAdd = selectedAttributeIds.slice(0, remainingCapacity);
+    setItems((current) => {
+      const existing = new Set(current.map((item) => item.attribute_id));
+      const nextToAdd: TemplateDraftItem[] = [];
+      let nextVariantCount = current.filter((item) => item.is_variant).length;
+      for (const id of idsToAdd) {
+        if (!existing.has(id)) {
+          const attribute = attributesById.get(id);
+          const isSelect = Boolean(attribute?.is_active && attribute.value_type === "select");
+          const canBeVariant = isSelect && nextVariantCount < 10;
+          if (canBeVariant) {
+            nextVariantCount += 1;
+          }
+          nextToAdd.push({
+            attribute_id: id,
+            is_variant: canBeVariant,
+            is_required: canBeVariant,
+            sort_order: null,
+            allow_custom_value: canBeVariant,
+          });
+          existing.add(id);
+        }
+      }
+      return [...current, ...nextToAdd];
+    });
+    setSelectedAttributeIds([]);
   };
   const retry = () => { void Promise.all([templateQuery.refetch(), attributesQuery.refetch()]); };
   const loading = templateQuery.isLoading || attributesQuery.isLoading;
@@ -285,68 +304,85 @@ export function CategoryTemplateDrawer({ category, canUpdate, close, done }: Pro
           </Button>
         ) : null}
       >
-        <Alert
-          showIcon
-          type="info"
-          title="模板只绑定当前分类，不继承上级分类，也不会按 Excel 类目自动匹配。"
-          description="销售规格只能引用单选公共属性；描述属性不能允许自定义候选值。"
-        />
-        <QueryState loading={loading} error={queryError ? errorMessage(queryError) : undefined} onRetry={retry} />
-        {!loading && !queryError && (
-          <Flex vertical gap={16} className="mt-16">
-            {invalidItems.length > 0 && (
-              <Alert
-                showIcon
-                type="error"
-                title="模板包含已停用或不存在的公共属性"
-                description="请移除这些属性后再保存；停用的公共属性不能继续作为分类模板使用。"
-              />
-            )}
-            {canUpdate && (
-              <Flex gap={8} align="center" wrap>
-                <Select
-                  showSearch
-                  allowClear
-                  value={attributeToAdd}
-                  placeholder="选择要直接绑定的公共属性"
-                  optionFilterProp="label"
-                  style={{ minWidth: 300, flex: "1 1 360px" }}
-                  options={availableAttributes.map((attribute) => ({
-                    value: attribute.id,
-                    label: `${attribute.name}（${attribute.code}，${valueTypeLabels[attribute.value_type]}）`,
-                  }))}
-                  disabled={busy || items.length >= 50 || availableAttributes.length === 0}
-                  onChange={setAttributeToAdd}
+        <Flex vertical gap={16}>
+          <Alert
+            showIcon
+            type="info"
+            title="模板只绑定当前分类，不继承上级分类，也不会按 Excel 类目自动匹配。"
+            description="销售规格只能引用单选公共属性；描述属性不能允许自定义候选值。"
+          />
+          <QueryState loading={loading} error={queryError ? errorMessage(queryError) : undefined} onRetry={retry} />
+          {!loading && !queryError && (
+            <Flex vertical gap={16}>
+              {invalidItems.length > 0 && (
+                <Alert
+                  showIcon
+                  type="error"
+                  title="模板包含已停用或不存在的公共属性"
+                  description="请移除这些属性后再保存；停用的公共属性不能继续作为分类模板使用。"
                 />
-                <Button type="primary" icon={<PlusOutlined />} disabled={!attributeToAdd || busy || items.length >= 50} onClick={addAttribute}>
-                  添加属性
-                </Button>
-                <Typography.Text type="secondary">已绑定 {items.length}/50 项，销售规格 {variantCount}/10 项</Typography.Text>
-              </Flex>
-            )}
-            {items.length === 0 ? (
-              <Empty description={canUpdate ? "尚未直接绑定公共属性" : "当前分类未配置直接属性模板"} />
-            ) : (
-              <TemplateTable
-                attributesById={attributesById}
-                busy={busy}
-                canUpdate={canUpdate}
-                items={items}
-                variantCount={variantCount}
-                updateItem={updateItem}
-                removeItem={setRemoveItem}
-              />
-            )}
-            {!canUpdate && <Alert type="info" title="当前账号仅可查看分类模板，不能修改绑定关系。" />}
-            {save.error && <Alert showIcon type="error" title={errorMessage(save.error)} />}
-          </Flex>
-        )}
-        <Divider />
-        <Space size={4} wrap>
-          <Typography.Text type="secondary">当前分类：</Typography.Text>
-          <Typography.Text>{category.name}</Typography.Text>
-          {revision !== undefined && <Typography.Text type="secondary">版本 v{revision}</Typography.Text>}
-        </Space>
+              )}
+              {canUpdate && (
+                <Flex gap={8} align="center" wrap>
+                  <Select
+                    mode="multiple"
+                    maxTagCount="responsive"
+                    showSearch
+                    allowClear
+                    value={selectedAttributeIds}
+                    placeholder="搜索并选择公共属性（支持多选）"
+                    optionFilterProp="label"
+                    style={{ minWidth: 320, flex: "1 1 380px" }}
+                    options={availableAttributes.map((attribute) => ({
+                      value: attribute.id,
+                      label: `${attribute.name}（${attribute.code}，${valueTypeLabels[attribute.value_type]}）`,
+                    }))}
+                    disabled={busy || items.length >= 50 || availableAttributes.length === 0}
+                    onChange={setSelectedAttributeIds}
+                  />
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    disabled={selectedAttributeIds.length === 0 || busy || items.length >= 50}
+                    onClick={addAttributes}
+                  >
+                    {`添加属性${selectedAttributeIds.length > 0 ? ` (${selectedAttributeIds.length})` : ""}`}
+                  </Button>
+                  {availableAttributes.length > 1 && (
+                    <Button
+                      disabled={busy || items.length >= 50}
+                      onClick={() => setSelectedAttributeIds(availableAttributes.map((attribute) => attribute.id))}
+                    >
+                      全选可用属性
+                    </Button>
+                  )}
+                  <Typography.Text type="secondary">已绑定 {items.length}/50 项，销售规格 {variantCount}/10 项</Typography.Text>
+                </Flex>
+              )}
+              {items.length === 0 ? (
+                <Empty description={canUpdate ? "尚未直接绑定公共属性" : "当前分类未配置直接属性模板"} />
+              ) : (
+                <TemplateTable
+                  attributesById={attributesById}
+                  busy={busy}
+                  canUpdate={canUpdate}
+                  items={items}
+                  variantCount={variantCount}
+                  updateItem={updateItem}
+                  removeItem={setRemoveItem}
+                />
+              )}
+              {!canUpdate && <Alert type="info" title="当前账号仅可查看分类模板，不能修改绑定关系。" />}
+              {save.error && <Alert showIcon type="error" title={errorMessage(save.error)} />}
+            </Flex>
+          )}
+          <Divider style={{ margin: "4px 0" }} />
+          <Space size={4} wrap>
+            <Typography.Text type="secondary">当前分类：</Typography.Text>
+            <Typography.Text>{category.name}</Typography.Text>
+            {revision !== undefined && <Typography.Text type="secondary">版本 v{revision}</Typography.Text>}
+          </Space>
+        </Flex>
       </Drawer>
       <StandardConfirmModal
         open={Boolean(removeItem)}
