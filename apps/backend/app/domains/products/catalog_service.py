@@ -65,15 +65,22 @@ class CatalogService:
 
     async def brands(self, page: int, page_size: int) -> PageResult[BrandRead]:
         rows, total = await self.repository.brand_page(page, page_size)
+        items: list[BrandRead] = []
+        for brand, logo_url in rows:
+            item = BrandRead.model_validate(brand)
+            item.logo_url = logo_url
+            items.append(item)
         return PageResult[BrandRead].create(
-            items=[BrandRead.model_validate(row) for row in rows], total=total, page=page, page_size=page_size
+            items=items, total=total, page=page, page_size=page_size
         )
 
     async def read_brand(self, brand_id: UUID) -> BrandRead:
         row = await self.repository.brand(brand_id)
         if row is None:
             raise AppException(status_code=404, code=ErrorCode.NOT_FOUND, message="品牌不存在")
-        return BrandRead.model_validate(row)
+        item = BrandRead.model_validate(row)
+        item.logo_url = await self.repository.asset_url(row.logo_asset_id)
+        return item
 
     async def save_brand(self, data: BrandInput, brand_id: UUID | None = None) -> BrandRead:
         await self.repository.lock_catalog()
@@ -90,7 +97,9 @@ class CatalogService:
         row.name, row.logo_asset_id, row.description = data.name, data.logo_asset_id, data.description
         row.is_active, row.sort_order = data.is_active, data.sort_order
         await self.repository.save_entity(row)
-        return BrandRead.model_validate(row)
+        item = BrandRead.model_validate(row)
+        item.logo_url = await self.repository.asset_url(row.logo_asset_id)
+        return item
 
     async def attributes(
         self,

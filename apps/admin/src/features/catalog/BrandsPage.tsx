@@ -1,12 +1,13 @@
 import type { BrandInput, BrandRead, BrandUpdate } from "@pinjie/api-client";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Form, Input, Switch, Tag, App } from "antd";
+import { Alert, Button, Form, Image, Input, Switch, Tag, App } from "antd";
 import { useState } from "react";
 
 import { EditorModal } from "@/components/EditorModal";
 import { PageFrame } from "@/components/PageFrame";
 import { ResourceTable } from "@/components/ResourceTable";
+import { BrandLogoPicker } from "@/components/Uploader";
 import { canAccess, useCurrentAdmin } from "@/features/auth";
 import { commerceApi } from "@/lib/api/commerce";
 
@@ -21,17 +22,22 @@ function BrandEditor({
 }) {
   const { message } = App.useApp();
   const [form] = Form.useForm();
+  const [logoUrl, setLogoUrl] = useState<string | null>(target?.logo_url ?? null);
+
   return (
     <EditorModal
       title={target ? "编辑品牌" : "新建品牌"}
       onClose={close}
       onSave={async () => {
         const values = await form.validateFields();
+        const rawLogo = values.logo_asset_id;
+        const normalizedLogo =
+          typeof rawLogo === "string" ? rawLogo.trim() || null : rawLogo ?? null;
         if (target) {
           const updatePayload: BrandUpdate = {
             name: values.name.trim(),
             description: values.description?.trim() || "",
-            logo_asset_id: values.logo_asset_id?.trim() || null,
+            logo_asset_id: normalizedLogo,
             is_active: values.is_active ?? true,
             revision: target.revision,
             sort_order: target.sort_order,
@@ -41,7 +47,7 @@ function BrandEditor({
           const createPayload: BrandInput = {
             name: values.name.trim(),
             description: values.description?.trim() || "",
-            logo_asset_id: values.logo_asset_id?.trim() || null,
+            logo_asset_id: normalizedLogo,
             is_active: values.is_active ?? true,
           };
           await commerceApi.createBrand(createPayload);
@@ -54,14 +60,12 @@ function BrandEditor({
       <Form
         form={form}
         layout="vertical"
-        initialValues={
-          target ?? {
-            name: "",
-            description: "",
-            logo_asset_id: "",
-            is_active: true,
-          }
-        }
+        initialValues={{
+          name: target?.name ?? "",
+          description: target?.description ?? "",
+          logo_asset_id: target?.logo_asset_id ?? null,
+          is_active: target?.is_active ?? true,
+        }}
       >
         <Form.Item
           name="name"
@@ -73,8 +77,14 @@ function BrandEditor({
         <Form.Item name="description" label="品牌描述">
           <Input.TextArea rows={3} maxLength={500} placeholder="品牌简介（选填）" />
         </Form.Item>
-        <Form.Item name="logo_asset_id" label="LOGO 资产标识">
-          <Input maxLength={64} placeholder="文件资产 UUID（选填）" />
+        <Form.Item name="logo_asset_id" label="品牌 LOGO">
+          <BrandLogoPicker
+            url={logoUrl}
+            onChange={(assetId, url) => {
+              form.setFieldValue("logo_asset_id", assetId);
+              setLogoUrl(url);
+            }}
+          />
         </Form.Item>
         <Form.Item name="is_active" label="启用状态" valuePropName="checked">
           <Switch />
@@ -132,6 +142,28 @@ export function BrandsPage() {
             ),
           ]}
           columns={[
+            {
+              title: "LOGO",
+              dataIndex: "logo_url",
+              width: 68,
+              render: (_, row) =>
+                row.logo_url ? (
+                  <Image
+                    src={row.logo_url}
+                    alt={row.name}
+                    width={36}
+                    height={36}
+                    style={{
+                      objectFit: "contain",
+                      borderRadius: 4,
+                      border: "1px solid #f0f0f0",
+                      display: "block",
+                    }}
+                  />
+                ) : (
+                  <span style={{ color: "#bbb" }}>-</span>
+                ),
+            },
             { title: "品牌名称", dataIndex: "name", ellipsis: true },
             {
               title: "描述",

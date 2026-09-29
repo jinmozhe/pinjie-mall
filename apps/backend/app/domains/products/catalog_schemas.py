@@ -52,6 +52,7 @@ class BrandRead(BrandInput):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     revision: int
+    logo_url: str | None = Field(default=None, description="品牌 LOGO 公开访问 URL")
 
 
 class AttributeInput(CatalogInput):
