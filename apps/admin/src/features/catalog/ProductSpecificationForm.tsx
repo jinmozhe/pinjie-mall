@@ -15,11 +15,13 @@ import {
   Alert,
   Button,
   Checkbox,
+  Col,
   Divider,
   Flex,
   Form,
   Input,
   InputNumber,
+  Row,
   Select,
   Skeleton,
   Table,
@@ -476,21 +478,52 @@ export const ProductSpecificationForm = forwardRef<ProductSpecificationFormHandl
             label: value.name,
           }));
           return (
-            <div key={attribute.id} className="catalog-specification-row">
-              <Flex align="center" gap={8} wrap>
-                <Form.Item name={["selected", attribute.id]} valuePropName="checked" noStyle initialValue={item.is_required}>
-                  <Checkbox disabled={item.is_required}>{attribute.name}</Checkbox>
-                </Form.Item>
-                <Tag color={item.is_variant ? "blue" : "default"}>{item.is_variant ? "销售规格" : "描述属性"}</Tag>
-                {item.is_required && <Tag color="error">必填</Tag>}
-                {attribute.unit && <Tag>{attribute.unit}</Tag>}
-              </Flex>
-              {adopted && item.is_variant && (
-                <Form.Item name={["variants", attribute.id]} label="销售候选值" rules={[{ required: true, type: "array", min: 1, message: "至少选择一个候选值" }]} className="mt-8 mb-0">
-                  <Select mode={item.allow_custom_value ? "tags" : "multiple"} options={options} placeholder={item.allow_custom_value ? "选择标准值，或输入允许的自定义值" : "选择标准候选值"} />
-                </Form.Item>
-              )}
-              {adopted && !item.is_variant && <DescriptionField attribute={attribute} item={item} values={valuesByAttribute.get(attribute.id) ?? []} />}
+            <div
+              key={attribute.id}
+              className="catalog-specification-row"
+              style={{ padding: "4px 0" }}
+            >
+              <Row gutter={[16, 0]} align="middle">
+                <Col flex="0 0 240px">
+                  <div style={{ display: "flex", alignItems: "center", minHeight: 32, gap: 8 }}>
+                    <Form.Item name={["selected", attribute.id]} valuePropName="checked" noStyle initialValue={item.is_required}>
+                      <Checkbox disabled={item.is_required} style={{ display: "inline-flex", alignItems: "center" }}>
+                        {attribute.name}
+                      </Checkbox>
+                    </Form.Item>
+                    <Tag color={item.is_variant ? "blue" : "default"} style={{ marginInlineEnd: 0 }}>
+                      {item.is_variant ? "销售规格" : "描述属性"}
+                    </Tag>
+                    {item.is_required && <Tag color="error" style={{ marginInlineEnd: 0 }}>必填</Tag>}
+                    {attribute.unit && <Tag style={{ marginInlineEnd: 0 }}>{attribute.unit}</Tag>}
+                  </div>
+                </Col>
+                <Col flex="auto" style={{ minWidth: 0 }}>
+                  {adopted && item.is_variant && (
+                    <Form.Item
+                      name={["variants", attribute.id]}
+                      rules={[{ required: true, type: "array", min: 1, message: "至少选择一个候选值" }]}
+                      className="mb-0"
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Select
+                        mode={item.allow_custom_value ? "tags" : "multiple"}
+                        options={options}
+                        placeholder={item.allow_custom_value ? "选择标准值，或输入允许的自定义值" : "选择标准候选值"}
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  )}
+                  {adopted && !item.is_variant && (
+                    <DescriptionField attribute={attribute} item={item} values={valuesByAttribute.get(attribute.id) ?? []} />
+                  )}
+                  {!adopted && (
+                    <span style={{ color: "#bfbfbf", fontSize: 13, lineHeight: "32px", display: "inline-block" }}>
+                      未启用（勾选左侧启用此规格）
+                    </span>
+                  )}
+                </Col>
+              </Row>
             </div>
           );
         })}
@@ -812,13 +845,32 @@ function DescriptionField({ attribute, item, values }: { attribute: AttributeRea
   const fieldName = ["descriptions", attribute.id];
   const required = item.is_required;
   if (attribute.value_type === "text") {
-    return <Form.Item name={fieldName} label="属性值" rules={required ? [{ required: true, whitespace: true, message: "请填写属性值" }] : undefined} className="mt-8 mb-0"><Input maxLength={Number(attribute.validation.max_length ?? 20000)} /></Form.Item>;
+    return (
+      <Form.Item name={fieldName} rules={required ? [{ required: true, whitespace: true, message: "请填写属性值" }] : undefined} className="mb-0" style={{ marginBottom: 0 }}>
+        <Input maxLength={Number(attribute.validation.max_length ?? 20000)} placeholder="请输入属性值" style={{ width: "100%" }} />
+      </Form.Item>
+    );
   }
   if (attribute.value_type === "number") {
-    return <Form.Item name={fieldName} label={`属性值${attribute.unit ? `（${attribute.unit}）` : ""}`} rules={required ? [{ required: true, message: "请填写属性值" }] : undefined} className="mt-8 mb-0"><InputNumber stringMode min={attribute.validation.min ? String(attribute.validation.min) : undefined} max={attribute.validation.max ? String(attribute.validation.max) : undefined} precision={Number(attribute.validation.decimal_places ?? 0)} /></Form.Item>;
+    return (
+      <Form.Item name={fieldName} rules={required ? [{ required: true, message: "请填写属性值" }] : undefined} className="mb-0" style={{ marginBottom: 0 }}>
+        <InputNumber
+          stringMode
+          min={attribute.validation.min ? String(attribute.validation.min) : undefined}
+          max={attribute.validation.max ? String(attribute.validation.max) : undefined}
+          precision={Number(attribute.validation.decimal_places ?? 0)}
+          placeholder={`请输入数值${attribute.unit ? `（${attribute.unit}）` : ""}`}
+          style={{ width: "100%" }}
+        />
+      </Form.Item>
+    );
   }
   const options = values.filter((value) => value.is_active).map((value) => ({ value: value.id, label: value.name }));
-  return <Form.Item name={fieldName} label="属性值" rules={required ? [{ required: true, message: "请选择属性值" }] : undefined} className="mt-8 mb-0"><Select mode={attribute.value_type === "multi_select" ? "multiple" : undefined} options={options} /></Form.Item>;
+  return (
+    <Form.Item name={fieldName} rules={required ? [{ required: true, message: "请选择属性值" }] : undefined} className="mb-0" style={{ marginBottom: 0 }}>
+      <Select mode={attribute.value_type === "multi_select" ? "multiple" : undefined} options={options} placeholder="请选择属性值" style={{ width: "100%" }} />
+    </Form.Item>
+  );
 }
 
 export default ProductSpecificationForm;
