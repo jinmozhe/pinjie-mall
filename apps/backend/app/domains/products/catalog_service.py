@@ -70,9 +70,7 @@ class CatalogService:
             item = BrandRead.model_validate(brand)
             item.logo_url = logo_url
             items.append(item)
-        return PageResult[BrandRead].create(
-            items=items, total=total, page=page, page_size=page_size
-        )
+        return PageResult[BrandRead].create(items=items, total=total, page=page, page_size=page_size)
 
     async def read_brand(self, brand_id: UUID) -> BrandRead:
         row = await self.repository.brand(brand_id)
