@@ -15,6 +15,8 @@ class CategoryInput(BaseModel):
 
     name: str = Field(min_length=1, max_length=100, description="分类名称")
     parent_id: UUID | None = Field(default=None, description="父分类 ID，根分类为空")
+    icon_asset_id: UUID | None = Field(default=None, description="分类图标资产 ID")
+    description: str = Field(default="", max_length=20000, description="分类简述，HTML 字符串")
     sort_order: int | None = Field(default=None, ge=0, description="排序权重，值越小越靠前，不填则自动排最后")
     is_active: bool = Field(default=True, strict=True, description="分类是否启用")
 
@@ -28,6 +30,7 @@ class CategoryRead(CategoryInput):
 
     id: UUID = Field(description="分类 ID")
     revision: int = Field(description="分类版本")
+    icon_url: str | None = Field(default=None, description="分类图标公开访问 URL")
 
 
 class SkuInput(SkuFields):

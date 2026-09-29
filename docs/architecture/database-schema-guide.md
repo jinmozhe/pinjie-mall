@@ -516,7 +516,7 @@ erDiagram
 
 #### 4.05.1 商品分类表 `product_categories`
 
-实现标记：现有表，字段/约束按本版目标核对，具体差异见第 13 章。
+实现标记：现有表，`20260929_01` 已新增 `icon_asset_id` 和 `description` 字段。
 
 用途：商品树形分类体系，最多支持三级，兼作会员价格最近祖先继承的锚点。
 
@@ -525,6 +525,8 @@ erDiagram
 | `id` | UUID | 否 | 应用生成 UUID v7 | 分类主键 |
 | `name` | VARCHAR(100) | 否 | 运营录入 | 分类名称，去除首尾空白后非空 |
 | `parent_id` | UUID | 是 | NULL | 父分类外键，指向自身 id。顶级为 NULL，禁止自身引用成环 |
+| `icon_asset_id` | UUID | 是 | NULL | 分类图标资产 ID，关联 `assets.id`，受引用删除保护（RESTRICT） |
+| `description` | TEXT | 否 | 空字符串 | 分类简述，Admin Tiptap 富文本编辑器生成，HTML 字符串存储，小程序端用 `mp-html` 渲染 |
 | `sort_order` | INTEGER | 是 | NULL | 同级排序号，数字越小越靠前 |
 | `is_active` | BOOLEAN | 否 | true | 启用状态。停用分类会直接导致其下商品不可售 |
 | `revision` | INTEGER | 否 | 1 | 乐观锁版本号，每次修改递增 |

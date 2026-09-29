@@ -63,8 +63,11 @@ Page / Feature -> domain API -> http.ts -> Backend
 | 标准新增或编辑表单 | `ModalForm` 或 `DrawerForm` | 多阶段流程、跨步骤草稿、复杂焦点或独立路由可使用 Form 与页面编排 |
 | 简单详情和键值信息 | ProDescriptions 或 Ant Design Descriptions | 大量自定义布局时使用语义化组合组件 |
 | 基础反馈、导航和输入 | Ant Design 组件 | 仅在现有组件无法满足明确契约时增加项目组件 |
+| **多行文本输入（富文本）** | `src/components/RichTextEditor`（Tiptap 封装） | **禁止**使用 `Input.TextArea` 或原生 `<textarea>` 承载品牌描述、商品说明、分类简述等存储 HTML 的字段 |
 
 ProComponents 是提高标准管理场景效率的首选，不是形式上的强制。选择较低层组件时必须保持统一的加载、空数据、失败、无权限、成功反馈、分页和可访问性行为，不能借此复制基础控件或破坏设计一致性。
+
+**富文本编辑器规范**：Admin 内所有存储 HTML 的文本字段（品牌描述、商品说明、分类简述等）统一使用 `RichTextEditor` 组件。工具栏固定为简洁模式：加粗、斜体、下划线、有序/无序列表、文字颜色（18 色色块面板）、清除格式；不开启代码块、引用块、分割线等复杂扩展。组件通过标准受控 `value`/`onChange` 与 Ant Design `Form.Item` 对接，输出 HTML 字符串。列表/表格中显示该字段时，必须调用 `src/lib/text.ts` 的 `plainTextPreview(html, 150)` 去标签并截取前 150 字符，不得直接渲染或展示原始 HTML。
 
 标准列表使用 `ProTable` 时，空数据展示以 `ProTable` 内建空态为唯一来源。页面外层 `QueryState` 只负责加载、失败和重试，不传 `empty`，也不额外渲染 Ant Design `Empty`，避免同一请求产生两个“暂无数据”。未使用 `ProTable` 的列表、抽屉和面板继续由 `QueryState empty` 或 Ant Design `Empty` 提供空态。
 
