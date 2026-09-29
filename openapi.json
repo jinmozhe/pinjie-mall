@@ -17962,6 +17962,26 @@
             "title": "Parent Id",
             "description": "父分类 ID，根分类为空"
           },
+          "icon_asset_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Asset Id",
+            "description": "分类图标资产 ID"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 20000,
+            "title": "Description",
+            "description": "分类简述，HTML 字符串",
+            "default": ""
+          },
           "sort_order": {
             "anyOf": [
               {
@@ -18011,6 +18031,26 @@
             "title": "Parent Id",
             "description": "父分类 ID，根分类为空"
           },
+          "icon_asset_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Asset Id",
+            "description": "分类图标资产 ID"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 20000,
+            "title": "Description",
+            "description": "分类简述，HTML 字符串",
+            "default": ""
+          },
           "sort_order": {
             "anyOf": [
               {
@@ -18040,6 +18080,18 @@
             "type": "integer",
             "title": "Revision",
             "description": "分类版本"
+          },
+          "icon_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Url",
+            "description": "分类图标公开访问 URL"
           }
         },
         "additionalProperties": false,
@@ -18072,6 +18124,26 @@
             ],
             "title": "Parent Id",
             "description": "父分类 ID，根分类为空"
+          },
+          "icon_asset_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Asset Id",
+            "description": "分类图标资产 ID"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 20000,
+            "title": "Description",
+            "description": "分类简述，HTML 字符串",
+            "default": ""
           },
           "sort_order": {
             "anyOf": [

@@ -1905,6 +1905,18 @@ export type CategoryInput = {
      */
     parent_id?: string | null;
     /**
+     * Icon Asset Id
+     *
+     * 分类图标资产 ID
+     */
+    icon_asset_id?: string | null;
+    /**
+     * Description
+     *
+     * 分类简述，HTML 字符串
+     */
+    description?: string;
+    /**
      * Sort Order
      *
      * 排序权重，值越小越靠前，不填则自动排最后
@@ -1935,6 +1947,18 @@ export type CategoryRead = {
      */
     parent_id?: string | null;
     /**
+     * Icon Asset Id
+     *
+     * 分类图标资产 ID
+     */
+    icon_asset_id?: string | null;
+    /**
+     * Description
+     *
+     * 分类简述，HTML 字符串
+     */
+    description?: string;
+    /**
      * Sort Order
      *
      * 排序权重，值越小越靠前，不填则自动排最后
@@ -1958,6 +1982,12 @@ export type CategoryRead = {
      * 分类版本
      */
     revision: number;
+    /**
+     * Icon Url
+     *
+     * 分类图标公开访问 URL
+     */
+    icon_url?: string | null;
 };
 
 /**
@@ -1976,6 +2006,18 @@ export type CategoryUpdate = {
      * 父分类 ID，根分类为空
      */
     parent_id?: string | null;
+    /**
+     * Icon Asset Id
+     *
+     * 分类图标资产 ID
+     */
+    icon_asset_id?: string | null;
+    /**
+     * Description
+     *
+     * 分类简述，HTML 字符串
+     */
+    description?: string;
     /**
      * Sort Order
      *

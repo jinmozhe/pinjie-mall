@@ -34,6 +34,10 @@ class Category(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     parent_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("product_categories.id", ondelete="RESTRICT"), nullable=True, index=True, comment="父分类 ID"
     )
+    icon_asset_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("assets.id", ondelete="RESTRICT"), nullable=True, index=True, comment="分类图标资产 ID"
+    )
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="", comment="分类简述，HTML 字符串")
     sort_order: Mapped[int | None] = mapped_column(
         Integer, nullable=True, default=None, comment="排序权重，值越小越靠前，NULL 表示未人工设置自动排最后"
     )

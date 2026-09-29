@@ -99,7 +99,9 @@ class ProductService(SpecificationService):
                     current = by_id.get(current.parent_id) if current.parent_id is not None else None
                 if not visible:
                     continue
-            result.append(CategoryRead.model_validate(row))
+            # 联查图标资产 URL
+            icon_url = await self.repository.asset_url(row.icon_asset_id)
+            result.append(CategoryRead.model_validate(row).model_copy(update={"icon_url": icon_url}))
         return result
 
     async def save_category(self, data: CategoryInput, category_id: UUID | None = None) -> CategoryRead:
@@ -129,8 +131,12 @@ class ProductService(SpecificationService):
             data.sort_order,
             data.is_active,
         )
+        row.icon_asset_id = data.icon_asset_id
+        row.description = data.description
         await self.repository.save(row)
-        return CategoryRead.model_validate(row)
+        # 联查图标 URL 后返回
+        icon_url = await self.repository.asset_url(row.icon_asset_id)
+        return CategoryRead.model_validate(row).model_copy(update={"icon_url": icon_url})
 
     async def _category(self, category_id: UUID) -> None:
         categories = {row.id: row for row in await self.repository.categories()}
