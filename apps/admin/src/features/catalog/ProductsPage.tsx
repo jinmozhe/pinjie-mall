@@ -31,8 +31,8 @@ import { canAccess, useCurrentAdmin } from "@/features/auth";
 import { commerceApi } from "@/lib/api/commerce";
 import { errorMessage } from "@/lib/api/http";
 import { useLockedMutation } from "@/lib/useLockedMutation";
+import { history } from "@umijs/max";
 import { InventoryPanel } from "./InventoryPanel";
-import { ProductEditor } from "./ProductEditor";
 import { ProductSpecificationsPanel } from "./ProductSpecificationsPanel";
 
 export function ProductsPage() {
@@ -44,7 +44,6 @@ export function ProductsPage() {
   const [statusFilter, setStatusFilter] = useState<ProductRead["status"]>();
   const [typeFilter, setTypeFilter] = useState<ProductRead["product_type"]>();
   const [selected, setSelected] = useState<ProductRead[]>([]);
-  const [editingProduct, setEditingProduct] = useState<ProductRead | null | undefined>(undefined);
   const [inspectProduct, setInspectProduct] = useState<ProductRead | null>(null);
   const [inventorySku, setInventorySku] = useState<SkuRead | null>(null);
   const [specificationProductId, setSpecificationProductId] = useState<string>();
@@ -208,7 +207,7 @@ export function ProductsPage() {
                   key="new"
                   type="primary"
                   icon={<PlusOutlined />}
-                  onClick={() => setEditingProduct(null)}
+                  onClick={() => history.push("/catalog/products/create")}
                 >
                   新建商品
                 </Button>
@@ -269,7 +268,9 @@ export function ProductsPage() {
                     {canUpdate && (
                       <Button
                         icon={<EditOutlined />}
-                        onClick={() => setEditingProduct(row)}
+                        onClick={() =>
+                          history.push(`/catalog/products/${row.id}/edit`)
+                        }
                       >
                         编辑
                       </Button>
@@ -364,15 +365,6 @@ export function ProductsPage() {
             }))}
           />
         </Drawer>
-      )}
-
-      {editingProduct !== undefined && (
-        <ProductEditor
-          key={editingProduct?.id ?? "new"}
-          target={editingProduct}
-          close={() => setEditingProduct(undefined)}
-          done={refresh}
-        />
       )}
 
       {specificationProductId && (

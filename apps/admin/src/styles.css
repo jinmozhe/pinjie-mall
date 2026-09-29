@@ -165,9 +165,17 @@ textarea {
   width: 100%;
 }
 
-.admins-table .ant-table-measure-row,
-.responsive-data-table .ant-table-measure-row {
-  visibility: hidden;
+/* 全局 Table 测量行保护：消除 Ant Design 横向滚动列宽计算时的隐藏测量行高度，防止首行出现空白幽灵行 */
+.ant-table-measure-row,
+tr.ant-table-measure-row,
+.ant-table-tbody > tr.ant-table-measure-row,
+.ant-table-tbody > tr.ant-table-measure-row > td {
+  padding: 0 !important;
+  border: 0 !important;
+  height: 0 !important;
+  line-height: 0 !important;
+  font-size: 0 !important;
+  visibility: hidden !important;
 }
 
 .table-primary-cell {
@@ -756,4 +764,41 @@ body .ant-tag.ant-tag-success {
     align-items: start;
     padding-top: 36px;
   }
+}
+
+/* SKU 规格表格样式收敛：统一表头与行高，垂直居中且紧凑适中 */
+.sku-specification-table.ant-table-wrapper {
+  margin-top: 8px;
+}
+
+.sku-specification-table .ant-table-thead > tr > th {
+  padding: 8px 12px !important;
+  height: 46px !important;
+  vertical-align: middle !important;
+  background-color: #fafafa;
+}
+
+.sku-specification-table .ant-table-tbody > tr:not(.ant-table-measure-row) > td {
+  padding: 6px 12px !important;
+  height: 46px !important;
+  vertical-align: middle !important;
+}
+
+/* 消除 Ant Design 表格用于列宽计算的隐藏测量行，防止其占据额外高度产生空白间距 */
+.sku-specification-table .ant-table-measure-row,
+.sku-specification-table tr.ant-table-measure-row td {
+  padding: 0 !important;
+  border: 0 !important;
+  height: 0 !important;
+  line-height: 0 !important;
+  font-size: 0 !important;
+  visibility: hidden !important;
+}
+
+.sku-specification-table .ant-form-item {
+  margin-bottom: 0 !important;
+}
+
+.sku-specification-table .ant-form-item-control-input {
+  min-height: 32px !important;
 }
