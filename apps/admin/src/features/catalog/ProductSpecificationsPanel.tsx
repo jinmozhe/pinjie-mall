@@ -334,20 +334,20 @@ function SkuEditorModal({
       {sku && dimensions.length > 0 && <Alert showIcon type="warning" title="已存在 SKU 的规格组合不可原位修改。需要变更货品身份时，请使用规格转换。" className="mb-16" />}
       <Form form={form} layout="vertical" disabled={write.isPending}>
         <Flex gap={12} wrap>
-          <Form.Item name="code" label="SKU 编码" rules={[{ required: true, whitespace: true, max: 100 }]} style={{ minWidth: 220, flex: "1 1 220px" }}>
-            <Input maxLength={100} />
+          <Form.Item name="code" label="SKU 编码" tooltip="唯一商品规格编码/货号，用于仓储管理与物流发货" rules={[{ required: true, whitespace: true, max: 100 }]} style={{ minWidth: 220, flex: "1 1 220px" }}>
+            <Input maxLength={100} placeholder="SKU 编码 / 货号" />
           </Form.Item>
-          <Form.Item name="price" label="售价" rules={[{ required: true, message: "请填写售价" }]}>
-            <InputNumber min={0} precision={2} stringMode style={{ width: 140 }} />
+          <Form.Item name="price" label="售价" tooltip="顾客在小程序下单购买该规格时实付的基础单价（元）" rules={[{ required: true, message: "请填写售价" }]}>
+            <InputNumber min={0} precision={2} stringMode prefix="¥" placeholder="售价" style={{ width: 140 }} />
           </Form.Item>
-          <Form.Item name="market_price" label="划线价">
-            <InputNumber min={0} precision={2} stringMode style={{ width: 140 }} />
+          <Form.Item name="market_price" label="划线价" tooltip="市场划线参考原价（元），用于小程序前台展示划线优惠对比，选填">
+            <InputNumber min={0} precision={2} stringMode prefix="¥" placeholder="划线价 (选填)" style={{ width: 140 }} />
           </Form.Item>
-          <Form.Item name="cost_price" label="成本价">
-            <InputNumber min={0} precision={2} stringMode style={{ width: 140 }} />
+          <Form.Item name="cost_price" label="成本价" tooltip="供内部利润核算参考的采购或生产成本价（元），选填">
+            <InputNumber min={0} precision={2} stringMode prefix="¥" placeholder="成本价 (选填)" style={{ width: 140 }} />
           </Form.Item>
-          <Form.Item name="weight_grams" label="重量（克）">
-            <InputNumber min={0} max={1000000000} precision={0} style={{ width: 140 }} />
+          <Form.Item name="weight_grams" label="重量（克）" tooltip="单件物流计重，用于运费模板精确计算（克），选填">
+            <InputNumber min={0} max={1000000000} precision={0} placeholder="重量 (选填)" style={{ width: 140 }} />
           </Form.Item>
           <Form.Item name="is_active" label="启用销售" valuePropName="checked">
             <Switch checkedChildren="启用" unCheckedChildren="停用" />

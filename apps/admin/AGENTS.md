@@ -30,7 +30,7 @@
 - 搜索、筛选和重置按需实现；预计数据较多且需求不明确时，开发前向用户确认是否需要及具体条件。保留已有查询能力。
 - 操作按钮使用 Ant Design 图标并提供明确文本或 Tooltip；危险操作必须有清晰文案和错误反馈，删除与移除类操作按本节统一二次确认。
 - 页面状态至少覆盖加载、空数据、失败、无权限和成功反馈。表格与表单需处理窄屏、长文本和溢出。
-- `Table`、`ProTable` 表头和单元格须 `white-space: nowrap`，优先用 `onHeaderCell`、`onCell` 或公共表格样式；空表与自适应布局也不换行，长文本用列宽、Tooltip 或明确溢出处理。
+- `Table`、`ProTable` 表头和单元格须 `white-space: nowrap` 且 `vertical-align: middle`，优先用 `onHeaderCell`、`onCell` 或公共表格样式；空表与自适应布局也不换行，长文本用列宽、Tooltip 或明确溢出处理。表头与数据行高度保持适中统一，单元格包含 `<Form.Item>` 时必须设 `className="mb-0"` 消除额外外边距。严禁对 `ant-table-measure-row` 测量行设置高度或内边距，自定义表格行高须通过 `:not(.ant-table-measure-row)` 排除测量行，防止表头下方出现空白幽灵行。
 - `ProTable` 和 `Table` 统一设置 `scroll={{ x: "max-content" }}`，无论有无数据都保持一致。禁止用 `rows.length ? { x: "max-content" } : undefined` 做条件分支：列头的 `white-space: nowrap` 始终存在，空数据时取消 `scroll.x` 会导致列头宽度撑出容器，触发意外横向滚动条。`ResourceTable` 公共组件已固定此行为，新增独立 Table 时同样遵守。详见工程标准。
 - 操作列沿用 `width: "1%"` 和按钮布局，表头、单元格及按钮容器保持单行，不随意换行或固定大宽度。
 - 使用 `ProTable` 的列表由 `ProTable` 统一呈现空数据状态，外层 `QueryState` 只处理加载、失败和重试，禁止再传 `empty` 或额外渲染 Ant Design `Empty`。未使用 `ProTable` 的列表、抽屉和面板继续通过 `QueryState empty` 或 Ant Design `Empty` 呈现“暂无数据”。

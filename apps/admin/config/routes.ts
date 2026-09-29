@@ -15,6 +15,8 @@ export default [
     routes: [
       { path: "/catalog", redirect: "/catalog/products" },
       { path: "/catalog/products", name: "商品管理", component: "../features/catalog/ProductsPage", access: "canProducts" },
+      { path: "/catalog/products/create", component: "../features/catalog/ProductCreatePage", access: "canProducts", hideInMenu: true },
+      { path: "/catalog/products/:id/edit", component: "../features/catalog/ProductEditPage", access: "canProducts", hideInMenu: true },
       { path: "/catalog/categories", name: "商品分类", component: "../features/catalog/CategoriesPage", access: "canCategories" },
       { path: "/catalog/brands", name: "品牌管理", component: "../features/catalog/BrandsPage", access: "canBrands" },
       { path: "/catalog/spec-attributes", name: "规格属性", component: "../features/catalog/SpecAttributesPage", access: "canSpecAttributes" },

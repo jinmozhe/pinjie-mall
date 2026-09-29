@@ -140,6 +140,20 @@ ProComponents 是提高标准管理场景效率的首选，不是形式上的强
 
 验收时分别核对桌面和窄屏下的空数据、有数据宽表、筛选无结果及空与非空双向切换，确认空态居中、无多余横向滚动条且有数据时宽表滚动能力正常。
 
+### 表格行高与测量行保护策略
+
+适用于全部 Ant Design `Table`、`ProTable` 以及抽屉或弹窗中的表单化数据录入表格。
+
+**根因说明**：Ant Design 的 `Table` 组件在配置了固定列宽或 `scroll={{ x: "max-content" }}` 时，会在 `tbody` 顶部自动注入一个隐藏的列宽计算辅助行（`<tr class="ant-table-measure-row">`）。若开发者给 `td` 粗暴设置了固定高度或内边距，会将该测量行撑高，导致表头与第一行真实业务数据之间出现空白幽灵行。同时，若单元格包含 `<Form.Item>` 且未清理默认下边距，会导致数据行被撑至近 70px，与表头高度脱节。
+
+**统一规则**：
+
+1. 表头行与数据行高度保持适中统一（推荐 44px 至 48px），单元格统一设置 `vertical-align: middle`，文本保持 `white-space: nowrap`。
+2. 表格单元格内包含 `<Form.Item>` 时，必须设置 `className="mb-0"` 消除默认外边距，确保内容垂直居中。
+3. 全局样式 `styles.css` 已对 `.ant-table-measure-row` 实施零高度锁定（`padding: 0 !important; height: 0 !important; border: 0 !important; line-height: 0 !important; font-size: 0 !important; visibility: hidden !important;`）。
+4. 自定义表格数据行高度或内边距时，选择器必须显式使用 `.ant-table-tbody > tr:not(.ant-table-measure-row) > td`，严禁直接作用于全部 `td`。
+5. 避免在 `columns[].onCell` 中返回内联 `height` 与 `padding`，防止样式被克隆至内部测量行单元格。
+
 ## 列表标题与工具栏
 
 按 `apps/admin/AGENTS.md` 的列表规则，`ProTable` 通过 `headerTitle` 设置表格上方工具栏左侧的具体列表名称，例如“用户列表”“角色列表”“审计事件列表”；页面标题或 Tab 名称不能代替该标题。右侧使用内建工具按钮，显式配置如下（`query` 指当前列表的 TanStack Query 查询）：

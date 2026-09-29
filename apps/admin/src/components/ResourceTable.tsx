@@ -20,8 +20,8 @@ export function ResourceTable<T extends object>({ title, rows, columns, rowKey =
       className="responsive-data-table" rowKey={rowKey} headerTitle={title.endsWith("列表") ? title : `${title}列表`}
       dataSource={rows} search={false} loading={fetching} toolBarRender={() => toolbar ?? []}
       columns={columns.map((column) => ({ ...column,
-        onHeaderCell: () => ({ style: { whiteSpace: "nowrap" } }),
-        onCell: () => ({ style: { whiteSpace: "nowrap" } }),
+        onHeaderCell: () => ({ style: { whiteSpace: "nowrap", verticalAlign: "middle" } }),
+        onCell: () => ({ style: { whiteSpace: "nowrap", verticalAlign: "middle" } }),
       }))}
       scroll={{ x: "max-content" }}
       options={{ reload: () => { retry(); }, density: true, setting: true, fullScreen: true }}

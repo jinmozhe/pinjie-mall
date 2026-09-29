@@ -8,4 +8,5 @@ declare module "@umijs/max" {
     push: (path: string) => void;
   };
   export const Link: ComponentType<{ to: string; children?: ReactNode }>;
+  export function useParams<T extends Record<string, string | undefined>>(): T;
 }

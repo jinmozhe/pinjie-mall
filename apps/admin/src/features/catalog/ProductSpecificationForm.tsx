@@ -9,7 +9,7 @@ import type {
   SkuRead,
   TemplateItem,
 } from "@pinjie/api-client";
-import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import { MinusCircleOutlined, PlusOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import {
   Alert,
@@ -22,7 +22,10 @@ import {
   InputNumber,
   Select,
   Skeleton,
+  Table,
+  type TableColumnsType,
   Tag,
+  Tooltip,
 } from "antd";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 
@@ -510,30 +513,269 @@ export const ProductSpecificationForm = forwardRef<ProductSpecificationFormHandl
         <Alert showIcon type="warning" title="每个已采用的销售规格至少选择一个候选值后，才能生成 SKU 组合。" />
       ) : (
         <Form.List name="skus">
-          {(fields) => <Flex vertical gap={8}>{fields.map((field, index) => (
-            <SkuCombinationRow key={field.key} fieldName={field.name} index={index} />
-          ))}</Flex>}
+          {(fields) => {
+            const columns: TableColumnsType<{ name: number; key: number }> = [
+              {
+                title: "启用状态",
+                dataIndex: "name",
+                key: "enabled",
+                width: 90,
+                align: "center",
+                onHeaderCell: tableHeaderCellStyle,
+                onCell: tableBodyCellStyle,
+                render: (fieldName: number, _, index: number) => (
+                  <Form.Item name={[fieldName, "enabled"]} valuePropName="checked" className="mb-0">
+                    <Checkbox aria-label={`第 ${index + 1} 个规格组合启用状态`} />
+                  </Form.Item>
+                ),
+              },
+              {
+                title: "规格搭配",
+                key: "spec",
+                width: 170,
+                align: "center",
+                onHeaderCell: tableHeaderCellStyle,
+                onCell: tableBodyCellStyle,
+                render: (_, __, index: number) => {
+                  const specLabel = getCombinationSpecLabel(draftCombinations[index], dimensions);
+                  return specLabel ? (
+                    <Tooltip title={specLabel}>
+                      <Tag
+                        color="blue"
+                        style={{
+                          maxWidth: 150,
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                          whiteSpace: "nowrap",
+                          marginInlineEnd: 0,
+                        }}
+                      >
+                        {specLabel}
+                      </Tag>
+                    </Tooltip>
+                  ) : (
+                    <Tag style={{ marginInlineEnd: 0 }}>默认规格</Tag>
+                  );
+                },
+              },
+              {
+                title: (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    SKU 编码
+                    <Tooltip title={skuFieldTooltips.code}>
+                      <QuestionCircleOutlined style={{ color: "#8c8c8c", cursor: "pointer" }} />
+                    </Tooltip>
+                  </span>
+                ),
+                dataIndex: "name",
+                key: "code",
+                width: 220,
+                onHeaderCell: tableHeaderCellStyle,
+                onCell: tableBodyCellStyle,
+                render: (fieldName: number, _, index: number) => (
+                  <SkuCodeCell fieldName={fieldName} index={index} />
+                ),
+              },
+              {
+                title: (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    销售单价 (元)
+                    <Tooltip title={skuFieldTooltips.price}>
+                      <QuestionCircleOutlined style={{ color: "#8c8c8c", cursor: "pointer" }} />
+                    </Tooltip>
+                  </span>
+                ),
+                dataIndex: "name",
+                key: "price",
+                width: 170,
+                onHeaderCell: tableHeaderCellStyle,
+                onCell: tableBodyCellStyle,
+                render: (fieldName: number, _, index: number) => (
+                  <SkuPriceCell fieldName={fieldName} index={index} />
+                ),
+              },
+              {
+                title: (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    划线原价 (元)
+                    <Tooltip title={skuFieldTooltips.market_price}>
+                      <QuestionCircleOutlined style={{ color: "#8c8c8c", cursor: "pointer" }} />
+                    </Tooltip>
+                  </span>
+                ),
+                dataIndex: "name",
+                key: "market_price",
+                width: 170,
+                onHeaderCell: tableHeaderCellStyle,
+                onCell: tableBodyCellStyle,
+                render: (fieldName: number, _, index: number) => (
+                  <Form.Item name={[fieldName, "market_price"]} className="mb-0">
+                    <InputNumber
+                      aria-label={`组合 ${index + 1} 划线价`}
+                      min={0}
+                      precision={2}
+                      stringMode
+                      placeholder="划线价 (选填)"
+                      prefix="¥"
+                      style={{ width: "100%" }}
+                      suffix={
+                        <Tooltip title={skuFieldTooltips.market_price}>
+                          <QuestionCircleOutlined style={{ color: "#8c8c8c", cursor: "pointer" }} />
+                        </Tooltip>
+                      }
+                    />
+                  </Form.Item>
+                ),
+              },
+              {
+                title: (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    初始库存 (件)
+                    <Tooltip title={skuFieldTooltips.initial_quantity}>
+                      <QuestionCircleOutlined style={{ color: "#8c8c8c", cursor: "pointer" }} />
+                    </Tooltip>
+                  </span>
+                ),
+                dataIndex: "name",
+                key: "initial_quantity",
+                width: 160,
+                onHeaderCell: tableHeaderCellStyle,
+                onCell: tableBodyCellStyle,
+                render: (fieldName: number, _, index: number) => (
+                  <SkuInitialQuantityCell fieldName={fieldName} index={index} />
+                ),
+              },
+            ];
+
+            return (
+              <Table
+                className="sku-specification-table"
+                rowKey="key"
+                size="small"
+                bordered
+                pagination={false}
+                scroll={{ x: "max-content" }}
+                dataSource={fields}
+                columns={columns}
+              />
+            );
+          }}
         </Form.List>
       )}
     </>
   );
 });
 
-function SkuCombinationRow({ fieldName, index }: { fieldName: number; index: number }) {
+const skuFieldTooltips = {
+  code: "唯一商品规格编码/货号（如 SPU-RED-L），用于仓储物流发货识别，启用时必填",
+  price: "商品该规格的实际销售单价（元），顾客下单时实付的基础价格，启用时必填",
+  market_price: "市场划线参考原价（元），用于小程序前台展示划线优惠对比，选填",
+  initial_quantity: "录入默认仓库的初始可用物理库存件数（整数），启用时必填，默认 0",
+};
+
+const tableHeaderCellStyle = () => ({
+  style: {
+    whiteSpace: "nowrap" as const,
+    verticalAlign: "middle" as const,
+    backgroundColor: "#fafafa",
+  },
+});
+
+const tableBodyCellStyle = () => ({
+  style: {
+    whiteSpace: "nowrap" as const,
+    verticalAlign: "middle" as const,
+  },
+});
+
+function getCombinationSpecLabel(
+  selections: Record<string, string> | undefined,
+  dimensions: DraftDimension[],
+): string {
+  if (!selections || !dimensions.length) return "";
+  const parts = dimensions
+    .map((dim) => {
+      const candidateKey = selections[dim.key];
+      const candidate = dim.candidates.find((c) => c.key === candidateKey);
+      return candidate?.label || "";
+    })
+    .filter(Boolean);
+  return parts.join(" / ");
+}
+
+function SkuCodeCell({ fieldName, index }: { fieldName: number; index: number }) {
   const form = Form.useFormInstance<FormValues>();
   const enabled = Form.useWatch(["skus", fieldName, "enabled"], form) ?? false;
-  const requiredRules = enabled ? [{ required: true, whitespace: true, max: 100 }] : undefined;
+  const requiredRules = enabled ? [{ required: true, whitespace: true, max: 100, message: "请填写 SKU 编码" }] : undefined;
+
   return (
-    <div className="catalog-specification-row">
-      <Flex gap={8} wrap align="center">
-        <Form.Item name={[fieldName, "enabled"]} valuePropName="checked" className="mb-0"><Checkbox>创建此组合</Checkbox></Form.Item>
-        <Tag>组合 {index + 1}</Tag>
-        <Form.Item name={[fieldName, "code"]} rules={requiredRules} className="mb-0"><Input aria-label={`组合 ${index + 1} SKU 编码`} style={{ width: 180 }} maxLength={100} /></Form.Item>
-        <Form.Item name={[fieldName, "price"]} rules={enabled ? [{ required: true, message: "请填写售价" }] : undefined} className="mb-0"><InputNumber aria-label={`组合 ${index + 1} 售价`} min={0} precision={2} stringMode placeholder="售价" /></Form.Item>
-        <Form.Item name={[fieldName, "market_price"]} className="mb-0"><InputNumber aria-label={`组合 ${index + 1} 划线价`} min={0} precision={2} stringMode placeholder="划线价" /></Form.Item>
-        <Form.Item name={[fieldName, "initial_quantity"]} rules={enabled ? [{ required: true, message: "请填写初始库存" }] : undefined} className="mb-0"><InputNumber aria-label={`组合 ${index + 1} 初始库存`} min={0} max={1000000000} precision={0} placeholder="初始库存" /></Form.Item>
-      </Flex>
-    </div>
+    <Form.Item name={[fieldName, "code"]} rules={requiredRules} className="mb-0">
+      <Input
+        aria-label={`组合 ${index + 1} SKU 编码`}
+        placeholder="SKU 编码 / 货号"
+        maxLength={100}
+        suffix={
+          <Tooltip title={skuFieldTooltips.code}>
+            <QuestionCircleOutlined style={{ color: "#8c8c8c", cursor: "pointer" }} />
+          </Tooltip>
+        }
+      />
+    </Form.Item>
+  );
+}
+
+function SkuPriceCell({ fieldName, index }: { fieldName: number; index: number }) {
+  const form = Form.useFormInstance<FormValues>();
+  const enabled = Form.useWatch(["skus", fieldName, "enabled"], form) ?? false;
+
+  return (
+    <Form.Item
+      name={[fieldName, "price"]}
+      rules={enabled ? [{ required: true, message: "请填写售价" }] : undefined}
+      className="mb-0"
+    >
+      <InputNumber
+        aria-label={`组合 ${index + 1} 售价`}
+        min={0}
+        precision={2}
+        stringMode
+        placeholder="售价"
+        prefix="¥"
+        style={{ width: "100%" }}
+        suffix={
+          <Tooltip title={skuFieldTooltips.price}>
+            <QuestionCircleOutlined style={{ color: "#8c8c8c", cursor: "pointer" }} />
+          </Tooltip>
+        }
+      />
+    </Form.Item>
+  );
+}
+
+function SkuInitialQuantityCell({ fieldName, index }: { fieldName: number; index: number }) {
+  const form = Form.useFormInstance<FormValues>();
+  const enabled = Form.useWatch(["skus", fieldName, "enabled"], form) ?? false;
+
+  return (
+    <Form.Item
+      name={[fieldName, "initial_quantity"]}
+      rules={enabled ? [{ required: true, message: "请填写初始库存" }] : undefined}
+      className="mb-0"
+    >
+      <InputNumber
+        aria-label={`组合 ${index + 1} 初始库存`}
+        min={0}
+        max={1000000000}
+        precision={0}
+        placeholder="初始库存"
+        style={{ width: "100%" }}
+        suffix={
+          <Tooltip title={skuFieldTooltips.initial_quantity}>
+            <QuestionCircleOutlined style={{ color: "#8c8c8c", cursor: "pointer" }} />
+          </Tooltip>
+        }
+      />
+    </Form.Item>
   );
 }
 
