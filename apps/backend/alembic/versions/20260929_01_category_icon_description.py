@@ -56,8 +56,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_index("ix_product_categories_icon", table_name="product_categories")
-    op.drop_constraint(
-        "fk_product_categories_icon_asset", "product_categories", type_="foreignkey"
-    )
+    op.drop_constraint("fk_product_categories_icon_asset", "product_categories", type_="foreignkey")
     op.drop_column("product_categories", "icon_asset_id")
     op.drop_column("product_categories", "description")
