@@ -154,6 +154,19 @@ ProComponents 是提高标准管理场景效率的首选，不是形式上的强
 4. 自定义表格数据行高度或内边距时，选择器必须显式使用 `.ant-table-tbody > tr:not(.ant-table-measure-row) > td`，严禁直接作用于全部 `td`。
 5. 避免在 `columns[].onCell` 中返回内联 `height` 与 `padding`，防止样式被克隆至内部测量行单元格。
 
+### 紧凑单行表单与下边距消除策略
+
+适用于商品销售规格、自定义描述属性、左右两列分栏录入以及表格外的自定义紧凑单行表单。
+
+**根因说明**：Ant Design 默认垂直布局的 `<Form.Item>`（`.ant-form-item-vertical`）自带 24px 的 `margin-bottom`。在自定义水平栅格、左右分栏或紧凑表单中，若直接使用 `<Form.Item>` 承载控件且未清除该外边距，会导致容器下方被无故撑开 24px 额外空白，且造成左侧标题与右侧输入控件无法在 32px 标准高度物理基线上垂直对齐。同时，若仅声明 `className="mb-0"` 而全局样式中未定义具体规则，类名将失效回退到默认下边距。
+
+**统一规则**：
+
+1. 全局样式 `src/styles.css` 已固定声明 `.mb-0 { margin-bottom: 0 !important; }` 通用重置类，并针对 `.catalog-specification-row .ant-form-item` 实施直接下边距清零。
+2. 在自定义单行栅格、左右两列分栏（如商品销售规格行）或紧凑无独立堆叠 label 的场景下，所有的 `<Form.Item>` 必须显式声明 `className="mb-0"`，关键行高控制建议同步提供内联 `style={{ marginBottom: 0 }}`。
+3. 左右分栏布局中，左侧标题与标签容器统一设置 `minHeight: 32` 与 `alignItems: "center"`，右侧控件设置 `100%` 宽度与 32px 标准高度，外层通过 `Row align="middle"` 达成像素级严格垂直居中。
+4. 紧凑行默认保持精简无边框设计，避免为每个简单表单项外层包裹多余的圆角边框或灰色卡片背景块，维持页面的平整利落。
+
 ## 列表标题与工具栏
 
 按 `apps/admin/AGENTS.md` 的列表规则，`ProTable` 通过 `headerTitle` 设置表格上方工具栏左侧的具体列表名称，例如“用户列表”“角色列表”“审计事件列表”；页面标题或 Tab 名称不能代替该标题。右侧使用内建工具按钮，显式配置如下（`query` 指当前列表的 TanStack Query 查询）：

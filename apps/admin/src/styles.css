@@ -802,3 +802,12 @@ body .ant-tag.ant-tag-success {
 .sku-specification-table .ant-form-item-control-input {
   min-height: 32px !important;
 }
+
+/* 通用边距重置类与规格行表单项下边距消除 */
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+.catalog-specification-row .ant-form-item {
+  margin-bottom: 0 !important;
+}
