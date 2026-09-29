@@ -2,6 +2,8 @@ import type { BrandInput, BrandRead, BrandUpdate } from "@pinjie/api-client";
 import { EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Button, Form, Image, Input, Switch, Tag, App } from "antd";
+import { RichTextEditor } from "@/components/RichTextEditor";
+import { plainTextPreview } from "@/lib/text";
 import { useState } from "react";
 
 import { EditorModal } from "@/components/EditorModal";
@@ -75,7 +77,7 @@ function BrandEditor({
           <Input maxLength={100} placeholder="例如：品界甄选" />
         </Form.Item>
         <Form.Item name="description" label="品牌描述">
-          <Input.TextArea rows={3} maxLength={500} placeholder="品牌简介（选填）" />
+          <RichTextEditor placeholder="品牌简介（选填）" minHeight={100} />
         </Form.Item>
         <Form.Item name="logo_asset_id" label="品牌 LOGO">
           <BrandLogoPicker
@@ -169,7 +171,7 @@ export function BrandsPage() {
               title: "描述",
               dataIndex: "description",
               ellipsis: true,
-              render: (v) => v || "-",
+              render: (_, row) => plainTextPreview(row.description ?? "") || "-",
             },
             {
               title: "状态",

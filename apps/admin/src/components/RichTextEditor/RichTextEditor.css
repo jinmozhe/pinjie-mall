@@ -1,0 +1,219 @@
+/**
+ * RichTextEditor 样式
+ * 使用 CSS 变量与 Ant Design token 对接，支持亮色/暗色主题
+ */
+
+/* 外层容器 */
+.rte-wrapper {
+  border: 1px solid var(--rte-border);
+  border-radius: var(--rte-radius);
+  background: var(--rte-bg);
+  transition: border-color 0.2s;
+  overflow: hidden;
+}
+
+.rte-wrapper:focus-within {
+  border-color: var(--rte-border-focus);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rte-border-focus) 20%, transparent);
+}
+
+/* 工具栏 */
+.rte-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  background: var(--rte-toolbar-bg);
+  border-bottom: 1px solid var(--rte-border);
+  flex-wrap: wrap;
+}
+
+/* 工具栏按钮 */
+.rte-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--rte-text);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s;
+  opacity: 0.75;
+}
+
+.rte-toolbar-btn:hover {
+  background: color-mix(in srgb, var(--rte-text) 10%, transparent);
+  opacity: 1;
+}
+
+.rte-toolbar-btn--active {
+  background: color-mix(in srgb, var(--rte-border-focus) 15%, transparent);
+  color: var(--rte-border-focus);
+  opacity: 1;
+}
+
+/* 分隔线 */
+.rte-toolbar-divider {
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  background: var(--rte-border);
+  margin: 0 4px;
+}
+
+/* 颜色选择器：触发按钮容器 */
+.rte-color-picker-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* 触发按钮内的 A 图标 */
+.rte-color-trigger {
+  width: 32px;
+}
+
+.rte-color-icon {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+.rte-color-icon-a {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* 当前颜色色条 */
+.rte-color-icon-bar {
+  display: block;
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+/* 弹出色块面板 */
+.rte-color-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--rte-bg);
+  border: 1px solid var(--rte-border);
+  border-radius: 6px;
+  padding: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  min-width: 140px;
+}
+
+/* 色块网格：每行 6 个 */
+.rte-color-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+}
+
+/* 单个色块 */
+.rte-color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s, border-color 0.1s;
+}
+
+.rte-color-swatch:hover {
+  transform: scale(1.2);
+  border-color: var(--rte-border);
+}
+
+.rte-color-swatch--active {
+  border-color: var(--rte-border-focus) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--rte-border-focus) 30%, transparent);
+}
+
+/* 默认色（清除颜色）色块：白底红斜线 */
+.rte-color-swatch--default {
+  background: #fff;
+  border-color: var(--rte-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.rte-color-swatch-slash {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.rte-color-swatch-slash::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -2px;
+  right: -2px;
+  height: 1.5px;
+  background: #e03131;
+  transform: rotate(-45deg);
+  transform-origin: center;
+}
+
+/* 编辑内容区 */
+.rte-content {
+  min-height: var(--rte-min-height);
+  padding: 10px 12px;
+  color: var(--rte-text);
+  font-size: 14px;
+  line-height: 1.75;
+  outline: none;
+}
+
+/* ProseMirror 内部编辑器 */
+.rte-content .ProseMirror {
+  min-height: var(--rte-min-height);
+  outline: none;
+}
+
+/* 占位符 */
+.rte-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--rte-placeholder);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* 段落间距 */
+.rte-content .ProseMirror p {
+  margin: 0 0 0.4em;
+}
+
+.rte-content .ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+/* 列表样式 */
+.rte-content .ProseMirror ul {
+  list-style: disc;
+  padding-left: 1.4em;
+  margin: 0.3em 0;
+}
+
+.rte-content .ProseMirror ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+  margin: 0.3em 0;
+}
+
+.rte-content .ProseMirror li {
+  margin: 0.1em 0;
+}

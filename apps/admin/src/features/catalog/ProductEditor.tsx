@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Form, Input, Radio, Select, Space, App, Modal, Tabs } from "antd";
 import { useRef, useState } from "react";
 
+import { RichTextEditor } from "@/components/RichTextEditor";
+
 import { EditorModal } from "@/components/EditorModal";
 import { QueryState } from "@/components/PageFrame";
 import { commerceApi } from "@/lib/api/commerce";
@@ -174,7 +176,7 @@ function ProductEditorForm({
         </Space>
 
         <Form.Item name="description" label="商品文字说明">
-          <Input.TextArea rows={3} maxLength={20000} placeholder="商品简要说明（选填）" />
+          <RichTextEditor placeholder="商品简要说明（选填）" minHeight={120} />
         </Form.Item>
 
         <Tabs items={[
