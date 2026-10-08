@@ -6,6 +6,8 @@
 
 ### Added
 
+- 更新本次线上安全检查涉及的兼容依赖：PyJWT 2.14.0、Axios 1.20.0、Next.js 16.3.8、sharp 0.35.5 及 Umi 传递依赖，保留七天冷却、信任策略、Umi 补丁与 Web 冻结。locked/frozen 安装、Backend 轻量检查、Admin/Web 静态检查及契约无漂移核验通过；braces 尚无官方修复发行版，安全交付仍受阻。等义压缩 Admin 规则并修正活动计划登记格式，保持既有门禁阈值。
+
 - Admin 商品规格面板接入独立 SKU 批量派生弹窗，支持候选值组合、已有组合去重、草稿微调、统一填充价格与库存及保存进度反馈；描述属性编辑保留草稿元数据，并随值类型和单位切换输入控件。复用现有商品与库存 API，未修改公开契约；动态业务验证未执行。
 
 - 修复 Admin 批量派生 SKU 弹窗触发的 Umi Babel `UnionTypeAnnotation / TSArrayType` 编译错误：组合计算改用逐维归并，保留组合顺序、已有 SKU 去重和草稿复用逻辑，不调整依赖与构建配置。Admin typecheck、lint 和当前 Umi Babel 单文件内存转译核验通过；production build、Vitest 与浏览器验证未执行。
