@@ -17,7 +17,7 @@
 
 | 路径 | 状态 | 结果 | 影响范围 | 用途 |
 | --- | --- | --- | --- | --- |
-| `plans/2026-10-08_依赖安全门禁修复计划.md` | 实施中 | 不适用 | Backend、Admin、Web 历史依赖、API Client、Documentation | 修复线上依赖安全门禁并跟踪 braces 无修复发行版阻塞 |
+| `plans/2026-10-08_依赖安全门禁修复计划.md` | 实施中 | 不适用 | Backend、Admin、Web 历史依赖、API Client、Documentation | 修复可升级依赖；braces 按限时例外先合并，2026-10-22 前复核 |
 | `plans/2026-09-29_分类图标与简述字段全栈实施计划.md` | 已结束 | 已完成；Alembic 迁移 `20260929_01` 已升级本地开发库，ORM/Schema/Service 已更新，OpenAPI 重新导出，API Client 重新生成，Admin CategoriesPage 编辑器已接入图标上传和 RichTextEditor，数据库字典同步，全栈轻量门禁通过；重型验证未执行 | Backend、Admin、API Client、Database、Documentation | 分类表新增图标资产和简述字段，Admin 编辑器配套改造，API Client 重新生成 |
 | `plans/2026-09-29_品牌LOGO上传与素材库选择闭环实施计划.md` | 已结束 | 已完成；品牌新建与编辑表单支持直接上传 LOGO 与素材库单选模态弹窗选择，移除手工输入 UUID 输入框，后端 BrandRead 联查回填 logo_url，列表呈现缩略图，全栈轻量与文档门禁全部通过；未执行重型验证已明确记录 | Backend、Admin、API Client、Documentation | 品牌新建与编辑表单支持直接上传 LOGO 与素材库选择，移除手动输入 UUID，后端联查回填 logo_url，列表呈现缩略图 |
 | `plans/2026-09-28_规格候选值状态筛选与安全删除计划.md` | 已结束 | 已完成；候选值抽屉状态筛选、行内快捷启停、安全删除后端端点及引用拦截、OpenAPI 契约重新导出与 API Client 生成已全部交付，全栈适用轻量门禁通过；重型验证未执行 | Backend、Admin、API Client、Documentation | 候选值抽屉增加状态筛选与快捷启停，后端支持未引用候选值的安全删除，防止商品关联断裂并方便找回停用数据 |
