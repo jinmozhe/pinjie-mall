@@ -5,6 +5,7 @@ import type {
   AttributeValidationInput,
   CandidateAppend,
   CandidateInput,
+  CandidateRead,
   DescriptionSet,
   ProductRead,
   SkuRead,
@@ -13,6 +14,7 @@ import type {
   StandardValueRead,
 } from "@pinjie/api-client";
 import {
+  ApartmentOutlined,
   EditOutlined,
   MinusCircleOutlined,
   PlusOutlined,
@@ -48,6 +50,7 @@ import { StandardConfirmModal } from "@/components/StandardConfirmModal";
 import { commerceApi } from "@/lib/api/commerce";
 import { errorMessage } from "@/lib/api/http";
 import { useLockedMutation } from "@/lib/useLockedMutation";
+import { BatchDeriveSkuModal } from "./BatchDeriveSkuModal";
 import {
   ProductSpecificationForm,
   type ProductSpecificationFormHandle,
@@ -87,10 +90,10 @@ type SkuFormValues = {
   weight_grams?: number | null;
 };
 
-type VariantDimension = {
+export type VariantDimension = {
   adoption: AdoptionRead;
   allowCustomValue: boolean;
-  candidates: NonNullable<AdoptionRead["candidates"]>;
+  candidates: CandidateRead[];
 };
 
 const valueTypeLabels: Record<ValueType, string> = {
@@ -186,9 +189,20 @@ function customValidation(row: DescriptionDraft): AttributeValidationInput {
   };
 }
 
+function safeUUID(): string {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 function newCustomDescription(): DescriptionDraft {
   return {
-    draft_id: `custom-${globalThis.crypto.randomUUID()}`,
+    draft_id: `custom-${safeUUID()}`,
     kind: "custom",
     name: "",
     value_type: "text",
@@ -484,16 +498,20 @@ function DescriptionValueField({
   row: DescriptionDraft;
   standardValues: StandardValueRead[];
 }) {
-  const label = `属性值${row.unit ? `（${row.unit}）` : ""}`;
+  const watchedValueType = Form.useWatch(["rows", fieldName, "value_type"]) as ValueType | undefined;
+  const currentValueType = watchedValueType ?? row.value_type;
+  const watchedUnit = Form.useWatch(["rows", fieldName, "unit"]) as string | undefined;
+  const currentUnit = watchedUnit ?? row.unit;
+  const label = `属性值${currentUnit ? `（${currentUnit}）` : ""}`;
   const requiredRule = row.is_required ? [{ required: true, message: `请填写${row.name}` }] : undefined;
-  if (row.value_type === "text") {
+  if (currentValueType === "text") {
     return (
       <Form.Item name={[fieldName, "value"]} rules={row.is_required ? [{ required: true, whitespace: true, message: `请填写${row.name}` }] : undefined} className="mb-0">
         <Input aria-label={label} maxLength={Number(row.validation.max_length ?? 20000)} placeholder={label} />
       </Form.Item>
     );
   }
-  if (row.value_type === "number") {
+  if (currentValueType === "number") {
     return (
       <Form.Item name={[fieldName, "value"]} rules={requiredRule} className="mb-0">
         <InputNumber
@@ -513,8 +531,8 @@ function DescriptionValueField({
     <Form.Item name={[fieldName, "value"]} rules={requiredRule} className="mb-0">
       <Select
         aria-label={label}
-        mode={row.value_type === "multi_select" ? "multiple" : undefined}
-        maxCount={row.value_type === "multi_select" ? Number(row.validation.max_selected ?? undefined) : undefined}
+        mode={currentValueType === "multi_select" ? "multiple" : undefined}
+        maxCount={currentValueType === "multi_select" ? Number(row.validation.max_selected ?? undefined) : undefined}
         options={options}
         placeholder={options.length ? label : "没有可用标准候选值"}
       />
@@ -523,6 +541,9 @@ function DescriptionValueField({
 }
 
 function CustomDescriptionConfiguration({ fieldName, row }: { fieldName: number; row: DescriptionDraft }) {
+  const watchedValueType = Form.useWatch(["rows", fieldName, "value_type"]) as ValueType | undefined;
+  const currentValueType = watchedValueType ?? row.value_type;
+
   return (
     <Flex gap={8} wrap align="center">
       <Form.Item name={[fieldName, "name"]} rules={[{ required: true, whitespace: true, max: 100, message: "请填写属性名称" }]} className="mb-0" style={{ width: 160 }}>
@@ -534,7 +555,7 @@ function CustomDescriptionConfiguration({ fieldName, row }: { fieldName: number;
       <Form.Item name={[fieldName, "is_required"]} valuePropName="checked" className="mb-0">
         <Switch checkedChildren="必填" unCheckedChildren="选填" aria-label="是否必填" />
       </Form.Item>
-      {row.value_type === "text" ? (
+      {currentValueType === "text" ? (
         <Form.Item name={[fieldName, "validation", "max_length"]} rules={[{ required: true, message: "请填写最大长度" }]} className="mb-0" style={{ width: 132 }}>
           <InputNumber aria-label="最大长度" min={1} max={20000} precision={0} placeholder="最大长度" style={{ width: "100%" }} />
         </Form.Item>
@@ -576,6 +597,7 @@ export function ProductSpecificationsPanel({
   const conversionRef = useRef<ProductSpecificationFormHandle>(null);
   const initializedProductRef = useRef<string | undefined>(undefined);
   const [descriptionDirty, setDescriptionDirty] = useState(false);
+  const [descriptionDraftsList, setDescriptionDraftsList] = useState<DescriptionDraft[]>([]);
   const [descriptionBaseRevision, setDescriptionBaseRevision] = useState<number>();
   const [discardDescriptionDraft, setDiscardDescriptionDraft] = useState(false);
   const [publicDescriptionId, setPublicDescriptionId] = useState<string>();
@@ -587,6 +609,8 @@ export function ProductSpecificationsPanel({
   const [conversionEditorOpen, setConversionEditorOpen] = useState(false);
   const [conversionConfirmOpen, setConversionConfirmOpen] = useState(false);
   const [preparedConversion, setPreparedConversion] = useState<SpecificationConversion>();
+  const [batchDeriveOpen, setBatchDeriveOpen] = useState(false);
+  const [batchDeriveBusy, setBatchDeriveBusy] = useState(false);
 
   const productQuery = useQuery({
     queryKey: ["commerce-product", productId],
@@ -678,20 +702,21 @@ export function ProductSpecificationsPanel({
     () => currentAdoptions.filter((adoption) => adoption.is_variant && (!adoption.attribute_id || !templateVariantIds.has(adoption.attribute_id))),
     [currentAdoptions, templateVariantIds],
   );
-  const descriptionRows = Form.useWatch("rows", descriptionForm) ?? [];
   const dependenciesLoading = templateQuery.isLoading || attributeQueries.some((query) => query.isLoading) || valueQueries.some((query) => query.isLoading);
   const dependenciesError = templateQuery.error ?? attributeQueries.find((query) => query.error)?.error ?? valueQueries.find((query) => query.error)?.error;
   const currentSkuRows = (product?.skus ?? []).filter((sku) => sku.archived_at === null);
-  const activeAttributeCount = currentAdoptions.filter((adoption) => adoption.is_variant).length + descriptionRows.length;
+  const activeAttributeCount = currentAdoptions.filter((adoption) => adoption.is_variant).length + descriptionDraftsList.length;
   const availableDescriptionAttributes = templateRows.filter(({ item, attribute }) => (
     !item.is_variant
     && attribute.is_active
-    && !descriptionRows.some((row) => row.attribute_id === attribute.id)
+    && !descriptionDraftsList.some((draft) => draft.attribute_id === attribute.id)
   ));
 
   const resetDescriptionDraft = useCallback((next: ProductRead) => {
+    const initialList = descriptionDrafts(next);
+    setDescriptionDraftsList(initialList);
     descriptionForm.resetFields();
-    descriptionForm.setFieldsValue({ rows: descriptionDrafts(next) });
+    descriptionForm.setFieldsValue({ rows: initialList });
     initializedProductRef.current = `${next.id}:${next.revision}`;
     setDescriptionBaseRevision(next.revision);
     setDescriptionDirty(false);
@@ -728,7 +753,7 @@ export function ProductSpecificationsPanel({
       message.success("规格转换已完成，旧 SKU 已归档，请盘点新 SKU 库存");
     },
   });
-  const busy = saveDescriptions.isPending || candidateSaving || skuSaving || convert.isPending;
+  const busy = saveDescriptions.isPending || candidateSaving || skuSaving || convert.isPending || batchDeriveBusy;
 
   const refreshDetail = async () => {
     await Promise.all([
@@ -745,48 +770,71 @@ export function ProductSpecificationsPanel({
       throw new Error("商品已变更，当前描述草稿不能覆盖最新数据。请明确放弃草稿后重新读取。");
     }
     const values = await descriptionForm.validateFields();
-    const rows = values.rows ?? [];
-    if (variants.length + rows.length > 50) throw new Error("商品属性最多五十项");
+    const formRows = (values.rows ?? []) as Partial<DescriptionDraft>[];
+    if (variants.length + descriptionDraftsList.length > 50) throw new Error("商品属性最多五十项");
     const currentNames = new Set<string>();
     const existing = [];
     const added: AdoptionInput[] = [];
-    for (const [index, row] of rows.entries()) {
-      const value = descriptionValue(row);
-      const name = row.name.trim();
+
+    for (const [index, draft] of descriptionDraftsList.entries()) {
+      const formRow = formRows[index] ?? {};
+      const mergedDraft: DescriptionDraft = {
+        ...draft,
+        ...formRow,
+        value: formRow.value !== undefined ? formRow.value : draft.value,
+      };
+      const value = descriptionValue(mergedDraft);
+      const name = (draft.kind === "custom" ? (formRow.name ?? draft.name ?? "") : draft.name).trim();
       if (!name) throw new Error(`第 ${index + 1} 项描述属性缺少名称`);
       if (currentNames.has(name)) throw new Error(`描述属性名称重复：${name}`);
       currentNames.add(name);
-      if (row.is_required && value === null) throw new Error(`${name}为必填项`);
-      if (row.kind === "existing") {
-        if (!row.adoption_id) throw new Error("描述属性缺少采用标识，请重新读取");
-        existing.push({ adoption_id: row.adoption_id, value });
+
+      const isRequired = draft.kind === "custom" ? Boolean(formRow.is_required ?? draft.is_required) : draft.is_required;
+      if (isRequired && value === null) throw new Error(`${name}为必填项`);
+
+      if (draft.kind === "existing") {
+        if (!draft.adoption_id) throw new Error("描述属性缺少采用标识，请重新读取");
+        existing.push({ adoption_id: draft.adoption_id, value });
         continue;
       }
-      if (row.kind === "public") {
-        if (!row.attribute_id) throw new Error("公共描述属性缺少标识");
-        const attribute = attributesById.get(row.attribute_id);
+      if (draft.kind === "public") {
+        if (!draft.attribute_id) throw new Error("公共描述属性缺少标识");
+        const attribute = attributesById.get(draft.attribute_id);
         if (!attribute?.is_active) throw new Error("公共描述属性已停用或尚未加载完成，请重新读取");
         added.push({
           key: `description-public-${attribute.id}`,
           attribute_id: attribute.id,
           source_attribute_revision: attribute.revision,
           is_variant: false,
-          is_required: row.is_required,
+          is_required: draft.is_required,
           value,
         });
         continue;
       }
-      added.push({
-        key: row.draft_id,
+
+      const customValueType = formRow.value_type ?? draft.value_type;
+      const customUnit = customValueType === "number" ? formRow.unit?.trim() || null : null;
+      const customDraftForValidation: DescriptionDraft = {
+        ...draft,
+        ...formRow,
         name,
-        value_type: row.value_type,
-        unit: row.value_type === "number" ? row.unit?.trim() || null : null,
-        validation: customValidation(row),
+        value_type: customValueType,
+        unit: customUnit,
+        validation: formRow.validation ?? draft.validation,
+      };
+
+      added.push({
+        key: draft.draft_id || `custom-${safeUUID()}`,
+        name,
+        value_type: customValueType,
+        unit: customUnit,
+        validation: customValidation(customDraftForValidation),
         is_variant: false,
-        is_required: row.is_required,
+        is_required: isRequired,
         value,
       });
     }
+
     await saveDescriptions.mutateAsync({
       revision: product.revision,
       category_revision: template.revision,
@@ -885,7 +933,7 @@ export function ProductSpecificationsPanel({
                           onClick={() => {
                             const match = templateRows.find(({ attribute }) => attribute.id === publicDescriptionId);
                             if (!match) return;
-                            actions.add({
+                            const newDraft: DescriptionDraft = {
                               draft_id: `public-${match.attribute.id}`,
                               attribute_id: match.attribute.id,
                               source_attribute_revision: match.attribute.revision,
@@ -896,8 +944,11 @@ export function ProductSpecificationsPanel({
                               validation: match.attribute.validation,
                               is_required: Boolean(match.item.is_required),
                               value: null,
-                            });
+                            };
+                            actions.add(newDraft);
+                            setDescriptionDraftsList((prev) => [...prev, newDraft]);
                             setPublicDescriptionId(undefined);
+                            setDescriptionDirty(true);
                           }}
                         >
                           添加公共描述
@@ -905,7 +956,12 @@ export function ProductSpecificationsPanel({
                         <Button
                           icon={<PlusOutlined />}
                           disabled={busy || activeAttributeCount >= 50}
-                          onClick={() => actions.add(newCustomDescription())}
+                          onClick={() => {
+                            const newDraft = newCustomDescription();
+                            actions.add(newDraft);
+                            setDescriptionDraftsList((prev) => [...prev, newDraft]);
+                            setDescriptionDirty(true);
+                          }}
                         >
                           添加商品独有描述
                         </Button>
@@ -919,7 +975,10 @@ export function ProductSpecificationsPanel({
                           size="small"
                           pagination={false}
                           scroll={{ x: "max-content" }}
-                          dataSource={fields.map((field) => ({ field, row: descriptionRows[field.name] })).filter((item): item is { field: typeof fields[number]; row: DescriptionDraft } => Boolean(item.row))}
+                          dataSource={fields.map((field) => {
+                            const row = descriptionDraftsList[field.name];
+                            return { field, row };
+                          }).filter((item): item is { field: typeof fields[number]; row: DescriptionDraft } => Boolean(item.row))}
                           columns={[
                             {
                               title: "属性",
@@ -994,7 +1053,9 @@ export function ProductSpecificationsPanel({
                         onConfirm={async () => {
                           if (!descriptionRemoval) return;
                           actions.remove(descriptionRemoval.index);
+                          setDescriptionDraftsList((prev) => prev.filter((_, idx) => idx !== descriptionRemoval.index));
                           setDescriptionRemoval(undefined);
+                          setDescriptionDirty(true);
                         }}
                       />
                     </>
@@ -1063,6 +1124,13 @@ export function ProductSpecificationsPanel({
                     onClick={() => setSkuEditor(null)}
                   >
                     新增 SKU
+                  </Button>
+                  <Button
+                    icon={<ApartmentOutlined />}
+                    disabled={busy || currentSkuRows.length >= 100 || variants.length === 0}
+                    onClick={() => setBatchDeriveOpen(true)}
+                  >
+                    批量派生 SKU
                   </Button>
                   <Tooltip title={legacyVariants.length ? `当前存在分类模板外的销售规格：${legacyVariants.map((adoption) => adoption.name_snapshot).join("、")}` : "转换销售维度或货品身份"}>
                     <span>
@@ -1138,6 +1206,16 @@ export function ProductSpecificationsPanel({
           open
           close={() => setSkuEditor(undefined)}
           onBusyChange={setSkuSaving}
+          onSaved={(next) => updateProduct(next)}
+        />
+      )}
+      {product && (
+        <BatchDeriveSkuModal
+          open={batchDeriveOpen}
+          close={() => setBatchDeriveOpen(false)}
+          dimensions={variants}
+          product={product}
+          onBusyChange={setBatchDeriveBusy}
           onSaved={(next) => updateProduct(next)}
         />
       )}
