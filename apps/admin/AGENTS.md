@@ -41,15 +41,15 @@
 - 提交前设置同步防重锁，提交期间确认按钮显示 Loading 并禁用，禁止取消、关闭、遮罩和 Esc 关闭；失败保留弹窗、目标、草稿和批量选择，显示明确错误后允许用户重试，成功才关闭、清理选择或刷新。已确认的目标和版本不能在重试中被静默替换。
 - 启停、恢复、密码重置、会话撤销、身份调整、角色分配、权限修改和筛选或选择清空等非删除操作保留原交互；不因本规则增加密码二次确认或替代服务端授权。详细接入与验证要求见 `docs/architecture/admin-engineering-standard.md`。
 - 登录安全事件、审计事件、请求元数据及产品需求明确登记的不可变历史记录属于只读日志列表，不提供选择列、人工删除或批量写操作。普通业务数据不得自行归类为日志以规避批量能力。
-- **富文本输入规则**：Admin 中所有需要多行文本输入的字段（如品牌描述、商品说明、分类简述等），必须统一使用 `src/components/RichTextEditor` 封装的 Tiptap 富文本编辑器组件，禁止使用原生 `<textarea>` 或 Ant Design 的 `Input.TextArea`。工具栏采用简洁模式：加粗、斜体、下划线、有序/无序列表、文字颜色（色块面板）、清除格式，不开启代码块、引用块、分割线等复杂扩展。编辑器输出 HTML 字符串存储于后端，在列表中显示时必须通过 `src/lib/text.ts` 的 `plainTextPreview(html, 150)` 函数去除 HTML 标签并截取前 150 字符。`RichTextEditor` 与 Ant Design Form 通过标准受控 `value` / `onChange` 对接，不需要额外适配器。
+- **富文本输入规则**：多行文本字段（品牌描述、商品说明、分类简述等）统一使用 `src/components/RichTextEditor` 封装的 Tiptap，禁止原生 `<textarea>` 和 `Input.TextArea`。工具栏仅含加粗、斜体、下划线、有序/无序列表、文字颜色色块面板、清除格式；禁用代码块、引用块、分割线等扩展。后端存储 HTML；列表用 `src/lib/text.ts` 的 `plainTextPreview(html, 150)` 去标签并截取前 150 字符。通过标准受控 `value` / `onChange` 接入 Ant Design Form，无需适配器。
 - 不使用营销页式巨型标题、装饰性卡片堆叠、夸张圆角、重阴影或花哨动效。
 
 ## 验证
 
-- Admin 的默认自动门禁只有 `pnpm --filter @pinjie/admin typecheck` 和 `pnpm --filter @pinjie/admin lint`。日常开发、普通提交、`$git-sync`、Push 和 Pull Request 均遵守这一范围。
+- Admin 的默认自动门禁只有 `pnpm --filter @pinjie/admin typecheck` 和 `pnpm --filter @pinjie/admin lint`；日常开发、提交、`$git-sync`、Push 和 PR 均遵守。
 - Admin 采用 Vitest、React Testing Library、jsdom 和 MSW 作为单元与组件测试栈，并使用 Playwright 执行真实浏览器跨栈 E2E；关键页面通过 axe 自动扫描可访问性。详细分层遵守 `docs/architecture/testing-strategy.md`。
 - 未经用户在当前任务中明确点名，禁止运行 Admin production build、定向或全量 Vitest、Playwright、axe 浏览器扫描及其他浏览器自动化。`$git-sync` 不提供隐式授权，GitHub Actions 的 Push、Pull Request 和定时触发也不得执行这些命令。
-- 用户明确授权时只执行被点名的命令和范围，授权不延续到后续任务；测试或构建失败必须如实报告。未获授权的项目记录为“按项目策略未执行”，不能表述为通过或待 GitSync 执行。
+- 重型验证授权仅限当前任务点名的命令和范围。失败如实报告；未授权项记为“按项目策略未执行”，不得写成通过或待 GitSync 执行。
 - 测试、构建和 E2E 脚本继续保留，供用户本地人工检查或明确授权的专项验证使用。人工页面体验没有可核验证据时，不记为自动测试或完整跨栈通过。
 - 应用出现入口但缺少测试脚本或必要测试时属于 `partial`，仓库门禁必须失败，禁止退回空骨架规避检查。
 - 用户明确授权浏览器验证时，检查桌面与移动端视口、关键流程、文字和横向溢出，并只清理本次启动的服务、进程和标签。

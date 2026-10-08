@@ -17,14 +17,25 @@ overrides:
   "colord@<2.9.4": 2.9.4
   "markdownlint-cli2@0.23.2>smol-toml": 1.7.1
   fast-uri: 3.1.8
+  "next@16.3.3": 16.3.8
+  "@next/eslint-plugin-next@16.3.3": 16.3.8
+  "piscina@>=4 <4.9.4": 4.9.4
+  "proxy-addr@>=2 <2.0.8": 2.0.8
+  "brace-expansion@>=1 <1.1.20": 1.1.20
+  "brace-expansion@>=2 <2.1.6": 2.1.6
+  "brace-expansion@>=5 <5.0.11": 5.0.11
+  "probe-image-size@>=7 <7.4.0": 7.4.0
+  "compression@>=1 <1.8.2": 1.8.2
+  "source-map-js@>=1 <1.2.2": 1.2.2
   path-to-regexp: 8.4.2
   qiankun: 2.10.16
   "js-yaml@<5": 4.3.2
-  "sharp@>=0.35.3 <0.35.4": 0.35.4
+  "sharp@>=0.35.3 <0.35.5": 0.35.5
   "svgo@>=2 <2.8.4": 2.8.4
   immer: 9.0.6
   "node-fetch@<2.6.7": 2.6.7
-  "axios@<0.31.2": 1.19.0
+  "axios@<0.31.2": 1.20.0
+  "axios@>=1.13.0 <1.20.0": 1.20.0
   "image-size@<2.0.3": 2.0.3
   "@babel/core@<=7.29.0": 7.29.7
   "@babel/runtime@<7.26.10": 7.29.7
