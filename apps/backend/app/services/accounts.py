@@ -26,39 +26,26 @@ from app.services.authentication import SessionArtifacts
 from app.services.security_events import login_event
 
 
-class UserAccountService:
-    def __init__(
-        self,
-        *,
-        session: AsyncSession,
-        settings: Settings,
-        password_manager: PasswordManager,
-        metadata: RequestMetadata,
-    ) -> None:
+class UserProfileService:
+    """Credential-independent profile writes shared by browser and miniapp clients."""
+
+    def __init__(self, *, session: AsyncSession, settings: Settings) -> None:
         self.session = session
         self.settings = settings
-        self.password_manager = password_manager
-        self.metadata = metadata
         self.users = UserRepository(session)
         self.assets = AssetRepository(session)
-        self.sessions = SessionRepository(session)
-        web_secret, _, web_hmac, _ = settings.authentication_secrets()
-        self.jwt_secret = web_secret
-        self.hmac_key = web_hmac
 
     async def update_profile(self, user_id: uuid.UUID, payload: UserUpdateIn) -> User:
         async with transaction_scope(self.session):
             user = await self.users.get(user_id, for_update=True)
             if user is None or user.deleted_at is not None:
                 raise AppException(status_code=404, code=ErrorCode.USER_NOT_FOUND, message="用户不存在")
+            if not user.is_active:
+                raise AppException(status_code=403, code=ErrorCode.AUTH_ACCOUNT_DISABLED, message="账户已停用")
             if "email" in payload.model_fields_set and payload.email:
                 existing = await self.users.get_by_email(payload.email)
                 if existing is not None and existing.id != user.id:
-                    raise AppException(
-                        status_code=409,
-                        code=ErrorCode.STATE_CONFLICT,
-                        message="邮箱已被使用",
-                    )
+                    raise AppException(status_code=409, code=ErrorCode.STATE_CONFLICT, message="邮箱已被使用")
             if "display_name" in payload.model_fields_set:
                 user.display_name = payload.display_name.strip() if payload.display_name else None
             if "email" in payload.model_fields_set:
@@ -70,6 +57,8 @@ class UserAccountService:
             user = await self.users.get(user_id, for_update=True)
             if user is None or user.deleted_at is not None:
                 raise AppException(status_code=404, code=ErrorCode.USER_NOT_FOUND, message="用户不存在")
+            if not user.is_active:
+                raise AppException(status_code=403, code=ErrorCode.AUTH_ACCOUNT_DISABLED, message="账户已停用")
             if payload.asset_id is None:
                 user.avatar = None
                 return user
@@ -85,6 +74,24 @@ class UserAccountService:
                 raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="无权使用该头像资产")
             user.avatar = asset.url
         return user
+
+
+class UserAccountService(UserProfileService):
+    def __init__(
+        self,
+        *,
+        session: AsyncSession,
+        settings: Settings,
+        password_manager: PasswordManager,
+        metadata: RequestMetadata,
+    ) -> None:
+        super().__init__(session=session, settings=settings)
+        self.password_manager = password_manager
+        self.metadata = metadata
+        self.sessions = SessionRepository(session)
+        web_secret, _, web_hmac, _ = settings.authentication_secrets()
+        self.jwt_secret = web_secret
+        self.hmac_key = web_hmac
 
     async def change_password(
         self,
@@ -369,4 +376,4 @@ class AdminAccountService:
         )
 
 
-__all__ = ["AdminAccountService", "UserAccountService"]
+__all__ = ["AdminAccountService", "UserAccountService", "UserProfileService"]

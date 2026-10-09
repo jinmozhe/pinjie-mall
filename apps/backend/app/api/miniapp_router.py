@@ -1,15 +1,19 @@
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from pydantic import BaseModel
 
+from app.api.dependencies import AssetServiceDependency
 from app.api.lifecycle_dependencies import Lifecycle
 from app.api.miniapp_dependencies import (
     MiniappAddresses,
     MiniappAuth,
+    MiniappAvatarUploader,
+    MiniappFinance,
     MiniappHelp,
     MiniappPrincipal,
+    MiniappProfile,
     MiniappTrade,
     require_miniapp_profile,
 )
@@ -19,6 +23,7 @@ from app.core.identifiers import new_uuid7
 from app.core.pagination import PageResult
 from app.core.response import ResponseModel, success_response
 from app.domains.addresses import AddressInput, AddressRead, AddressUpdate
+from app.domains.assets.schemas import UploadScene
 from app.domains.auth.miniapp_schemas import (
     MiniappCapabilitiesRead,
     MiniappLoginIn,
@@ -36,6 +41,18 @@ from app.domains.lifecycle.schemas import (
     RefundRequestRead,
 )
 from app.domains.orders import CheckoutQuote, CheckoutRequest, OrderRead
+from app.domains.users.schemas import UserAvatarUpdateIn, UserUpdateIn
+from app.services.miniapp_finance_schemas import (
+    MiniappAvatarAssetRead,
+    MiniappAvatarUpdate,
+    MiniappCommissionRead,
+    MiniappMemberRead,
+    MiniappProfileUpdate,
+    MiniappWalletLedgerRead,
+    MiniappWalletRead,
+    MiniappWithdrawalRead,
+    WalletType,
+)
 from app.services.miniapp_trade_schemas import (
     MiniappHelpRead,
     MiniappRefundLookupRead,
@@ -50,6 +67,100 @@ class MiniappCheckoutIntentRead(BaseModel):
 
 
 router = APIRouter(prefix="/miniapp", tags=["小程序"], dependencies=[Depends(require_miniapp_profile)])
+
+
+@router.patch("/me", response_model=ResponseModel[MiniappUserRead], summary="修改本人小程序昵称")
+async def profile_update(
+    payload: MiniappProfileUpdate, service: MiniappProfile, current: MiniappPrincipal
+) -> ResponseModel[MiniappUserRead]:
+    user = await service.update_profile(current.user.id, UserUpdateIn(display_name=payload.display_name))
+    return success_response(data=MiniappUserRead.model_validate(user), request_id=current_request_id())
+
+
+@router.put("/me/avatar", response_model=ResponseModel[MiniappUserRead], summary="绑定或移除本人头像资产")
+async def avatar_update(
+    payload: MiniappAvatarUpdate, service: MiniappProfile, current: MiniappPrincipal
+) -> ResponseModel[MiniappUserRead]:
+    user = await service.update_avatar(current.user.id, UserAvatarUpdateIn(asset_id=payload.asset_id))
+    return success_response(data=MiniappUserRead.model_validate(user), request_id=current_request_id())
+
+
+@router.post(
+    "/me/avatar-assets",
+    response_model=ResponseModel[MiniappAvatarAssetRead],
+    status_code=201,
+    summary="上传本人头像资产",
+    description="仅允许 avatar 场景；复用类型、体积及存储校验，只返回资产标识和公开地址，上传不自动绑定头像。",
+)
+async def avatar_upload(
+    file: Annotated[UploadFile, File()], uploader: MiniappAvatarUploader, service: AssetServiceDependency
+) -> ResponseModel[MiniappAvatarAssetRead]:
+    asset = await service.upload(
+        source=file.file, original_name=file.filename or "", scene=UploadScene.AVATAR, uploader=uploader
+    )
+    return success_response(data=MiniappAvatarAssetRead.model_validate(asset), request_id=current_request_id())
+
+
+@router.get("/membership", response_model=ResponseModel[MiniappMemberRead], summary="读取本人档案和会员等级有效状态")
+async def membership(service: MiniappFinance, current: MiniappPrincipal) -> ResponseModel[MiniappMemberRead]:
+    return success_response(data=await service.member(current.user.id), request_id=current_request_id())
+
+
+@router.post("/membership", response_model=ResponseModel[MiniappMemberRead], summary="主动幂等开通本人会员分销档案")
+async def membership_activate(service: MiniappFinance, current: MiniappPrincipal) -> ResponseModel[MiniappMemberRead]:
+    return success_response(data=await service.activate(current.user.id), request_id=current_request_id())
+
+
+@router.get("/wallets", response_model=ResponseModel[list[MiniappWalletRead]], summary="查询本人双轨钱包")
+async def wallets(service: MiniappFinance, current: MiniappPrincipal) -> ResponseModel[list[MiniappWalletRead]]:
+    return success_response(data=await service.wallets(current.user.id), request_id=current_request_id())
+
+
+@router.get(
+    "/wallets/{wallet_type}/ledgers",
+    response_model=ResponseModel[PageResult[MiniappWalletLedgerRead]],
+    summary="分页查询本人指定轨道钱包流水",
+)
+async def wallet_ledgers(
+    wallet_type: WalletType,
+    service: MiniappFinance,
+    current: MiniappPrincipal,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+) -> ResponseModel[PageResult[MiniappWalletLedgerRead]]:
+    return success_response(
+        data=await service.ledgers(current.user.id, wallet_type, page, page_size), request_id=current_request_id()
+    )
+
+
+@router.get(
+    "/commissions", response_model=ResponseModel[PageResult[MiniappCommissionRead]], summary="分页查询本人安全佣金记录"
+)
+async def commissions(
+    service: MiniappFinance,
+    current: MiniappPrincipal,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+) -> ResponseModel[PageResult[MiniappCommissionRead]]:
+    return success_response(
+        data=await service.commissions(current.user.id, page, page_size), request_id=current_request_id()
+    )
+
+
+@router.get(
+    "/withdrawals",
+    response_model=ResponseModel[PageResult[MiniappWithdrawalRead]],
+    summary="分页查询本人历史提现审核和确认事实",
+)
+async def withdrawals(
+    service: MiniappFinance,
+    current: MiniappPrincipal,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+) -> ResponseModel[PageResult[MiniappWithdrawalRead]]:
+    return success_response(
+        data=await service.withdrawals(current.user.id, page, page_size), request_id=current_request_id()
+    )
 
 
 @router.get("/help", response_model=ResponseModel[MiniappHelpRead], summary="查询公开支持联系方式")

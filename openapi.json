@@ -15239,6 +15239,441 @@
         }
       }
     },
+    "/api/v1/miniapp/me": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "读取本人基础信息",
+        "operationId": "me_api_v1_miniapp_me_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappUserRead_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "修改本人小程序昵称",
+        "operationId": "profile_update_api_v1_miniapp_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiniappProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappUserRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/me/avatar": {
+      "put": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "绑定或移除本人头像资产",
+        "operationId": "avatar_update_api_v1_miniapp_me_avatar_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiniappAvatarUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappUserRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/me/avatar-assets": {
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "上传本人头像资产",
+        "description": "仅允许 avatar 场景；复用类型、体积及存储校验，只返回资产标识和公开地址，上传不自动绑定头像。",
+        "operationId": "avatar_upload_api_v1_miniapp_me_avatar_assets_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_avatar_upload_api_v1_miniapp_me_avatar_assets_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappAvatarAssetRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/membership": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "读取本人档案和会员等级有效状态",
+        "operationId": "membership_api_v1_miniapp_membership_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappMemberRead_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "主动幂等开通本人会员分销档案",
+        "operationId": "membership_activate_api_v1_miniapp_membership_post",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappMemberRead_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/wallets": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "查询本人双轨钱包",
+        "operationId": "wallets_api_v1_miniapp_wallets_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_list_MiniappWalletRead__"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/wallets/{wallet_type}/ledgers": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "分页查询本人指定轨道钱包流水",
+        "operationId": "wallet_ledgers_api_v1_miniapp_wallets__wallet_type__ledgers_get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "wallet_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "commission",
+                "consumption"
+              ],
+              "type": "string",
+              "title": "Wallet Type"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_MiniappWalletLedgerRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/commissions": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "分页查询本人安全佣金记录",
+        "operationId": "commissions_api_v1_miniapp_commissions_get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_MiniappCommissionRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/withdrawals": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "分页查询本人历史提现审核和确认事实",
+        "operationId": "withdrawals_api_v1_miniapp_withdrawals_get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_MiniappWithdrawalRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/miniapp/help": {
       "get": {
         "tags": [
@@ -15885,32 +16320,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseModel_NoneType_"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "MiniappBearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/miniapp/me": {
-      "get": {
-        "tags": [
-          "小程序"
-        ],
-        "summary": "读取本人基础信息",
-        "operationId": "me_api_v1_miniapp_me_get",
-        "responses": {
-          "200": {
-            "description": "请求成功",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseModel_MiniappUserRead_"
                 }
               }
             }
@@ -18968,6 +19377,21 @@
           "completed_count"
         ],
         "title": "BatchCompleted"
+      },
+      "Body_avatar_upload_api_v1_miniapp_me_avatar_assets_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_avatar_upload_api_v1_miniapp_me_avatar_assets_post"
       },
       "Body_update_site_logo_api_v1_admin_settings_site_logo_put": {
         "properties": {
@@ -23074,6 +23498,50 @@
         ],
         "title": "MembershipQualificationEventRead"
       },
+      "MiniappAvatarAssetRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "资源唯一标识"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "文件的公开访问 URL 或站内路径"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "url"
+        ],
+        "title": "MiniappAvatarAssetRead"
+      },
+      "MiniappAvatarUpdate": {
+        "properties": {
+          "asset_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset Id",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "asset_id"
+        ],
+        "title": "MiniappAvatarUpdate"
+      },
       "MiniappCapabilitiesRead": {
         "properties": {
           "login_enabled": {
@@ -23235,6 +23703,122 @@
         ],
         "title": "MiniappCheckoutIntentRead"
       },
+      "MiniappCommissionRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "资源唯一标识"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level",
+            "description": "推荐佣金层级，最多两级"
+          },
+          "base_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Base Amount",
+            "description": "佣金计提基数，单位人民币元"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate",
+            "description": "佣金比例快照"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "description": "业务金额，单位人民币元"
+          },
+          "recovered_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Recovered Amount",
+            "description": "累计追回佣金，单位人民币元"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "frozen",
+              "settled",
+              "recovered"
+            ],
+            "title": "Status",
+            "description": "当前状态代码"
+          },
+          "frozen_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Frozen At",
+            "description": "佣金冻结时间"
+          },
+          "settle_after": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settle After",
+            "description": "允许结算的最早时间"
+          },
+          "settled_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settled At",
+            "description": "佣金结算时间"
+          },
+          "recovered_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovered At",
+            "description": "最近佣金追回时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "level",
+          "base_amount",
+          "rate",
+          "amount",
+          "recovered_amount",
+          "status",
+          "frozen_at",
+          "settle_after",
+          "settled_at",
+          "recovered_at"
+        ],
+        "title": "MiniappCommissionRead"
+      },
       "MiniappHelpRead": {
         "properties": {
           "phone": {
@@ -23318,6 +23902,104 @@
           "code"
         ],
         "title": "MiniappLoginIn"
+      },
+      "MiniappMemberRead": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "not_opened",
+              "no_level",
+              "active",
+              "inactive"
+            ],
+            "title": "State",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "level_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level Name",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "level_changed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level Changed At",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At",
+            "description": "创建时间"
+          },
+          "referral_bound": {
+            "type": "boolean",
+            "title": "Referral Bound",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "bound_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bound At",
+            "description": "推荐关系首次绑定时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "level_name",
+          "level_changed_at",
+          "created_at",
+          "referral_bound",
+          "bound_at"
+        ],
+        "title": "MiniappMemberRead"
+      },
+      "MiniappProfileUpdate": {
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Display Name",
+            "description": "展示名称"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "display_name"
+        ],
+        "title": "MiniappProfileUpdate"
       },
       "MiniappRefreshIn": {
         "properties": {
@@ -23872,6 +24554,250 @@
           "avatar"
         ],
         "title": "MiniappUserRead"
+      },
+      "MiniappWalletBalanceRead": {
+        "properties": {
+          "available_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Available Amount",
+            "description": "可用余额，单位人民币元"
+          },
+          "frozen_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Frozen Amount",
+            "description": "冻结余额，单位人民币元"
+          },
+          "debt_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debt Amount",
+            "description": "待追回欠款，单位人民币元"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available_amount",
+          "frozen_amount",
+          "debt_amount"
+        ],
+        "title": "MiniappWalletBalanceRead"
+      },
+      "MiniappWalletLedgerRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "资源唯一标识"
+          },
+          "entry_type": {
+            "type": "string",
+            "enum": [
+              "commission_settlement",
+              "commission_recovery",
+              "withdrawal_freeze",
+              "withdrawal_release",
+              "withdrawal_paid"
+            ],
+            "title": "Entry Type",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "description": "业务金额，单位人民币元"
+          },
+          "frozen_delta": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Frozen Delta",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "debt_delta": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debt Delta",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "wallet_revision": {
+            "type": "integer",
+            "title": "Wallet Revision",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "balance_after": {
+            "$ref": "#/components/schemas/MiniappWalletBalanceRead",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "创建时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "entry_type",
+          "amount",
+          "frozen_delta",
+          "debt_delta",
+          "wallet_revision",
+          "balance_after",
+          "created_at"
+        ],
+        "title": "MiniappWalletLedgerRead"
+      },
+      "MiniappWalletRead": {
+        "properties": {
+          "wallet_type": {
+            "type": "string",
+            "enum": [
+              "commission",
+              "consumption"
+            ],
+            "title": "Wallet Type",
+            "description": "佣金或消费钱包类型"
+          },
+          "available_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Available Amount",
+            "description": "可用余额，单位人民币元"
+          },
+          "frozen_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Frozen Amount",
+            "description": "冻结余额，单位人民币元"
+          },
+          "debt_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Debt Amount",
+            "description": "待追回欠款，单位人民币元"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "最近更新时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "wallet_type",
+          "available_amount",
+          "frozen_amount",
+          "debt_amount",
+          "revision",
+          "updated_at"
+        ],
+        "title": "MiniappWalletRead"
+      },
+      "MiniappWithdrawalRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "资源唯一标识"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "description": "业务金额，单位人民币元"
+          },
+          "currency": {
+            "type": "string",
+            "const": "CNY",
+            "title": "Currency",
+            "description": "货币代码"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "requested",
+              "approved",
+              "rejected",
+              "processing",
+              "succeeded",
+              "unknown"
+            ],
+            "title": "Status",
+            "description": "当前状态代码"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At",
+            "description": "审核时间"
+          },
+          "funds_status": {
+            "type": "string",
+            "enum": [
+              "not_confirmed",
+              "manual_confirmed",
+              "channel_confirmed"
+            ],
+            "title": "Funds Status",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed At",
+            "description": "权威渠道确认时间"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "创建时间"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "最近更新时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "amount",
+          "currency",
+          "status",
+          "reviewed_at",
+          "funds_status",
+          "confirmed_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "MiniappWithdrawalRead"
       },
       "NewSkuInput": {
         "properties": {
@@ -25197,6 +26123,53 @@
         ],
         "title": "PageResult[MembershipQualificationEventRead]"
       },
+      "PageResult_MiniappCommissionRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MiniappCommissionRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[MiniappCommissionRead]"
+      },
       "PageResult_MiniappRefundRead_": {
         "properties": {
           "items": {
@@ -25290,6 +26263,100 @@
           "total_pages"
         ],
         "title": "PageResult[MiniappTradeOrderRead]"
+      },
+      "PageResult_MiniappWalletLedgerRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MiniappWalletLedgerRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[MiniappWalletLedgerRead]"
+      },
+      "PageResult_MiniappWithdrawalRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MiniappWithdrawalRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[MiniappWithdrawalRead]"
       },
       "PageResult_OrderRead_": {
         "properties": {
@@ -29526,6 +30593,38 @@
         ],
         "title": "ResponseModel[MemberProfileRead]"
       },
+      "ResponseModel_MiniappAvatarAssetRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappAvatarAssetRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappAvatarAssetRead]"
+      },
       "ResponseModel_MiniappCapabilitiesRead_": {
         "properties": {
           "code": {
@@ -29621,6 +30720,38 @@
           "request_id"
         ],
         "title": "ResponseModel[MiniappHelpRead]"
+      },
+      "ResponseModel_MiniappMemberRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappMemberRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappMemberRead]"
       },
       "ResponseModel_MiniappRefundLookupRead_": {
         "properties": {
@@ -30519,6 +31650,38 @@
         ],
         "title": "ResponseModel[PageResult[MembershipQualificationEventRead]]"
       },
+      "ResponseModel_PageResult_MiniappCommissionRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_MiniappCommissionRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[MiniappCommissionRead]]"
+      },
       "ResponseModel_PageResult_MiniappRefundRead__": {
         "properties": {
           "code": {
@@ -30582,6 +31745,70 @@
           "request_id"
         ],
         "title": "ResponseModel[PageResult[MiniappTradeOrderRead]]"
+      },
+      "ResponseModel_PageResult_MiniappWalletLedgerRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_MiniappWalletLedgerRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[MiniappWalletLedgerRead]]"
+      },
+      "ResponseModel_PageResult_MiniappWithdrawalRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_MiniappWithdrawalRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[MiniappWithdrawalRead]]"
       },
       "ResponseModel_PageResult_OrderRead__": {
         "properties": {
@@ -32019,6 +33246,42 @@
           "request_id"
         ],
         "title": "ResponseModel[list[MiniappCartItemRead]]"
+      },
+      "ResponseModel_list_MiniappWalletRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/MiniappWalletRead"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[list[MiniappWalletRead]]"
       },
       "ResponseModel_list_PermissionRead__": {
         "properties": {

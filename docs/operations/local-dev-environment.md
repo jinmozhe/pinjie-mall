@@ -229,6 +229,8 @@ pnpm --filter @pinjie/admin dev
 
 履约、整单售后、评价与公开帮助也已有源码，继续沿用下方 watch 命令；配置公开联系方式和处理原退款请求见[履约售后接入手册](miniapp-fulfillment-and-aftersales.md)。新阶段源码尚未执行微信编译与平台验收。
 
+本人资料头像、会员开通、双钱包流水、佣金和历史提现查询也沿用同一 watch 命令，无需另开 HTTP 服务或逐次手工构建。头像上传域名、本人资产绑定、资金权利及未知结果查询见[资料会员资金手册](miniapp-profile-and-finance.md)；默认登录关闭，新提现申请未开放。
+
 1. 使用 Codex 或 VS Code 编辑同一工作区；Backend 与 Admin 按前两节独立运行。
 2. 初始化专项完成后，在仓库根目录的独立终端启动小程序 watch：
 
