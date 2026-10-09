@@ -51,12 +51,18 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("product_type IN ('physical', 'virtual')", name="ck_products_type"),
         CheckConstraint("status IN ('draft', 'on_sale', 'off_sale')", name="ck_products_status"),
         CheckConstraint("revision > 0", name="ck_products_revision"),
+        CheckConstraint("description_version IN (0, 1)", name="ck_products_description_version"),
         CheckConstraint("purchase_limit_quantity >= 0", name="ck_products_purchase_limit"),
         Index("ix_products_category_status", "category_id", "status", "id"),
         {"comment": "商品 SPU 资料，不保存库存"},
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False, comment="商品名称")
-    description: Mapped[str] = mapped_column(Text, nullable=False, default="", comment="商品纯文本说明")
+    description: Mapped[str] = mapped_column(
+        Text, nullable=False, default="", comment="商品受限 HTML，旧数据须显式迁移"
+    )
+    description_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1, comment="0 未审计 legacy；1 受限 HTML v1"
+    )
     product_type: Mapped[str] = mapped_column(String(16), nullable=False, comment="实物或虚拟商品")
     category_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("product_categories.id", ondelete="RESTRICT"), nullable=False, index=True, comment="商品分类 ID"

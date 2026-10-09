@@ -1,3 +1,5 @@
+import builtins
+from typing import Literal, cast
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +10,7 @@ from app.core.identifiers import new_uuid7
 from app.db.models.cart import CartItem
 from app.db.transaction import transaction_scope
 from app.domains.cart.repository import CartRepository
-from app.domains.cart.schemas import CartItemInput, CartItemRead, CartItemUpdate
+from app.domains.cart.schemas import CartItemInput, CartItemRead, CartItemUpdate, MiniappCartItemRead
 from app.domains.inventory import InventoryService
 from app.domains.inventory.repository import InventoryRepository
 from app.domains.products import ProductService
@@ -37,6 +39,59 @@ class CartService:
     async def list(self, user_id: UUID) -> list[CartItemRead]:
         await self.access.require_active_user(user_id)
         return [CartItemRead.model_validate(row) for row in await self.repository.list_for_user(user_id)]
+
+    async def miniapp_list(self, user_id: UUID) -> builtins.list[MiniappCartItemRead]:
+        await self.access.require_active_user(user_id)
+        rows = await self.repository.list_for_user(user_id)
+        products = {
+            sku.id: (sku, product)
+            for sku, product in await self.products.repository.checkout_skus([row.sku_id for row in rows])
+        }
+        saleable = await self.products.available_sku_ids([row.sku_id for row in rows])
+        inventories = {
+            account.sku_id: account.available
+            for account in await self.inventory.repository.available_accounts([row.sku_id for row in rows])
+        }
+        product_images = await self.products.repository.image_urls_for_products(
+            list({product.id for _, product in products.values()})
+        )
+        result: builtins.list[MiniappCartItemRead] = []
+        for row in rows:
+            found = products.get(row.sku_id)
+            reason: str | None = None
+            available = 0
+            price = None
+            images: builtins.list[str] = []
+            if found is None:
+                reason = "商品规格已移除"
+            else:
+                sku, product = found
+                if row.sku_id not in saleable:
+                    reason = "商品或规格当前不可售"
+                if reason is None:
+                    if row.sku_id not in inventories:
+                        raise AppException(
+                            status_code=409, code=ErrorCode.INVENTORY_NOT_FOUND, message="库存账户缺失，请联系管理员"
+                        )
+                    available = inventories[row.sku_id]
+                    price = sku.price
+                    if available < row.quantity:
+                        reason = "库存不足，请调整数量"
+                images = product_images.get(product.id, [])
+            result.append(
+                MiniappCartItemRead(
+                    **CartItemRead.model_validate(row).model_dump(),
+                    product_id=found[1].id if found else None,
+                    product_type=cast(Literal["physical", "virtual"], found[1].product_type) if found else None,
+                    product_name=found[1].name if found else "已失效商品",
+                    image_url=images[0] if images else None,
+                    specifications=found[0].specifications if found else {},
+                    unit_price=price,
+                    available_quantity=available,
+                    invalid_reason=reason,
+                )
+            )
+        return result
 
     async def add(self, user_id: UUID, data: CartItemInput) -> CartItemRead:
         async with transaction_scope(self.session):

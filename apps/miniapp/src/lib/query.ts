@@ -11,6 +11,6 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: true,
       refetchOnReconnect: true,
     },
-    mutations: { retry: false },
+    mutations: { retry: false, networkMode: 'always' },
   },
 })

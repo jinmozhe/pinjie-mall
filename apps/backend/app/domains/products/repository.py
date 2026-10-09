@@ -78,6 +78,18 @@ class ProductRepository(CatalogRepository):
             )
         )
 
+    async def image_urls_for_products(self, product_ids: list[UUID]) -> dict[UUID, list[str]]:
+        rows = await self.session.execute(
+            select(ProductImage.product_id, Asset.url)
+            .join(Asset, ProductImage.asset_id == Asset.id)
+            .where(ProductImage.product_id.in_(product_ids))
+            .order_by(ProductImage.product_id, ProductImage.position)
+        )
+        result: dict[UUID, list[str]] = {}
+        for product_id, url in rows.tuples():
+            result.setdefault(product_id, []).append(url)
+        return result
+
     async def image_assets(self, product_id: UUID, *, detail: bool = False) -> list[Asset]:
         """Read-only projection of images already bound to this product."""
         relation = ProductDetailImage if detail else ProductImage

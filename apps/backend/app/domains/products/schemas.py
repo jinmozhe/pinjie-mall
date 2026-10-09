@@ -1,13 +1,16 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal, Self
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.core.batch import VersionedBatch
+from app.core.restricted_html import restricted_html
 
 from .catalog_schemas import AdoptionRead, SkuFields, SpecificationSet, WholesalePrice
+
+RestrictedDescription = Annotated[str, AfterValidator(restricted_html)]
 
 
 class CategoryInput(BaseModel):
@@ -91,7 +94,7 @@ class ProductInput(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     name: str = Field(min_length=1, max_length=200, description="商品名称")
-    description: str = Field(default="", max_length=20000, description="纯文本商品说明")
+    description: str = Field(default="", max_length=20000, description="商品受限 HTML；旧说明由显式迁移审计")
     product_type: Literal["physical", "virtual"] = Field(description="实物或虚拟商品")
     category_id: UUID = Field(description="所属分类 ID")
     brand_id: UUID | None = Field(default=None, description="可选品牌")
@@ -108,6 +111,9 @@ class ProductInput(BaseModel):
 
 
 class ProductCreate(ProductInput, SpecificationSet):
+    description: RestrictedDescription = Field(
+        default="", max_length=20000, description="受限 HTML v1，仅文字格式和颜色；不支持媒体、链接或脚本"
+    )
     detail_image_asset_ids: list[UUID] = Field(default_factory=list, max_length=20, description="有序详情图资产 ID")
 
     @field_validator("detail_image_asset_ids")
@@ -119,6 +125,9 @@ class ProductCreate(ProductInput, SpecificationSet):
 
 
 class ProductUpdate(ProductInput):
+    description: RestrictedDescription = Field(
+        default="", max_length=20000, description="受限 HTML v1；不支持媒体、链接或脚本"
+    )
     detail_image_asset_ids: list[UUID] = Field(max_length=20, description="完整有序详情图资产 ID，空数组解除全部关联")
 
     @field_validator("detail_image_asset_ids")
@@ -158,6 +167,7 @@ class SkuStatusBatch(BaseModel):
 
 
 class ProductRead(ProductInput):
+    description_format: Literal["legacy", "restricted_html_v1"] = Field(description="说明内容格式；legacy 须显式迁移")
     id: UUID = Field(description="商品 ID")
     status: Literal["draft", "on_sale", "off_sale"] = Field(description="商品状态")
     revision: int = Field(description="商品版本")
@@ -190,7 +200,8 @@ class PublicDetailImageRead(BaseModel):
 class PublicProductRead(BaseModel):
     id: UUID = Field(description="商品 ID")
     name: str = Field(description="商品名称")
-    description: str = Field(description="商品纯文本说明")
+    description: str = Field(description="已校验的受限 HTML；legacy 未审计内容不向消费者输出")
+    description_format: Literal["legacy", "restricted_html_v1"]
     product_type: Literal["physical", "virtual"] = Field(description="商品类型")
     category_id: UUID = Field(description="分类 ID")
     brand_id: UUID | None

@@ -420,4 +420,16 @@ describe("SettingsPage", () => {
     expect(await screen.findByText("保存失败")).toBeInTheDocument();
     expect(description).toHaveValue("本地描述");
   });
+
+  it("isolates miniapp registration permissions and sends the current revision", async () => {
+    const read = { schema_version: 1, enabled: false, revision: 7, updated_at: now };
+    vi.spyOn(adminApi, "miniappRegistrationSetting").mockResolvedValue(read);
+    const update = vi.spyOn(adminApi, "updateMiniappRegistrationSetting").mockResolvedValue({ ...read, enabled: true, revision: 8 });
+    const user = userEvent.setup();
+    renderSettingsPage({ ...admin, is_superuser: false, permissions: ["settings:miniapp-registration:read", "settings:miniapp-registration:update"] });
+    expect(screen.queryByRole("tab", { name: "站点设置" })).not.toBeInTheDocument();
+    await user.click(await screen.findByRole("switch", { name: "开放小程序首次建号" }));
+    await user.click(screen.getByRole("button", { name: /保存设置/ }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ revision: 7, enabled: true }));
+  });
 });

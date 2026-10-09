@@ -250,7 +250,12 @@ async def get_current_user(
             code=ErrorCode.SERVICE_UNAVAILABLE,
             message="认证服务暂时不可用",
         ) from exc
-    if login_session is None or login_session.user_id != claims.subject_id:
+    if (
+        login_session is None
+        or login_session.user_id != claims.subject_id
+        or login_session.credential_profile != "browser_cookie"
+        or login_session.client_id != "pinjie-web"
+    ):
         request.state.clear_auth_profile = "web"
         raise AppException(
             status_code=401,
@@ -481,7 +486,9 @@ def require_web_csrf(
     token = require_web_csrf_pair(request)
     settings = get_request_settings(request)
     _, _, web_hmac, _ = settings.authentication_secrets()
-    if not hmac.compare_digest(token_digest(token, web_hmac), current.login_session.csrf_digest):
+    if current.login_session.csrf_digest is None or not hmac.compare_digest(
+        token_digest(token, web_hmac), current.login_session.csrf_digest
+    ):
         raise AppException(status_code=403, code=ErrorCode.CSRF_REJECTED, message="CSRF 校验失败")
     return current
 

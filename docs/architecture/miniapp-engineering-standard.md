@@ -4,7 +4,7 @@
 
 本文是 `apps/miniapp` 技术栈、依赖准入、代码、配置和验证的执行标准。技术取舍见 [ADR 0017](../adr/0017-小程序采用TaroReact与NutUI决策.md)，目录与协作机制见[小程序架构](miniapp-architecture.md)，视觉与组件要求见[小程序 UI 规范](miniapp-ui-standard.md)，需求见[小程序 PRD](../MINIAPP_PRD.md)。
 
-2026-10-09：应用工程与公开浏览已初始化，包含首页、分类分页、详情图、公开评价和 SKU 选择。开发 watch 编译及轻量检查已落地；AppID、微信身份、私有交易、HTML 内容边界、真机和发布仍未完成。实际验证见[工程与公开浏览计划](../../plans/2026-10-09_小程序工程与公开浏览接入计划.md)。
+2026-10-09：工程、公开浏览、独立身份、个人中心、地址、购物车、结算和基础订单及受限 HTML 已有源码。新依赖后的微信编译、AppID、实际数据库升级、真实登录、真机与发布未验证；默认微信登录关闭。实际验证分别见[公开浏览计划](../../plans/2026-10-09_小程序工程与公开浏览接入计划.md)与[身份交易计划](../../plans/2026-10-09_小程序身份与基础交易接入计划.md)。
 
 ## 2. 初始化技术栈与版本
 
@@ -21,7 +21,8 @@
 | 服务端状态 | `@tanstack/react-query` 5.101.4 | Query 缓存、取消、失效和生命周期适配 |
 | 样式 | Sass 1.105.1、tokens、NutUI 主题 | 不默认引入 Tailwind、CSS-in-JS 或浏览器字体包 |
 | 请求 | Taro.request、Taro.uploadFile | 独立传输与认证，消费根契约生成类型 |
-| 内容 | mp-html 2.5.2，后续接入 | 服务端内容边界与历史迁移完成后再安装，通过 usingComponents 接入；当前不渲染 description |
+| 内容 | mp-html 2.5.2 | usingComponents 声明并复制 dist/mp-weixin 原生组件；只渲染 restricted_html_v1，legacy 不公开渲染 |
+| 地址区域数据 | @vant/area-data 2.2.0 | 仅使用行政区名称/编码数据用于三级 Picker，不引入 Vant UI；锁定版本，变更需重新准入 |
 | 可选状态/校验 | Zustand、Zod | 有跨页状态或必要运行时输入边界才引入，精确版本在对应实施计划与锁文件核验 |
 | 逻辑测试 | Vitest 的 node 环境 | 沿用测试策略；平台 UI 用微信工具及真机验证，执行需当前任务明确授权 |
 | 预览上传 | miniprogram-ci 2.1.31 | 发布工具独立准入，Node 24、签名和上传链路须单独验证 |
@@ -66,7 +67,7 @@ Taro 传递 normalize-url 2.0.1 的 query-string 使用限定为 parse/stringify
 - pages/subpackages 负责路由、生命周期与页面组合，只通过 Feature 的 index.ts 消费业务能力。
 - 同一 Feature 的 UI、Hook、Query、api/service、domain 就近组织；跨 Feature 不穿透内部文件，不使用 export * 暴露全部实现。
 - domain 保持纯 TypeScript，不导入 React、Taro、NutUI、Query 或 I/O。最终价格、库存、资格、佣金与退款由 Backend 决定。
-- lib/api、lib/auth 和 platform 分别负责传输、会话和微信能力；基础设施不反向依赖具体 Feature。
+- lib/api.ts、lib/session.ts、lib/cancellation.ts 与 platform 分别负责传输、私有会话、原生请求取消和微信能力；基础设施不反向依赖具体 Feature。不依赖微信必然存在 DOM AbortController，适配 Query 的取消信号并调用 RequestTask.abort。
 - Admin、小程序不相互导入源码或 DOM 组件；共享只经 packages 公共入口。生成 API 类型使用 import type，禁止复制 DTO、运行 Admin 请求管道或手改生成文件。
 - 导入路径、别名、React 类型解析与 ESLint 配置在初始化时明确校验。不得用 any、强制断言或忽略规则掩盖契约不匹配。
 
@@ -91,11 +92,11 @@ Taro 传递 normalize-url 2.0.1 的 query-string 使用限定为 parse/stringify
 
 ## 6. 商品富文本与图片
 
-description 采用受限 HTML，与独立 detail_images 分开。实际 Admin 已输出 Tiptap HTML，后端当前按字符串保存；字段注释仍为纯文本，服务端净化与格式迁移尚无完成证据。后续接入必须先统一后端字段语义、内容策略、历史数据和根契约，不能把客户端渲染器当作输入安全保证。
+description 采用受限 HTML，与独立 detail_images 分开。Admin 保留 Tiptap，Backend 新写采用 html5lib 严格校验并规范化，字段和根契约已明确语义。迁移 20261009_01 将旧数据标记 description_version=0，公开 description_format=legacy 且说明为空；新写为 restricted_html_v1。历史工具默认 dry-run，指定 text/html 来源，不实际迁移未知记录。负责人、期限及退役见[ADR 0018](../adr/0018-小程序独立身份会话与内容边界决策.md#历史内容迁移窗口)。
 
 目标标签允许 `p`、`br`、`strong`、`b`、`em`、`i`、`u`、`ul`、`ol`、`li`、`span`、`font`、`h1` 至 `h6`，覆盖现有编辑器的段落、强调、列表、颜色与可粘贴标题。只保留经验证的文字颜色属性，不允许任意 style、事件属性、脚本、iframe、表单、链接跳转或内嵌媒体；商品媒体继续由独立资产图集提供。边界策略在服务端执行，拒绝不支持的新内容并反馈，历史不合规内容采用显式迁移与复核，禁止按字符串猜测版本形成永久双轨。
 
-mp-html 不开启脚本、链接导航、编辑、Markdown 或额外媒体插件。通过 usingComponents 声明微信原生组件并确保源码进入构建产物，原生组件边界内配置文字样式，不能假定 React 全局 CSS 能穿透。内容为普通文本的历史记录须在接入计划中按已审计来源转换并转义，不直接按 HTML 解释任意旧字符串。
+mp-html 不开启脚本、链接导航、编辑、Markdown 或额外媒体插件。详情页 usingComponents 指向 /components/mp-html/index，copy.patterns 复制包内 dist/mp-weixin，关闭链接复制和锚点。原生组件边界内显式配置文字样式，实际新编译与微信验收未执行。普通文本历史记录必须按已审计来源转换并转义，不直接按 HTML 解释旧字符串。
 
 详情图按后端有序 URL/width/height 显示，等宽、按比例占位、widthFix、下方懒加载、失败可重试和点击预览。可信 HTTPS 基址解析站内资源，绝对 URL 同样受域名准入约束。数量、字节和像素预算以[商品详情图集操作规范](../operations/product-detail-images.md)为准。
 

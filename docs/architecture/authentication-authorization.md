@@ -2,7 +2,7 @@
 
 ## 1. 目标
 
-本文件定义当前 Browser Cookie Profile 的身份认证、会话、权限声明、资源授权和审计机制。重大取舍以 [ADR 0010](../adr/0010-浏览器认证会话RBAC与审计决策.md) 为准，完整端点与验收规格以当前源码、根 OpenAPI 和测试为准。阶段 C 历史计划文件未纳入当前仓库。
+本文件定义 Browser Cookie 与小程序独立 Bearer 的身份、会话、权限和审计机制。取舍见 [ADR 0010](../adr/0010-浏览器认证会话RBAC与审计决策.md)与[ADR 0018](../adr/0018-小程序独立身份会话与内容边界决策.md)，完整端点与验收以源码、根 OpenAPI 和实际验证为准。阶段 C 历史计划文件未纳入当前仓库。
 
 ## 2. 分层职责
 
@@ -36,7 +36,11 @@
 - Web 与 Admin 分别配置 `WEB_ORIGINS` 和 `ADMIN_ORIGINS`，两组值必须是无路径的绝对 HTTP(S) Origin 且不得重叠。登录、注册、Refresh、Logout 与其他 Cookie 写请求按当前 Profile 精确校验，不能用统一 CORS 列表替代 Profile 隔离。
 - Web BFF 只允许已登记的方法与用户端路径，只转发 `pinjie_web_*` Cookie；Admin 反向代理只开放管理端路径和公共系统状态。代理过滤用于缩小攻击面，Backend 的 Profile、认证与授权检查仍是最终边界。
 
-小程序、原生 App 和其他无法可靠使用 Cookie 的客户端属于后续 Public Client Bearer Profile。该 Profile 必须独立定义端点、Session 类型、客户端证明、Token 存储、轮换、撤销和测试契约，禁止临时复用浏览器登录响应输出 JSON Token。
+小程序 Public Client Bearer Profile 已有独立源码，默认登录关闭。/api/v1/miniapp 拒绝 Cookie，私有端点使用 MiniappBearer 安全声明、独立 pinjie-miniapp audience 与签名/HMAC 密钥。会话必须同时符合 miniapp_bearer、pinjie-miniapp、csrf_digest=NULL；Browser 主体必须仍符合 browser_cookie、pinjie-web 和有效 CSRF 摘要，不能串用凭据。响应为 no-store。
+
+微信一次性 code 通过固定 code2Session 接口换取可信 OpenID，以 provider/AppID/OpenID 事务锁及唯一约束防止重复建号。无密码用户独立创建，首次建号受 miniapp_registration 共享配置锁保护；已有绑定不受建号关闭影响。UnionID 仅记录，不自动合并旧账户。登录失败独立写安全事件，成功建号和会话事件与业务事务同提交；秘密、OpenID、session_key 和外部错误原文不进入事件或日志。
+
+客户端 Access/Refresh 仅私有内存，刷新单飞、单次轮换；重放会提交原会话与 Refresh 族撤销再返回 401。每次私有请求检查用户状态、凭据版本、会话撤销和过期。主动退出清理私有请求与 Query，并持久化非秘密退出标记；已有隐私确认的冷启动重新取得 code，退出后须主动登录。写请求不通用重放，下单未知恢复见[接入手册](../operations/miniapp-identity-and-content.md)。实际迁移、真实微信和动态验收未执行。
 
 ## 5. JWT、密码与 Session
 
@@ -55,12 +59,13 @@
 
 ### 5.1 普通用户创建来源
 
-普通用户有两种独立创建来源：
+普通用户有以下独立创建来源：
 
 - Web 公开注册受数据库 `system_settings.registration.enabled` 控制。注册事务对配置行取得共享锁，配置缺失、无效或数据库不可用时明确失败并保持关闭；注册成功后创建 Web Session、Refresh Token 和登录安全事件。
 - Admin 创建用户使用 `POST /api/v1/admin/users`，受 `users:create`、管理员会话和 CSRF 保护，不受公开注册开关影响。该流程只创建账户和 `users:create` 审计事件，不创建 Web Session、Refresh Token 或公开注册登录事件。
+- 微信可信身份首次建号使用 /api/v1/miniapp/auth/login，受独立 miniapp_registration 与登录总开关控制。无密码账户与外部身份绑定、Bearer 会话和成功事件同事务提交，不使用公开密码注册许可。
 
-两种来源复用相同的用户名、邮箱唯一性和密码规则。软删除账户继续占用用户名与邮箱，管理员应恢复原账户，不能用同一标识创建新账户。Admin 创建审计只记录目标、启用状态和可选资料是否存在，不保存初始密码、密码摘要或邮箱明文。
+密码创建来源复用相同的用户名、邮箱唯一性和密码规则；微信账户生成独立用户名，密码为空，不填写公开默认密码。软删除账户继续占用标识，管理员应恢复原账户，不能用同一标识重复创建。Admin 创建审计只记录目标、启用状态和可选资料是否存在，不保存初始密码、密码摘要或邮箱明文。
 
 登录后的用户资料通过 `GET/PATCH /api/v1/users/me` 读取和更新；头像使用独立的 `PUT /api/v1/users/me/avatar`，只接受当前用户自己上传的 `avatar` 资产 ID，传 `null` 解除绑定。头像更新受 Web 会话、精确 Origin 和 CSRF 保护，不改变凭据版本或会话。
 

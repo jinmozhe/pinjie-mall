@@ -4228,6 +4228,258 @@ export type MembershipQualificationEventRead = {
 };
 
 /**
+ * MiniappCapabilitiesRead
+ */
+export type MiniappCapabilitiesRead = {
+    /**
+     * Login Enabled
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    login_enabled: boolean;
+};
+
+/**
+ * MiniappCartItemRead
+ */
+export type MiniappCartItemRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Sku Id
+     *
+     * 商品变体标识
+     */
+    sku_id: string;
+    /**
+     * Quantity
+     *
+     * 商品数量
+     */
+    quantity: number;
+    /**
+     * Selected
+     *
+     * 购物车条目是否选中
+     */
+    selected: boolean;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Product Id
+     *
+     * 商品标识
+     */
+    product_id: string | null;
+    /**
+     * Product Type
+     *
+     * 实物或虚拟商品类型
+     */
+    product_type: 'physical' | 'virtual' | null;
+    /**
+     * Product Name
+     *
+     * 商品名称快照
+     */
+    product_name: string;
+    /**
+     * Image Url
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    image_url: string | null;
+    /**
+     * Specifications
+     *
+     * 商品规格名称与取值
+     */
+    specifications: {
+        [key: string]: string;
+    };
+    /**
+     * Unit Price
+     *
+     * 成交单价，单位人民币元
+     */
+    unit_price: string | null;
+    /**
+     * Available Quantity
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    available_quantity: number;
+    /**
+     * Invalid Reason
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    invalid_reason: string | null;
+};
+
+/**
+ * MiniappCheckoutIntentRead
+ */
+export type MiniappCheckoutIntentRead = {
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * MiniappLoginIn
+ */
+export type MiniappLoginIn = {
+    /**
+     * Code
+     *
+     * 微信一次性登录 code，不接受客户端 OpenID
+     */
+    code: string;
+};
+
+/**
+ * MiniappRefreshIn
+ */
+export type MiniappRefreshIn = {
+    /**
+     * Refresh Token
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    refresh_token: string;
+};
+
+/**
+ * MiniappRegistrationPatch
+ */
+export type MiniappRegistrationPatch = {
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Enabled
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    enabled: boolean;
+};
+
+/**
+ * MiniappRegistrationRead
+ */
+export type MiniappRegistrationRead = {
+    /**
+     * Schema Version
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    schema_version?: number;
+    /**
+     * Enabled
+     *
+     * 是否允许微信小程序首次建号；不影响已有身份登录
+     */
+    enabled: boolean;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * MiniappSessionRead
+ */
+export type MiniappSessionRead = {
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    user: MiniappUserRead;
+    /**
+     * Session Id
+     *
+     * 登录会话唯一标识
+     */
+    session_id: string;
+    /**
+     * Access Token
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    access_token: string;
+    /**
+     * Refresh Token
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    refresh_token: string;
+    /**
+     * Access Expires At
+     *
+     * 访问凭据过期时间
+     */
+    access_expires_at: string;
+    /**
+     * Idle Expires At
+     *
+     * 会话空闲过期时间
+     */
+    idle_expires_at: string;
+    /**
+     * Absolute Expires At
+     *
+     * 会话绝对过期时间
+     */
+    absolute_expires_at: string;
+};
+
+/**
+ * MiniappUserRead
+ */
+export type MiniappUserRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Display Name
+     *
+     * 展示名称
+     */
+    display_name: string | null;
+    /**
+     * Avatar
+     *
+     * 管理员头像 URL 或站内资源路径
+     */
+    avatar: string | null;
+};
+
+/**
  * NewSkuInput
  */
 export type NewSkuInput = {
@@ -5232,6 +5484,42 @@ export type PageResultMembershipQualificationEventRead = {
 };
 
 /**
+ * PageResult[OrderRead]
+ */
+export type PageResultOrderRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<OrderRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
  * PageResult[PaymentAttemptRead]
  */
 export type PageResultPaymentAttemptRead = {
@@ -6138,7 +6426,7 @@ export type ProductCreate = {
     /**
      * Description
      *
-     * 纯文本商品说明
+     * 受限 HTML v1，仅文字格式和颜色；不支持媒体、链接或脚本
      */
     description?: string;
     /**
@@ -6192,7 +6480,7 @@ export type ProductDetailRead = {
     /**
      * Description
      *
-     * 纯文本商品说明
+     * 商品受限 HTML；旧说明由显式迁移审计
      */
     description?: string;
     /**
@@ -6225,6 +6513,12 @@ export type ProductDetailRead = {
      * 有序图片资产 ID，首张为主图
      */
     image_asset_ids?: Array<string>;
+    /**
+     * Description Format
+     *
+     * 说明内容格式；legacy 须显式迁移
+     */
+    description_format: 'legacy' | 'restricted_html_v1';
     /**
      * Id
      *
@@ -6336,7 +6630,7 @@ export type ProductRead = {
     /**
      * Description
      *
-     * 纯文本商品说明
+     * 商品受限 HTML；旧说明由显式迁移审计
      */
     description?: string;
     /**
@@ -6369,6 +6663,12 @@ export type ProductRead = {
      * 有序图片资产 ID，首张为主图
      */
     image_asset_ids?: Array<string>;
+    /**
+     * Description Format
+     *
+     * 说明内容格式；legacy 须显式迁移
+     */
+    description_format: 'legacy' | 'restricted_html_v1';
     /**
      * Id
      *
@@ -6504,7 +6804,7 @@ export type ProductUpdate = {
     /**
      * Description
      *
-     * 纯文本商品说明
+     * 受限 HTML v1；不支持媒体、链接或脚本
      */
     description?: string;
     /**
@@ -6594,9 +6894,15 @@ export type PublicProductDetailRead = {
     /**
      * Description
      *
-     * 商品纯文本说明
+     * 已校验的受限 HTML；legacy 未审计内容不向消费者输出
      */
     description: string;
+    /**
+     * Description Format
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    description_format: 'legacy' | 'restricted_html_v1';
     /**
      * Product Type
      *
@@ -6660,9 +6966,15 @@ export type PublicProductRead = {
     /**
      * Description
      *
-     * 商品纯文本说明
+     * 已校验的受限 HTML；legacy 未审计内容不向消费者输出
      */
     description: string;
+    /**
+     * Description Format
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    description_format: 'legacy' | 'restricted_html_v1';
     /**
      * Product Type
      *
@@ -8408,6 +8720,146 @@ export type ResponseModelMemberProfileRead = {
 };
 
 /**
+ * ResponseModel[MiniappCapabilitiesRead]
+ */
+export type ResponseModelMiniappCapabilitiesRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappCapabilitiesRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MiniappCheckoutIntentRead]
+ */
+export type ResponseModelMiniappCheckoutIntentRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappCheckoutIntentRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MiniappRegistrationRead]
+ */
+export type ResponseModelMiniappRegistrationRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappRegistrationRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MiniappSessionRead]
+ */
+export type ResponseModelMiniappSessionRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappSessionRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MiniappUserRead]
+ */
+export type ResponseModelMiniappUserRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappUserRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[NoneType]
  */
 export type ResponseModelNoneType = {
@@ -9017,6 +9469,34 @@ export type ResponseModelPageResultMembershipQualificationEventRead = {
      * 响应业务数据
      */
     data: PageResultMembershipQualificationEventRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[OrderRead]]
+ */
+export type ResponseModelPageResultOrderRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultOrderRead;
     /**
      * Request Id
      *
@@ -10207,6 +10687,36 @@ export type ResponseModelListCommissionDistributionRuleRead = {
      * 响应业务数据
      */
     data: Array<CommissionDistributionRuleRead>;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[list[MiniappCartItemRead]]
+ */
+export type ResponseModelListMiniappCartItemRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * Data
+     *
+     * 响应业务数据
+     */
+    data: Array<MiniappCartItemRead>;
     /**
      * Request Id
      *
@@ -18894,6 +19404,56 @@ export type UpdateRegistrationSettingApiV1AdminSettingsRegistrationPatchResponse
 
 export type UpdateRegistrationSettingApiV1AdminSettingsRegistrationPatchResponse = UpdateRegistrationSettingApiV1AdminSettingsRegistrationPatchResponses[keyof UpdateRegistrationSettingApiV1AdminSettingsRegistrationPatchResponses];
 
+export type MiniappRegistrationReadApiV1AdminSettingsMiniappRegistrationGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/settings/miniapp-registration';
+};
+
+export type MiniappRegistrationReadApiV1AdminSettingsMiniappRegistrationGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type MiniappRegistrationReadApiV1AdminSettingsMiniappRegistrationGetError = MiniappRegistrationReadApiV1AdminSettingsMiniappRegistrationGetErrors[keyof MiniappRegistrationReadApiV1AdminSettingsMiniappRegistrationGetErrors];
+
+export type MiniappRegistrationReadApiV1AdminSettingsMiniappRegistrationGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappRegistrationRead;
+};
+
+export type MiniappRegistrationReadApiV1AdminSettingsMiniappRegistrationGetResponse = MiniappRegistrationReadApiV1AdminSettingsMiniappRegistrationGetResponses[keyof MiniappRegistrationReadApiV1AdminSettingsMiniappRegistrationGetResponses];
+
+export type MiniappRegistrationUpdateApiV1AdminSettingsMiniappRegistrationPatchData = {
+    body: MiniappRegistrationPatch;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/settings/miniapp-registration';
+};
+
+export type MiniappRegistrationUpdateApiV1AdminSettingsMiniappRegistrationPatchErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type MiniappRegistrationUpdateApiV1AdminSettingsMiniappRegistrationPatchError = MiniappRegistrationUpdateApiV1AdminSettingsMiniappRegistrationPatchErrors[keyof MiniappRegistrationUpdateApiV1AdminSettingsMiniappRegistrationPatchErrors];
+
+export type MiniappRegistrationUpdateApiV1AdminSettingsMiniappRegistrationPatchResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappRegistrationRead;
+};
+
+export type MiniappRegistrationUpdateApiV1AdminSettingsMiniappRegistrationPatchResponse = MiniappRegistrationUpdateApiV1AdminSettingsMiniappRegistrationPatchResponses[keyof MiniappRegistrationUpdateApiV1AdminSettingsMiniappRegistrationPatchResponses];
+
 export type GetSiteProfileApiV1SystemSiteProfileGetData = {
     body?: never;
     path?: never;
@@ -18941,6 +19501,505 @@ export type GetSystemStatusApiV1SystemStatusGetResponses = {
 };
 
 export type GetSystemStatusApiV1SystemStatusGetResponse = GetSystemStatusApiV1SystemStatusGetResponses[keyof GetSystemStatusApiV1SystemStatusGetResponses];
+
+export type CapabilitiesApiV1MiniappAuthCapabilitiesGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/auth/capabilities';
+};
+
+export type CapabilitiesApiV1MiniappAuthCapabilitiesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappCapabilitiesRead;
+};
+
+export type CapabilitiesApiV1MiniappAuthCapabilitiesGetResponse = CapabilitiesApiV1MiniappAuthCapabilitiesGetResponses[keyof CapabilitiesApiV1MiniappAuthCapabilitiesGetResponses];
+
+export type LoginApiV1MiniappAuthLoginPostData = {
+    body: MiniappLoginIn;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/auth/login';
+};
+
+export type LoginApiV1MiniappAuthLoginPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type LoginApiV1MiniappAuthLoginPostError = LoginApiV1MiniappAuthLoginPostErrors[keyof LoginApiV1MiniappAuthLoginPostErrors];
+
+export type LoginApiV1MiniappAuthLoginPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappSessionRead;
+};
+
+export type LoginApiV1MiniappAuthLoginPostResponse = LoginApiV1MiniappAuthLoginPostResponses[keyof LoginApiV1MiniappAuthLoginPostResponses];
+
+export type RefreshApiV1MiniappAuthRefreshPostData = {
+    body: MiniappRefreshIn;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/auth/refresh';
+};
+
+export type RefreshApiV1MiniappAuthRefreshPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type RefreshApiV1MiniappAuthRefreshPostError = RefreshApiV1MiniappAuthRefreshPostErrors[keyof RefreshApiV1MiniappAuthRefreshPostErrors];
+
+export type RefreshApiV1MiniappAuthRefreshPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappSessionRead;
+};
+
+export type RefreshApiV1MiniappAuthRefreshPostResponse = RefreshApiV1MiniappAuthRefreshPostResponses[keyof RefreshApiV1MiniappAuthRefreshPostResponses];
+
+export type LogoutApiV1MiniappAuthLogoutPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/auth/logout';
+};
+
+export type LogoutApiV1MiniappAuthLogoutPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelNoneType;
+};
+
+export type LogoutApiV1MiniappAuthLogoutPostResponse = LogoutApiV1MiniappAuthLogoutPostResponses[keyof LogoutApiV1MiniappAuthLogoutPostResponses];
+
+export type MeApiV1MiniappMeGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/me';
+};
+
+export type MeApiV1MiniappMeGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappUserRead;
+};
+
+export type MeApiV1MiniappMeGetResponse = MeApiV1MiniappMeGetResponses[keyof MeApiV1MiniappMeGetResponses];
+
+export type CartListApiV1MiniappCartItemsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/cart-items';
+};
+
+export type CartListApiV1MiniappCartItemsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListMiniappCartItemRead;
+};
+
+export type CartListApiV1MiniappCartItemsGetResponse = CartListApiV1MiniappCartItemsGetResponses[keyof CartListApiV1MiniappCartItemsGetResponses];
+
+export type CartAddApiV1MiniappCartItemsPostData = {
+    body: CartItemInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/cart-items';
+};
+
+export type CartAddApiV1MiniappCartItemsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CartAddApiV1MiniappCartItemsPostError = CartAddApiV1MiniappCartItemsPostErrors[keyof CartAddApiV1MiniappCartItemsPostErrors];
+
+export type CartAddApiV1MiniappCartItemsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelCartItemRead;
+};
+
+export type CartAddApiV1MiniappCartItemsPostResponse = CartAddApiV1MiniappCartItemsPostResponses[keyof CartAddApiV1MiniappCartItemsPostResponses];
+
+export type CartRemoveApiV1MiniappCartItemsItemIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Item Id
+         */
+        item_id: string;
+    };
+    query?: never;
+    url: '/api/v1/miniapp/cart-items/{item_id}';
+};
+
+export type CartRemoveApiV1MiniappCartItemsItemIdDeleteErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CartRemoveApiV1MiniappCartItemsItemIdDeleteError = CartRemoveApiV1MiniappCartItemsItemIdDeleteErrors[keyof CartRemoveApiV1MiniappCartItemsItemIdDeleteErrors];
+
+export type CartRemoveApiV1MiniappCartItemsItemIdDeleteResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelNoneType;
+};
+
+export type CartRemoveApiV1MiniappCartItemsItemIdDeleteResponse = CartRemoveApiV1MiniappCartItemsItemIdDeleteResponses[keyof CartRemoveApiV1MiniappCartItemsItemIdDeleteResponses];
+
+export type CartUpdateApiV1MiniappCartItemsItemIdPatchData = {
+    body: CartItemUpdate;
+    path: {
+        /**
+         * Item Id
+         */
+        item_id: string;
+    };
+    query?: never;
+    url: '/api/v1/miniapp/cart-items/{item_id}';
+};
+
+export type CartUpdateApiV1MiniappCartItemsItemIdPatchErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CartUpdateApiV1MiniappCartItemsItemIdPatchError = CartUpdateApiV1MiniappCartItemsItemIdPatchErrors[keyof CartUpdateApiV1MiniappCartItemsItemIdPatchErrors];
+
+export type CartUpdateApiV1MiniappCartItemsItemIdPatchResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCartItemRead;
+};
+
+export type CartUpdateApiV1MiniappCartItemsItemIdPatchResponse = CartUpdateApiV1MiniappCartItemsItemIdPatchResponses[keyof CartUpdateApiV1MiniappCartItemsItemIdPatchResponses];
+
+export type AddressesListApiV1MiniappAddressesGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/addresses';
+};
+
+export type AddressesListApiV1MiniappAddressesGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListAddressRead;
+};
+
+export type AddressesListApiV1MiniappAddressesGetResponse = AddressesListApiV1MiniappAddressesGetResponses[keyof AddressesListApiV1MiniappAddressesGetResponses];
+
+export type AddressAddApiV1MiniappAddressesPostData = {
+    body: AddressInput;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/addresses';
+};
+
+export type AddressAddApiV1MiniappAddressesPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AddressAddApiV1MiniappAddressesPostError = AddressAddApiV1MiniappAddressesPostErrors[keyof AddressAddApiV1MiniappAddressesPostErrors];
+
+export type AddressAddApiV1MiniappAddressesPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelAddressRead;
+};
+
+export type AddressAddApiV1MiniappAddressesPostResponse = AddressAddApiV1MiniappAddressesPostResponses[keyof AddressAddApiV1MiniappAddressesPostResponses];
+
+export type AddressRemoveApiV1MiniappAddressesAddressIdDeleteData = {
+    body?: never;
+    path: {
+        /**
+         * Address Id
+         */
+        address_id: string;
+    };
+    query: {
+        /**
+         * Revision
+         */
+        revision: number;
+    };
+    url: '/api/v1/miniapp/addresses/{address_id}';
+};
+
+export type AddressRemoveApiV1MiniappAddressesAddressIdDeleteErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AddressRemoveApiV1MiniappAddressesAddressIdDeleteError = AddressRemoveApiV1MiniappAddressesAddressIdDeleteErrors[keyof AddressRemoveApiV1MiniappAddressesAddressIdDeleteErrors];
+
+export type AddressRemoveApiV1MiniappAddressesAddressIdDeleteResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelNoneType;
+};
+
+export type AddressRemoveApiV1MiniappAddressesAddressIdDeleteResponse = AddressRemoveApiV1MiniappAddressesAddressIdDeleteResponses[keyof AddressRemoveApiV1MiniappAddressesAddressIdDeleteResponses];
+
+export type AddressUpdateApiV1MiniappAddressesAddressIdPutData = {
+    body: AddressUpdate;
+    path: {
+        /**
+         * Address Id
+         */
+        address_id: string;
+    };
+    query?: never;
+    url: '/api/v1/miniapp/addresses/{address_id}';
+};
+
+export type AddressUpdateApiV1MiniappAddressesAddressIdPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AddressUpdateApiV1MiniappAddressesAddressIdPutError = AddressUpdateApiV1MiniappAddressesAddressIdPutErrors[keyof AddressUpdateApiV1MiniappAddressesAddressIdPutErrors];
+
+export type AddressUpdateApiV1MiniappAddressesAddressIdPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelAddressRead;
+};
+
+export type AddressUpdateApiV1MiniappAddressesAddressIdPutResponse = AddressUpdateApiV1MiniappAddressesAddressIdPutResponses[keyof AddressUpdateApiV1MiniappAddressesAddressIdPutResponses];
+
+export type CheckoutIntentApiV1MiniappCheckoutIntentGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/checkout/intent';
+};
+
+export type CheckoutIntentApiV1MiniappCheckoutIntentGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappCheckoutIntentRead;
+};
+
+export type CheckoutIntentApiV1MiniappCheckoutIntentGetResponse = CheckoutIntentApiV1MiniappCheckoutIntentGetResponses[keyof CheckoutIntentApiV1MiniappCheckoutIntentGetResponses];
+
+export type CheckoutPreviewApiV1MiniappCheckoutPreviewPostData = {
+    body: CheckoutRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/checkout/preview';
+};
+
+export type CheckoutPreviewApiV1MiniappCheckoutPreviewPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CheckoutPreviewApiV1MiniappCheckoutPreviewPostError = CheckoutPreviewApiV1MiniappCheckoutPreviewPostErrors[keyof CheckoutPreviewApiV1MiniappCheckoutPreviewPostErrors];
+
+export type CheckoutPreviewApiV1MiniappCheckoutPreviewPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelCheckoutQuote;
+};
+
+export type CheckoutPreviewApiV1MiniappCheckoutPreviewPostResponse = CheckoutPreviewApiV1MiniappCheckoutPreviewPostResponses[keyof CheckoutPreviewApiV1MiniappCheckoutPreviewPostResponses];
+
+export type OrdersListApiV1MiniappOrdersGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Status
+         */
+        status?: 'pending_payment' | 'paid' | 'cancelled' | null;
+    };
+    url: '/api/v1/miniapp/orders';
+};
+
+export type OrdersListApiV1MiniappOrdersGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type OrdersListApiV1MiniappOrdersGetError = OrdersListApiV1MiniappOrdersGetErrors[keyof OrdersListApiV1MiniappOrdersGetErrors];
+
+export type OrdersListApiV1MiniappOrdersGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultOrderRead;
+};
+
+export type OrdersListApiV1MiniappOrdersGetResponse = OrdersListApiV1MiniappOrdersGetResponses[keyof OrdersListApiV1MiniappOrdersGetResponses];
+
+export type OrderCreateApiV1MiniappOrdersPostData = {
+    body: CheckoutRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/orders';
+};
+
+export type OrderCreateApiV1MiniappOrdersPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type OrderCreateApiV1MiniappOrdersPostError = OrderCreateApiV1MiniappOrdersPostErrors[keyof OrderCreateApiV1MiniappOrdersPostErrors];
+
+export type OrderCreateApiV1MiniappOrdersPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelOrderRead;
+};
+
+export type OrderCreateApiV1MiniappOrdersPostResponse = OrderCreateApiV1MiniappOrdersPostResponses[keyof OrderCreateApiV1MiniappOrdersPostResponses];
+
+export type OrderByRequestApiV1MiniappOrdersByRequestRequestIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Request Id
+         */
+        request_id: string;
+    };
+    query?: never;
+    url: '/api/v1/miniapp/orders/by-request/{request_id}';
+};
+
+export type OrderByRequestApiV1MiniappOrdersByRequestRequestIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type OrderByRequestApiV1MiniappOrdersByRequestRequestIdGetError = OrderByRequestApiV1MiniappOrdersByRequestRequestIdGetErrors[keyof OrderByRequestApiV1MiniappOrdersByRequestRequestIdGetErrors];
+
+export type OrderByRequestApiV1MiniappOrdersByRequestRequestIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelOrderRead;
+};
+
+export type OrderByRequestApiV1MiniappOrdersByRequestRequestIdGetResponse = OrderByRequestApiV1MiniappOrdersByRequestRequestIdGetResponses[keyof OrderByRequestApiV1MiniappOrdersByRequestRequestIdGetResponses];
+
+export type OrderReadApiV1MiniappOrdersOrderIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/miniapp/orders/{order_id}';
+};
+
+export type OrderReadApiV1MiniappOrdersOrderIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type OrderReadApiV1MiniappOrdersOrderIdGetError = OrderReadApiV1MiniappOrdersOrderIdGetErrors[keyof OrderReadApiV1MiniappOrdersOrderIdGetErrors];
+
+export type OrderReadApiV1MiniappOrdersOrderIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelOrderRead;
+};
+
+export type OrderReadApiV1MiniappOrdersOrderIdGetResponse = OrderReadApiV1MiniappOrdersOrderIdGetResponses[keyof OrderReadApiV1MiniappOrdersOrderIdGetResponses];
+
+export type OrderCancelApiV1MiniappOrdersOrderIdCancelPostData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/miniapp/orders/{order_id}/cancel';
+};
+
+export type OrderCancelApiV1MiniappOrdersOrderIdCancelPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type OrderCancelApiV1MiniappOrdersOrderIdCancelPostError = OrderCancelApiV1MiniappOrdersOrderIdCancelPostErrors[keyof OrderCancelApiV1MiniappOrdersOrderIdCancelPostErrors];
+
+export type OrderCancelApiV1MiniappOrdersOrderIdCancelPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelOrderRead;
+};
+
+export type OrderCancelApiV1MiniappOrdersOrderIdCancelPostResponse = OrderCancelApiV1MiniappOrdersOrderIdCancelPostResponses[keyof OrderCancelApiV1MiniappOrdersOrderIdCancelPostResponses];
 
 export type HealthLiveHealthLiveGetData = {
     body?: never;

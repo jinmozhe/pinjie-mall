@@ -1,5 +1,7 @@
 import type {
   AdminAuthSessionOut,
+  MiniappRegistrationRead,
+  MiniappRegistrationPatch,
   AdminRegistrationSettingRead,
   AdminSiteSettingRead,
   AdminBulkStatusUpdateIn,
@@ -240,6 +242,8 @@ export const adminApi = {
     ),
   registrationSetting: () =>
     apiRequest<AdminRegistrationSettingRead>("/api/v1/admin/settings/registration"),
+  miniappRegistrationSetting: () => apiRequest<MiniappRegistrationRead>("/api/v1/admin/settings/miniapp-registration"),
+  updateMiniappRegistrationSetting: (input: MiniappRegistrationPatch) => apiRequest<MiniappRegistrationRead>("/api/v1/admin/settings/miniapp-registration", { method: "PATCH", body: jsonBody(input) }),
   updateRegistrationSetting: (input: RegistrationSettingPatchIn) =>
     apiRequest<AdminRegistrationSettingRead>("/api/v1/admin/settings/registration", {
       method: "PATCH",

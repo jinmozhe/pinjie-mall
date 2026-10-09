@@ -72,7 +72,11 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
 class UserSession(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "user_sessions"
     __table_args__ = (
-        CheckConstraint("credential_profile = 'browser_cookie'", name="ck_user_sessions_profile"),
+        CheckConstraint(
+            "(credential_profile = 'browser_cookie' AND client_id = 'pinjie-web' AND csrf_digest IS NOT NULL) OR "
+            "(credential_profile = 'miniapp_bearer' AND client_id = 'pinjie-miniapp' AND csrf_digest IS NULL)",
+            name="ck_user_sessions_profile",
+        ),
         CheckConstraint("idle_expires_at <= absolute_expires_at", name="ck_user_sessions_expiry_order"),
         Index("ix_user_sessions_user_active", "user_id", "revoked_at", "absolute_expires_at"),
         {"comment": "C 端登录会话权威记录"},
@@ -84,7 +88,7 @@ class UserSession(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     family_id: Mapped[uuid.UUID] = mapped_column(nullable=False, index=True, comment="Refresh Token 族 ID")
     credential_profile: Mapped[str] = mapped_column(String(32), nullable=False, default="browser_cookie")
     client_id: Mapped[str] = mapped_column(String(64), nullable=False, default="pinjie-web")
-    csrf_digest: Mapped[str] = mapped_column(String(64), nullable=False, comment="CSRF Token HMAC")
+    csrf_digest: Mapped[str | None] = mapped_column(String(64), nullable=True, comment="Cookie CSRF HMAC；Bearer 为空")
     ip_address: Mapped[str | None] = mapped_column(INET, nullable=True, comment="可信客户端 IP")
     user_agent_summary: Mapped[str | None] = mapped_column(String(512), nullable=True, comment="清理后的 UA 摘要")
     device_name: Mapped[str | None] = mapped_column(String(100), nullable=True, comment="设备展示名称")

@@ -62,6 +62,15 @@ class OrderRepository:
             await self.session.scalars(select(OrderItem).where(OrderItem.order_id == order_id).order_by(OrderItem.id))
         )
 
+    async def items_for_orders(self, order_ids: list[UUID]) -> dict[UUID, list[OrderItem]]:
+        result: dict[UUID, list[OrderItem]] = {}
+        rows = await self.session.scalars(
+            select(OrderItem).where(OrderItem.order_id.in_(order_ids)).order_by(OrderItem.id)
+        )
+        for item in rows:
+            result.setdefault(item.order_id, []).append(item)
+        return result
+
     async def item(self, order_item_id: UUID) -> OrderItem | None:
         return await self.session.get(OrderItem, order_item_id)
 
@@ -69,6 +78,16 @@ class OrderRepository:
         count = int(await self.session.scalar(select(func.count()).select_from(Order)) or 0)
         rows = await self.session.scalars(
             select(Order).order_by(Order.id.desc()).offset((page - 1) * page_size).limit(page_size)
+        )
+        return list(rows), count
+
+    async def user_page(self, user_id: UUID, page: int, page_size: int, status: str | None) -> tuple[list[Order], int]:
+        filters = [Order.user_id == user_id]
+        if status is not None:
+            filters.append(Order.status == status)
+        count = int(await self.session.scalar(select(func.count()).select_from(Order).where(*filters)) or 0)
+        rows = await self.session.scalars(
+            select(Order).where(*filters).order_by(Order.id.desc()).offset((page - 1) * page_size).limit(page_size)
         )
         return list(rows), count
 

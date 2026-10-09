@@ -38,6 +38,7 @@
 | [0015-派生项目计划基线重建决策.md](adr/0015-派生项目计划基线重建决策.md) | 历史计划治理决策，仅保留 Git 追溯价值 |
 | [0016-独立商城基线与Web停用决策.md](adr/0016-独立商城基线与Web停用决策.md) | 独立商城身份、小程序唯一 C 端、Web 冻结及 Backend 与 Admin 交付边界 |
 | [0017-小程序采用TaroReact与NutUI决策.md](adr/0017-小程序采用TaroReact与NutUI决策.md) | 小程序 Taro React、NutUI、Query、weapp 单目标与独立运行时的定版决策；公开浏览工程已实施 |
+| [0018-小程序独立身份会话与内容边界决策.md](adr/0018-小程序独立身份会话与内容边界决策.md) | 独立 Bearer、内存凭据、未知下单恢复与受限内容迁移窗口 |
 
 ---
 
@@ -100,6 +101,7 @@
 | 文件 | 说明 |
 | --- | --- |
 | [local-dev-environment.md](operations/local-dev-environment.md) | Windows 本地开发手册：纯 uv、pnpm、本机 PostgreSQL、Docker Desktop Redis、Codex 默认联网沙箱基线与生产环境边界 |
+| [miniapp-identity-and-content.md](operations/miniapp-identity-and-content.md) | 小程序登录配置、权限与迁移前置、未知订单恢复和受限说明迁移步骤 |
 | [environment-variables-and-backend-local-run.md](operations/environment-variables-and-backend-local-run.md) | Backend 与 Admin 环境变量、Backend 初始化、权限同步和本地检查步骤 |
 | [admin-local-development-and-validation-troubleshooting.md](operations/admin-local-development-and-validation-troubleshooting.md) | Admin Umi 本地启动、测试、浏览器验证、跨栈前置条件和迁移故障排查 |
 | [ai-assisted-development-workflow.md](operations/ai-assisted-development-workflow.md) | AI 助手规则读取与跨端实施指南：第 17 节为修改前必读流程，第 18.1 节定义 git-sync 全仓本地交付授权、保留整合与自动恢复 |

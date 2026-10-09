@@ -4,6 +4,8 @@ import Taro, { useDidHide, useDidShow } from '@tarojs/taro'
 import { View } from '@tarojs/components'
 import { focusManager, onlineManager, QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/query'
+import { restoreSession } from './lib/session'
+import { CartBadge } from './features/cart'
 import './styles/app.scss'
 import '@nutui/icons-react-taro/dist/style_icon.css'
 
@@ -12,6 +14,7 @@ export default function App({ children }: PropsWithChildren) {
   useDidShow(() => { focusManager.setFocused(true) })
   useDidHide(() => { focusManager.setFocused(false) })
   useEffect(() => {
+    void restoreSession()
     let live = true
     let revision = 0
     function update(connected: boolean) {
@@ -34,5 +37,5 @@ export default function App({ children }: PropsWithChildren) {
     })
     return () => { live = false; Taro.offNetworkStatusChange(listener) }
   }, [])
-  return <QueryClientProvider client={queryClient}>{networkNote && <View className='network-note'>{networkNote}</View>}{children}</QueryClientProvider>
+  return <QueryClientProvider client={queryClient}><CartBadge />{networkNote && <View className='network-note'>{networkNote}</View>}{children}</QueryClientProvider>
 }
