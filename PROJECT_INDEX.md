@@ -26,6 +26,7 @@
 | 小程序工程标准 | [docs/architecture/miniapp-engineering-standard.md](docs/architecture/miniapp-engineering-standard.md) | 初始化版本、配置、依赖、请求、内容与验证要求 |
 | 小程序 UI 规范 | [docs/architecture/miniapp-ui-standard.md](docs/architecture/miniapp-ui-standard.md) | 设计 tokens、组件、页面与交互验收标准 |
 | 小程序页面设计 | [docs/design/miniapp/README.md](docs/design/miniapp/README.md) | V1 风格已确认；V2 完整页面与状态图片、能力映射及流程评审入口 |
+| 小程序账户安全 | [docs/operations/miniapp-account-security.md](docs/operations/miniapp-account-security.md) | 账户设置、本人会话撤销/原集合恢复及只读注销前置边界 |
 | 计划规则 | [plans/README.md](plans/README.md) | 计划创建、格式、状态、完成和保护规则 |
 | 计划永久登记 | [plans/INDEX.md](plans/INDEX.md) | 全部实施计划的路径、状态、结果、范围和用途 |
 | 项目文档清单 | [docs/README.md](docs/README.md) | `docs/` 下全部项目文档导航 |
@@ -44,6 +45,6 @@
 
 全部计划状态与已结束结果见 [plans/INDEX.md](plans/INDEX.md)。
 
-小程序工程、公开浏览、独立微信身份、本人基础交易、履约售后评价、公开帮助、资料头像、会员与双钱包流水/佣金/历史提现、推荐分享/主动首次绑定与本人积分查询已有源码，适用轻量门禁通过；操作见[资料会员资金手册](docs/operations/miniapp-profile-and-finance.md)与[推荐积分手册](docs/operations/miniapp-referral-and-points.md)，最近实施结果见[推荐积分计划](plans/2026-10-09_小程序推荐分享与本人积分查询接入计划.md)。AppID 继续预留 touristappid，默认登录关闭，新提现申请关闭；服务端秘密、实际迁移、新阶段微信编译、平台与重型验收未执行。有效邀请政策、积分兑换/到期/抵扣、注销/设备及真实资金渠道留待后续专项。
+小程序工程、公开浏览、独立微信身份、本人基础交易、履约售后评价、公开帮助、资料头像、会员与双钱包流水/佣金/历史提现、推荐分享/主动首次绑定与本人积分查询，以及账户设置、本人会话管理和注销前置核对已有源码，适用轻量门禁通过；相关操作见[资料会员资金手册](docs/operations/miniapp-profile-and-finance.md)、[推荐积分手册](docs/operations/miniapp-referral-and-points.md)与[账户安全手册](docs/operations/miniapp-account-security.md)，最近实施结果见[账户安全计划](plans/2026-10-09_小程序账户设置会话与注销前置计划.md)。AppID 继续预留 touristappid，默认登录关闭，新提现申请与实际注销关闭；服务端秘密、实际迁移、新阶段微信编译、平台与重型验收未执行。有效邀请政策、积分兑换/到期/抵扣、实际注销及真实资金渠道留待后续专项。
 
 此前目标模型及动态验证计划继续保留原结果。接单售后、分佣快照、资金恢复、约束审计和消费资格来源修复的本地实现及本次专项动态验证均已收口；验证分层见[数据库字典第 13 章](docs/architecture/database-schema-guide.md#131-当前源码及迁移盘点)，全部记录见[计划永久登记](plans/INDEX.md)。

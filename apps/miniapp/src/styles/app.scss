@@ -71,3 +71,6 @@ page {
 .referral-code { font-size: 36px; font-weight: 600; letter-spacing: 2px; margin: 24px 0; }
 .share-button { min-height: 88px; margin: 24px 0; padding: 16px 24px; font-size: 28px; line-height: 1.5; border-radius: 12px; background: $primary; color: $surface; }
 .share-button[disabled] { background: $background; color: $secondary; }
+.security-page .nut-button { margin-top: 16px; }
+.security-page .trade-row { flex-wrap: wrap; overflow-wrap: anywhere; }
+.security-page .trade-row > text, .security-page .trade-row > view { min-width: 0; max-width: 100%; }

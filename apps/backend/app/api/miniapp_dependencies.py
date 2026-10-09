@@ -18,6 +18,7 @@ from app.domains.assets.schemas import UploaderType
 from app.services.accounts import UserProfileService
 from app.services.assets import AssetUploader
 from app.services.commerce import AddressApplicationService
+from app.services.miniapp_account import MiniappAccountService
 from app.services.miniapp_auth import MiniappAuthService, bearer_error
 from app.services.miniapp_engagement import MiniappEngagementService
 from app.services.miniapp_finance import MiniappFinanceService
@@ -133,3 +134,14 @@ def miniapp_engagement(session: DatabaseSession) -> MiniappEngagementService:
 
 
 MiniappEngagement = Annotated[MiniappEngagementService, Depends(miniapp_engagement)]
+
+
+def miniapp_account(request: Request, session: DatabaseSession) -> MiniappAccountService:
+    return MiniappAccountService(
+        session=session,
+        session_factory=get_resources(request).session_factory,
+        metadata=request_metadata(request),
+    )
+
+
+MiniappAccount = Annotated[MiniappAccountService, Depends(miniapp_account)]

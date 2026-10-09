@@ -10,7 +10,7 @@
 
 ## 全局身份与资金边界
 
-- 身份、基础交易、履约售后与评价已有独立 /api/v1/miniapp Bearer 源码及生成契约，默认微信登录关闭；本人订单履约组合分页、确认收货、整单售后记录与请求恢复、评价资格已接入。下表原领域路径保留为设计依据，小程序实际消费专用入口，详见[身份手册](../../operations/miniapp-identity-and-content.md)和[履约售后手册](../../operations/miniapp-fulfillment-and-aftersales.md)。设备、密码、注销及其他资金入口仍需专项适配，不要求无密码账户填不存在的密码。
+- 身份、基础交易、履约售后与评价已有独立 /api/v1/miniapp Bearer 源码及生成契约，默认微信登录关闭；本人订单履约组合分页、确认收货、整单售后记录与请求恢复、评价资格已接入。下表原领域路径保留为设计依据，小程序实际消费专用入口，详见[身份手册](../../operations/miniapp-identity-and-content.md)和[履约售后手册](../../operations/miniapp-fulfillment-and-aftersales.md)。账户设置、本人会话及只读注销前置已有源码，详见[账户安全手册](../../operations/miniapp-account-security.md)；实际注销关闭，不要求无密码账户填不存在的密码。
 - 真实微信支付调起参数、通知和查单尚未接通。`PaymentAttemptRead` 没有微信调起字段，当前创建意图明确返回 `unavailable`。成功与确认中的支付图是目标恢复流程，无法直接运行。
 - 退款申请、审核、内部补偿有本地实现，真实退款渠道未接通。miniapp 安全投影已分开申请/执行/资金状态；`approved` 只代表审核通过，正额资金仅渠道 succeeded 且有确认时间才显示已确认；零金额 completed 明确无资金退回。动态渠道恢复未验收。
 - 提现申请、审核和带凭证的人工完成已有实现，真实自动打款和收款目标接入未完成。小程序历史查询已有源码，`succeeded` 且有确认时间才显示人工或渠道确认；`approved` 不表示到账，新提现申请继续关闭。资料与资金专用入口见[接入手册](../../operations/miniapp-profile-and-finance.md)。
@@ -32,8 +32,9 @@
 | 退款申请/记录 | `POST /api/v1/miniapp/orders/{order_id}/refunds`、`GET /api/v1/miniapp/refunds` 及详情/原请求查询 | 整单商品与原运费、review_mode、审核意见、执行/资金分离、未知结果恢复 | 已有本人全量分页及按单筛选源码；未发货/未交付整单，无部分数量/金额；真实渠道与恢复未验收 |
 | 提交评价 | `POST /api/v1/miniapp/order-items/{item_id}/review`、trade-orders 本人 item_reviews | 1 至 5 分、正文最多 1000 字、资格与已有本人评价 | 已有源码；仅本人已交付明细一次评价；无图片上传；重复及动态验收未执行 |
 | 本人资料/头像 | `GET/PATCH /api/v1/miniapp/me`、`PUT /api/v1/miniapp/me/avatar`、`POST /api/v1/miniapp/me/avatar-assets` | 昵称编辑、主动选图上传、分别绑定/移除与查询当前事实 | 已有源码；固定本人 avatar 场景，不允许 email 扩权；无手机号绑定或实名认证；平台上传未验收 |
-| 退出与恢复 | `POST /api/v1/auth/logout`、`POST /api/v1/auth/refresh` | 主动退出、会话恢复失败、保留公开浏览 | 当前为浏览器 Profile；微信退出、刷新轮换与账户隔离须专项实现 |
-| 安全/设备/注销 | `GET /api/v1/users/me/sessions`、会话单条撤销及 revoke-others、`POST /api/v1/users/me/password`、`DELETE /api/v1/users/me` | 设备脱敏摘要、撤销确认、已有密码账户修改密码、注销说明 | 会话模型为 browser_cookie；密码和注销要求 current_password，微信无密码凭据证明未完成 |
+| 退出与恢复 | `POST /api/v1/miniapp/auth/logout`、`POST /api/v1/miniapp/auth/refresh` | 主动退出、内存凭据单次刷新轮换、保留公开浏览 | 已有独立 MiniappBearer 源码，平台及动态账户隔离验收未执行 |
+| 账户设置/会话 | `GET /api/v1/miniapp/sessions`、`POST /api/v1/miniapp/sessions/revoke`、`POST /api/v1/miniapp/sessions/revocation-status` | 本人分页、遮掩网络段、当前/有效/过期/撤销、明确原集合确认与恢复 | 已有源码，不证明物理设备身份；一次最多 100 个，当前会话走退出，新登录会话不加入原目标；并发及平台未验收 |
+| 注销前置/隐私 | `GET /api/v1/miniapp/account/closure-precheck`、公开帮助 | 公开说明、本人八类交易权益只读核对、未开通/零事项/失败区分、联系运营 | 已有源码，self_service_enabled 恒 false，实际注销关闭；不删除账户、解绑身份或放弃权益，不调用 Browser 密码/注销接口 |
 | 收货地址 | `GET/POST /api/v1/addresses`、`PUT/DELETE /api/v1/addresses/{address_id}` | 收件人、联系号码、三级区域名称/编码、详细地址、默认值与 revision | 最多 20 条；删除默认地址由后端选替补；区域数据源需工程专项确定 |
 | 分销档案 | `GET/POST /api/v1/miniapp/membership` | 主动开通、等级名称与有效状态、已有推荐关系及绑定时间 | 已有源码；开通不等于获得等级；不输出推荐人 ID/邀请码，不绑定推荐人；无有效邀请统计 |
 | 推荐关系 | `GET/POST /api/v1/miniapp/referral` | 本人码、主动确认首次绑定、已绑定事实及指定原码匹配查询 | 已有安全投影与页面源码；服务端拒绝自邀/循环/换绑；平台及数据库动态验证未执行，不输出推荐人身份 |
