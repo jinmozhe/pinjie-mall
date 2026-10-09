@@ -23,6 +23,8 @@ from app.domains.auth.miniapp_schemas import MiniappSessionRead, MiniappUserRead
 from app.domains.settings.schemas import MiniappRegistrationValue
 from app.services.security_events import SecurityEventWriter, login_event
 
+_EXCHANGE_FAILURES = (httpx.HTTPError, TimeoutError, ValueError)
+
 
 def bearer_error(code: ErrorCode = ErrorCode.AUTH_TOKEN_INVALID) -> AppException:
     return AppException(
@@ -79,7 +81,7 @@ class MiniappAuthService:
                     status_code=503, code=ErrorCode.SERVICE_UNAVAILABLE, message="微信登录响应不可用，请重新发起登录"
                 )
             body = response.json()
-        except httpx.HTTPError, TimeoutError, ValueError:
+        except _EXCHANGE_FAILURES:
             # Exceptions can contain the full secret-bearing URL; discard the external error and payload.
             raise AppException(
                 status_code=503, code=ErrorCode.SERVICE_UNAVAILABLE, message="微信登录结果未确认，请重新发起登录"
