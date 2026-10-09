@@ -30,7 +30,7 @@ assert.throws(
 );
 
 const lockfile = await readFile(resolve(root, "pnpm-lock.yaml"), "utf8");
-for (const forbidden of ["'@umijs/bundler-vite@4.7.5':", "vite@4.5.2:", "codesandbox@2.2.3:", "swiper@11.1.15:", "http-cache-semantics@3.8.1:", "webpack-dev-middleware@5.3.4:", "decompress@4.2.1:"]) {
+for (const forbidden of ["'@umijs/bundler-vite@4.7.5':", "vite@4.5.2:", "codesandbox@2.2.3:", "swiper@11.1.15:", "http-cache-semantics@3.8.1:", "webpack-dev-middleware@5.3.4:", "decompress@4.2.1:", "postcss@7.0.39:"]) {
   assert.equal(lockfile.includes(forbidden), false, `Forbidden dependency remains in pnpm-lock.yaml: ${forbidden}`);
 }
 assert.equal(lockfile.includes("vite@6.4.3:"), true, "The supported Vitest Vite version is missing");
@@ -80,6 +80,10 @@ assert.match(downloadPath, /download@7\.1\.0_patch_/);
 const downloadRequire = createRequire(downloadPath);
 const extractor = await import(pathToFileURL(downloadRequire.resolve("decompress")).href);
 assert.equal(typeof extractor.default, "function");
+
+const runnerRequire = createRequire(miniappRequire.resolve("@tarojs/webpack5-runner/package.json"));
+const simulatorRequire = createRequire(runnerRequire.resolve("miniprogram-simulate/package.json"));
+assert.equal(simulatorRequire("postcss/package.json").version, "8.5.27");
 
 const adminRequire = createRequire(resolve(root, "apps", "admin", "package.json"));
 const maxRequire = createRequire(adminRequire.resolve("@umijs/max/package.json"));
