@@ -60,6 +60,23 @@ class RegistrationSettingValue(BaseModel):
     enabled: bool = Field(strict=True, description="是否允许 Web 公开注册普通用户")
 
 
+class MiniappRegistrationValue(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_version: int = Field(default=1, ge=1, le=1)
+    enabled: bool = Field(strict=True, description="是否允许微信小程序首次建号；不影响已有身份登录")
+
+
+class MiniappRegistrationPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    revision: int = Field(gt=0)
+    enabled: bool = Field(strict=True)
+
+
+class MiniappRegistrationRead(MiniappRegistrationValue):
+    revision: int
+    updated_at: datetime
+
+
 class AdminSummaryRead(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

@@ -15068,6 +15068,112 @@
         }
       }
     },
+    "/api/v1/admin/settings/miniapp-registration": {
+      "get": {
+        "tags": [
+          "系统设置"
+        ],
+        "summary": "读取微信小程序首次建号设置",
+        "operationId": "miniapp_registration_read_api_v1_admin_settings_miniapp_registration_get",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappRegistrationRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "系统设置"
+        ],
+        "summary": "修改微信小程序首次建号设置",
+        "operationId": "miniapp_registration_update_api_v1_admin_settings_miniapp_registration_patch",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiniappRegistrationPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappRegistrationRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/system/site-profile": {
       "get": {
         "tags": [
@@ -15126,6 +15232,861 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseModel_SystemStatus_"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/auth/capabilities": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "查询微信登录开放状态",
+        "operationId": "capabilities_api_v1_miniapp_auth_capabilities_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappCapabilitiesRead_"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/auth/login": {
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "微信凭证登录",
+        "operationId": "login_api_v1_miniapp_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiniappLoginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappSessionRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/auth/refresh": {
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "轮换小程序会话凭据",
+        "operationId": "refresh_api_v1_miniapp_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiniappRefreshIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappSessionRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/auth/logout": {
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "退出小程序会话",
+        "operationId": "logout_api_v1_miniapp_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_NoneType_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/me": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "读取本人基础信息",
+        "operationId": "me_api_v1_miniapp_me_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappUserRead_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/cart-items": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "读取本人购物车展示数据",
+        "operationId": "cart_list_api_v1_miniapp_cart_items_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_list_MiniappCartItemRead__"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "加入本人购物车",
+        "operationId": "cart_add_api_v1_miniapp_cart_items_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CartItemInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CartItemRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/cart-items/{item_id}": {
+      "patch": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "修改本人购物车条目",
+        "operationId": "cart_update_api_v1_miniapp_cart_items__item_id__patch",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CartItemUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CartItemRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "移除本人购物车条目",
+        "operationId": "cart_remove_api_v1_miniapp_cart_items__item_id__delete",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_NoneType_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/addresses": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "读取本人收货地址",
+        "operationId": "addresses_list_api_v1_miniapp_addresses_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_list_AddressRead__"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "创建本人收货地址",
+        "operationId": "address_add_api_v1_miniapp_addresses_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_AddressRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/addresses/{address_id}": {
+      "put": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "更新本人收货地址",
+        "operationId": "address_update_api_v1_miniapp_addresses__address_id__put",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "address_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Address Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_AddressRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "按版本删除本人收货地址",
+        "operationId": "address_remove_api_v1_miniapp_addresses__address_id__delete",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "address_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Address Id"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "title": "Revision"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_NoneType_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/checkout/intent": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "取得新的结算请求号",
+        "operationId": "checkout_intent_api_v1_miniapp_checkout_intent_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappCheckoutIntentRead_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/checkout/preview": {
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "获取服务端结算报价",
+        "operationId": "checkout_preview_api_v1_miniapp_checkout_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_CheckoutQuote_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/orders": {
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "幂等创建本人订单",
+        "operationId": "order_create_api_v1_miniapp_orders_post",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_OrderRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "分页筛选本人订单",
+        "operationId": "orders_list_api_v1_miniapp_orders_get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending_payment",
+                    "paid",
+                    "cancelled"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_OrderRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/orders/by-request/{request_id}": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "按原请求号确认本人订单",
+        "operationId": "order_by_request_api_v1_miniapp_orders_by_request__request_id__get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_OrderRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/orders/{order_id}": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "读取本人订单详情",
+        "operationId": "order_read_api_v1_miniapp_orders__order_id__get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_OrderRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/orders/{order_id}/cancel": {
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "取消本人待付款订单",
+        "operationId": "order_cancel_api_v1_miniapp_orders__order_id__cancel_post",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_OrderRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -21584,6 +22545,353 @@
         ],
         "title": "MembershipQualificationEventRead"
       },
+      "MiniappCapabilitiesRead": {
+        "properties": {
+          "login_enabled": {
+            "type": "boolean",
+            "title": "Login Enabled",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "login_enabled"
+        ],
+        "title": "MiniappCapabilitiesRead"
+      },
+      "MiniappCartItemRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "资源唯一标识"
+          },
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id",
+            "description": "商品变体标识"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity",
+            "description": "商品数量"
+          },
+          "selected": {
+            "type": "boolean",
+            "title": "Selected",
+            "description": "购物车条目是否选中"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id",
+            "description": "商品标识"
+          },
+          "product_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "physical",
+                  "virtual"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Type",
+            "description": "实物或虚拟商品类型"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name",
+            "description": "商品名称快照"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "specifications": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Specifications",
+            "description": "商品规格名称与取值"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Price",
+            "description": "成交单价，单位人民币元"
+          },
+          "available_quantity": {
+            "type": "integer",
+            "title": "Available Quantity",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "invalid_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invalid Reason",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "sku_id",
+          "quantity",
+          "selected",
+          "revision",
+          "product_id",
+          "product_type",
+          "product_name",
+          "image_url",
+          "specifications",
+          "unit_price",
+          "available_quantity",
+          "invalid_reason"
+        ],
+        "title": "MiniappCartItemRead"
+      },
+      "MiniappCheckoutIntentRead": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id"
+        ],
+        "title": "MiniappCheckoutIntentRead"
+      },
+      "MiniappLoginIn": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Code",
+            "description": "微信一次性登录 code，不接受客户端 OpenID"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "MiniappLoginIn"
+      },
+      "MiniappRefreshIn": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 64,
+            "title": "Refresh Token",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "MiniappRefreshIn"
+      },
+      "MiniappRegistrationPatch": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "enabled"
+        ],
+        "title": "MiniappRegistrationPatch"
+      },
+      "MiniappRegistrationRead": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "maximum": 1.0,
+            "minimum": 1.0,
+            "title": "Schema Version",
+            "default": 1,
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "是否允许微信小程序首次建号；不影响已有身份登录"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "最近更新时间"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "enabled",
+          "revision",
+          "updated_at"
+        ],
+        "title": "MiniappRegistrationRead"
+      },
+      "MiniappSessionRead": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/MiniappUserRead",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Session Id",
+            "description": "登录会话唯一标识"
+          },
+          "access_token": {
+            "type": "string",
+            "title": "Access Token",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "access_expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Access Expires At",
+            "description": "访问凭据过期时间"
+          },
+          "idle_expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Idle Expires At",
+            "description": "会话空闲过期时间"
+          },
+          "absolute_expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Absolute Expires At",
+            "description": "会话绝对过期时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "session_id",
+          "access_token",
+          "refresh_token",
+          "access_expires_at",
+          "idle_expires_at",
+          "absolute_expires_at"
+        ],
+        "title": "MiniappSessionRead"
+      },
+      "MiniappUserRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "资源唯一标识"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name",
+            "description": "展示名称"
+          },
+          "avatar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar",
+            "description": "管理员头像 URL 或站内资源路径"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "avatar"
+        ],
+        "title": "MiniappUserRead"
+      },
       "NewSkuInput": {
         "properties": {
           "code": {
@@ -22908,6 +24216,53 @@
         ],
         "title": "PageResult[MembershipQualificationEventRead]"
       },
+      "PageResult_OrderRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[OrderRead]"
+      },
       "PageResult_PaymentAttemptRead_": {
         "properties": {
           "items": {
@@ -24090,7 +25445,7 @@
             "type": "string",
             "maxLength": 20000,
             "title": "Description",
-            "description": "纯文本商品说明",
+            "description": "受限 HTML v1，仅文字格式和颜色；不支持媒体、链接或脚本",
             "default": ""
           },
           "product_type": {
@@ -24174,7 +25529,7 @@
             "type": "string",
             "maxLength": 20000,
             "title": "Description",
-            "description": "纯文本商品说明",
+            "description": "商品受限 HTML；旧说明由显式迁移审计",
             "default": ""
           },
           "product_type": {
@@ -24222,6 +25577,15 @@
             "maxItems": 20,
             "title": "Image Asset Ids",
             "description": "有序图片资产 ID，首张为主图"
+          },
+          "description_format": {
+            "type": "string",
+            "enum": [
+              "legacy",
+              "restricted_html_v1"
+            ],
+            "title": "Description Format",
+            "description": "说明内容格式；legacy 须显式迁移"
           },
           "id": {
             "type": "string",
@@ -24292,6 +25656,7 @@
           "name",
           "product_type",
           "category_id",
+          "description_format",
           "id",
           "status",
           "revision",
@@ -24389,7 +25754,7 @@
             "type": "string",
             "maxLength": 20000,
             "title": "Description",
-            "description": "纯文本商品说明",
+            "description": "商品受限 HTML；旧说明由显式迁移审计",
             "default": ""
           },
           "product_type": {
@@ -24438,6 +25803,15 @@
             "title": "Image Asset Ids",
             "description": "有序图片资产 ID，首张为主图"
           },
+          "description_format": {
+            "type": "string",
+            "enum": [
+              "legacy",
+              "restricted_html_v1"
+            ],
+            "title": "Description Format",
+            "description": "说明内容格式；legacy 须显式迁移"
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -24482,6 +25856,7 @@
           "name",
           "product_type",
           "category_id",
+          "description_format",
           "id",
           "status",
           "revision",
@@ -24624,7 +25999,7 @@
             "type": "string",
             "maxLength": 20000,
             "title": "Description",
-            "description": "纯文本商品说明",
+            "description": "受限 HTML v1；不支持媒体、链接或脚本",
             "default": ""
           },
           "product_type": {
@@ -24745,7 +26120,16 @@
           "description": {
             "type": "string",
             "title": "Description",
-            "description": "商品纯文本说明"
+            "description": "已校验的受限 HTML；legacy 未审计内容不向消费者输出"
+          },
+          "description_format": {
+            "type": "string",
+            "enum": [
+              "legacy",
+              "restricted_html_v1"
+            ],
+            "title": "Description Format",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
           },
           "product_type": {
             "type": "string",
@@ -24813,6 +26197,7 @@
           "id",
           "name",
           "description",
+          "description_format",
           "product_type",
           "category_id",
           "brand_id",
@@ -24839,7 +26224,16 @@
           "description": {
             "type": "string",
             "title": "Description",
-            "description": "商品纯文本说明"
+            "description": "已校验的受限 HTML；legacy 未审计内容不向消费者输出"
+          },
+          "description_format": {
+            "type": "string",
+            "enum": [
+              "legacy",
+              "restricted_html_v1"
+            ],
+            "title": "Description Format",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
           },
           "product_type": {
             "type": "string",
@@ -24899,6 +26293,7 @@
           "id",
           "name",
           "description",
+          "description_format",
           "product_type",
           "category_id",
           "brand_id",
@@ -27056,6 +28451,166 @@
         ],
         "title": "ResponseModel[MemberProfileRead]"
       },
+      "ResponseModel_MiniappCapabilitiesRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappCapabilitiesRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappCapabilitiesRead]"
+      },
+      "ResponseModel_MiniappCheckoutIntentRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappCheckoutIntentRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappCheckoutIntentRead]"
+      },
+      "ResponseModel_MiniappRegistrationRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappRegistrationRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappRegistrationRead]"
+      },
+      "ResponseModel_MiniappSessionRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappSessionRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappSessionRead]"
+      },
+      "ResponseModel_MiniappUserRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappUserRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappUserRead]"
+      },
       "ResponseModel_NoneType_": {
         "properties": {
           "code": {
@@ -27760,6 +29315,38 @@
           "request_id"
         ],
         "title": "ResponseModel[PageResult[MembershipQualificationEventRead]]"
+      },
+      "ResponseModel_PageResult_OrderRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_OrderRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[OrderRead]]"
       },
       "ResponseModel_PageResult_PaymentAttemptRead__": {
         "properties": {
@@ -29129,6 +30716,42 @@
           "request_id"
         ],
         "title": "ResponseModel[list[CommissionDistributionRuleRead]]"
+      },
+      "ResponseModel_list_MiniappCartItemRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/MiniappCartItemRead"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[list[MiniappCartItemRead]]"
       },
       "ResponseModel_list_PermissionRead__": {
         "properties": {
@@ -32113,6 +33736,12 @@
           "note"
         ],
         "title": "WithdrawalReview"
+      }
+    },
+    "securitySchemes": {
+      "MiniappBearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   },

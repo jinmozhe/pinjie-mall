@@ -22,3 +22,5 @@
 .quantity-control { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
 .quantity-control input { width: 144px; height: 88px; border: 1px solid $border; border-radius: 12px; text-align: center; }
 .sku-footer { background: $surface; padding: 24px 0 calc(24px + env(safe-area-inset-bottom)); }
+.detail-actions.trade-row { margin: 0; }
+.detail-actions .nut-button { flex: 1; }

@@ -500,7 +500,7 @@ class OrderService:
             await self._cancel(order, "待付款超时", "system", None)
             return True
 
-    async def _read(self, order: Order) -> OrderRead:
+    async def _read(self, order: Order, items: list[OrderItem] | None = None) -> OrderRead:
         return OrderRead(
             id=order.id,
             status=order.status,
@@ -516,7 +516,10 @@ class OrderService:
             acceptance_status=order.acceptance_status,
             created_at=order.created_at,
             revision=order.revision,
-            items=[OrderItemRead.model_validate(item) for item in await self.repository.items(order.id)],
+            items=[
+                OrderItemRead.model_validate(item)
+                for item in (items if items is not None else await self.repository.items(order.id))
+            ],
         )
 
     async def read(self, user_id: UUID, order_id: UUID) -> OrderRead:
@@ -530,6 +533,26 @@ class OrderService:
         return PageResult[AdminOrderSummary].create(
             items=[AdminOrderSummary.model_validate(row) for row in rows], total=total, page=page, page_size=page_size
         )
+
+    async def user_page(self, user_id: UUID, page: int, page_size: int, status: str | None) -> PageResult[OrderRead]:
+        await self.access.require_active_user(user_id)
+        rows, total = await self.repository.user_page(user_id, page, page_size, status)
+        items = await self.repository.items_for_orders([row.id for row in rows])
+        return PageResult[OrderRead].create(
+            items=[await self._read(row, items.get(row.id, [])) for row in rows],
+            total=total,
+            page=page,
+            page_size=page_size,
+        )
+
+    async def read_by_request(self, user_id: UUID, request_id: UUID) -> OrderRead:
+        await self.access.require_active_user(user_id)
+        row = await self.repository.order_by_request(user_id, request_id)
+        if row is None:
+            raise AppException(
+                status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="尚未确认订单，请稍后查询或使用原请求恢复"
+            )
+        return await self._read(row)
 
     async def admin_read(self, order_id: UUID) -> OrderRead:
         order = await self.repository.order_by_id(order_id)

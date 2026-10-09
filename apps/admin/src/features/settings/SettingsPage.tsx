@@ -299,14 +299,15 @@ function SiteSettingsTab({ canUpdate }: { canUpdate: boolean }) {
   );
 }
 
-function RegistrationSettingsTab({ canUpdate }: { canUpdate: boolean }) {
+function RegistrationSettingsTab({ canUpdate, miniapp = false }: { canUpdate: boolean; miniapp?: boolean }) {
   const { message } = App.useApp();
   const [form] = Form.useForm<RegistrationFormValues>();
   const queryClient = useQueryClient();
   const [dirty, setDirty] = useState(false);
   const [hydratedRevision, setHydratedRevision] = useState<number>();
   const [conflict, setConflict] = useState(false);
-  const query = useQuery({ queryKey: REGISTRATION_QUERY_KEY, queryFn: adminApi.registrationSetting });
+  const queryKey = miniapp ? ["settings", "miniapp-registration"] as const : REGISTRATION_QUERY_KEY;
+  const query = useQuery({ queryKey, queryFn: async () => miniapp ? adminApi.miniappRegistrationSetting() : adminApi.registrationSetting() });
 
   useEffect(() => {
     if (query.data && hydratedRevision === undefined) {
@@ -316,12 +317,13 @@ function RegistrationSettingsTab({ canUpdate }: { canUpdate: boolean }) {
   }, [query.data, hydratedRevision, form]);
 
   const save = useMutation({
-    mutationFn: (values: RegistrationFormValues) => {
+    mutationFn: async (values: RegistrationFormValues) => {
       if (hydratedRevision === undefined) throw new Error("注册设置尚未加载");
-      return adminApi.updateRegistrationSetting({ revision: hydratedRevision, enabled: values.enabled });
+      const input = { revision: hydratedRevision, enabled: values.enabled };
+      return miniapp ? adminApi.updateMiniappRegistrationSetting(input) : adminApi.updateRegistrationSetting(input);
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(REGISTRATION_QUERY_KEY, data);
+      queryClient.setQueryData(queryKey, data);
       form.setFieldsValue({ enabled: data.enabled });
       setHydratedRevision(data.revision);
       setDirty(false);
@@ -363,16 +365,16 @@ function RegistrationSettingsTab({ canUpdate }: { canUpdate: boolean }) {
             onFieldsChange={() => setDirty(true)}
             onFinish={(values) => save.mutate(values)}
           >
-            <Form.Item label="开放用户注册" name="enabled" valuePropName="checked">
+            <Form.Item label={miniapp ? "开放小程序首次建号" : "开放用户注册"} name="enabled" valuePropName="checked">
               <Switch checkedChildren="已开放" unCheckedChildren="已关闭" />
             </Form.Item>
             <Alert
               showIcon
               type="warning"
-              title="关闭后，Web 将隐藏注册入口并拒绝新的公开注册请求。Admin 创建用户不受影响。"
+              title={miniapp ? "开放后，可信微信身份可首次创建独立商城账户。关闭仅阻止首次建号，已有身份仍可登录；服务端微信登录总开关和凭据需另行配置。" : "关闭后，Web 将隐藏注册入口并拒绝新的公开注册请求。Admin 创建用户不受影响。"}
             />
             <Flex align="center" justify="space-between" gap={16} wrap="wrap">
-              <SettingMeta data={query.data} />
+              {"updated_by" in query.data ? <SettingMeta data={query.data} /> : <Typography.Text type="secondary">版本 {query.data.revision} · {formatTime(query.data.updated_at)}</Typography.Text>}
               <Button
                 type="primary"
                 htmlType="submit"
@@ -394,6 +396,7 @@ export function SettingsPage() {
   const admin = useCurrentAdmin();
   const canReadSite = canAccess(admin, "settings:site:read");
   const canReadRegistration = canAccess(admin, "settings:registration:read");
+  const canReadMiniapp = canAccess(admin, "settings:miniapp-registration:read");
   const items = useMemo(
     () => [
       ...(canReadSite
@@ -402,8 +405,9 @@ export function SettingsPage() {
       ...(canReadRegistration
         ? [{ key: "registration", label: "注册设置", children: <RegistrationSettingsTab canUpdate={canAccess(admin, "settings:registration:update")} /> }]
         : []),
+      ...(canReadMiniapp ? [{ key: "miniapp-registration", label: "小程序建号", children: <RegistrationSettingsTab miniapp canUpdate={canAccess(admin, "settings:miniapp-registration:update")} /> }] : []),
     ],
-    [admin, canReadRegistration, canReadSite],
+    [admin, canReadRegistration, canReadSite, canReadMiniapp],
   );
 
   if (items.length === 0) {
@@ -411,7 +415,7 @@ export function SettingsPage() {
   }
 
   return (
-    <PageFrame title="系统设置" description="管理 Web 公共站点资料与用户注册策略。Admin 控制台品牌保持独立。">
+    <PageFrame title="系统设置" description="管理站点资料、既有注册策略与微信小程序首次建号策略。">
       <Tabs items={items} destroyOnHidden={false} />
     </PageFrame>
   );

@@ -65,11 +65,12 @@ export default function access(initialState?: AdminInitialState) {
       "assets:read",
       "settings:site:read",
       "settings:registration:read",
+      "settings:miniapp-registration:read",
     ].some(has),
     canAdmins: has("admins:read"),
     canRoles: has("roles:read"),
     canAssets: has("assets:read"),
-    canSettings: ["settings:site:read", "settings:registration:read"].some(has),
+    canSettings: ["settings:site:read", "settings:registration:read", "settings:miniapp-registration:read"].some(has),
     canOps: [
       "security:login-events:read",
       "security:audit-events:read",

@@ -15,7 +15,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.core.identifiers import new_uuid7
 
-Audience = Literal["pinjie-web", "pinjie-admin"]
+Audience = Literal["pinjie-web", "pinjie-admin", "pinjie-miniapp"]
 
 _PASSWORD_HASH = PasswordHash(
     (

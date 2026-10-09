@@ -92,6 +92,8 @@ class PermissionCode(StrEnum):
     SETTINGS_SITE_UPDATE = "settings:site:update"
     SETTINGS_REGISTRATION_READ = "settings:registration:read"
     SETTINGS_REGISTRATION_UPDATE = "settings:registration:update"
+    SETTINGS_MINIAPP_REGISTRATION_READ = "settings:miniapp-registration:read"
+    SETTINGS_MINIAPP_REGISTRATION_UPDATE = "settings:miniapp-registration:update"
     FULFILLMENTS_SHIP = "fulfillments:ship"
     ORDERS_READ = "orders:read"
     ORDERS_ACCEPT = "orders:accept"
@@ -197,6 +199,8 @@ PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
     PermissionDefinition("settings:site:update", "修改站点设置", "修改 Web 公共站点资料和 LOGO"),
     PermissionDefinition("settings:registration:read", "查看注册设置", "查看 Web 公开注册开关"),
     PermissionDefinition("settings:registration:update", "修改注册设置", "修改 Web 公开注册开关"),
+    PermissionDefinition("settings:miniapp-registration:read", "查看小程序建号设置", "查看微信小程序首次建号开关"),
+    PermissionDefinition("settings:miniapp-registration:update", "修改小程序建号设置", "修改微信小程序首次建号开关"),
     PermissionDefinition("fulfillments:ship", "订单发货", "对已付款实物订单填写物流发货信息"),
     PermissionDefinition("fulfillments:deliver-virtual", "完成虚拟交付", "对已付款虚拟订单登记交付引用"),
     PermissionDefinition("refunds:review", "审核退款", "审核通过或驳回用户退款申请"),
@@ -211,7 +215,7 @@ PERMISSION_CATALOG: tuple[PermissionDefinition, ...] = (
 
 PERMISSION_CODES = frozenset(item.code for item in PERMISSION_CATALOG)
 ROLE_ASSIGNABLE_PERMISSION_CODES = frozenset(item.code for item in PERMISSION_CATALOG if item.assignable_to_roles)
-CATALOG_VERSION = "2026-09-23.1"
+CATALOG_VERSION = "2026-10-09.1"
 
 __all__ = [
     "CATALOG_VERSION",

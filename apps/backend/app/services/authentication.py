@@ -157,8 +157,8 @@ class _AuthBase:
         )
 
     @staticmethod
-    def _verify_session_csrf(csrf_token: str, csrf_digest: str, key: str) -> None:
-        if not hmac.compare_digest(token_digest(csrf_token, key), csrf_digest):
+    def _verify_session_csrf(csrf_token: str, csrf_digest: str | None, key: str) -> None:
+        if csrf_digest is None or not hmac.compare_digest(token_digest(csrf_token, key), csrf_digest):
             raise AppException(status_code=403, code=ErrorCode.CSRF_REJECTED, message="CSRF 校验失败")
 
 

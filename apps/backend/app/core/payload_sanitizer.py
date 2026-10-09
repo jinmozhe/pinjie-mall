@@ -24,6 +24,7 @@ _SENSITIVE_ROUTES = frozenset(
     }
 )
 _COMMERCE_PRIVATE_PREFIXES = (
+    "/api/v1/miniapp",
     "/api/v1/addresses",
     "/api/v1/orders",
     "/api/v1/order-items",

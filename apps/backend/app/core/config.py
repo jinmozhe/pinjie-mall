@@ -63,6 +63,11 @@ class Settings(BaseSettings):
     admin_jwt_secret: str | None = Field(default=None, validation_alias="ADMIN_JWT_SECRET")
     web_token_hmac_key: str | None = Field(default=None, validation_alias="WEB_TOKEN_HMAC_KEY")
     admin_token_hmac_key: str | None = Field(default=None, validation_alias="ADMIN_TOKEN_HMAC_KEY")
+    miniapp_login_enabled: bool = Field(default=False, validation_alias="MINIAPP_LOGIN_ENABLED")
+    wechat_app_id: str | None = Field(default=None, validation_alias="WECHAT_APP_ID")
+    wechat_app_secret: str | None = Field(default=None, validation_alias="WECHAT_APP_SECRET", repr=False)
+    miniapp_jwt_secret: str | None = Field(default=None, validation_alias="MINIAPP_JWT_SECRET", repr=False)
+    miniapp_token_hmac_key: str | None = Field(default=None, validation_alias="MINIAPP_TOKEN_HMAC_KEY", repr=False)
     auth_cookie_secure: bool = Field(default=False, validation_alias="AUTH_COOKIE_SECURE")
     web_access_ttl_seconds: int = Field(default=900, validation_alias="WEB_ACCESS_TTL_SECONDS", ge=300, le=1800)
     admin_access_ttl_seconds: int = Field(
@@ -211,6 +216,19 @@ class Settings(BaseSettings):
             if self.redis_url != self.test_redis_url:
                 raise ValueError("REDIS_URL must match TEST_REDIS_URL in test environment")
         self._validate_authentication_secrets()
+        if self.miniapp_login_enabled:
+            self.miniapp_secrets()
+            import re
+
+            if self.wechat_app_id is None or re.fullmatch(r"wx[0-9a-zA-Z]{16}", self.wechat_app_id) is None:
+                raise ValueError("WECHAT_APP_ID must be an explicit WeChat application identifier")
+            if self.wechat_app_secret is None or len(self.wechat_app_secret) < 32:
+                raise ValueError("WECHAT_APP_SECRET is required when MINIAPP_LOGIN_ENABLED=true")
+            if any(
+                marker in self.wechat_app_secret.lower()
+                for marker in {"replace_with", "change_me", "example", "placeholder"}
+            ):
+                raise ValueError("WECHAT_APP_SECRET must not use a template value")
         self._validate_trusted_proxy_cidrs()
         self._validate_browser_origins()
         if self.session_absolute_ttl_days <= self.refresh_idle_ttl_days:
@@ -300,6 +318,20 @@ class Settings(BaseSettings):
             self.web_token_hmac_key,
             self.admin_token_hmac_key,
         )
+
+    def miniapp_secrets(self) -> tuple[str, str]:
+        values = (self.miniapp_jwt_secret, self.miniapp_token_hmac_key)
+        for value in values:
+            if value is None or len(value.encode("utf-8")) < 32:
+                raise ValueError("Miniapp JWT and HMAC keys must contain at least 32 UTF-8 bytes")
+            if any(marker in value.lower() for marker in {"replace_with", "change_me", "example", "placeholder"}):
+                raise ValueError("Miniapp keys must not use template values")
+        jwt_key, hmac_key = values
+        if jwt_key is None or hmac_key is None:
+            raise RuntimeError("Miniapp keys were not validated")
+        if jwt_key == hmac_key or any(value in self.authentication_secrets() for value in (jwt_key, hmac_key)):
+            raise ValueError("Miniapp keys must be independent from each other and Browser keys")
+        return jwt_key, hmac_key
 
     @property
     def allowed_upload_extensions(self) -> frozenset[str]:

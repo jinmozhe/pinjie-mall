@@ -17,6 +17,9 @@ class CacheKeys:
     def admin_session(self, session_id: str) -> str:
         return self._key("auth-admin", "session", session_id)
 
+    def miniapp(self, purpose: str, digest: str) -> str:
+        return self._key("auth-miniapp", purpose, digest)
+
     def refresh_lock(self, digest: str, *, admin: bool = False) -> str:
         domain = "auth-admin" if admin else "auth-web"
         return self._key(domain, "refresh-lock", digest)

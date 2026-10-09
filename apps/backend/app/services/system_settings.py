@@ -21,6 +21,9 @@ from app.domains.settings.schemas import (
     AdminRegistrationSettingRead,
     AdminSiteSettingRead,
     AdminSummaryRead,
+    MiniappRegistrationPatch,
+    MiniappRegistrationRead,
+    MiniappRegistrationValue,
     RegistrationSettingPatchIn,
     RegistrationSettingValue,
     SiteLogoRead,
@@ -63,6 +66,26 @@ class SystemSettingsService:
     async def registration_for_admin(self) -> AdminRegistrationSettingRead:
         setting, value = await self._read("registration", RegistrationSettingValue)
         return await self._admin_registration(setting, value)
+
+    async def miniapp_registration_for_admin(self) -> MiniappRegistrationRead:
+        setting, value = await self._read("miniapp_registration", MiniappRegistrationValue)
+        return MiniappRegistrationRead(**value.model_dump(), revision=setting.revision, updated_at=setting.updated_at)
+
+    async def update_miniapp_registration(self, payload: MiniappRegistrationPatch) -> MiniappRegistrationRead:
+        actor_id = self._require_actor()
+        changes: dict[str, object] = {}
+
+        async def operation() -> MiniappRegistrationRead:
+            setting, current = await self._read("miniapp_registration", MiniappRegistrationValue, for_update=True)
+            self._check_revision(setting, payload.revision)
+            value = MiniappRegistrationValue(enabled=payload.enabled)
+            changes["enabled"] = {"old": current.enabled, "new": value.enabled}
+            self._apply(setting, value, actor_id)
+            return MiniappRegistrationRead(
+                **value.model_dump(), revision=setting.revision, updated_at=setting.updated_at
+            )
+
+        return await self._audit("settings.miniapp_registration.update", "system_setting", changes, operation)
 
     async def site_profile(self) -> SiteProfileRead:
         setting, value = await self._read("site", SiteSettingValue)
@@ -199,7 +222,10 @@ class SystemSettingsService:
             ) from exc
 
     def _apply(
-        self, setting: SystemSetting, value: SiteSettingValue | RegistrationSettingValue, actor_id: uuid.UUID
+        self,
+        setting: SystemSetting,
+        value: SiteSettingValue | RegistrationSettingValue | MiniappRegistrationValue,
+        actor_id: uuid.UUID,
     ) -> None:
         setting.setting_value = value.model_dump(mode="json")
         setting.revision += 1

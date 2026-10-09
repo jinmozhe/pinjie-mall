@@ -3,7 +3,7 @@
 | 项目 | 内容 |
 | --- | --- |
 | 适用应用 | `apps/miniapp`，建议包名 `@pinjie/miniapp` |
-| 文档状态 | 工程、catalog 与 catalog-detail 公开浏览已实施；身份、私有交易及资金模块为目标设计 |
+| 文档状态 | 工程、公开浏览、独立会话、本人地址/购物车/结算/基础订单与受限说明已有源码；资金与平台验收未完成 |
 | 产品依据 | [微信小程序 PRD](../MINIAPP_PRD.md)与[产品需求基线](../PROJECT_REQUIREMENTS.md) |
 | 通用边界 | [模块与依赖边界](module-boundaries.md)、[认证机制](authentication-authorization.md)、[错误模型](error-model.md) |
 | 核对日期 | 2026-10-09 |
@@ -12,7 +12,7 @@
 
 PRD 定义用户需要什么、业务边界和验收结果；本文定义代码放在哪里、依赖方向、状态所有者及执行链路。技术取舍见[ADR 0017](../adr/0017-小程序采用TaroReact与NutUI决策.md)，精确版本与执行要求见[工程标准](miniapp-engineering-standard.md)，视觉与交互见[UI 规范](miniapp-ui-standard.md)。各文档按职责维护，具体实施、验证与未决事项进入活动全栈计划。
 
-应用名称统一为 `miniapp`。已实现目录包括 config、四个 TabBar 页面、商品详情分包、catalog 和 catalog-detail 两个 Feature、公共状态/图片/按钮组件、lib/api.ts、lib/query.ts、platform/media.ts 与 styles。下文交易、身份及资金模块按后续授权逐步实施，不提前创建空目录。
+应用名称统一为 miniapp。当前四项 TabBar、商品详情、账户地址/隐私及结算订单分包已配置，Feature 和身份传输入口见第 3 节实际目录说明。下文履约售后、资金和发布仍是后续设计，不提前建立空目录。
 
 前后端都需要数据所有权、职责边界与明确依赖。后端强调权威业务规则和事务，前端还需要处理异步请求、缓存、交互状态和平台生命周期。不能用“后端只管命令、前端只管状态”划分全部职责，也不能假定 API 或平台能力长期不变。
 
@@ -107,11 +107,11 @@ apps/miniapp/
 
 目录补充约束：
 
-- 当前只有应用规则，不存在上述源码实现；dev:weapp、构建、lint 与 typecheck 等脚本在初始化时配置，不能描述为已经可用。
+- 上述树为目标分层。当前实际入口为 lib/api.ts、lib/session.ts、lib/cancellation.ts、lib/query.ts；features 包含 catalog、catalog-detail、cart、account、addresses、privacy、checkout、checkout-page 与 orders。checkout 公开草稿能力与 checkout-page 分包 UI 分离，地址区域数据只由地址分包消费，不经 app.tsx 导入全部分包。
 - 商品与 SKU 选择先归 `catalog`；没有独立业务边界与复用证据时，不拆一个全局 `features/sku`。
 - 商品卡片留在 `features/catalog/components/`，通过公开入口复用。业务组件不全部堆入 `components/biz`。
 - 每个领域的端点封装与生成类型转换放在自身 `api/`，不集中堆入全局 `services/` 或单一 `endpoints.ts`。
-- 单个 Feature 的可持久草稿优先就近放置；应用级 `stores/` 只容纳真实跨 Feature 的非敏感状态。暂时没有该需求时不安装 Zustand。
+- 结算草稿在 features/checkout/draft.ts，使用有版本、校验与用户隔离的最小非秘密恢复记录；未知下单保留同键同内容。会话凭据只在 lib/session.ts 私有内存，身份代次隔离请求与 Query；不安装 Zustand。
 - 主包 TabBar 入口与分包页明确区分。商品详情是否留在主包由首屏路径和包体实测决定，目录树不代替微信构建配置。
 - 项目私有配置、环境秘密、`node_modules` 与构建产物不进入源码目录；公开配置只包含可公开值。AppID 是环境标识，上传私钥是秘密，两者不能混为同一保密等级。
 

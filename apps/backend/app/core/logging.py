@@ -1,3 +1,4 @@
+import logging
 import sys
 from pathlib import Path
 
@@ -7,6 +8,9 @@ from .config import Settings
 
 
 def configure_logging(settings: Settings) -> None:
+    # httpx INFO includes URLs. WeChat requires secrets in its query; never emit client request logs.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
     logger.remove()
     logger.add(
         sys.stderr,

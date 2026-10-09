@@ -8,6 +8,7 @@ from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
 from app.core.pagination import PageResult
+from app.core.restricted_html import restricted_html
 from app.db.models.product import Category, Product
 
 from .catalog_schemas import CandidateAppend, DescriptionSet, DescriptionUpdate, SpecificationConversion
@@ -47,6 +48,35 @@ class ProductService(SpecificationService):
 
     async def lock_changes(self) -> None:
         await self.repository.lock_catalog()
+
+    async def available_sku_ids(self, sku_ids: list[UUID]) -> set[UUID]:
+        categories = {row.id: row for row in await self.repository.categories()}
+        grouped: dict[UUID, list[UUID]] = {}
+        rows = await self.repository.checkout_skus(sku_ids)
+        for sku, product in rows:
+            grouped.setdefault(product.id, []).append(sku.id)
+        available: set[UUID] = set()
+        for product_id in grouped:
+            product_rows = [(sku, product) for sku, product in rows if product.id == product_id]
+            product = product_rows[0][1]
+            if product.status != "on_sale":
+                continue
+            category_id: UUID | None = product.category_id
+            visible = True
+            while category_id is not None:
+                category = categories.get(category_id)
+                if category is None or not category.is_active:
+                    visible = False
+                    break
+                category_id = category.parent_id
+            if not visible:
+                continue
+            adoptions = await self.repository.adoptions(product_id)
+            selections = await self.repository.sku_selections(product_id)
+            for sku, _ in product_rows:
+                if await self.sku_is_available(sku, adoptions, selections):
+                    available.add(sku.id)
+        return available
 
     async def checkout_skus(self, sku_ids: list[UUID]) -> list[CheckoutSku]:
         rows = await self.repository.checkout_skus(sorted(set(sku_ids), key=lambda item: item.hex))
@@ -161,6 +191,7 @@ class ProductService(SpecificationService):
             id=row.id,
             name=row.name,
             description=row.description,
+            description_format="restricted_html_v1" if row.description_version == 1 else "legacy",
             product_type=cast(Literal["physical", "virtual"], row.product_type),
             category_id=row.category_id,
             brand_id=row.brand_id,
@@ -228,7 +259,8 @@ class ProductService(SpecificationService):
         return PublicProductRead(
             id=row.id,
             name=row.name,
-            description=row.description,
+            description=restricted_html(row.description) if row.description_version == 1 else "",
+            description_format="restricted_html_v1" if row.description_version == 1 else "legacy",
             product_type=cast(Literal["physical", "virtual"], row.product_type),
             category_id=row.category_id,
             brand_id=row.brand_id,
@@ -334,6 +366,7 @@ class ProductService(SpecificationService):
         if data.brand_id != row.brand_id:
             await self._brand(data.brand_id)
         row.name, row.description, row.category_id = data.name, data.description, data.category_id
+        row.description_version = 1
         row.brand_id, row.purchase_limit_quantity = data.brand_id, data.purchase_limit_quantity
         row.revision += 1
         await self.repository.replace_images(product_id, data.image_asset_ids)

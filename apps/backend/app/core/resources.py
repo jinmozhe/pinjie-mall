@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+import httpx
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
@@ -15,13 +16,18 @@ class AppResources:
     redis: Redis | None
     password_manager: PasswordManager
     settings_media_ready: bool = False
+    wechat_http: httpx.AsyncClient | None = None
 
     async def close(self) -> None:
         try:
             if self.redis is not None:
                 await self.redis.aclose()
         finally:
-            await self.engine.dispose()
+            try:
+                if self.wechat_http is not None:
+                    await self.wechat_http.aclose()
+            finally:
+                await self.engine.dispose()
 
 
 def create_resources(settings: Settings) -> AppResources:
@@ -45,4 +51,12 @@ def create_resources(settings: Settings) -> AppResources:
         session_factory=session_factory,
         redis=create_redis_client(settings),
         password_manager=PasswordManager(settings.password_hash_concurrency),
+        wechat_http=httpx.AsyncClient(
+            timeout=httpx.Timeout(4.0, connect=2.0, pool=1.0),
+            limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+            trust_env=False,
+            follow_redirects=False,
+        )
+        if settings.miniapp_login_enabled
+        else None,
     )

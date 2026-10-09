@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Taro, { useDidHide, useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { Input, ScrollView, Swiper, SwiperItem, Text, View } from '@tarojs/components'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/Button'
 import { Popup } from '@nutui/nutui-react-taro/dist/es/packages/popup/popup'
 import '@nutui/nutui-react-taro/dist/es/packages/popup/style'
@@ -12,6 +12,9 @@ import { priceLabel } from '@/lib/money'
 import { previewImages } from '@/platform/media'
 import { ProductImage } from '@/components/ProductImage'
 import { QueryState } from '@/components/QueryState'
+import { signedIn, sessionScope } from '@/lib/session'
+import { addToCart } from '@/features/cart'
+import { startCheckout } from '@/features/checkout'
 import { canSelect, matchingSkus, resolvedSku, specGroups } from './domain/sku'
 import type { Selection } from './domain/sku'
 import './detail.scss'
@@ -53,6 +56,26 @@ function DetailContent({ product, visible }: { product: PublicProductDetailRead;
   const price = displaySku ? `¥${displaySku.price}` : priceLabel(matchingSkus(product.skus, displaySelection).map((sku) => sku.price))
   const validQuantity = /^\d+$/.test(quantity) && Number(quantity) >= 1 && Number(quantity) <= 99
   const canSell = product.skus.some((sku) => sku.is_active)
+  const [intent, setIntent] = useState<'cart' | 'buy' | 'select'>('select')
+  const [actionNotice, setActionNotice] = useState('')
+  const [unknownCart, setUnknownCart] = useState(false)
+  const action = useMutation({ mutationFn: async () => {
+    if (!selectedSku || !validQuantity) throw new Error('请完整选择规格和数量')
+    if (intent === 'select') { setConfirmed({ selection: { ...selection }, quantity }); setOpen(false); return }
+    const epoch = sessionScope()
+    if (!signedIn()) { setConfirmed({ selection: { ...selection }, quantity }); setOpen(false); setActionNotice('请到“我的”完成登录后返回，再次确认购买操作'); await Taro.switchTab({ url: '/pages/account/index' }); return }
+    if (intent === 'cart') {
+      if (unknownCart) throw new Error('请先查询购物车，确认上一次添加结果')
+      try { await addToCart({ sku_id: selectedSku.id, quantity: Number(quantity) }) }
+      catch (error) {
+        if (!(error instanceof ApiError) || error.kind === 'network' || error.kind === 'protocol' || error.status >= 500) setUnknownCart(true)
+        throw error
+      }
+      if (epoch === sessionScope()) { setActionNotice('已加入购物车'); setOpen(false) }
+    } else if (intent === 'buy') await startCheckout([{ sku_id: selectedSku.id, quantity: Number(quantity) }], product.product_type)
+    else { setConfirmed({ selection: { ...selection }, quantity }); setOpen(false) }
+  } })
+  function begin(next: 'cart' | 'buy') { setIntent(next); setActionNotice(''); action.reset(); openSheet() }
   function openSheet() { setSelection({ ...confirmed.selection }); setQuantity(confirmed.quantity); setOpen(true) }
   function select(name: string, value: string) {
     const next = { ...selection }
@@ -75,7 +98,7 @@ function DetailContent({ product, visible }: { product: PublicProductDetailRead;
         {!canSell && <View className='note'>当前暂无可售规格</View>}
       </View>
       <View className='surface'>
-        <View className='spec-entry' onClick={() => { if (canSell) openSheet() }}>
+        <View className='spec-entry' onClick={() => { if (canSell) { setIntent('select'); action.reset(); openSheet() } }}>
           <View><Text className='muted'>规格 </Text>{displaySku ? Object.values(displaySku.specifications).join(' / ') || '默认规格' : '请选择规格'}{displaySku ? ` · ${confirmed.quantity} 件` : ''}</View>
           <Text>{canSell ? '选择 ›' : '不可售'}</Text>
         </View>
@@ -89,7 +112,7 @@ function DetailContent({ product, visible }: { product: PublicProductDetailRead;
       </View>}
       <View className='surface'>
         <View className='section-title'>商品说明</View>
-        <View className='muted'>{product.description ? '文字说明暂未开放，请先查看商品参数和详情图片。' : '暂无文字说明'}</View>
+        {product.description_format === 'restricted_html_v1' && product.description ? <mp-html content={product.description} selectable copy-link={false} use-anchor={false} container-style='font-size: 14px; line-height: 1.7; color: #101828; overflow-wrap: anywhere;' /> : <View className='muted'>{product.description_format === 'legacy' ? '说明整理中，请查看商品参数和详情图片' : '暂无文字说明'}</View>}
       </View>
       <View className='section-title'>商品详情</View>
       {!product.detail_images.length && <View className='surface muted'>暂无详情图片</View>}
@@ -97,9 +120,11 @@ function DetailContent({ product, visible }: { product: PublicProductDetailRead;
         <ProductImage url={image.url} mode='widthFix' onClick={() => { void previewImages(product.detail_images.map((item) => item.url), image.url) }} />
       </View>)}
       <Reviews productId={product.id} visible={visible} />
-      <View className='note'>当前开放商品浏览。微信登录接入后可使用购物车和下单。</View>
+      {actionNotice && <View className='note'>{actionNotice}</View>}
+      {action.error && <QueryState title='操作未完成' error={action.error} detail='加购超时请先到购物车核对结果，勿盲目重复添加。' />}
+      {unknownCart && <Button block fill='outline' onClick={() => { void Taro.switchTab({ url: '/pages/cart/index' }) }}>查询购物车确认添加结果</Button>}
     </View>
-    <View className='detail-actions'><Button block type='primary' disabled={!canSell} onClick={openSheet}>{canSell ? '选择商品规格' : '暂无可售规格'}</Button></View>
+    <View className='detail-actions trade-row'><Button fill='outline' disabled={!canSell || action.isPending} onClick={() => begin('cart')}>加入购物车</Button><Button type='primary' disabled={!canSell || action.isPending} onClick={() => begin('buy')}>立即购买</Button></View>
     <Popup className='sku-popup' visible={open} position='bottom' round closeable onClose={() => setOpen(false)} style={{ height: '80vh' }}>
       <View className='sku-sheet'>
         <View className='sku-header'><ProductImage url={product.images[0]} /><View><View className='price'>{price}</View><View className='sku-name'>{product.name}</View></View></View>
@@ -121,9 +146,10 @@ function DetailContent({ product, visible }: { product: PublicProductDetailRead;
             <Button fill='outline' disabled={!validQuantity || Number(quantity) >= 99} onClick={() => setQuantity(String(Number(quantity) + 1))}>＋</Button>
           </View>
           {!validQuantity && <View className='note'>请输入 1 至 99 的整数预览数量</View>}
-          <View className='muted'>数量仅作本地规格预览；可购买数量和库存待交易接入后由服务端确认。</View>
+          <View className='muted'>可购买数量和库存由服务端确认。</View>
+          {action.error && <QueryState title='操作未完成' error={action.error} detail='加购超时请先到购物车核对结果，再决定是否重试。' />}
         </ScrollView>
-        <View className='sku-footer'><Button block type='primary' disabled={!selectedSku || !validQuantity} onClick={() => { setConfirmed({ selection: { ...selection }, quantity }); setOpen(false) }}>{selectedSku ? '确认规格' : '请选择完整规格'}</Button></View>
+        <View className='sku-footer'>{unknownCart && <Button block fill='outline' onClick={() => { setOpen(false); void Taro.switchTab({ url: '/pages/cart/index' }) }}>查询购物车确认结果</Button>}<Button block type='primary' loading={action.isPending} disabled={!selectedSku || !validQuantity || action.isPending || intent === 'cart' && unknownCart} onClick={() => action.mutate()}>{!selectedSku ? '请选择完整规格' : intent === 'cart' ? '确认加入购物车' : intent === 'buy' ? '确认规格并结算' : '确认规格'}</Button></View>
       </View>
     </Popup>
   </View>

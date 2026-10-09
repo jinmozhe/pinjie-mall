@@ -1,3 +1,5 @@
+from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -23,3 +25,14 @@ class CartItemRead(BaseModel):
     quantity: int
     selected: bool
     revision: int
+
+
+class MiniappCartItemRead(CartItemRead):
+    product_id: UUID | None
+    product_type: Literal["physical", "virtual"] | None
+    product_name: str
+    image_url: str | None
+    specifications: dict[str, str]
+    unit_price: Decimal | None
+    available_quantity: int
+    invalid_reason: str | None

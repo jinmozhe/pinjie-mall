@@ -16,6 +16,8 @@ from app.domains.system.schemas import SystemCapabilitiesRead
 from .schemas import (
     AdminRegistrationSettingRead,
     AdminSiteSettingRead,
+    MiniappRegistrationPatch,
+    MiniappRegistrationRead,
     RegistrationSettingPatchIn,
     SiteProfileRead,
     SiteSettingPatchIn,
@@ -146,6 +148,33 @@ async def update_registration_setting(
         request_id=current_request_id(),
         message="注册设置已保存",
     )
+
+
+@admin_router.get(
+    "/miniapp-registration",
+    response_model=ResponseModel[MiniappRegistrationRead],
+    dependencies=[Depends(require_permission(PermissionCode.SETTINGS_MINIAPP_REGISTRATION_READ))],
+    summary="读取微信小程序首次建号设置",
+)
+async def miniapp_registration_read(
+    service: AdminSystemSettingsServiceDependency,
+) -> ResponseModel[MiniappRegistrationRead]:
+    return success_response(data=await service.miniapp_registration_for_admin(), request_id=current_request_id())
+
+
+@admin_router.patch(
+    "/miniapp-registration",
+    response_model=ResponseModel[MiniappRegistrationRead],
+    dependencies=[
+        Depends(require_admin_csrf),
+        Depends(require_permission(PermissionCode.SETTINGS_MINIAPP_REGISTRATION_UPDATE)),
+    ],
+    summary="修改微信小程序首次建号设置",
+)
+async def miniapp_registration_update(
+    payload: MiniappRegistrationPatch, service: AdminSystemSettingsServiceDependency
+) -> ResponseModel[MiniappRegistrationRead]:
+    return success_response(data=await service.update_miniapp_registration(payload), request_id=current_request_id())
 
 
 __all__ = ["admin_router", "public_router"]

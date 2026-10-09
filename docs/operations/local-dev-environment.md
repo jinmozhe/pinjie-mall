@@ -225,7 +225,7 @@ pnpm --filter @pinjie/admin dev
 
 ### 终端三：小程序 watch 与微信开发者工具
 
-`apps/miniapp` 已配置独立工程与公开浏览，以下开发命令可执行。技术版本、依赖、编译和后续内容接入要求由[小程序工程标准](../architecture/miniapp-engineering-standard.md)维护。
+`apps/miniapp` 已配置独立工程、公开浏览及身份与基础交易源码，以下开发命令可执行。微信登录默认关闭，联调配置、数据库与内容迁移见[小程序身份与内容接入](miniapp-identity-and-content.md)。技术版本、依赖与编译要求由[小程序工程标准](../architecture/miniapp-engineering-standard.md)维护。
 
 1. 使用 Codex 或 VS Code 编辑同一工作区；Backend 与 Admin 按前两节独立运行。
 2. 初始化专项完成后，在仓库根目录的独立终端启动小程序 watch：
