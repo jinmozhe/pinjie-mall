@@ -20,7 +20,7 @@
 | `plans/2026-10-09_小程序工程与公开浏览接入计划.md` | 已结束 | 已完成；工程、真实公开浏览、分类契约、开发编译与轻量门禁已交付；平台及重型验收未执行，临时资源清理受策略拦截 | Backend、Miniapp、API Client、治理、Documentation | 初始化 weapp 工程，接通真实公开分类、商品与规格浏览 |
 | `plans/2026-10-09_小程序核心页面设计与原型计划.md` | 已结束 | 已替代；静态设计已交付，交互由 Taro 工程专项承接，独立 HTML/CSS 原型未生成 | Miniapp 设计、Documentation | 保留 V1、V2 全套图片和设计源文件，公开浏览直接实现 Taro 页面 |
 | `plans/2026-10-09_小程序开发标准与UI规范定版计划.md` | 已结束 | 已完成；PRD/架构已校正，技术基线、工程/UI 标准、应用规则与桥接已交付，适用轻量门禁及治理夹具通过；小程序工程未初始化 | Miniapp 规则、Documentation、治理门禁 | 校正小程序文档，确定技术栈并补齐工程标准与 UI 规范；不初始化工程 |
-| `plans/2026-10-08_依赖安全门禁修复计划.md` | 实施中 | 不适用 | Backend、Admin、Web 历史依赖、API Client、Documentation | 修复可升级依赖；braces 按限时例外先合并，2026-10-22 前复核 |
+| `plans/2026-10-08_依赖安全门禁修复计划.md` | 实施中 | 不适用 | Backend、Admin、Miniapp、Web 历史依赖、API Client、Documentation | 修复兼容依赖、跟踪未修复项；2026-10-22 前复核风险，2026-10-11 UTC 删除缓存库冷却例外 |
 | `plans/2026-09-29_分类图标与简述字段全栈实施计划.md` | 已结束 | 已完成；Alembic 迁移 `20260929_01` 已升级本地开发库，ORM/Schema/Service 已更新，OpenAPI 重新导出，API Client 重新生成，Admin CategoriesPage 编辑器已接入图标上传和 RichTextEditor，数据库字典同步，全栈轻量门禁通过；重型验证未执行 | Backend、Admin、API Client、Database、Documentation | 分类表新增图标资产和简述字段，Admin 编辑器配套改造，API Client 重新生成 |
 | `plans/2026-09-29_品牌LOGO上传与素材库选择闭环实施计划.md` | 已结束 | 已完成；品牌新建与编辑表单支持直接上传 LOGO 与素材库单选模态弹窗选择，移除手工输入 UUID 输入框，后端 BrandRead 联查回填 logo_url，列表呈现缩略图，全栈轻量与文档门禁全部通过；未执行重型验证已明确记录 | Backend、Admin、API Client、Documentation | 品牌新建与编辑表单支持直接上传 LOGO 与素材库选择，移除手动输入 UUID，后端联查回填 logo_url，列表呈现缩略图 |
 | `plans/2026-09-28_规格候选值状态筛选与安全删除计划.md` | 已结束 | 已完成；候选值抽屉状态筛选、行内快捷启停、安全删除后端端点及引用拦截、OpenAPI 契约重新导出与 API Client 生成已全部交付，全栈适用轻量门禁通过；重型验证未执行 | Backend、Admin、API Client、Documentation | 候选值抽屉增加状态筛选与快捷启停，后端支持未引用候选值的安全删除，防止商品关联断裂并方便找回停用数据 |
