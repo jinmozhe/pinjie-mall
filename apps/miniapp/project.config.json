@@ -1,0 +1,10 @@
+{
+  "projectname": "pinjie-miniapp",
+  "description": "拼捷商城公开商品浏览",
+  "miniprogramRoot": "dist/",
+  "compileType": "miniprogram",
+  "appid": "touristappid",
+  "setting": { "urlCheck": true, "es6": false, "postcss": false, "minified": false },
+  "condition": {},
+  "packOptions": { "ignore": [{ "type": "suffix", "value": ".map" }] }
+}

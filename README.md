@@ -10,14 +10,14 @@
 - 本地服务只允许 Backend 使用 18168 端口、Admin 使用 3001 端口。禁止监听或暴露 3000 及其他 Web 端口。
 - Backend 已完成商品、库存、购物车、订单、支付售后和会员分销的 M1 至 M4 本地实现；本地迁移、权限目录与真实 PostgreSQL/Redis pytest 已验证，真实渠道支付、退款、提现和生产环境仍需专项验证。
 - Admin 在既有通用管理功能上增加商品中心、订单履约、退款审核、支付对账、会员推荐、佣金、钱包与提现查询审核；前端动态交互尚未执行浏览器或 Vitest 验收。
-- 小程序技术路线、工程与 UI 标准已定版，`apps/miniapp` 仅有应用规则，工程尚未初始化；产品范围见 [小程序 PRD](docs/MINIAPP_PRD.md)，目录与分层见[小程序架构文档](docs/architecture/miniapp-architecture.md)。
+- 小程序工程和公开浏览已初始化，包含首页、分类分页、商品详情、图片预览和规格选择；微信身份、私有交易及渠道尚未接入。产品范围见 [小程序 PRD](docs/MINIAPP_PRD.md)，本地启动见[开发手册](docs/operations/local-dev-environment.md)。
 - 当前已具备认证、用户、管理员、RBAC、文件资产、系统设置、审计、健康检查与 OpenAPI 契约等基础能力。
 
 ## 技术栈
 
 - **Backend**：FastAPI、SQLAlchemy 2 async、PostgreSQL、Redis、Alembic、uv
 - **Admin**：Ant Design Pro v6、Umi Max、React、TypeScript、ProComponents、TanStack Query
-- **用户端**：微信小程序，确定采用 Taro React、NutUI React-Taro、TanStack Query、TypeScript 与 Sass；精确初始化版本见[工程标准](docs/architecture/miniapp-engineering-standard.md)，工程尚未初始化
+- **用户端**：微信小程序，采用 Taro React、NutUI React-Taro、TanStack Query、TypeScript 与 Sass；精确版本与实际工程状态见[工程标准](docs/architecture/miniapp-engineering-standard.md)
 - **共享包**：OpenAPI 生成的 TypeScript API Client、ESLint 配置、TypeScript 配置
 - **部署**：Backend 与 Admin 独立容器、1Panel OpenResty、GitHub Actions、CNB、TCR
 
@@ -27,7 +27,7 @@
 apps/
   backend/              FastAPI 后端
   admin/                Ant Design Pro 管理后台
-  miniapp/              微信小程序应用规则，尚未初始化工程
+  miniapp/              微信小程序工程与公开商品浏览
   web/                  冻结保留的历史骨架
 
 packages/

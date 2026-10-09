@@ -37,7 +37,7 @@
 | [0014-共享PostgreSQL与Redis生产基础设施决策.md](adr/0014-共享PostgreSQL与Redis生产基础设施决策.md) | 生产共享 1Panel PostgreSQL 与 Redis，并按项目隔离数据库、角色、ACL、Key 和恢复范围 |
 | [0015-派生项目计划基线重建决策.md](adr/0015-派生项目计划基线重建决策.md) | 历史计划治理决策，仅保留 Git 追溯价值 |
 | [0016-独立商城基线与Web停用决策.md](adr/0016-独立商城基线与Web停用决策.md) | 独立商城身份、小程序唯一 C 端、Web 冻结及 Backend 与 Admin 交付边界 |
-| [0017-小程序采用TaroReact与NutUI决策.md](adr/0017-小程序采用TaroReact与NutUI决策.md) | 小程序 Taro React、NutUI、Query、weapp 单目标与独立运行时的定版决策；工程未实施 |
+| [0017-小程序采用TaroReact与NutUI决策.md](adr/0017-小程序采用TaroReact与NutUI决策.md) | 小程序 Taro React、NutUI、Query、weapp 单目标与独立运行时的定版决策；公开浏览工程已实施 |
 
 ---
 
@@ -51,7 +51,7 @@
 | [backend-engineering-standard.md](architecture/backend-engineering-standard.md) | Backend 配置、Router、事务、数据、外部调用、日志、探针、测试和质量门禁的具体实施标准       |
 | [admin-engineering-standard.md](architecture/admin-engineering-standard.md) | Admin Umi/Pro 边界、请求状态、统一页面间距、响应式工具栏、列宽、开关交互与依赖准入 |
 | [commerce-backend.md](architecture/commerce-backend.md) | 商城后端领域边界、阶段 1 至 6 及符合性修复后的商品交易、资金恢复、售后、分佣、钱包、会员资格、积分和对账机制 |
-| [miniapp-architecture.md](architecture/miniapp-architecture.md) | 小程序目标目录、Feature 分层、商品加购链路、状态与认证边界；工程尚未初始化 |
+| [miniapp-architecture.md](architecture/miniapp-architecture.md) | 小程序已实现公开浏览目录及后续交易目标、Feature 分层、状态与认证边界 |
 | [miniapp-engineering-standard.md](architecture/miniapp-engineering-standard.md) | 小程序初始化精确版本、配置、代码边界、请求恢复、内容渲染与验证执行标准 |
 | [miniapp-ui-standard.md](architecture/miniapp-ui-standard.md) | 小程序设计 tokens、组件、页面布局、异常反馈、安全区与视觉验收规范 |
 | [module-boundaries.md](architecture/module-boundaries.md)                       | Backend 领域、Frontend Feature、共享包和机械依赖门禁的边界                                 |

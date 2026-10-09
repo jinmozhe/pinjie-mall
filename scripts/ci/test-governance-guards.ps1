@@ -86,6 +86,17 @@ try {
         throw "Expected ready fixture to pass. Output: $($readyResult.Output)"
     }
 
+    Write-Utf8File -Path (Join-Path $fixtureRoot "apps/miniapp/src/app.tsx") -Content "export default function App() { return null; }`n"
+    $miniappPartial = Invoke-Guard -Script $WorkspaceScript -Root $fixtureRoot
+    if ($miniappPartial.ExitCode -eq 0) { throw "Expected partial miniapp to fail." }
+    foreach ($path in @("src/app.config.ts", "config/index.ts", "src/pages/home/index.tsx")) {
+        Write-Utf8File -Path (Join-Path $fixtureRoot "apps/miniapp/$path") -Content "export default {};`n"
+    }
+    Write-Utf8File -Path (Join-Path $fixtureRoot "apps/miniapp/project.config.json") -Content "{}`n"
+    Write-Utf8File -Path (Join-Path $fixtureRoot "apps/miniapp/package.json") -Content "{`"scripts`":{`"dev:weapp`":`"taro build --type weapp --watch`",`"lint`":`"eslint src`",`"typecheck`":`"tsc --noEmit`"}}`n"
+    $miniappReady = Invoke-Guard -Script $WorkspaceScript -Root $fixtureRoot
+    if ($miniappReady.ExitCode -ne 0) { throw "Expected ready miniapp to pass. Output: $($miniappReady.Output)" }
+
     Write-Utf8File -Path (Join-Path $fixtureRoot "apps/backend/app/main.py") -Content "app = object()`n"
     Write-Utf8File -Path (Join-Path $fixtureRoot "apps/backend/tests/test_health.py") -Content "def test_health():`n    assert True`n"
     Write-Utf8File -Path (Join-Path $fixtureRoot "apps/backend/uv.lock") -Content "version = 1`n"

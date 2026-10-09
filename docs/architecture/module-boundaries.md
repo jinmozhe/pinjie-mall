@@ -76,7 +76,7 @@ Route / Page
 
 小程序沿用应用隔离、Feature 公开入口、服务端状态单一来源与共享包准入原则。目标目录、层级职责和调用链以[小程序目录与应用架构](miniapp-architecture.md)为准；页面经 Feature 的 `index.ts` 组合能力，不穿透其他 Feature 的内部文件，领域 API 封装与业务组件就近内聚。
 
-小程序请求运行时独立使用平台能力，继续通过既有 API Client 公共入口消费生成类型。认证模块隔离凭据，购物车角标从 Query 派生；纯领域逻辑不依赖 UI 和平台框架。该设计尚未创建工程，不能以本文登记视为边界扫描已经覆盖。
+小程序请求运行时独立使用 Taro.request，通过既有 API Client 公共入口消费生成类型；catalog 与 catalog-detail 公开入口已落地，SKU domain 不依赖 UI 和平台框架。认证凭据隔离与购物车角标派生随后续身份交易专项接入。
 
 ## 6. 共享包准入
 
@@ -110,7 +110,7 @@ Route / Page
 仓库使用两层机械门禁：
 
 - `scripts/ci/check-module-boundaries.ps1` 检查目录、依赖声明和可由文本路径确认的违规。
-- `scripts/ci/check-typescript-boundaries.mjs` 使用 Web 已安装的 TypeScript 5.9 Compiler API 构建 Admin、Web 静态依赖图。
+- `scripts/ci/check-typescript-boundaries.mjs` 使用 Web 已安装的 TypeScript 5.9 Compiler API 构建 Admin、Web 与 Miniapp 静态依赖图。
 
 当前门禁检查：
 
@@ -120,8 +120,8 @@ Route / Page
 - `packages/` 反向依赖 `apps/`。
 - Frontend Feature 只能通过目标 Feature 的 `index` 公开入口协作。
 - 静态 `import`、`export`、可解析的 `import()` 和 `require()` 不能绕过应用或 Feature 边界。
-- Admin 和 Web 依赖图不得形成循环。
+- Admin、Web 与 Miniapp 依赖图不得形成循环；Miniapp 页面只消费 Feature 公开入口，domain 禁止 UI、平台和应用基础设施依赖。
 
 Backend 继续由 import-linter 合同验证 Python 依赖方向。`pnpm check:boundaries` 顺序运行两层仓库门禁，`pnpm check:guards` 使用合法公开入口、动态越界、循环依赖和跨应用引用正反例验证门禁本身。运行时拼接路径、远程模块和业务语义仍由测试与评审承担。
 
-当前脚本尚未登记 miniapp。小程序初始化时必须在同一全栈计划中接入状态检测、两层依赖门禁及正反例验证；现有检查通过不代表小程序具备完整治理覆盖。
+miniapp 已登记 workspace 状态、两层依赖门禁和 CI typecheck/lint；正反例包含不完整工程拒绝、完整工程接受、页面内部路径越界、跨应用和 domain 平台依赖拒绝。ready 表达工程完整性，不能替代微信工具或真机验收。

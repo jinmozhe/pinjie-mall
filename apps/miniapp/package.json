@@ -1,0 +1,45 @@
+{
+  "name": "@pinjie/miniapp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:weapp": "taro build --type weapp --watch",
+    "build:weapp": "taro build --type weapp",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src config vitest.config.ts babel.config.cjs eslint.config.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@babel/runtime": "7.29.7",
+    "@nutui/icons-react-taro": "3.0.2",
+    "@nutui/nutui-react-taro": "3.0.20",
+    "@pinjie/api-client": "workspace:*",
+    "@tanstack/react-query": "5.101.4",
+    "@tarojs/components": "4.3.0",
+    "@tarojs/react": "4.3.0",
+    "@tarojs/runtime": "4.3.0",
+    "@tarojs/shared": "4.3.0",
+    "@tarojs/taro": "4.3.0",
+    "react": "18.3.1"
+  },
+  "devDependencies": {
+    "@babel/core": "7.29.7",
+    "@babel/preset-react": "7.29.7",
+    "@pinjie/eslint-config": "workspace:*",
+    "@tarojs/cli": "4.3.0",
+    "@tarojs/helper": "4.3.0",
+    "@tarojs/plugin-framework-react": "4.3.0",
+    "@tarojs/plugin-platform-weapp": "4.3.0",
+    "@tarojs/webpack5-runner": "4.3.0",
+    "@types/node": "24.0.0",
+    "@types/react": "18.3.31",
+    "babel-preset-taro": "4.3.0",
+    "babel-plugin-import": "1.13.8",
+    "eslint": "9.39.4",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "sass": "1.105.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11",
+    "webpack": "5.91.0"
+  }
+}

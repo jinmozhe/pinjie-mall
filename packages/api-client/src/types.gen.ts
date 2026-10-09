@@ -14861,6 +14861,12 @@ export type PublicProductsApiV1ProductsGetData = {
          * 每页数量
          */
         page_size?: number;
+        /**
+         * Category Id
+         *
+         * 公开分类 ID，包含启用的下级分类商品
+         */
+        category_id?: string | null;
     };
     url: '/api/v1/products';
 };

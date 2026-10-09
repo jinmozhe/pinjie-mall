@@ -2,7 +2,7 @@
 
 ## 1. 适用范围
 
-本文说明 Pinjie Mall 当前 GitHub Actions 配置。执行事实以 `.github/workflows/` 中的 YAML 为准。商城前阶段只运行 Backend 与 Admin；`apps/web` 已永久冻结，不允许构建、启动、发布或部署。
+本文说明 Pinjie Mall 当前 GitHub Actions 配置。执行事实以 `.github/workflows/` 中的 YAML 为准。Backend 与 Admin 提供业务基础，小程序已实现工程与公开浏览；`apps/web` 已永久冻结，不允许构建、启动、发布或部署。
 
 镜像发布和生产部署必须分别取得明确授权。日常 Push、Pull Request 与本地交付不包含这些操作。
 
@@ -12,7 +12,7 @@
 | --- | --- | --- | --- |
 | CI - Governance | [ci-governance.yml](../../.github/workflows/ci-governance.yml) | `main` Push、目标为 `main` 的 Pull Request | 文档、工作区、依赖与治理门禁 |
 | CI - Backend | [ci-backend.yml](../../.github/workflows/ci-backend.yml) | `main` Push、目标为 `main` 的 Pull Request | Backend 静态、导入边界、应用导入与 OpenAPI 契约检查 |
-| CI - Frontend | [ci-frontend.yml](../../.github/workflows/ci-frontend.yml) | `main` Push、目标为 `main` 的 Pull Request | Admin lint、typecheck 与冻结 Web 的静态检查 |
+| CI - Frontend | [ci-frontend.yml](../../.github/workflows/ci-frontend.yml) | `main` Push、目标为 `main` 的 Pull Request | Admin、Miniapp lint/typecheck 与冻结 Web 的静态检查 |
 | CI - Full Validation | [ci-e2e.yml](../../.github/workflows/ci-e2e.yml) | 人工触发 | Backend pytest、Admin Vitest 和 production build、Admin 浏览器验证 |
 | Security | [security.yml](../../.github/workflows/security.yml) | `main` Push、目标为 `main` 的 Pull Request、定时 | 密钥、依赖和静态安全检查 |
 | Handoff Source to CNB | [publish-images.yml](../../.github/workflows/publish-images.yml) | 人工触发 | 以固定 Commit SHA 交接商城源码到 CNB |
@@ -24,7 +24,7 @@
 
 目标为 `main` 的 Pull Request 和 `main` Push 会独立运行 Governance、Backend、Frontend 和 Security。它们只运行轻量检查，不运行 pytest、Vitest、production build、Playwright、数据库迁移或镜像发布。
 
-Frontend 工作流会读取工作区状态。Admin 为 `ready` 时运行 lint 与 typecheck。冻结 Web 只允许静态检查，任何 Web 运行时命令均由 `scripts/disabled-web.mjs` 明确失败。
+Frontend 工作流会读取工作区状态。Admin 与 Miniapp 分别为 `ready` 时运行 lint 与 typecheck，不自动编译微信产物或运行应用测试。冻结 Web 只允许静态检查，任何 Web 运行时命令均由 `scripts/disabled-web.mjs` 明确失败。
 
 Backend 工作流根据工作区状态运行 Ruff、格式、Mypy、导入边界、编译、应用导入及 OpenAPI 契约检查。公开 API 变化还会导出 `openapi.json`、生成 `packages/api-client/src/` 并检查漂移。
 

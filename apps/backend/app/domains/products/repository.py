@@ -149,7 +149,7 @@ class ProductRepository(CatalogRepository):
                     ),
                 )
             )
-        if category_id is not None:
+        if category_id is not None and not public:
             query = query.where(Product.category_id == category_id)
         if status is not None:
             query = query.where(Product.status == status)
@@ -169,6 +169,11 @@ class ProductRepository(CatalogRepository):
                     (parent.parent_id.is_(None) | grandparent.is_active.is_(True)),
                 )
             )
+            if category_id is not None:
+                # 分类树最多三级；复用可见性 JOIN，列表与 count 使用同一条件。
+                query = query.where(
+                    or_(Category.id == category_id, parent.id == category_id, grandparent.id == category_id)
+                )
         total = int(await self.session.scalar(select(func.count()).select_from(query.subquery())) or 0)
         rows = await self.session.scalars(
             query.order_by(Product.id.desc()).offset((page - 1) * page_size).limit(page_size)

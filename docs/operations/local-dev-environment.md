@@ -15,7 +15,7 @@
 Windows 本机
 ├── Backend：uv + 标准 CPython 3.14 + 项目 .venv，端口 18168
 ├── Admin：pnpm + Umi Max，端口 3001
-├── 小程序端：Taro React + 微信开发者工具（标准已定版，工程尚未初始化）
+├── 小程序端：Taro React watch + 微信开发者工具（工程及公开浏览已实现）
 └── PostgreSQL：本机服务，端口 5432
 （注：本项目不需要 Web 端，apps/web 已全面停用，完全禁止启动 Web 服务与端口）
 
@@ -225,7 +225,7 @@ pnpm --filter @pinjie/admin dev
 
 ### 终端三：小程序 watch 与微信开发者工具
 
-当前 `apps/miniapp` 只有应用规则，没有 package.json、源码、开发脚本或编译产物。本节是初始化后的目标操作流程，以下命令当前不可执行。技术版本、脚本和编译配置由[小程序工程标准](../architecture/miniapp-engineering-standard.md)维护。
+`apps/miniapp` 已配置独立工程与公开浏览，以下开发命令可执行。技术版本、依赖、编译和后续内容接入要求由[小程序工程标准](../architecture/miniapp-engineering-standard.md)维护。
 
 1. 使用 Codex 或 VS Code 编辑同一工作区；Backend 与 Admin 按前两节独立运行。
 2. 初始化专项完成后，在仓库根目录的独立终端启动小程序 watch：
@@ -234,11 +234,32 @@ pnpm --filter @pinjie/admin dev
    pnpm --filter @pinjie/miniapp dev:weapp
    ```
 
-3. 等待首次微信产物编译成功，在微信开发者工具导入 `apps/miniapp`，由公开 project.config.json 的 miniprogramRoot 指向实际输出目录；工程初始化时落实对应配置。微信工具加载编译后的微信文件。
+3. 等待首次编译成功，在微信开发者工具导入仓库的 `apps/miniapp` 目录；公开 project.config.json 已设置 miniprogramRoot 为 dist/，工具加载编译后的微信文件。当前 touristappid 用于游客开发模式；导入时若工具要求选择账号，选择游客模式，暂不尝试登录、真机或发布。以后取得公开 AppID 再更新项目配置，AppSecret 留在服务端。
 4. 保持 watch 终端运行。保存源码后 Taro 自动重新编译，微信工具读取更新产物并按其自动编译设置刷新；关闭自动编译时需要在工具中手动编译。每次保存仍有编译过程，无需反复手动执行 production build。
 5. 编译报错先修复，微信工具内旧页面不证明最新源码成功。新增依赖或修改编译配置后按具体变更重启 watch；退出开发时使用该终端的 Ctrl+C 停止。
 
-`dev:weapp` 对应 `taro build --type weapp --watch`，不启动 H5 或 HTTP 服务，与 Backend 18168、Admin 3001 的本地使用方式没有端口冲突。`pnpm --filter @pinjie/miniapp build:weapp` 用于微信生产产物，当前同样尚未配置，仅在明确点名授权后运行。watch 开发编译不代表生产构建或真机验收通过。
+`dev:weapp` 对应 `taro build --type weapp --watch`，保存源码后自动增量编译，保持该终端运行即可，不需要每次手动执行生产构建。微信工具监听 dist 变化并重新编译页面。Taro 源码不能直接作为微信原生源码运行；首次启动、依赖或 config/环境变量变更后需重新启动 watch。
+
+该流程不启动 H5 或 HTTP 服务，与 Backend 18168、Admin 3001 没有端口冲突。`pnpm --filter @pinjie/miniapp build:weapp` 已配置，用于生产产物，明确点名授权后运行；要求显式 HTTPS 环境源站。watch 编译不代表生产构建、微信工具或真机验收通过。
+
+默认公开 API 和资源源站为 `http://127.0.0.1:18168`。开发者工具连接本机 HTTP 时，在本地项目设置中勾选“不校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书”，该设置只用于本机模拟器，保存在已忽略的 project.private.config.json，不提交到公开项目配置。Backend 必须已启动，否则页面会显示真实网络错误，页面不注入演示商品。
+
+需要覆盖公开源站时，在终端三设置后再启动 watch，源站末尾不带斜线：
+
+```powershell
+$env:TARO_APP_API_BASE_URL = 'http://127.0.0.1:18168'
+$env:TARO_APP_ASSET_BASE_URL = 'http://127.0.0.1:18168'
+pnpm --filter @pinjie/miniapp dev:weapp
+```
+
+资源支持配置源站的绝对地址和站内路径；使用独立资源域名时显式设置 ASSET 源站。启动失败先核对终端错误，不能通过关闭 pnpm 策略或全量清理缓存修复。日常轻量检查从根目录执行：
+
+```powershell
+pnpm --filter @pinjie/miniapp typecheck
+pnpm --filter @pinjie/miniapp lint
+pnpm check:workspace
+pnpm check:boundaries
+```
 
 开发者工具模拟器的 API 地址使用明确的本地开发配置；手机 localhost 指向手机自身，真机应使用可达且符合微信域名/TLS 要求的开发 HTTPS 服务。当前消费者 Cookie 与小程序 Bearer、微信登录及真实资金渠道的适配缺口见[接口能力映射](../design/miniapp/api-coverage.md)，本地工具流程不消除这些接入前置条件。
 

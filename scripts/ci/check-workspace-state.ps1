@@ -125,6 +125,21 @@ $states = [ordered]@{
     admin = Get-State -Markers $adminMarkers
 }
 
+$miniappRoot = Join-Path $rootPath "apps/miniapp"
+$miniappHasSource = Test-HasSourceFile -Path (Join-Path $miniappRoot "src") -Extensions @(".ts", ".tsx", ".js", ".jsx")
+$miniappMarkers = [ordered]@{
+    source = $miniappHasSource
+    entry = Test-Path -LiteralPath (Join-Path $miniappRoot "src/app.tsx") -PathType Leaf
+    app_config = Test-Path -LiteralPath (Join-Path $miniappRoot "src/app.config.ts") -PathType Leaf
+    compiler = Test-Path -LiteralPath (Join-Path $miniappRoot "config/index.ts") -PathType Leaf
+    project = Test-Path -LiteralPath (Join-Path $miniappRoot "project.config.json") -PathType Leaf
+    home = Test-Path -LiteralPath (Join-Path $miniappRoot "src/pages/home/index.tsx") -PathType Leaf
+    dev_script = Get-PackageHasScript -PackagePath (Join-Path $miniappRoot "package.json") -ScriptName "dev:weapp"
+    lint_script = Get-PackageHasScript -PackagePath (Join-Path $miniappRoot "package.json") -ScriptName "lint"
+    typecheck_script = Get-PackageHasScript -PackagePath (Join-Path $miniappRoot "package.json") -ScriptName "typecheck"
+}
+$states.Add("miniapp", (Get-State -Markers $miniappMarkers))
+
 if (-not (Test-Path -LiteralPath (Join-Path $rootPath "pnpm-lock.yaml") -PathType Leaf)) {
     $failures.Add("Root pnpm-lock.yaml is missing.")
 }
@@ -136,6 +151,7 @@ foreach ($entry in $states.GetEnumerator()) {
             "backend" { $backendMarkers }
             "web" { $webMarkers }
             "admin" { $adminMarkers }
+            "miniapp" { $miniappMarkers }
         }
         $detail = ($markers.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ", "
         $failures.Add("$($entry.Key) is partial: $detail")

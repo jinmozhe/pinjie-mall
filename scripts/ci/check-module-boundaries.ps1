@@ -72,6 +72,7 @@ $applicationRoots = [ordered]@{
     backend = Join-Path $rootPath "apps/backend"
     web = Join-Path $rootPath "apps/web"
     admin = Join-Path $rootPath "apps/admin"
+    miniapp = Join-Path $rootPath "apps/miniapp"
 }
 
 foreach ($app in $applicationRoots.GetEnumerator()) {
@@ -102,7 +103,7 @@ foreach ($file in Get-SourceFiles -Path $packagesRoot) {
     $lineNumber = 0
     foreach ($line in Get-Content -Encoding UTF8 -LiteralPath $file.FullName) {
         $lineNumber++
-        if ($line -match '(?:^|[''"])(?:\.\.?/)*apps/|@pinjie/(?:web|admin|backend)') {
+        if ($line -match '(?:^|[''"])(?:\.\.?/)*apps/|@pinjie/(?:web|admin|backend|miniapp)') {
             Add-Violation -File $file.FullName -Line $lineNumber -Message "packages must not depend on apps."
         }
     }

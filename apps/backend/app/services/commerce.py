@@ -195,8 +195,10 @@ class CommerceService:
     async def product_read(self, product_id: UUID) -> ProductDetailRead:
         return await self.products.detail_read(product_id)
 
-    async def public_product_page(self, page: int, page_size: int) -> PageResult[PublicProductRead]:
-        return await self.products.public_page(page, page_size)
+    async def public_product_page(
+        self, page: int, page_size: int, *, category_id: UUID | None = None
+    ) -> PageResult[PublicProductRead]:
+        return await self.products.public_page(page, page_size, category_id=category_id)
 
     async def public_product_read(self, product_id: UUID) -> PublicProductDetailRead:
         return await self.products.public_detail_read(product_id)

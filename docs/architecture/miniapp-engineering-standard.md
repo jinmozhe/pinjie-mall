@@ -4,7 +4,7 @@
 
 本文是 `apps/miniapp` 技术栈、依赖准入、代码、配置和验证的执行标准。技术取舍见 [ADR 0017](../adr/0017-小程序采用TaroReact与NutUI决策.md)，目录与协作机制见[小程序架构](miniapp-architecture.md)，视觉与组件要求见[小程序 UI 规范](miniapp-ui-standard.md)，需求见[小程序 PRD](../MINIAPP_PRD.md)。
 
-2026-10-09：文档基线已定版，应用只有规则文件，尚无 package.json、源码、开发脚本或构建产物。下文中的目标命令和配置在初始化专项落实，不能当作当前可执行入口。元数据核验不等于兼容验收。
+2026-10-09：应用工程与公开浏览已初始化，包含首页、分类分页、详情图、公开评价和 SKU 选择。开发 watch 编译及轻量检查已落地；AppID、微信身份、私有交易、HTML 内容边界、真机和发布仍未完成。实际验证见[工程与公开浏览计划](../../plans/2026-10-09_小程序工程与公开浏览接入计划.md)。
 
 ## 2. 初始化技术栈与版本
 
@@ -21,15 +21,21 @@
 | 服务端状态 | `@tanstack/react-query` 5.101.4 | Query 缓存、取消、失效和生命周期适配 |
 | 样式 | Sass 1.105.1、tokens、NutUI 主题 | 不默认引入 Tailwind、CSS-in-JS 或浏览器字体包 |
 | 请求 | Taro.request、Taro.uploadFile | 独立传输与认证，消费根契约生成类型 |
-| 内容 | mp-html 2.5.2 | 微信原生组件经 Taro usingComponents 接入，渲染受限商品 HTML；不复制 Admin DOM 组件 |
+| 内容 | mp-html 2.5.2，后续接入 | 服务端内容边界与历史迁移完成后再安装，通过 usingComponents 接入；当前不渲染 description |
 | 可选状态/校验 | Zustand、Zod | 有跨页状态或必要运行时输入边界才引入，精确版本在对应实施计划与锁文件核验 |
 | 逻辑测试 | Vitest 的 node 环境 | 沿用测试策略；平台 UI 用微信工具及真机验证，执行需当前任务明确授权 |
 | 预览上传 | miniprogram-ci 2.1.31 | 发布工具独立准入，Node 24、签名和上传链路须单独验证 |
 | 环境 | 根 package.json 的 Node 24 基线、pnpm 11.17.0 | 不建立子应用锁文件；后续根基线变化时统一核对 |
 
-本表为初始化精确版本基线，版本升级在工程计划内明确修订，不能运行不带版本的安装命令让发布标签替代决策。2026-10-09 已核对上述固定包的公开版本与适用 peer/engines；尚未安装小程序依赖或做其 frozen 解析。TypeScript 采用 5.9 系列以缩小首次 Taro 接入的工具变化范围，不随最新主版本自动升级。
+本表为精确版本基线，版本升级在工程计划内明确修订，不能由发布标签替代决策。已安装工程所需包并冻结根锁文件；Babel core、runtime、preset-react 固定 7.29.7，babel-plugin-import 1.13.8 用于 NutUI 内部图标按需转换。小程序 tsconfig 显式将 React 类型解析到本应用的 18.3.31，避免传递包拾取 Admin 类型。TypeScript 保持 5.9 系列。
+
+icons-react-taro 发布包未声明 React 运行 peer，不能依赖它从工作区自动找到正确版本。编译配置将 react 及子路径显式定位到小程序 React 18，并从产物 sourcemap 核对单一实例；不使用全仓 React override，不改变 Admin。
+
+Taro 传递 normalize-url 2.0.1 的 query-string 使用限定为 parse/stringify，根 scoped override 指向仓库已有修复版 6.14.1 与 CJS 补丁，避免重新引入 decode-uri-component 0.2.2；依赖策略门禁继续拒绝旧版本。
 
 根 `pnpm-workspace.yaml` 当前 `minimumReleaseAge: 10080` 为七天。Taro 4.3.0 和 Sass 1.105.1 已超过观察期；所有传递依赖仍需实际检查。依赖解析失败、peer 冲突、安装脚本未准入和线上 Security 失败必须如实传播，不关闭信任策略、忽略冲突或无范围更新 allowBuilds。
+
+安装脚本已逐项读取：Taro CLI 的联网统计插件安装、NutUI/usage-stats 的统计执行禁止；binding、SWC 和 Parcel 的源码构建或联网回退禁止，采用锁定的本机原生预编译包。Taro runner 的 detect-port 选用其声明范围内带 provenance 的 1.6.0。Rollup 3.30.0 为 Taro 的 3.x 维护线安全修复，官方 tag、gitHead 和 npm 签名已核对，精确 trustPolicyExclude 仅适用于该版本；不关闭全仓信任策略。既有 Admin/Web 传递 peer 告警不代表小程序 React 冲突，当前范围不升级这些应用。Security 继续仅在线上执行。
 
 ## 3. 初始化与配置
 
@@ -41,13 +47,15 @@
 
 | 目标脚本 | 用途 | 当前状态与授权 |
 | --- | --- | --- |
-| `pnpm --filter @pinjie/miniapp dev:weapp` | Taro build --type weapp --watch，输出供微信工具加载 | 尚未配置；不启动 HTTP/H5 服务 |
-| `pnpm --filter @pinjie/miniapp typecheck` | tsc --noEmit | 尚未配置；初始化后为日常轻量门禁 |
-| `pnpm --filter @pinjie/miniapp lint` | 兼容的 ESLint、Hooks 与边界规则 | 尚未配置；初始化后为日常轻量门禁 |
-| `pnpm --filter @pinjie/miniapp build:weapp` | Taro 微信生产产物 | 尚未配置；当前任务明确点名才执行 |
-| `pnpm --filter @pinjie/miniapp test` | 授权范围内的 Vitest | 尚未配置；普通开发/提交不自动执行 |
+| `pnpm --filter @pinjie/miniapp dev:weapp` | Taro build --type weapp --watch，输出 dist | 已配置；只做微信开发编译，不启动 HTTP/H5 服务 |
+| `pnpm --filter @pinjie/miniapp typecheck` | tsc --noEmit | 已配置；日常轻量门禁 |
+| `pnpm --filter @pinjie/miniapp lint` | ESLint、Hooks 与边界规则 | 已配置；日常轻量门禁 |
+| `pnpm --filter @pinjie/miniapp build:weapp` | Taro 微信生产产物 | 已配置但未执行；明确点名授权后运行 |
+| `pnpm --filter @pinjie/miniapp test` | Vitest node | 已配置规格与十进制价格逻辑测试；未执行，明确点名授权后运行 |
 
 公开 project.config.json 只放可公开配置与 AppID。project.private.config.json、真实环境文件、上传私钥、输出目录和日志应加入忽略规则。AppID 可公开，AppSecret、session_key、支付密钥与上传私钥不得进入客户端、仓库或产物。
+
+当前 AppID 为工具游客模式标识 touristappid，不能用于微信登录、真机能力或发布。公开项目配置指向 dist/ 并排除打包 .map 文件。开发 API 与资源源站默认明确为 `http://127.0.0.1:18168`；可用公开 TARO_APP_API_BASE_URL 与 TARO_APP_ASSET_BASE_URL 覆盖，生产必须显式配置 HTTPS 源站。图片仅允许配置资源源站的绝对 URL 或站内路径，不自动信任其他 CDN。
 
 根 dev 保持 Admin 入口，Backend 本机使用已有 18168，Admin 使用 3001。小程序真机连接可达且符合微信配置的 HTTPS 服务；手机 localhost 不指向电脑。禁止启动 Web、H5 或监听 3000。
 
@@ -93,6 +101,8 @@ mp-html 不开启脚本、链接导航、编辑、Markdown 或额外媒体插件
 
 UI tokens 与业务组件必须遵循[小程序 UI 规范](miniapp-ui-standard.md)。业务 Sass 使用 750 设计宽度；NutUI 源样式按其 375 宽度独立换算，配置 designWidth 函数与 `deviceRatio[375] = 2`，防止控件尺寸减半或应用尺寸翻倍。原生 rpx 不二次换算，JS 动态尺寸使用对应设计宽度的 Taro.pxTransform 或明确 rpx。
 
+当前编译注入 NutUI variables.scss，按组件导入 Button/Popup 与样式，不导入完整主题字体。应用 CSS 变量映射 tokens；统一 Button 默认为 solid 和 square，避免 NutUI 默认 outline/round 偏离设计。已核对产物默认 NutUI 32px 转为 64rpx，应用按钮变量为 88rpx。主包四项 TabBar，详情路由位于 subpackages/catalog；分页每页 20 件，页面查询离开后 gcTime=0，不累积长列表；公开评价每页 10 条。实际发布包体和设备表现需专项验证。
+
 主题用共享语义变量映射 NutUI 变量，不在业务页面直接写一组全局覆盖。CSS Modules 先验证 Taro 编译与第三方主题边界，无法适用时使用应用/Feature 命名作用域；不默认用浏览器选择器、hover 或 window/document。
 
 主包保留四个 TabBar 页面。详情页位置和业务分包由真实入口与包体测量确定；禁止把分包全部导入全局 index 或 app.tsx。业务列表采用服务端分页、有界缓存和图片尺寸选择，不添加未授权的营销装修、搜索、优惠券或游客购物车。
@@ -117,4 +127,4 @@ UI tokens 与业务组件必须遵循[小程序 UI 规范](miniapp-ui-standard.m
 - [mp-html 原生组件与 usingComponents 用法](https://github.com/jin-yufeng/mp-html#使用方法)
 - [微信小程序登录](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/login.html)
 
-技术路线与初始化版本已定版，依赖解析、工程配置、真机和渠道验证未执行。平台或依赖声明变化时按官方证据更新本标准，不将文档存在视为实现通过。
+技术路线、依赖解析与工程配置已落地；开发编译通过不代表微信工具、真机、生产包体、HTML 或渠道验证通过。平台或依赖声明变化时按官方证据更新本标准。
