@@ -3,14 +3,14 @@
 | 项目 | 内容 |
 | --- | --- |
 | 适用应用 | `apps/miniapp`，建议包名 `@pinjie/miniapp` |
-| 文档状态 | 待工程实施的架构设计；目录、模块和示例尚未创建 |
+| 文档状态 | 架构、技术路线与配套标准已定版；应用规则已创建，工程与模块尚未初始化 |
 | 产品依据 | [微信小程序 PRD](../MINIAPP_PRD.md)与[产品需求基线](../PROJECT_REQUIREMENTS.md) |
 | 通用边界 | [模块与依赖边界](module-boundaries.md)、[认证机制](authentication-authorization.md)、[错误模型](error-model.md) |
-| 核对日期 | 2026-09-17 |
+| 核对日期 | 2026-10-09 |
 
 ## 1. 文档职责与设计依据
 
-PRD 定义用户需要什么、业务边界和验收结果；本文定义代码放在哪里、依赖方向、状态所有者及执行链路。目录与技术细节在本文维护，PRD 通过链接引用；正式框架定版及重大技术取舍在后续 ADR 记录，具体实施、验证与未决事项进入活动全栈计划。
+PRD 定义用户需要什么、业务边界和验收结果；本文定义代码放在哪里、依赖方向、状态所有者及执行链路。技术取舍见[ADR 0017](../adr/0017-小程序采用TaroReact与NutUI决策.md)，精确版本与执行要求见[工程标准](miniapp-engineering-standard.md)，视觉与交互见[UI 规范](miniapp-ui-standard.md)。各文档按职责维护，具体实施、验证与未决事项进入活动全栈计划。
 
 本次只补齐设计，不初始化小程序，不改变 Admin、Backend、生成契约或工作流。应用名称统一为 `miniapp`，不使用另一套 `miniprogram` 应用命名。
 
@@ -18,23 +18,21 @@ PRD 定义用户需要什么、业务边界和验收结果；本文定义代码�
 
 高内聚通过同一业务能力是否集中、依赖是否明确、改变后的验证是否可控判断。跨契约需求合理地影响多个层；文件数量少不代表设计正确。本文采用业务 Feature 内聚，避免把所有业务组件、接口和 Store 分散成三个全局目录。
 
-## 2. 技术候选与既有约束
+## 2. 已定版技术路线与既有约束
 
 | 事项 | 本项目采用的设计边界 |
 | --- | --- |
-| 框架 | Taro 4.2.1、React 18.3.1 为候选；只构建 weapp，不创建 H5 目标；同一发布序列的核心 Taro 编译、运行与平台包保持同版本，独立版本插件单独核验 |
+| 框架 | Taro 4 与 React 18；只构建 weapp，不创建 H5 目标；同一发布序列的核心 Taro 编译、运行与平台包保持同版本，独立版本插件单独核验 |
 | 应用隔离 | Admin 保持现有 React 19、Umi Max、Ant Design；小程序独立 React 18 与类型依赖，应用内单一 React 实例；不全局 override React 主版本 |
-| 编译 | TypeScript strict，复用兼容的共享基础约束，独立设置小程序 JSX、类型和路径；优先验证官方对应模板的 Webpack 5，TS 与 Sass 版本待实际验证后锁定 |
+| 编译 | TypeScript strict、Taro Webpack 5 与 Sass；独立设置小程序 JSX、类型和路径，精确版本与配置由工程标准维护 |
 | UI | 使用 `@nutui/nutui-react-taro`，Sass、设计 tokens 与主题变量；CSS Modules 按兼容情况启用，不使用浏览器 DOM 组件 |
 | 状态 | TanStack Query 5 管服务端数据；局部状态优先，Zustand 只按真实跨页需求引入；Zod 用于必要运行时边界，不手写全套 API Schema |
 | 网络与契约 | Taro.request、Taro.uploadFile 与既有 OpenAPI 生成类型；不直接复用 Axios 请求运行时，不新增平行契约包 |
-| 工程与发布 | 沿用根 pnpm、Node 基线、唯一锁文件、依赖观察期与构建脚本白名单；miniprogram-ci 为专项预览上传工具候选 |
+| 工程与发布 | 沿用根 pnpm、Node 基线、唯一锁文件、依赖观察期与构建脚本白名单；miniprogram-ci 为专项预览上传工具，执行需分别授权 |
 | 测试 | Vitest 优先验证纯逻辑及传输边界；组件测试需验证运行环境兼容，微信开发者工具与真机提供平台证据 |
-| 富文本渲染 | `description` 字段由 Admin Tiptap 富文本编辑器生成，以 HTML 字符串存储于后端（无数据库迁移）；小程序端使用 [`mp-html`](https://github.com/jin-yufeng/mp-html) 组件渲染，接入时需核验标签白名单（`b`、`i`、`u`、`ul`、`ol`、`li`、`p`、`span`、`font`）与内联颜色样式的兼容性，不得自行构造解析逻辑替代 `mp-html` |
+| 富文本渲染 | description 沿用 Admin Tiptap HTML，使用 mp-html 微信原生组件；服务端内容净化、字段注释与历史格式迁移按工程标准在接入专项完成，不手写另一套解析器 |
 
-截至核对日，Taro React 适配包的 peer 为 React `^18`；NutUI 的 latest 为 `3.0.23-cpp`，无后缀版本 `3.0.20` 也存在。版本标签和后缀不能独立证明微信生产适配，不把 `3.0.23-cpp` 直接固定为本项目基线。`@tarojs/test-utils-react@0.1.1` 的多个 peer 指向 Taro 3.6，不列入 Taro 4 默认测试依赖；不为 SKU 纯函数新增 Jest。
-
-`miniprogram-ci@2.1.31` 仅是已核对的发布候选，Node engine 下限满足不代表 Node 24 全链路验证通过。后续在实际依赖策略下完成解析、微信构建、关键组件和真机验证，再固定精确版本。未实现的兼容能力不得靠忽略 peer 冲突或降低仓库门禁取得通过。
+精确版本唯一维护在工程标准，不在本文复制版本表。官方元数据仅证明发布与兼容声明，实际安装、冻结解析、微信构建、关键组件与真机仍未执行。Taro Test Utils 和 Jest 不列为默认依赖，兼容问题不能通过忽略 peer 或降低门禁掩盖。
 
 ## 3. 推荐目录
 
@@ -42,7 +40,7 @@ PRD 定义用户需要什么、业务边界和验收结果；本文定义代码�
 
 ```text
 apps/miniapp/
-├── AGENTS.md                         应用规则，初始化时补齐
+├── AGENTS.md                         应用规则已创建，其余目录为目标结构
 ├── config/                           Taro 编译、环境与单位转换配置
 ├── project.config.json               可公开的微信开发者工具项目配置
 ├── package.json                      独立脚本与应用依赖，无子应用锁文件
@@ -109,7 +107,7 @@ apps/miniapp/
 
 目录补充约束：
 
-- 当前不存在上述实现，`dev:weapp`、构建、lint 与 typecheck 等脚本在初始化时配置，不能描述为已经可用。
+- 当前只有应用规则，不存在上述源码实现；dev:weapp、构建、lint 与 typecheck 等脚本在初始化时配置，不能描述为已经可用。
 - 商品与 SKU 选择先归 `catalog`；没有独立业务边界与复用证据时，不拆一个全局 `features/sku`。
 - 商品卡片留在 `features/catalog/components/`，通过公开入口复用。业务组件不全部堆入 `components/biz`。
 - 每个领域的端点封装与生成类型转换放在自身 `api/`，不集中堆入全局 `services/` 或单一 `endpoints.ts`。
@@ -176,7 +174,7 @@ catalog 向外输出商品展示和 SKU 选择能力，cart 输出加购能力�
 
 ## 5. 商品详情、选规格与加购完整链路
 
-商品内容采用纯文本说明与独立详情图集。Backend 详情契约已有 `detail_images` 有序 URL、width、height；列表不携带详情切片。后续小程序使用原生 Text/Image，文本保留换行，图片等宽并使用 widthFix、按尺寸预留比例、下方懒加载、失败反馈和点击预览，切片间默认无缝连续。不共享 Admin DOM 组件，不引入 HTML/Markdown 解析器。
+商品内容采用受限 HTML 说明与独立详情图集，保留 Admin 已有富文本能力。说明经 mp-html 微信原生组件渲染，内容边界、原生组件接入、字段注释和历史格式迁移以工程标准第 6 节为准。Backend 详情契约已有 detail_images 有序 URL、width、height；列表不携带详情切片。图片使用原生 Image，等宽、widthFix、按尺寸预留比例、下方懒加载、失败反馈与点击预览，切片默认无缝连续。不共享 Admin DOM 组件，不自行解析 HTML，不引入 Markdown 功能。
 
 站内资源路径必须通过配置的可信 HTTPS 资源基址解析，不能依赖 Admin Origin 或本机地址；绝对 URL 受同一可信域名策略约束。微信资源域名配置、WebP、EXIF 方向、长图内存及弱网表现均需后续 iOS/Android 真机验证，本轮未初始化小程序工程。
 
@@ -222,7 +220,7 @@ catalog 向外输出商品展示和 SKU 选择能力，cart 输出加购能力�
 | 凭据与恢复任务 | lib/auth | 私有内存状态、明确轮换与撤销；页面只接收安全会话摘要 |
 | 本地非敏感偏好 | lib/storage -> platform/storage | 版本校验、损坏提示或明确重置，不默默恢复为成功状态 |
 
-角标采用总件数或条目数必须有统一产品口径；显示格式可设置上限，但格式化不能改变底层数据。具体口径在涉及角标的实施计划确定；首次查询失败不伪装成空购物车，已有值过期时不得宣称已同步。失效查询不保证未订阅的缓存立即重新获取，应用壳需要角标时订阅相同 Query，返回购物车页再按新鲜度规则刷新。
+角标总件数与显示上限统一以 UI 规范第 4 节为准，格式化不能改变底层数据；首次查询失败不伪装成空购物车，已有值过期时不得宣称已同步。失效查询不保证未订阅的缓存立即重新获取，应用壳需要角标时订阅相同 Query，返回购物车页再按新鲜度规则刷新。
 
 私有 Query key 包含用户或会话隔离范围。应用装配在退出、停用或合法账号切换时取消请求、清理私有缓存并递增会话代次；请求和 Mutation 回调核对代次，防止取消未及时生效时旧响应回填。取消本地请求不等于撤销服务端已经执行的写操作。
 
@@ -264,7 +262,7 @@ checkout 用例先调用后端创建支付意图，获取签名参数，再调�
 
 app.tsx 只装配必要 Provider、生命周期及应用级投影，不导入全部业务页面。分包按页面入口和实际依赖图组织，不能仅移动文件后认定依赖已经离开主包。重点检查共享 Feature 的 index、全局样式、NutUI 全量引入及主包对分包能力的依赖，不能只依赖 tree-shaking 宣称包体正确。
 
-设计 tokens 集中维护，局部样式与业务组件就近组织；明确设计稿宽度、Taro 单位转换和原生 rpx 的使用，防止重复转换。业务组件归 Feature，通用布局归 components，独立平台适配不承载 NutUI 或组件主题。
+设计 tokens、设计宽度和单位转换遵循 UI 规范与工程标准，局部样式和业务组件就近组织，防止重复转换。业务组件归 Feature，通用布局归 components，独立平台适配不承载 NutUI 或组件主题。
 
 | 变化 | 正常影响范围 | 评审重点 |
 | --- | --- | --- |
@@ -304,7 +302,7 @@ Push、PR 只接入适用轻量门禁和生成漂移检查。Taro production bui
 ### 9.3 落地顺序
 
 1. 读取 PRD、本文与适用规则，在单一全栈计划关联需求，明确身份与渠道的关键前置条件。
-2. 先验证最小工程、依赖、关键商品组件、Query 与包体；此步骤可使用明确标识的样例，不当作业务验收。
+2. 按工程与 UI 标准初始化，在授权范围验证最小工程、依赖、关键商品组件、mp-html、Query 与包体；明确标识的样例不当作业务验收。
 3. 实现微信身份、会话模型和消费者接口扩展，导出根 OpenAPI，再生成既有 API Client 类型并适配请求层。
 4. 按 PRD 顺序建设浏览、购物车、结算、订单及必要 Admin 运营能力，保持业务 Feature 内聚。
 5. 完成真实支付、退款、异常恢复、任务运行及既有分销资金联动，再按实际开放范围完成会员与提现体验。
@@ -313,8 +311,8 @@ Push、PR 只接入适用轻量门禁和生成漂移检查。Taro production bui
 ## 10. 官方核验入口
 
 - [Taro React 生命周期 Hooks](https://docs.taro.zone/docs/hooks/)
-- [Taro 4.2.1 发布记录](https://github.com/NervJS/taro/releases/tag/v4.2.1)
-- [Taro React 适配包元数据](https://registry.npmjs.org/@tarojs/react/4.2.1)
+- [Taro 4.3.0 发布记录](https://github.com/NervJS/taro/releases/tag/v4.3.0)
+- [Taro React 适配包元数据](https://registry.npmjs.org/@tarojs/react/4.3.0)
 - [NutUI React-Taro 发布元数据](https://registry.npmjs.org/@nutui/nutui-react-taro)
 - [Taro Test Utils 发布元数据](https://registry.npmjs.org/@tarojs/test-utils-react/0.1.1)
 - [TanStack Query 非浏览器生命周期适配](https://tanstack.com/query/latest/docs/framework/react/react-native)

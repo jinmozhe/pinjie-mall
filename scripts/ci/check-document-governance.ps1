@@ -108,6 +108,7 @@ $expectedRuleFiles = @(
     "AGENTS.md",
     "apps/backend/AGENTS.md",
     "apps/admin/AGENTS.md",
+    "apps/miniapp/AGENTS.md",
     "apps/web/AGENTS.md"
 )
 $actualRuleFiles = @($repositoryFiles | Where-Object { $_ -match "(^|/)AGENTS\.md$" })
@@ -135,6 +136,7 @@ $bridgeExpectations = [ordered]@{
     ".agents/rules/10-backend.md" = "@../../apps/backend/AGENTS.md"
     ".agents/rules/20-admin.md" = "@../../apps/admin/AGENTS.md"
     ".agents/rules/30-web.md" = "@../../apps/web/AGENTS.md"
+    ".agents/rules/40-miniapp.md" = "@../../apps/miniapp/AGENTS.md"
 }
 foreach ($entry in $bridgeExpectations.GetEnumerator()) {
     $bridgePath = Join-Path $rootPath $entry.Key

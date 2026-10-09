@@ -561,7 +561,7 @@ erDiagram
 | --- | --- | --- | --- | --- |
 | `id` | UUID | 否 | 应用生成 UUID v7 | 商品主键 |
 | `name` | VARCHAR(200) | 否 | 运营录入 | 商品名称，非空，最多 200 字符 |
-| `description` | TEXT | 否 | 空字符串 | 商品纯文本介绍说明 |
+| `description` | TEXT | 否 | 空字符串 | 商品受限 HTML 说明，与详情图集独立；内容边界、历史格式迁移与契约注释对齐见[小程序工程标准](miniapp-engineering-standard.md#6-商品富文本与图片)，不据本文推断净化已实现 |
 | `product_type` | VARCHAR(16) | 否 | 运营选择 | 商品类型：`physical`（实物商品）、`virtual`（虚拟商品） |
 | `category_id` | UUID | 否 | 运营选择 | 主分类外键，关联 `product_categories.id`，RESTRICT 保护 |
 | `brand_id` | UUID | 是 | NULL | 品牌外键，关联 `brands.id`，允许为空 |

@@ -15,7 +15,7 @@
 Windows 本机
 ├── Backend：uv + 标准 CPython 3.14 + 项目 .venv，端口 18168
 ├── Admin：pnpm + Umi Max，端口 3001
-├── 小程序端：微信小程序（前阶段暂不开发，由后续专项阶段实施）
+├── 小程序端：Taro React + 微信开发者工具（标准已定版，工程尚未初始化）
 └── PostgreSQL：本机服务，端口 5432
 （注：本项目不需要 Web 端，apps/web 已全面停用，完全禁止启动 Web 服务与端口）
 
@@ -93,6 +93,7 @@ Windows 本机
 | pnpm | 11.17.0 或更高的 11.x | Monorepo 依赖管理，与根 `packageManager` 保持一致 |
 | PostgreSQL | 主版本尽量与生产一致 | 本地数据库 |
 | Docker Desktop | 包含 Docker Compose | 本地 Redis |
+| 微信开发者工具 | 工程初始化时核对版本与基础库 | 小程序模拟器、调试与真机入口，不运行 Taro 源码 |
 
 在 PowerShell 中检查：
 
@@ -200,7 +201,7 @@ PONG
 
 ## 六、日常启动
 
-建议使用两个独立 PowerShell 终端。Redis 由 Docker Desktop 后台运行。本项目不需要 Web 端，完全禁止启动 Web 端服务与监听 3000 端口。
+Backend 与 Admin 使用两个独立 PowerShell 终端；小程序工程初始化后增加一个 Taro watch 终端。Redis 由 Docker Desktop 后台运行。本项目不需要 Web 端，完全禁止启动 Web 端服务与监听 3000 端口。
 
 ### 终端一：Backend
 
@@ -221,6 +222,27 @@ pnpm --filter @pinjie/admin dev
 访问地址：`http://localhost:3001`
 
 也可以在根目录运行 `pnpm dev`，仅启动 Admin 管理端开发服务。后端仍在独立终端中运行。
+
+### 终端三：小程序 watch 与微信开发者工具
+
+当前 `apps/miniapp` 只有应用规则，没有 package.json、源码、开发脚本或编译产物。本节是初始化后的目标操作流程，以下命令当前不可执行。技术版本、脚本和编译配置由[小程序工程标准](../architecture/miniapp-engineering-standard.md)维护。
+
+1. 使用 Codex 或 VS Code 编辑同一工作区；Backend 与 Admin 按前两节独立运行。
+2. 初始化专项完成后，在仓库根目录的独立终端启动小程序 watch：
+
+   ```powershell
+   pnpm --filter @pinjie/miniapp dev:weapp
+   ```
+
+3. 等待首次微信产物编译成功，在微信开发者工具导入 `apps/miniapp`，由公开 project.config.json 的 miniprogramRoot 指向实际输出目录；工程初始化时落实对应配置。微信工具加载编译后的微信文件。
+4. 保持 watch 终端运行。保存源码后 Taro 自动重新编译，微信工具读取更新产物并按其自动编译设置刷新；关闭自动编译时需要在工具中手动编译。每次保存仍有编译过程，无需反复手动执行 production build。
+5. 编译报错先修复，微信工具内旧页面不证明最新源码成功。新增依赖或修改编译配置后按具体变更重启 watch；退出开发时使用该终端的 Ctrl+C 停止。
+
+`dev:weapp` 对应 `taro build --type weapp --watch`，不启动 H5 或 HTTP 服务，与 Backend 18168、Admin 3001 的本地使用方式没有端口冲突。`pnpm --filter @pinjie/miniapp build:weapp` 用于微信生产产物，当前同样尚未配置，仅在明确点名授权后运行。watch 开发编译不代表生产构建或真机验收通过。
+
+开发者工具模拟器的 API 地址使用明确的本地开发配置；手机 localhost 指向手机自身，真机应使用可达且符合微信域名/TLS 要求的开发 HTTPS 服务。当前消费者 Cookie 与小程序 Bearer、微信登录及真实资金渠道的适配缺口见[接口能力映射](../design/miniapp/api-coverage.md)，本地工具流程不消除这些接入前置条件。
+
+官方操作依据见 [Taro 开始使用](https://docs.taro.zone/docs/GETTING-STARTED)。
 
 ## 七、常用维护命令
 

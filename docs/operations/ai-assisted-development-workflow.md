@@ -62,7 +62,7 @@ E:\fastapi\pinjie-mall
 -> 仓库根 AGENTS.md
 ```
 
-此时嵌套的 `apps/backend/AGENTS.md`、`apps/admin/AGENTS.md` 和 `apps/web/AGENTS.md` 不应仅依赖平台目录发现。根 [AGENTS.md](../../AGENTS.md) 已补充项目级路由，要求 AI 根据任务范围主动读取对应应用规则。
+此时嵌套的 Backend、Admin、Miniapp 与历史 Web 应用规则不应仅依赖平台目录发现。根 [AGENTS.md](../../AGENTS.md) 定义项目级路由，要求 AI 根据任务范围主动读取对应应用规则。
 
 当 Codex 明确以 `apps/backend` 作为当前工作目录启动时，原生链通常为：
 
@@ -72,7 +72,7 @@ E:\fastapi\pinjie-mall
 -> apps/backend/AGENTS.md
 ```
 
-Admin 和 Web 同理。无论平台是否已经注入应用规则，AI 都要确认该规则处于活动上下文；已经加载时不重复读取。
+Admin、Miniapp 和历史 Web 同理。无论平台是否已经注入应用规则，AI 都要确认该规则处于活动上下文；已经加载时不重复读取。
 
 ### 4.3 Codex 不会自动读取的内容
 
@@ -102,6 +102,7 @@ Antigravity 使用 `.agents/rules/` 作为 Workspace Rules 入口，本项目通
 | [10-backend.md](../../.agents/rules/10-backend.md) | Glob：`apps/backend/**` | `apps/backend/AGENTS.md` |
 | [20-admin.md](../../.agents/rules/20-admin.md) | Glob：`apps/admin/**` | `apps/admin/AGENTS.md` |
 | [30-web.md](../../.agents/rules/30-web.md) | Glob：`apps/web/**` | `apps/web/AGENTS.md` |
+| [40-miniapp.md](../../.agents/rules/40-miniapp.md) | Glob：`apps/miniapp/**` | `apps/miniapp/AGENTS.md` |
 
 执行含义：
 
@@ -704,7 +705,7 @@ AI 应执行：
 
 ## 20. 常见错误
 
-- 看到根 `AGENTS.md` 就假设三个应用规则全部自动加载。
+- 看到根 `AGENTS.md` 就假设所有应用规则全部自动加载。
 - 把 Markdown 链接当作已经读取的内容。
 - 每次任务全文读取全部 `docs/` 和全部历史计划。
 - 使用 PRD 判断当前实现完成度。

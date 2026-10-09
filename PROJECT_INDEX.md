@@ -8,20 +8,24 @@
 | --- | --- |
 | 项目角色 | 高可用标准电商与多级分销全栈商城平台 |
 | 项目类型 | 独立商城仓库 |
-| 当前阶段 | 后端阶段 1 至 6、会员资格与积分及 2026-09-23 符合性修复已有本地实现；本机开发库和隔离测试库已升级至 `20260923_02`，完整 Backend pytest、迁移、恢复及结构检查通过；Admin 管理端已落地顶级工作台与 7 个一级分组、28 个二级菜单（共 M01 至 M29）及配套业务操作，公共规格属性库已精简收敛为覆盖 4 种值类型的 5 项典型属性（颜色黑白灰 3 项、尺寸 7 码、适用场景 2 项、执行标准、净重，共 12 个候选值），分类模板与商品规格调用闭环已完成全栈适配和轻量门禁验证；品牌模块 LOGO 已完成本地直传与素材库选择闭环，移除 UUID 手工输入；本机开发库 `pinjie_mall_dev` 已升级至 `20260926_01` 并完成 5 项典型属性清空重置导入，2 条历史商品图片元数据已回填且复核无待处理项；小程序未实施，Web 永久冻结 |
+| 当前阶段 | 后端阶段 1 至 6、会员资格与积分及 2026-09-23 符合性修复已有本地实现；本机开发库和隔离测试库已升级至 `20260923_02`，完整 Backend pytest、迁移、恢复及结构检查通过；Admin 管理端已落地顶级工作台与 7 个一级分组、28 个二级菜单（共 M01 至 M29）及配套业务操作，公共规格属性库已精简收敛为覆盖 4 种值类型的 5 项典型属性（颜色黑白灰 3 项、尺寸 7 码、适用场景 2 项、执行标准、净重，共 12 个候选值），分类模板与商品规格调用闭环已完成全栈适配和轻量门禁验证；品牌模块 LOGO 已完成本地直传与素材库选择闭环，移除 UUID 手工输入；本机开发库 `pinjie_mall_dev` 已升级至 `20260926_01` 并完成 5 项典型属性清空重置导入，2 条历史商品图片元数据已回填且复核无待处理项；小程序技术、工程与 UI 标准已定版，应用规则已创建，工程尚未初始化，Web 永久冻结 |
 | 业务范围 | SPU/SKU 商品、品牌与属性、库存管理、会员价格与平台运费报价、会员资格与积分账本、三级分佣政策、钱包、购物车、结算、订单、内部可信成交、履约及售后补偿已有本地后端实现；真实渠道、小程序 Bearer 会话、常驻 Worker 部署、有效邀请规则，以及积分兑换、到期和抵扣政策仍未完成 |
 
 ## 权威入口
 
 | 事项 | 唯一来源 | 用途 |
 | --- | --- | --- |
-| 全仓库长期规则 | [AGENTS.md](AGENTS.md) 与三个应用级 `AGENTS.md` | 任务读取、工程边界、验证和交付规则 |
+| 全仓库长期规则 | [AGENTS.md](AGENTS.md) 与各应用级 `AGENTS.md` | 任务读取、工程边界、验证和交付规则 |
 | 项目身份与阶段导航 | [PROJECT_INDEX.md](PROJECT_INDEX.md) | 项目身份、当前阶段、活动计划和权威入口 |
 | 详细实现状态 | 实际源码、配置、迁移、生成契约与对应架构文档 | 判断具体能力、接口和运行机制是否已经实现 |
 | 产品需求基线 | [docs/PROJECT_REQUIREMENTS.md](docs/PROJECT_REQUIREMENTS.md) | 商城目标用户、能力、非目标和验收边界 |
 | 全域目标数据库字典 | [docs/architecture/database-schema-guide.md](docs/architecture/database-schema-guide.md) | 长期目标物理模型、字段约束、配置、事务与迁移差异；23 张目标新增运行表已迁移至本机开发库和隔离测试库 |
 | 小程序详细需求 | [docs/MINIAPP_PRD.md](docs/MINIAPP_PRD.md) | 小程序用户流程、交付分组与专项验收；不代表工程已启动 |
 | 小程序工程设计 | [docs/architecture/miniapp-architecture.md](docs/architecture/miniapp-architecture.md) | 待实施的目录、分层、调用链与状态归属 |
+| 小程序技术决策 | [docs/adr/0017-小程序采用TaroReact与NutUI决策.md](docs/adr/0017-小程序采用TaroReact与NutUI决策.md) | 已定版技术路线与取舍；工程尚未实施 |
+| 小程序工程标准 | [docs/architecture/miniapp-engineering-standard.md](docs/architecture/miniapp-engineering-standard.md) | 初始化版本、配置、依赖、请求、内容与验证要求 |
+| 小程序 UI 规范 | [docs/architecture/miniapp-ui-standard.md](docs/architecture/miniapp-ui-standard.md) | 设计 tokens、组件、页面与交互验收标准 |
+| 小程序页面设计 | [docs/design/miniapp/README.md](docs/design/miniapp/README.md) | V1 风格已确认；V2 完整页面与状态图片、能力映射及流程评审入口 |
 | 计划规则 | [plans/README.md](plans/README.md) | 计划创建、格式、状态、完成和保护规则 |
 | 计划永久登记 | [plans/INDEX.md](plans/INDEX.md) | 全部实施计划的路径、状态、结果、范围和用途 |
 | 项目文档清单 | [docs/README.md](docs/README.md) | `docs/` 下全部项目文档导航 |
@@ -36,6 +40,7 @@
 
 | 计划 | 状态 | 当前工作 |
 | --- | --- | --- |
+| [小程序核心页面设计与原型计划](plans/2026-10-09_小程序核心页面设计与原型计划.md) | 实施中 | V2 全套静态图与能力映射已交付，轻量门禁通过；业务原型等待整套流程确认 |
 | [依赖安全门禁修复计划](plans/2026-10-08_依赖安全门禁修复计划.md) | 实施中 | PR 44 按已授权限时例外先合并；跟踪 braces 修复版，2026-10-22 前复核 |
 
 全部计划状态与已结束结果见 [plans/INDEX.md](plans/INDEX.md)。

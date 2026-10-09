@@ -101,11 +101,13 @@ try {
     Write-Utf8File -Path (Join-Path $fixtureRoot "AGENTS.md") -Content "# Root rules`n"
     Write-Utf8File -Path (Join-Path $fixtureRoot "apps/backend/AGENTS.md") -Content "# Backend rules`n"
     Write-Utf8File -Path (Join-Path $fixtureRoot "apps/admin/AGENTS.md") -Content "# Admin rules`n"
+    Write-Utf8File -Path (Join-Path $fixtureRoot "apps/miniapp/AGENTS.md") -Content "# Miniapp rules`n"
     Write-Utf8File -Path (Join-Path $fixtureRoot "apps/web/AGENTS.md") -Content "# Web rules`n"
     Write-Utf8File -Path (Join-Path $fixtureRoot ".agents/rules/00-repository.md") -Content "@../../AGENTS.md`n"
     Write-Utf8File -Path (Join-Path $fixtureRoot ".agents/rules/10-backend.md") -Content "@../../apps/backend/AGENTS.md`n"
     Write-Utf8File -Path (Join-Path $fixtureRoot ".agents/rules/20-admin.md") -Content "@../../apps/admin/AGENTS.md`n"
     Write-Utf8File -Path (Join-Path $fixtureRoot ".agents/rules/30-web.md") -Content "@../../apps/web/AGENTS.md`n"
+    Write-Utf8File -Path (Join-Path $fixtureRoot ".agents/rules/40-miniapp.md") -Content "@../../apps/miniapp/AGENTS.md`n"
     Write-Utf8File -Path (Join-Path $fixtureRoot "plans/README.md") -Content "# Plan rules`n"
     Write-Utf8File -Path $planIndexPath -Content ($planIndex + "`n")
     Write-Utf8File -Path (Join-Path $fixtureRoot $planPath) -Content "# Fixture plan`n"
