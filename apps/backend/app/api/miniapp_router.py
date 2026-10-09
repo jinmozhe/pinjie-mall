@@ -4,7 +4,15 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from app.api.miniapp_dependencies import MiniappAddresses, MiniappAuth, MiniappPrincipal, require_miniapp_profile
+from app.api.lifecycle_dependencies import Lifecycle
+from app.api.miniapp_dependencies import (
+    MiniappAddresses,
+    MiniappAuth,
+    MiniappHelp,
+    MiniappPrincipal,
+    MiniappTrade,
+    require_miniapp_profile,
+)
 from app.api.transaction_dependencies import Cart, Orders
 from app.core.context import current_request_id
 from app.core.identifiers import new_uuid7
@@ -19,13 +27,142 @@ from app.domains.auth.miniapp_schemas import (
     MiniappUserRead,
 )
 from app.domains.cart.schemas import CartItemInput, CartItemRead, CartItemUpdate, MiniappCartItemRead
+from app.domains.lifecycle.schemas import (
+    FulfillmentRead,
+    ProductReviewCreate,
+    ProductReviewRead,
+    ReceiptConfirm,
+    RefundRequestCreate,
+    RefundRequestRead,
+)
 from app.domains.orders import CheckoutQuote, CheckoutRequest, OrderRead
-
-router = APIRouter(prefix="/miniapp", tags=["小程序"], dependencies=[Depends(require_miniapp_profile)])
+from app.services.miniapp_trade_schemas import (
+    MiniappHelpRead,
+    MiniappRefundLookupRead,
+    MiniappRefundRead,
+    MiniappTradeOrderRead,
+    TradeFilter,
+)
 
 
 class MiniappCheckoutIntentRead(BaseModel):
     request_id: UUID
+
+
+router = APIRouter(prefix="/miniapp", tags=["小程序"], dependencies=[Depends(require_miniapp_profile)])
+
+
+@router.get("/help", response_model=ResponseModel[MiniappHelpRead], summary="查询公开支持联系方式")
+async def help_read(help_info: MiniappHelp) -> ResponseModel[MiniappHelpRead]:
+    return success_response(data=help_info, request_id=current_request_id())
+
+
+@router.get(
+    "/trade-orders",
+    response_model=ResponseModel[PageResult[MiniappTradeOrderRead]],
+    summary="按订单与履约事实分页本人订单",
+)
+async def trade_orders(
+    trade: MiniappTrade,
+    current: MiniappPrincipal,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+    status: TradeFilter | None = None,
+) -> ResponseModel[PageResult[MiniappTradeOrderRead]]:
+    return success_response(
+        data=await trade.orders(current.user.id, page, page_size, status), request_id=current_request_id()
+    )
+
+
+@router.get(
+    "/trade-orders/{order_id}",
+    response_model=ResponseModel[MiniappTradeOrderRead],
+    summary="读取本人订单履约与操作资格",
+)
+async def trade_order(
+    order_id: UUID, trade: MiniappTrade, current: MiniappPrincipal
+) -> ResponseModel[MiniappTradeOrderRead]:
+    return success_response(data=await trade.order(current.user.id, order_id), request_id=current_request_id())
+
+
+@router.post(
+    "/orders/{order_id}/receipt", response_model=ResponseModel[FulfillmentRead], summary="按版本确认本人实物订单收货"
+)
+async def receipt(
+    order_id: UUID, payload: ReceiptConfirm, lifecycle: Lifecycle, current: MiniappPrincipal
+) -> ResponseModel[FulfillmentRead]:
+    return success_response(
+        data=await lifecycle.confirm_receipt(current.user.id, order_id, payload.revision),
+        request_id=current_request_id(),
+    )
+
+
+@router.get("/refunds/intent", response_model=ResponseModel[MiniappCheckoutIntentRead], summary="取得新的退款请求号")
+async def refund_intent(current: MiniappPrincipal) -> ResponseModel[MiniappCheckoutIntentRead]:
+    return success_response(data=MiniappCheckoutIntentRead(request_id=new_uuid7()), request_id=current_request_id())
+
+
+@router.post(
+    "/orders/{order_id}/refunds",
+    response_model=ResponseModel[RefundRequestRead],
+    status_code=201,
+    summary="幂等申请本人未发货或未交付整单退款",
+)
+async def refund_create(
+    order_id: UUID, payload: RefundRequestCreate, lifecycle: Lifecycle, current: MiniappPrincipal
+) -> ResponseModel[RefundRequestRead]:
+    return success_response(
+        data=await lifecycle.create_refund(current.user.id, order_id, payload), request_id=current_request_id()
+    )
+
+
+@router.get("/refunds", response_model=ResponseModel[PageResult[MiniappRefundRead]], summary="分页读取本人整单售后记录")
+async def refund_list(
+    trade: MiniappTrade,
+    current: MiniappPrincipal,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+    order_id: UUID | None = None,
+) -> ResponseModel[PageResult[MiniappRefundRead]]:
+    return success_response(
+        data=await trade.refunds(current.user.id, page, page_size, order_id), request_id=current_request_id()
+    )
+
+
+@router.get(
+    "/refunds/by-request/{request_id}",
+    response_model=ResponseModel[MiniappRefundLookupRead],
+    summary="按原请求号确认本人退款受理事实",
+)
+async def refund_lookup(
+    request_id: UUID, trade: MiniappTrade, current: MiniappPrincipal
+) -> ResponseModel[MiniappRefundLookupRead]:
+    return success_response(
+        data=await trade.refund_by_request(current.user.id, request_id), request_id=current_request_id()
+    )
+
+
+@router.get(
+    "/refunds/{refund_id}", response_model=ResponseModel[MiniappRefundRead], summary="读取本人售后审核与资金事实"
+)
+async def refund_detail(
+    refund_id: UUID, trade: MiniappTrade, current: MiniappPrincipal
+) -> ResponseModel[MiniappRefundRead]:
+    return success_response(data=await trade.refund(current.user.id, refund_id), request_id=current_request_id())
+
+
+@router.post(
+    "/order-items/{item_id}/review",
+    response_model=ResponseModel[ProductReviewRead],
+    status_code=201,
+    summary="评价本人已交付订单明细",
+)
+async def review_create(
+    item_id: UUID, payload: ProductReviewCreate, lifecycle: Lifecycle, current: MiniappPrincipal
+) -> ResponseModel[ProductReviewRead]:
+    return success_response(
+        data=await lifecycle.create_review(current.user.id, item_id, payload), request_id=current_request_id()
+    )
 
 
 @router.get("/auth/capabilities", response_model=ResponseModel[MiniappCapabilitiesRead], summary="查询微信登录开放状态")

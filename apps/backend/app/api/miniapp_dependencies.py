@@ -16,6 +16,8 @@ from app.domains.addresses.repository import AddressRepository
 from app.domains.addresses.service import AddressService
 from app.services.commerce import AddressApplicationService
 from app.services.miniapp_auth import MiniappAuthService, bearer_error
+from app.services.miniapp_trade import MiniappTradeQueryService
+from app.services.miniapp_trade_schemas import MiniappHelpRead
 
 
 def require_miniapp_profile(request: Request, response: Response) -> None:
@@ -89,3 +91,16 @@ def miniapp_addresses(session: DatabaseSession, current: MiniappPrincipal) -> Ad
 
 MiniappAuth = Annotated[MiniappAuthService, Depends(miniapp_auth)]
 MiniappAddresses = Annotated[AddressApplicationService, Depends(miniapp_addresses)]
+
+
+def miniapp_trade(session: DatabaseSession) -> MiniappTradeQueryService:
+    return MiniappTradeQueryService(session)
+
+
+def miniapp_help(request: Request) -> MiniappHelpRead:
+    settings = get_request_settings(request)
+    return MiniappHelpRead(phone=settings.support_phone, email=settings.support_email)
+
+
+MiniappTrade = Annotated[MiniappTradeQueryService, Depends(miniapp_trade)]
+MiniappHelp = Annotated[MiniappHelpRead, Depends(miniapp_help)]

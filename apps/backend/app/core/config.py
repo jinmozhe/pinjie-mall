@@ -64,6 +64,12 @@ class Settings(BaseSettings):
     web_token_hmac_key: str | None = Field(default=None, validation_alias="WEB_TOKEN_HMAC_KEY")
     admin_token_hmac_key: str | None = Field(default=None, validation_alias="ADMIN_TOKEN_HMAC_KEY")
     miniapp_login_enabled: bool = Field(default=False, validation_alias="MINIAPP_LOGIN_ENABLED")
+    support_phone: str | None = Field(
+        default=None, validation_alias="SUPPORT_PHONE", pattern=r"^\+?[0-9][0-9 -]{4,29}$"
+    )
+    support_email: str | None = Field(
+        default=None, validation_alias="SUPPORT_EMAIL", max_length=254, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$"
+    )
     wechat_app_id: str | None = Field(default=None, validation_alias="WECHAT_APP_ID")
     wechat_app_secret: str | None = Field(default=None, validation_alias="WECHAT_APP_SECRET", repr=False)
     miniapp_jwt_secret: str | None = Field(default=None, validation_alias="MINIAPP_JWT_SECRET", repr=False)

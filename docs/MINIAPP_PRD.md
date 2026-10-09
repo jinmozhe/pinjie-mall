@@ -244,9 +244,10 @@ R1 与 R2 表达开发顺序，不取消产品基线中的任何长期能力。�
 | 商品浏览 | GET /api/v1/products 支持分类分页；公开浏览、详情图集、评价、SKU 与受限 HTML 已接入 | 历史说明审计迁移、原生组件与适用会员价格展示验收；其他搜索排序按范围确认 | MP-CAT-001、MP-CAT-002 |
 | 购物车 | /api/v1/miniapp/cart-items 支持本人展示与读写，明确不可售及库存不足 | 真实环境与未知加购结果的旅程验收 | MP-CART-001、MP-CART-002 |
 | 地址与上传 | /api/v1/miniapp/addresses 已有本人 CRUD、区域 Picker 与 revision；me 读取基础信息 | 头像/资料更新和上传权限及平台响应适配，地址动态验收 | MP-AUTH-005、MP-ADDR-001 |
-| 本人订单 | /api/v1/miniapp/orders 已有分页筛选、详情、取消与按 request_id 查询；报价和同键创建已接入 | 动态恢复与取消竞争验收，履约及售后消费者能力 | MP-CHK-003、MP-ORD-001 |
+| 本人订单 | /api/v1/miniapp/orders 保留基础交易；trade-orders 已提供本人订单与履约组合分页、详情与动作资格，receipt 已接入版本确认 | 动态恢复、取消竞争、实物/虚拟履约与平台验收 | MP-CHK-003、MP-ORD-001、MP-ORD-002、MP-FUL-001 |
 | 支付 | POST /api/v1/orders/{order_id}/payment-attempts 返回不可用意图 | 真实渠道下单、调起参数、状态查询、通知、查单、关单及恢复 | MP-PAY-001 至 MP-PAY-003 |
-| 售后与评价 | 已有整单售后、退款执行事实、库存/佣金补偿和商品评价读写 | 小程序资格与进度展示、真实渠道资金执行与异常恢复联调 | MP-AFT-001、MP-AFT-002、MP-REV-001 |
+| 售后与评价 | miniapp 已接入整单退款、本人分页/详情/原请求查询、资金安全投影、本人评价资格与写入；复用原补偿服务 | 动态资格与未知结果恢复、真实渠道资金执行、重复评价与并发验收 | MP-AFT-001、MP-AFT-002、MP-REV-001 |
+| 帮助与支持 | 公开 /api/v1/miniapp/help 与帮助分包已有源码，联系方式可配置或明确未配置 | 正式运营联系人与平台隐私指引，界面和联系操作验收 | R1 |
 | 会员分销 | 已有 /api/v1/distribution/me 下的档案、推荐、佣金、钱包和提现 | Bearer、分享参数处理；真实打款及结果恢复作为开放提现前置 | MP-MEM-001、MP-REF-001、MP-COM-001、MP-WAL-001、MP-WDR-001 |
 
 ### 8.2 Admin、Backend 与运维配套

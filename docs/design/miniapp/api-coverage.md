@@ -10,9 +10,9 @@
 
 ## 全局身份与资金边界
 
-- 身份与基础交易已有独立 /api/v1/miniapp Bearer 源码及生成契约，默认微信登录关闭；微信 code 可信交换、本人 me、地址/购物车、报价/订单分页详情取消、按原请求号查询已接入。下表保留原领域能力路径作为设计依据，当前这组可执行页面通过新小程序端点消费，详见[接入手册](../../operations/miniapp-identity-and-content.md)。设备、密码、注销及其他资金/履约入口仍需微信凭据和消费者专项适配，不要求无密码账户填不存在的密码。
+- 身份、基础交易、履约售后与评价已有独立 /api/v1/miniapp Bearer 源码及生成契约，默认微信登录关闭；本人订单履约组合分页、确认收货、整单售后记录与请求恢复、评价资格已接入。下表原领域路径保留为设计依据，小程序实际消费专用入口，详见[身份手册](../../operations/miniapp-identity-and-content.md)和[履约售后手册](../../operations/miniapp-fulfillment-and-aftersales.md)。设备、密码、注销及其他资金入口仍需专项适配，不要求无密码账户填不存在的密码。
 - 真实微信支付调起参数、通知和查单尚未接通。`PaymentAttemptRead` 没有微信调起字段，当前创建意图明确返回 `unavailable`。成功与确认中的支付图是目标恢复流程，无法直接运行。
-- 退款申请、审核、内部补偿有本地实现，真实退款渠道未接通。`approved` 只代表审核通过，`completed` 才可呈现已完成事实；渠道处理中/未知的精细投影仍需消费者查询契约。
+- 退款申请、审核、内部补偿有本地实现，真实退款渠道未接通。miniapp 安全投影已分开申请/执行/资金状态；`approved` 只代表审核通过，正额资金仅渠道 succeeded 且有确认时间才显示已确认；零金额 completed 明确无资金退回。动态渠道恢复未验收。
 - 提现申请、审核和带凭证的人工完成已有实现，真实自动打款和收款目标接入未完成。本轮提现申请页禁用提交；历史 `succeeded` 可代表已确认的人工完成，`approved` 不表示到账。
 
 ## 页面能力矩阵
@@ -28,9 +28,9 @@
 | 我的订单列表 | 当前无本人分页列表方法 | 展示目标列表、状态标签与入口，不显示假统计角标 | 分页、全量状态筛选和统计均需 C 端查询；不调用 Admin 列表 |
 | 订单详情/取消 | `GET /api/v1/orders/{order_id}`、`POST /api/v1/orders/{order_id}/cancel` | 订单与商品快照、金额、acceptance_status、待付款取消 | status 只有 pending_payment/paid/cancelled；待发货/待收货/已完成须联合履约事实，不另造订单枚举 |
 | 支付结果 | `POST /api/v1/orders/{order_id}/payment-attempts`、既有订单查询 | 当前不可付款、目标支付结果查询与未知恢复 | 当前意图为 unavailable；平台弹窗返回不决定资金状态；真实渠道待接通 |
-| 实物/虚拟履约 | `GET /api/v1/orders/{order_id}/fulfillment`、`POST /api/v1/orders/{order_id}/fulfillment/confirm-receipt` | carrier、tracking_number、delivery_reference、时间与 revision；本人确认收货 | 不画实时轨迹；交付信息只向本人展示；已发货/已交付订单本期不能新增正常退款 |
-| 退款申请/记录 | `POST/GET /api/v1/orders/{order_id}/refunds` | 原因、整单商品与原运费、review_mode、审核意见、申请状态 | 仅已成交且未发货/未交付；无部分数量/金额；列表范围为本单，未有本人全量售后列表 |
-| 提交评价 | `POST /api/v1/order-items/{order_item_id}/review` | 1 至 5 分、正文最多 1000 字 | 仅本人已交付且未评价的明细；无图片上传 |
+| 实物/虚拟履约 | `GET /api/v1/miniapp/trade-orders/{order_id}`、`POST /api/v1/miniapp/orders/{order_id}/receipt` | 本人履约事实、操作资格、carrier、tracking_number、delivery_reference、时间与 revision | 已有源码；无实时轨迹；交付信息只向本人展示；已发货/已交付不开放本期退款；动态验收未执行 |
+| 退款申请/记录 | `POST /api/v1/miniapp/orders/{order_id}/refunds`、`GET /api/v1/miniapp/refunds` 及详情/原请求查询 | 整单商品与原运费、review_mode、审核意见、执行/资金分离、未知结果恢复 | 已有本人全量分页及按单筛选源码；未发货/未交付整单，无部分数量/金额；真实渠道与恢复未验收 |
+| 提交评价 | `POST /api/v1/miniapp/order-items/{item_id}/review`、trade-orders 本人 item_reviews | 1 至 5 分、正文最多 1000 字、资格与已有本人评价 | 已有源码；仅本人已交付明细一次评价；无图片上传；重复及动态验收未执行 |
 | 本人资料/头像 | `GET/PATCH /api/v1/users/me`、`PUT /api/v1/users/me/avatar`、`POST /api/v1/assets/upload` | display_name、email、本人头像资产、资料查询 | 头像按实际权限上传；不把手机号绑定或实名认证加入产品范围 |
 | 退出与恢复 | `POST /api/v1/auth/logout`、`POST /api/v1/auth/refresh` | 主动退出、会话恢复失败、保留公开浏览 | 当前为浏览器 Profile；微信退出、刷新轮换与账户隔离须专项实现 |
 | 安全/设备/注销 | `GET /api/v1/users/me/sessions`、会话单条撤销及 revoke-others、`POST /api/v1/users/me/password`、`DELETE /api/v1/users/me` | 设备脱敏摘要、撤销确认、已有密码账户修改密码、注销说明 | 会话模型为 browser_cookie；密码和注销要求 current_password，微信无密码凭据证明未完成 |
@@ -42,12 +42,13 @@
 | 佣金 | `GET /api/v1/distribution/me/commissions` | amount、level、recovered_amount、settle_after、状态和规则快照 | 只有 page/page_size，不画服务端状态筛选；无全量收益汇总；不暴露 source_user_id 完整身份 |
 | 提现 | `POST/GET /api/v1/distribution/me/withdrawals` | 脱敏 destination_reference、金额、审核意见、执行状态、时间与分页 | 无收款账户管理 API；欠款/余额不足拒绝；真实自动渠道未接通，当前申请不可执行 |
 | 积分 | 只有管理端账户/流水查询与内部账本能力 | 接入前不可用页面 | 未有本人 C 端余额/流水，不调用 Admin；不展示假积分、兑换、抵扣或到期功能 |
-| 关于/帮助/隐私 | `GET /api/v1/system/site-profile`、`GET /api/v1/system/status` 可作现有资料参考 | 静态帮助、协议结构、未配联系方式提示 | site-profile 为通用 Web 字段，不含客服联系方式；正式协议、主体与联系信息需确认，无聊天客服 |
+| 关于/帮助/隐私 | `GET /api/v1/miniapp/help`；原 system/site-profile 仅资料参考 | 公开帮助、问题展开、电话/邮箱操作或未配置提示、隐私说明 | 已有帮助源码；联系方式由 Backend Settings 配置，未配置明确 null；正式协议与主体需运营确认，无聊天客服 |
 
 ## 源码证据入口
 
 | 范围 | 实际文件 |
 | --- | --- |
+| 小程序消费者 Router 与安全投影 | [miniapp_router.py](../../../apps/backend/app/api/miniapp_router.py)、[miniapp_trade.py](../../../apps/backend/app/services/miniapp_trade.py)、[专用展示契约](../../../apps/backend/app/services/miniapp_trade_schemas.py) |
 | 消费端商品、地址 Router | [commerce_router.py](../../../apps/backend/app/api/commerce_router.py) |
 | 购物车、结算与订单 Router | [transaction_router.py](../../../apps/backend/app/api/transaction_router.py) |
 | 支付、履约、退款与评价 Router | [lifecycle_router.py](../../../apps/backend/app/api/lifecycle_router.py) |

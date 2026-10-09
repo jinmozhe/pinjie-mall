@@ -4,6 +4,8 @@
 
 已有小程序登录、内存会话、个人中心基础信息、本人地址、购物车、服务端报价、幂等创建订单、本人订单分页筛选、详情、取消及受限商品说明源码。默认微信登录关闭；游客模式可以公开浏览。真实微信平台、数据库和渠道验收未执行。
 
+本人履约、整单售后、评价及公开帮助已补充源码，入口与恢复步骤见[履约售后接入手册](miniapp-fulfillment-and-aftersales.md)。
+
 本地日常运行以[本地开发手册](local-dev-environment.md#终端三小程序-watch-与微信开发者工具)为准：Codex/VS Code 编辑源码，Backend 18168、Admin 3001 独立运行，根目录 pnpm --filter @pinjie/miniapp dev:weapp 持续编译到 dist，微信工具加载 apps/miniapp。依赖和配置改变后重启 watch；不启动 H5 或 3000。
 
 ## 联调前置条件
