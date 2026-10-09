@@ -241,7 +241,7 @@ R1 与 R2 表达开发顺序，不取消产品基线中的任何长期能力。�
 | 能力 | 当前接口或源码事实 | 需要补齐的能力 | 关联需求 |
 | --- | --- | --- | --- |
 | 微信身份与会话 | 当前消费者使用 Cookie；根 OpenAPI 无 securitySchemes | 微信身份映射、Public Client Bearer、会话类型、准确安全声明及逐路由授权 | MP-AUTH-001 至 MP-AUTH-005 |
-| 商品浏览 | GET /api/v1/products 仅有 page 与 page_size；已有分类、详情图集与 SKU 基础价格 | 分类过滤、适用会员价格展示查询、HTML 字段说明与内容边界；其他搜索排序仅在对应范围确认后扩展 | MP-CAT-001、MP-CAT-002 |
+| 商品浏览 | GET /api/v1/products 已支持 page、page_size 和包含下级的 category_id；公开浏览、详情图集、评价及 SKU 基础价格已接入 | 适用会员价格展示查询、HTML 字段说明与服务端内容边界；其他搜索排序仅在对应范围确认后扩展 | MP-CAT-001、MP-CAT-002 |
 | 购物车 | /api/v1/cart-items 支持读写，条目主要为 SKU 标识和数量 | 小程序身份、展示查询及错误语义，不重复实现购物车权威 | MP-CART-001、MP-CART-002 |
 | 地址与上传 | 已有 /api/v1/addresses、本人资料及资产上传 | Bearer 身份、头像权限和平台上传响应适配 | MP-AUTH-005、MP-ADDR-001 |
 | 本人订单 | POST /api/v1/orders 与 GET /api/v1/orders/{order_id} 已有 | 本人分页及筛选、下单未知结果确认方式、订单与履约展示模型 | MP-CHK-003、MP-ORD-001 |

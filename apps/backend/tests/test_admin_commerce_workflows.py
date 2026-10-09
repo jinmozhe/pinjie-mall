@@ -472,6 +472,32 @@ async def test_backfill_check_apply_and_corruption(shop, tmp_path):
 
 
 @pytest.mark.integration
+async def test_public_category_subtree_pagination_and_visibility(shop):
+    first, first_category, _, _ = await prepare_product(shop)
+    second, second_category, _, _ = await prepare_product(shop)
+    root = await shop.commerce.create_category(CategoryInput(name="公开筛选根分类"))
+    middle = await shop.commerce.create_category(CategoryInput(name="公开筛选中间分类", parent_id=root.id))
+    for category in (first_category, second_category):
+        await shop.commerce.update_category(
+            category.id, CategoryUpdate(name=category.name, parent_id=middle.id, revision=category.revision)
+        )
+    page_one = await shop.commerce.public_product_page(1, 1, category_id=root.id)
+    page_two = await shop.commerce.public_product_page(2, 1, category_id=root.id)
+    assert page_one.total == page_two.total == 2
+    assert {item.id for item in [*page_one.items, *page_two.items]} == {first.id, second.id}
+    leaf = await shop.commerce.public_product_page(1, 20, category_id=first_category.id)
+    assert leaf.total == 1 and [item.id for item in leaf.items] == [first.id]
+    assert (await shop.commerce.public_product_page(1, 20, category_id=middle.id)).total == 2
+    assert (await shop.commerce.public_product_page(1, 20, category_id=new_uuid7())).total == 0
+    assert (await shop.commerce.product_page(1, 20, category_id=root.id)).total == 0
+    await shop.commerce.categories_status_batch(
+        ActiveStatusBatch(targets=[VersionedTarget(id=middle.id, revision=middle.revision)], is_active=False)
+    )
+    hidden = await shop.commerce.public_product_page(1, 20, category_id=root.id)
+    assert hidden.total == 0 and hidden.items == []
+
+
+@pytest.mark.integration
 async def test_catalog_operating_flow_and_atomic_batch_conflicts(shop):
     product, category, shipping, data = await prepare_product(shop)
     second = await shop.commerce.create_category(CategoryInput(name="第二分类"))

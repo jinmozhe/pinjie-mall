@@ -21,7 +21,7 @@
 
 - 本仓库定位为高可用标准电商与多级分销全栈商城平台，技术栈为 FastAPI、React、pnpm 和 Turborepo。
 - 客户端形态与定位：本项目是小程序商城项目，应用层完全不需要 Web 端，C 端交互唯一形态为微信小程序端。
-- 阶段推进约束：Backend 与 Admin 提供业务与运营基础；小程序先定版开发标准，工程按单一全栈专项计划实施。阶段以 `PROJECT_INDEX.md` 为准，文档定版不代表工程启动。
+- 阶段推进约束：Backend/Admin 维护业务与运营基础；小程序按单一全栈专项授权实施，身份、交易及渠道接入后开放。阶段以 `PROJECT_INDEX.md` 为准。
 - Web 端停用与服务约束：`apps/web` 进入永久停用与冻结状态，不分配开发维护资源。禁止启动 Web 服务，完全禁止监听或暴露 WEB 端口（包括 3000 端口）。
 - 应用间边界：`apps/backend` 与 `apps/admin` 保持独立，禁止相互直接引用。共享代码和配置只能通过 `packages/` 公共包提供。
 - Backend 采用模块化单体，领域与前端 Feature 只能通过公开入口协作。完整边界以 `docs/architecture/module-boundaries.md` 为准，违规由仓库门禁拒绝。
@@ -144,7 +144,7 @@
 ## 验证与交付
 
 - 按实际影响范围运行最小充分验证。跨应用契约变化必须同时验证后端契约、生成客户端和受影响前端。
-- 日常开发、普通提交、`$git-sync`、Push 和 Pull Request 只自动执行轻量门禁：Admin 运行 typecheck 和 lint，Backend 运行 Ruff、格式、Mypy、导入边界、编译、应用导入和契约检查；Web 端已停用且不属于日常开发范围。公开 API 变化继续导出 OpenAPI、生成 API Client 并检查漂移。
+- 日常开发、普通提交、`$git-sync`、Push 和 Pull Request 只自动执行轻量门禁：Admin 与 Miniapp 运行 typecheck 和 lint，Backend 运行 Ruff、格式、Mypy、导入边界、编译、应用导入和契约检查；Web 端已停用且不属于日常开发范围。公开 API 变化继续导出 OpenAPI、生成 API Client 并检查漂移。
 - 未经用户在当前任务中明确点名，禁止在本地或 GitHub Actions 自动执行 Admin production build、任何 Vitest、任何 pytest、Playwright、浏览器自动化、测试数据库迁移或其他全量测试。普通“提交”“推送”和 `$git-sync` 均不包含这些重型验证的隐式授权，也不得通过定时任务或其他 Workflow 间接触发。
 - 用户明确授权重型验证时，只执行被点名的应用、命令和范围；授权不延续到后续任务。用户自行进行本地人工验收不受此限制，未提供可核验证据时只记录为“用户自行验收，自动验证未执行”。
 - 按策略未执行的重型验证记录为“未执行”，不再记录为“待 `$git-sync` 执行”，也不得表述为测试通过、完整跨栈验收完成或生产可用。

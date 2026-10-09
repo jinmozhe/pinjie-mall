@@ -262,8 +262,10 @@ class ProductService(SpecificationService):
             total=total,
         )
 
-    async def public_page(self, page: int, page_size: int) -> PageResult[PublicProductRead]:
-        rows, total = await self.repository.page(page, page_size, public=True)
+    async def public_page(
+        self, page: int, page_size: int, *, category_id: UUID | None = None
+    ) -> PageResult[PublicProductRead]:
+        rows, total = await self.repository.page(page, page_size, public=True, category_id=category_id)
         return PageResult[PublicProductRead].create(
             items=[await self.public_read(row.id) for row in rows],
             page=page,

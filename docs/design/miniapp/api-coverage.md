@@ -19,7 +19,7 @@
 
 | 页面组 | 现有消费端方法与路径 | 设计采用的信息与操作 | 尚需补齐或限制 |
 | --- | --- | --- | --- |
-| 首页/分类 | `GET /api/v1/product-categories`、`GET /api/v1/products` | 分类名称、父子关系、图标、分页公开商品、基础 SKU 价格 | 商品列表当前只支持 page/page_size，分类过滤待补齐；不借用 Admin 搜索/排序 |
+| 首页/分类 | `GET /api/v1/product-categories`、`GET /api/v1/products` | 分类名称、父子关系、图标、分页公开商品、基础 SKU 价格 | 已接入公开浏览；category_id 包含启用下级，分页和总数由服务端过滤；不借用 Admin 搜索/排序 |
 | 商品详情/规格 | `GET /api/v1/products/{product_id}` | 主图、description、attributes、SKUs、detail_images；有效规格组合、图片原生预览 | 当前公开 SKU 无可用库存字段，不能给出库存承诺；HTML 净化与字段语义专项未完成 |
 | 商品评价 | `GET /api/v1/products/{product_id}/reviews` | rating、content、published_at 与分页 | 不虚构头像、评价图片、回复或全量好评率 |
 | 购物车 | `GET/POST /api/v1/cart-items`、`PATCH/DELETE /api/v1/cart-items/{item_id}` | sku_id、quantity、selected、revision；修改数量、选择和单条删除 | 名称、缩略图、不可售原因需明确读模型或有界查询；不伪造批量删除 |
@@ -69,4 +69,4 @@
 
 图片只能呈现一个状态，不能演示动画、点击、键盘、滚动、手势、请求结果或账户隔离。生成前检查画布布局，生成后核对图片解码与尺寸、每个引用方法/路径存在于根契约，并人工检查分组总览；这些辅助检查不等于应用测试、浏览器验证或微信真机验收。
 
-本轮不实现业务交互 HTML/CSS 原型，不初始化小程序，不修改现有 API。静态图中的目标入口不授权新增产品能力；后续工程按 PRD、需求基线和专项计划落实必要缺口。
+设计图交付时未初始化工程；随后用户授权直接实现公开浏览，工程和分类筛选已落地，见[工程与公开浏览计划](../../../plans/2026-10-09_小程序工程与公开浏览接入计划.md)。静态图中的其他目标入口不授权新增产品能力，私有流程继续按 PRD、需求基线和专项计划实施。

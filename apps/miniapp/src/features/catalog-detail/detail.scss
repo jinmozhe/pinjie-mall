@@ -1,0 +1,24 @@
+@use '../../styles/tokens' as *;
+
+.detail-page { padding-bottom: calc(136px + env(safe-area-inset-bottom)); }
+.detail-hero { width: 100%; height: 750px; background: $surface; }
+.detail-body { padding: 24px 32px; }
+.detail-body .surface .section-title { margin-top: 0; }
+.spec-entry { display: flex; align-items: center; justify-content: space-between; min-height: 88px; gap: 24px; }
+.attribute-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 24px; padding: 16px 0; border-bottom: 1px solid $border; overflow-wrap: anywhere; }
+.detail-slice { position: relative; width: 100%; }
+.detail-slice > .image-box { position: absolute; inset: 0; }
+.review-row { padding: 24px 0; border-bottom: 1px solid $border; overflow-wrap: anywhere; }
+.detail-actions { position: fixed; bottom: 0; left: 0; right: 0; background: $surface; padding: 16px 32px calc(16px + env(safe-area-inset-bottom)); border-top: 1px solid $border; }
+.sku-sheet { display: flex; flex-direction: column; height: 100%; padding: 40px 32px 0; }
+.sku-popup .nut-popup-title-right { display: flex; align-items: center; justify-content: center; width: 88px; height: 88px; top: 16px; right: 16px; }
+.sku-header { display: flex; align-items: center; gap: 24px; padding-right: 88px; }
+.sku-header .image-box { flex: 0 0 160px; height: 160px; border-radius: 12px; }
+.sku-name { font-size: 28px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.sku-scroll { flex: 1; min-height: 0; margin-top: 24px; height: 0; }
+.spec-options { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.spec-options .nut-button { min-height: 88px; height: auto; border-radius: 12px; }
+.spec-options .spec-active { color: $primary; border-color: $primary; background: $primary-soft; }
+.quantity-control { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+.quantity-control input { width: 144px; height: 88px; border: 1px solid $border; border-radius: 12px; text-align: center; }
+.sku-footer { background: $surface; padding: 24px 0 calc(24px + env(safe-area-inset-bottom)); }

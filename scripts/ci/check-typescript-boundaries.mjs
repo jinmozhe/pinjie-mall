@@ -51,7 +51,8 @@ function importSpecifiers(sourceFile) {
   const imports = [];
   function record(node, value) {
     const position = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
-    imports.push({ value, line: position.line + 1 });
+    const typeOnly = ts.isImportDeclaration(node) ? node.importClause?.isTypeOnly === true : ts.isExportDeclaration(node) && node.isTypeOnly;
+    imports.push({ value, line: position.line + 1, typeOnly });
   }
   function visit(node) {
     if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier) {
@@ -89,12 +90,18 @@ function checkApplication(name) {
     const kind = file.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
     const sourceFile = ts.createSourceFile(file, sourceText, ts.ScriptTarget.Latest, true, kind);
     for (const specifier of importSpecifiers(sourceFile)) {
-      for (const otherName of ["admin", "web"].filter((candidate) => candidate !== name)) {
+      if (name === "miniapp" && /^@pinjie\/api-client(?:\/|$)/.test(specifier.value) && !specifier.typeOnly) {
+        violations.push(`${relativePath(file)}:${specifier.line}: Miniapp must consume generated API contracts with import type, without the browser SDK runtime.`);
+      }
+      for (const otherName of ["admin", "web", "miniapp", "backend"].filter((candidate) => candidate !== name)) {
         if (specifier.value.includes(`apps/${otherName}/`) || specifier.value === `@pinjie/${otherName}`) {
           violations.push(`${relativePath(file)}:${specifier.line}: Application ${name} must not import application ${otherName}.`);
         }
       }
 
+      if (name === "miniapp" && relativePath(file).includes("/domain/") && /^(react(?:\/|$)|@tarojs\/|@nutui\/|@tanstack\/|node:|(?:fs|http|https|net|child_process|axios)(?:\/|$))/.test(specifier.value)) {
+        violations.push(`${relativePath(file)}:${specifier.line}: Miniapp domain must remain independent of UI, platform and I/O.`);
+      }
       let candidate;
       if (specifier.value.startsWith("@/")) candidate = resolve(sourceRoot, specifier.value.slice(2));
       if (specifier.value.startsWith(".")) candidate = resolve(dirname(file), specifier.value);
@@ -102,7 +109,7 @@ function checkApplication(name) {
 
       const target = resolveSourcePath(candidate);
       if (!target) continue;
-      for (const otherName of ["admin", "web"].filter((item) => item !== name)) {
+      for (const otherName of ["admin", "web", "miniapp", "backend"].filter((item) => item !== name)) {
         if (isWithin(target, resolve(workspaceRoot, "apps", otherName))) {
           violations.push(`${relativePath(file)}:${specifier.line}: Application ${name} must not import application ${otherName}.`);
         }
@@ -113,6 +120,12 @@ function checkApplication(name) {
       edgeCount += 1;
       const sourceFeature = featureName(file, featuresRoot);
       const targetFeature = featureName(target, featuresRoot);
+      if (name === "miniapp" && relativePath(file).includes("/domain/") && !relativePath(target).includes("/domain/")) {
+        violations.push(`${relativePath(file)}:${specifier.line}: Miniapp domain must not import application infrastructure or UI.`);
+      }
+      if (name === "miniapp" && !sourceFeature && targetFeature && !indexNames.has(target.split(sep).at(-1))) {
+        violations.push(`${relativePath(file)}:${specifier.line}: Miniapp pages and infrastructure must use Feature public entries.`);
+      }
       if (sourceFeature && targetFeature && sourceFeature !== targetFeature && !indexNames.has(target.split(sep).at(-1))) {
         violations.push(
           `${relativePath(file)}:${specifier.line}: Feature ${sourceFeature} must import Feature ${targetFeature} through its public index.`,
@@ -150,7 +163,7 @@ function checkApplication(name) {
   return { files: files.length, edges: edgeCount };
 }
 
-const totals = [checkApplication("admin"), checkApplication("web")].reduce(
+const totals = [checkApplication("admin"), checkApplication("web"), checkApplication("miniapp")].reduce(
   (sum, result) => ({ files: sum.files + result.files, edges: sum.edges + result.edges }),
   { files: 0, edges: 0 },
 );

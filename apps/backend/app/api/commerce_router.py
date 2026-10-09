@@ -310,9 +310,15 @@ async def public_categories(service: PublicCommerce) -> ResponseModel[list[Categ
 
 @router.get("/products", response_model=ResponseModel[PageResult[PublicProductRead]], summary="查看上架商品")
 async def public_products(
-    service: PublicCommerce, page: Page = 1, page_size: PageSize = 20
+    service: PublicCommerce,
+    page: Page = 1,
+    page_size: PageSize = 20,
+    category_id: Annotated[UUID | None, Query(description="公开分类 ID，包含启用的下级分类商品")] = None,
 ) -> ResponseModel[PageResult[PublicProductRead]]:
-    return success_response(data=await service.public_product_page(page, page_size), request_id=current_request_id())
+    return success_response(
+        data=await service.public_product_page(page, page_size, category_id=category_id),
+        request_id=current_request_id(),
+    )
 
 
 @router.get("/products/{product_id}", response_model=ResponseModel[PublicProductDetailRead], summary="查看上架商品详情")

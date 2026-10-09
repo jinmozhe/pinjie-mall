@@ -1,6 +1,6 @@
 # ADR 0017：小程序采用 Taro React 与 NutUI
 
-- 状态：已定版，工程未实施
+- 状态：已定版，工程与公开浏览已实施，平台与交易验收未完成
 - 日期：2026-10-09
 - 授权依据：用户要求确定小程序技术栈并补齐工程标准与 UI 规范
 - 当前标准：[小程序工程标准](../architecture/miniapp-engineering-standard.md)

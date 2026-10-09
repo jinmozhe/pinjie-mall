@@ -3,7 +3,7 @@
 | 项目 | 内容 |
 | --- | --- |
 | 适用应用 | `apps/miniapp`，建议包名 `@pinjie/miniapp` |
-| 文档状态 | 架构、技术路线与配套标准已定版；应用规则已创建，工程与模块尚未初始化 |
+| 文档状态 | 工程、catalog 与 catalog-detail 公开浏览已实施；身份、私有交易及资金模块为目标设计 |
 | 产品依据 | [微信小程序 PRD](../MINIAPP_PRD.md)与[产品需求基线](../PROJECT_REQUIREMENTS.md) |
 | 通用边界 | [模块与依赖边界](module-boundaries.md)、[认证机制](authentication-authorization.md)、[错误模型](error-model.md) |
 | 核对日期 | 2026-10-09 |
@@ -12,7 +12,7 @@
 
 PRD 定义用户需要什么、业务边界和验收结果；本文定义代码放在哪里、依赖方向、状态所有者及执行链路。技术取舍见[ADR 0017](../adr/0017-小程序采用TaroReact与NutUI决策.md)，精确版本与执行要求见[工程标准](miniapp-engineering-standard.md)，视觉与交互见[UI 规范](miniapp-ui-standard.md)。各文档按职责维护，具体实施、验证与未决事项进入活动全栈计划。
 
-本次只补齐设计，不初始化小程序，不改变 Admin、Backend、生成契约或工作流。应用名称统一为 `miniapp`，不使用另一套 `miniprogram` 应用命名。
+应用名称统一为 `miniapp`。已实现目录包括 config、四个 TabBar 页面、商品详情分包、catalog 和 catalog-detail 两个 Feature、公共状态/图片/按钮组件、lib/api.ts、lib/query.ts、platform/media.ts 与 styles。下文交易、身份及资金模块按后续授权逐步实施，不提前创建空目录。
 
 前后端都需要数据所有权、职责边界与明确依赖。后端强调权威业务规则和事务，前端还需要处理异步请求、缓存、交互状态和平台生命周期。不能用“后端只管命令、前端只管状态”划分全部职责，也不能假定 API 或平台能力长期不变。
 
@@ -32,7 +32,7 @@ PRD 定义用户需要什么、业务边界和验收结果；本文定义代码�
 | 测试 | Vitest 优先验证纯逻辑及传输边界；组件测试需验证运行环境兼容，微信开发者工具与真机提供平台证据 |
 | 富文本渲染 | description 沿用 Admin Tiptap HTML，使用 mp-html 微信原生组件；服务端内容净化、字段注释与历史格式迁移按工程标准在接入专项完成，不手写另一套解析器 |
 
-精确版本唯一维护在工程标准，不在本文复制版本表。官方元数据仅证明发布与兼容声明，实际安装、冻结解析、微信构建、关键组件与真机仍未执行。Taro Test Utils 和 Jest 不列为默认依赖，兼容问题不能通过忽略 peer 或降低门禁掩盖。
+精确版本与解析策略唯一维护在工程标准，不在本文复制版本表。实际依赖安装、冻结解析和 weapp 开发编译已有证据，微信工具、真机和发布仍未执行。Taro Test Utils 和 Jest 不列为默认依赖，兼容问题不能通过忽略 peer 或降低门禁掩盖。
 
 ## 3. 推荐目录
 
@@ -40,7 +40,7 @@ PRD 定义用户需要什么、业务边界和验收结果；本文定义代码�
 
 ```text
 apps/miniapp/
-├── AGENTS.md                         应用规则已创建，其余目录为目标结构
+├── AGENTS.md                         应用规则；下文目录按功能逐步实施
 ├── config/                           Taro 编译、环境与单位转换配置
 ├── project.config.json               可公开的微信开发者工具项目配置
 ├── package.json                      独立脚本与应用依赖，无子应用锁文件
@@ -293,9 +293,9 @@ Hook 按明确用例拆分，如 `useCheckoutPreview`、`useCreateOrder`、`useC
 
 ### 9.2 门禁与命令
 
-当前状态检查及 TypeScript 边界扫描主要覆盖 Backend、Admin 和历史 Web，尚未登记 miniapp。后续初始化必须补齐应用 empty/ready/partial 状态、公开入口与循环依赖、跨应用引用、变更路由和正反例；当前边界检查通过不能证明本文拟议结构已受检查。
+当前状态检查已覆盖 Miniapp 的源码、入口、路由配置、编译与项目配置、首页、开发/typecheck/lint 脚本；任一缺失为 partial。TypeScript 边界扫描包含 Miniapp 的公开入口、循环依赖、跨应用引用和纯 domain，已补充对应正反例；CI 只执行小程序 typecheck/lint。
 
-日常拟提供 `pnpm --filter @pinjie/miniapp typecheck`、`lint` 与独立 `dev:weapp`。脚本尚未配置；根 pnpm dev 保持 Admin 行为，微信构建监听输出由开发者工具加载，不运行 H5 服务或 3000 端口。
+日常已提供 `pnpm --filter @pinjie/miniapp typecheck`、`lint` 与独立 `dev:weapp`。根 pnpm dev 保持 Admin 行为，微信开发监听输出到 dist，由开发者工具加载，不运行 H5 服务或 3000 端口。
 
 Push、PR 只接入适用轻量门禁和生成漂移检查。Taro production build、Vitest、平台自动化、真实数据库与渠道验证按当前任务明确授权执行；预览、上传与发布分别授权并留证，不能借工作流调用链自动触发。AppID 等公开环境标识可进入受控配置，上传私钥等秘密仅进入受保护 CI 环境，上传网络出口按平台要求核对。
 
