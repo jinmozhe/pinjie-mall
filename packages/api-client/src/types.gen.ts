@@ -1561,6 +1561,18 @@ export type BatchCompleted = {
 };
 
 /**
+ * Body_avatar_upload_api_v1_miniapp_me_avatar_assets_post
+ */
+export type BodyAvatarUploadApiV1MiniappMeAvatarAssetsPost = {
+    /**
+     * File
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    file: Blob | File;
+};
+
+/**
  * Body_update_site_logo_api_v1_admin_settings_site_logo_put
  */
 export type BodyUpdateSiteLogoApiV1AdminSettingsSiteLogoPut = {
@@ -4228,6 +4240,36 @@ export type MembershipQualificationEventRead = {
 };
 
 /**
+ * MiniappAvatarAssetRead
+ */
+export type MiniappAvatarAssetRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Url
+     *
+     * 文件的公开访问 URL 或站内路径
+     */
+    url: string;
+};
+
+/**
+ * MiniappAvatarUpdate
+ */
+export type MiniappAvatarUpdate = {
+    /**
+     * Asset Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    asset_id: string | null;
+};
+
+/**
  * MiniappCapabilitiesRead
  */
 export type MiniappCapabilitiesRead = {
@@ -4338,6 +4380,78 @@ export type MiniappCheckoutIntentRead = {
 };
 
 /**
+ * MiniappCommissionRead
+ */
+export type MiniappCommissionRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Level
+     *
+     * 推荐佣金层级，最多两级
+     */
+    level: number;
+    /**
+     * Base Amount
+     *
+     * 佣金计提基数，单位人民币元
+     */
+    base_amount: string;
+    /**
+     * Rate
+     *
+     * 佣金比例快照
+     */
+    rate: string | null;
+    /**
+     * Amount
+     *
+     * 业务金额，单位人民币元
+     */
+    amount: string;
+    /**
+     * Recovered Amount
+     *
+     * 累计追回佣金，单位人民币元
+     */
+    recovered_amount: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: 'frozen' | 'settled' | 'recovered';
+    /**
+     * Frozen At
+     *
+     * 佣金冻结时间
+     */
+    frozen_at: string;
+    /**
+     * Settle After
+     *
+     * 允许结算的最早时间
+     */
+    settle_after: string | null;
+    /**
+     * Settled At
+     *
+     * 佣金结算时间
+     */
+    settled_at: string | null;
+    /**
+     * Recovered At
+     *
+     * 最近佣金追回时间
+     */
+    recovered_at: string | null;
+};
+
+/**
  * MiniappHelpRead
  */
 export type MiniappHelpRead = {
@@ -4387,6 +4501,60 @@ export type MiniappLoginIn = {
      * 微信一次性登录 code，不接受客户端 OpenID
      */
     code: string;
+};
+
+/**
+ * MiniappMemberRead
+ */
+export type MiniappMemberRead = {
+    /**
+     * State
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    state: 'not_opened' | 'no_level' | 'active' | 'inactive';
+    /**
+     * Level Name
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    level_name: string | null;
+    /**
+     * Level Changed At
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    level_changed_at: string | null;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string | null;
+    /**
+     * Referral Bound
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    referral_bound: boolean;
+    /**
+     * Bound At
+     *
+     * 推荐关系首次绑定时间
+     */
+    bound_at: string | null;
+};
+
+/**
+ * MiniappProfileUpdate
+ */
+export type MiniappProfileUpdate = {
+    /**
+     * Display Name
+     *
+     * 展示名称
+     */
+    display_name: string;
 };
 
 /**
@@ -4783,6 +4951,184 @@ export type MiniappUserRead = {
      * 管理员头像 URL 或站内资源路径
      */
     avatar: string | null;
+};
+
+/**
+ * MiniappWalletBalanceRead
+ */
+export type MiniappWalletBalanceRead = {
+    /**
+     * Available Amount
+     *
+     * 可用余额，单位人民币元
+     */
+    available_amount: string;
+    /**
+     * Frozen Amount
+     *
+     * 冻结余额，单位人民币元
+     */
+    frozen_amount: string;
+    /**
+     * Debt Amount
+     *
+     * 待追回欠款，单位人民币元
+     */
+    debt_amount: string;
+};
+
+/**
+ * MiniappWalletLedgerRead
+ */
+export type MiniappWalletLedgerRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Entry Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    entry_type: 'commission_settlement' | 'commission_recovery' | 'withdrawal_freeze' | 'withdrawal_release' | 'withdrawal_paid';
+    /**
+     * Amount
+     *
+     * 业务金额，单位人民币元
+     */
+    amount: string;
+    /**
+     * Frozen Delta
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    frozen_delta: string;
+    /**
+     * Debt Delta
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    debt_delta: string;
+    /**
+     * Wallet Revision
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    wallet_revision: number;
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    balance_after: MiniappWalletBalanceRead;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+};
+
+/**
+ * MiniappWalletRead
+ */
+export type MiniappWalletRead = {
+    /**
+     * Wallet Type
+     *
+     * 佣金或消费钱包类型
+     */
+    wallet_type: 'commission' | 'consumption';
+    /**
+     * Available Amount
+     *
+     * 可用余额，单位人民币元
+     */
+    available_amount: string;
+    /**
+     * Frozen Amount
+     *
+     * 冻结余额，单位人民币元
+     */
+    frozen_amount: string;
+    /**
+     * Debt Amount
+     *
+     * 待追回欠款，单位人民币元
+     */
+    debt_amount: string;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * MiniappWithdrawalRead
+ */
+export type MiniappWithdrawalRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Amount
+     *
+     * 业务金额，单位人民币元
+     */
+    amount: string;
+    /**
+     * Currency
+     *
+     * 货币代码
+     */
+    currency: 'CNY';
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: 'requested' | 'approved' | 'rejected' | 'processing' | 'succeeded' | 'unknown';
+    /**
+     * Reviewed At
+     *
+     * 审核时间
+     */
+    reviewed_at: string | null;
+    /**
+     * Funds Status
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    funds_status: 'not_confirmed' | 'manual_confirmed' | 'channel_confirmed';
+    /**
+     * Confirmed At
+     *
+     * 权威渠道确认时间
+     */
+    confirmed_at: string | null;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
 };
 
 /**
@@ -5790,6 +6136,42 @@ export type PageResultMembershipQualificationEventRead = {
 };
 
 /**
+ * PageResult[MiniappCommissionRead]
+ */
+export type PageResultMiniappCommissionRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MiniappCommissionRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
  * PageResult[MiniappRefundRead]
  */
 export type PageResultMiniappRefundRead = {
@@ -5835,6 +6217,78 @@ export type PageResultMiniappTradeOrderRead = {
      * 当前分页中的资源列表
      */
     items: Array<MiniappTradeOrderRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[MiniappWalletLedgerRead]
+ */
+export type PageResultMiniappWalletLedgerRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MiniappWalletLedgerRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[MiniappWithdrawalRead]
+ */
+export type PageResultMiniappWithdrawalRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MiniappWithdrawalRead>;
     /**
      * Page
      *
@@ -9098,6 +9552,34 @@ export type ResponseModelMemberProfileRead = {
 };
 
 /**
+ * ResponseModel[MiniappAvatarAssetRead]
+ */
+export type ResponseModelMiniappAvatarAssetRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappAvatarAssetRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[MiniappCapabilitiesRead]
  */
 export type ResponseModelMiniappCapabilitiesRead = {
@@ -9173,6 +9655,34 @@ export type ResponseModelMiniappHelpRead = {
      * 响应业务数据
      */
     data: MiniappHelpRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MiniappMemberRead]
+ */
+export type ResponseModelMiniappMemberRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappMemberRead;
     /**
      * Request Id
      *
@@ -9968,6 +10478,34 @@ export type ResponseModelPageResultMembershipQualificationEventRead = {
 };
 
 /**
+ * ResponseModel[PageResult[MiniappCommissionRead]]
+ */
+export type ResponseModelPageResultMiniappCommissionRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultMiniappCommissionRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[PageResult[MiniappRefundRead]]
  */
 export type ResponseModelPageResultMiniappRefundRead = {
@@ -10015,6 +10553,62 @@ export type ResponseModelPageResultMiniappTradeOrderRead = {
      * 响应业务数据
      */
     data: PageResultMiniappTradeOrderRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[MiniappWalletLedgerRead]]
+ */
+export type ResponseModelPageResultMiniappWalletLedgerRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultMiniappWalletLedgerRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[MiniappWithdrawalRead]]
+ */
+export type ResponseModelPageResultMiniappWithdrawalRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultMiniappWithdrawalRead;
     /**
      * Request Id
      *
@@ -11263,6 +11857,36 @@ export type ResponseModelListMiniappCartItemRead = {
      * 响应业务数据
      */
     data: Array<MiniappCartItemRead>;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[list[MiniappWalletRead]]
+ */
+export type ResponseModelListMiniappWalletRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * Data
+     *
+     * 响应业务数据
+     */
+    data: Array<MiniappWalletRead>;
     /**
      * Request Id
      *
@@ -20048,6 +20672,252 @@ export type GetSystemStatusApiV1SystemStatusGetResponses = {
 
 export type GetSystemStatusApiV1SystemStatusGetResponse = GetSystemStatusApiV1SystemStatusGetResponses[keyof GetSystemStatusApiV1SystemStatusGetResponses];
 
+export type MeApiV1MiniappMeGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/me';
+};
+
+export type MeApiV1MiniappMeGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappUserRead;
+};
+
+export type MeApiV1MiniappMeGetResponse = MeApiV1MiniappMeGetResponses[keyof MeApiV1MiniappMeGetResponses];
+
+export type ProfileUpdateApiV1MiniappMePatchData = {
+    body: MiniappProfileUpdate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/me';
+};
+
+export type ProfileUpdateApiV1MiniappMePatchErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ProfileUpdateApiV1MiniappMePatchError = ProfileUpdateApiV1MiniappMePatchErrors[keyof ProfileUpdateApiV1MiniappMePatchErrors];
+
+export type ProfileUpdateApiV1MiniappMePatchResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappUserRead;
+};
+
+export type ProfileUpdateApiV1MiniappMePatchResponse = ProfileUpdateApiV1MiniappMePatchResponses[keyof ProfileUpdateApiV1MiniappMePatchResponses];
+
+export type AvatarUpdateApiV1MiniappMeAvatarPutData = {
+    body: MiniappAvatarUpdate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/me/avatar';
+};
+
+export type AvatarUpdateApiV1MiniappMeAvatarPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AvatarUpdateApiV1MiniappMeAvatarPutError = AvatarUpdateApiV1MiniappMeAvatarPutErrors[keyof AvatarUpdateApiV1MiniappMeAvatarPutErrors];
+
+export type AvatarUpdateApiV1MiniappMeAvatarPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappUserRead;
+};
+
+export type AvatarUpdateApiV1MiniappMeAvatarPutResponse = AvatarUpdateApiV1MiniappMeAvatarPutResponses[keyof AvatarUpdateApiV1MiniappMeAvatarPutResponses];
+
+export type AvatarUploadApiV1MiniappMeAvatarAssetsPostData = {
+    body: BodyAvatarUploadApiV1MiniappMeAvatarAssetsPost;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/me/avatar-assets';
+};
+
+export type AvatarUploadApiV1MiniappMeAvatarAssetsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type AvatarUploadApiV1MiniappMeAvatarAssetsPostError = AvatarUploadApiV1MiniappMeAvatarAssetsPostErrors[keyof AvatarUploadApiV1MiniappMeAvatarAssetsPostErrors];
+
+export type AvatarUploadApiV1MiniappMeAvatarAssetsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelMiniappAvatarAssetRead;
+};
+
+export type AvatarUploadApiV1MiniappMeAvatarAssetsPostResponse = AvatarUploadApiV1MiniappMeAvatarAssetsPostResponses[keyof AvatarUploadApiV1MiniappMeAvatarAssetsPostResponses];
+
+export type MembershipApiV1MiniappMembershipGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/membership';
+};
+
+export type MembershipApiV1MiniappMembershipGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappMemberRead;
+};
+
+export type MembershipApiV1MiniappMembershipGetResponse = MembershipApiV1MiniappMembershipGetResponses[keyof MembershipApiV1MiniappMembershipGetResponses];
+
+export type MembershipActivateApiV1MiniappMembershipPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/membership';
+};
+
+export type MembershipActivateApiV1MiniappMembershipPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappMemberRead;
+};
+
+export type MembershipActivateApiV1MiniappMembershipPostResponse = MembershipActivateApiV1MiniappMembershipPostResponses[keyof MembershipActivateApiV1MiniappMembershipPostResponses];
+
+export type WalletsApiV1MiniappWalletsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/wallets';
+};
+
+export type WalletsApiV1MiniappWalletsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListMiniappWalletRead;
+};
+
+export type WalletsApiV1MiniappWalletsGetResponse = WalletsApiV1MiniappWalletsGetResponses[keyof WalletsApiV1MiniappWalletsGetResponses];
+
+export type WalletLedgersApiV1MiniappWalletsWalletTypeLedgersGetData = {
+    body?: never;
+    path: {
+        /**
+         * Wallet Type
+         */
+        wallet_type: 'commission' | 'consumption';
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/miniapp/wallets/{wallet_type}/ledgers';
+};
+
+export type WalletLedgersApiV1MiniappWalletsWalletTypeLedgersGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type WalletLedgersApiV1MiniappWalletsWalletTypeLedgersGetError = WalletLedgersApiV1MiniappWalletsWalletTypeLedgersGetErrors[keyof WalletLedgersApiV1MiniappWalletsWalletTypeLedgersGetErrors];
+
+export type WalletLedgersApiV1MiniappWalletsWalletTypeLedgersGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultMiniappWalletLedgerRead;
+};
+
+export type WalletLedgersApiV1MiniappWalletsWalletTypeLedgersGetResponse = WalletLedgersApiV1MiniappWalletsWalletTypeLedgersGetResponses[keyof WalletLedgersApiV1MiniappWalletsWalletTypeLedgersGetResponses];
+
+export type CommissionsApiV1MiniappCommissionsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/miniapp/commissions';
+};
+
+export type CommissionsApiV1MiniappCommissionsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type CommissionsApiV1MiniappCommissionsGetError = CommissionsApiV1MiniappCommissionsGetErrors[keyof CommissionsApiV1MiniappCommissionsGetErrors];
+
+export type CommissionsApiV1MiniappCommissionsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultMiniappCommissionRead;
+};
+
+export type CommissionsApiV1MiniappCommissionsGetResponse = CommissionsApiV1MiniappCommissionsGetResponses[keyof CommissionsApiV1MiniappCommissionsGetResponses];
+
+export type WithdrawalsApiV1MiniappWithdrawalsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/miniapp/withdrawals';
+};
+
+export type WithdrawalsApiV1MiniappWithdrawalsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type WithdrawalsApiV1MiniappWithdrawalsGetError = WithdrawalsApiV1MiniappWithdrawalsGetErrors[keyof WithdrawalsApiV1MiniappWithdrawalsGetErrors];
+
+export type WithdrawalsApiV1MiniappWithdrawalsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultMiniappWithdrawalRead;
+};
+
+export type WithdrawalsApiV1MiniappWithdrawalsGetResponse = WithdrawalsApiV1MiniappWithdrawalsGetResponses[keyof WithdrawalsApiV1MiniappWithdrawalsGetResponses];
+
 export type HelpReadApiV1MiniappHelpGetData = {
     body?: never;
     path?: never;
@@ -20417,22 +21287,6 @@ export type LogoutApiV1MiniappAuthLogoutPostResponses = {
 };
 
 export type LogoutApiV1MiniappAuthLogoutPostResponse = LogoutApiV1MiniappAuthLogoutPostResponses[keyof LogoutApiV1MiniappAuthLogoutPostResponses];
-
-export type MeApiV1MiniappMeGetData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/v1/miniapp/me';
-};
-
-export type MeApiV1MiniappMeGetResponses = {
-    /**
-     * 请求成功
-     */
-    200: ResponseModelMiniappUserRead;
-};
-
-export type MeApiV1MiniappMeGetResponse = MeApiV1MiniappMeGetResponses[keyof MeApiV1MiniappMeGetResponses];
 
 export type CartListApiV1MiniappCartItemsGetData = {
     body?: never;

@@ -103,6 +103,7 @@
 | [local-dev-environment.md](operations/local-dev-environment.md) | Windows 本地开发手册：纯 uv、pnpm、本机 PostgreSQL、Docker Desktop Redis、Codex 默认联网沙箱基线与生产环境边界 |
 | [miniapp-identity-and-content.md](operations/miniapp-identity-and-content.md) | 小程序登录配置、权限与迁移前置、未知订单恢复和受限说明迁移步骤 |
 | [miniapp-fulfillment-and-aftersales.md](operations/miniapp-fulfillment-and-aftersales.md) | 小程序履约、整单售后恢复、评价资格与公开支持配置 |
+| [miniapp-profile-and-finance.md](operations/miniapp-profile-and-finance.md) | 本人资料头像、会员开通、双钱包流水、佣金及历史提现查询和未知结果恢复 |
 | [environment-variables-and-backend-local-run.md](operations/environment-variables-and-backend-local-run.md) | Backend 与 Admin 环境变量、Backend 初始化、权限同步和本地检查步骤 |
 | [admin-local-development-and-validation-troubleshooting.md](operations/admin-local-development-and-validation-troubleshooting.md) | Admin Umi 本地启动、测试、浏览器验证、跨栈前置条件和迁移故障排查 |
 | [ai-assisted-development-workflow.md](operations/ai-assisted-development-workflow.md) | AI 助手规则读取与跨端实施指南：第 17 节为修改前必读流程，第 18.1 节定义 git-sync 全仓本地交付授权、保留整合与自动恢复 |

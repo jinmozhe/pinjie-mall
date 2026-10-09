@@ -12,7 +12,9 @@
 
 PRD 定义用户需要什么、业务边界和验收结果；本文定义代码放在哪里、依赖方向、状态所有者及执行链路。技术取舍见[ADR 0017](../adr/0017-小程序采用TaroReact与NutUI决策.md)，精确版本与执行要求见[工程标准](miniapp-engineering-standard.md)，视觉与交互见[UI 规范](miniapp-ui-standard.md)。各文档按职责维护，具体实施、验证与未决事项进入活动全栈计划。
 
-应用名称统一为 miniapp。当前四项 TabBar、商品详情、账户地址/隐私、结算订单及 service 分包已配置。service 分包承载退款申请/记录/详情、评价和公开帮助，Feature 为 aftersales、reviews、help，只经公开 index 入口消费。资金和发布仍是后续设计，不提前建立空目录。
+应用名称统一为 miniapp。当前四项 TabBar、商品详情、账户地址/隐私/资料、结算订单、service 和 finance 分包已配置。service 分包承载退款申请/记录/详情、评价和公开帮助，Feature 为 aftersales、reviews、help；profile 承载资料编辑，finance 承载会员、双钱包、流水、佣金和历史提现，只经公开 index 入口消费。真实资金与发布仍需专项，不提前建立空目录。
+
+Backend 的 MiniappFinanceService 是跨域本人只读查询，会员等级、钱包、流水、佣金和提现均采用安全白名单投影；主动开通复用 DistributionService，资料写入复用不依赖浏览器凭据的 UserProfileService。上传与绑定分开，lib/upload 使用原生任务取消与字符串信封解析，privateCall 统一刷新和会话代次校验。操作与状态边界见[资料会员资金手册](../operations/miniapp-profile-and-finance.md)。
 
 Backend 的 MiniappTradeQueryService 是显式跨域只读投影，使用本人订单与履约 JOIN 进行真实筛选和分页，批量加载商品、退款阻断与本人评价，避免 N+1。原订单接口保留，页面消费 trade-orders 展示契约；写操作复用 LifecycleService，资格提示不替代事务授权。退款安全投影不暴露商户退款号或渠道流水；原请求恢复与支持配置见[接入手册](../operations/miniapp-fulfillment-and-aftersales.md)。
 

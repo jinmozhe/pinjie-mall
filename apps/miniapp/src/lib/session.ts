@@ -6,6 +6,7 @@ import type { Envelope } from './api'
 import { queryClient } from './query'
 import { requestController } from './cancellation'
 import type { RequestSignal } from './cancellation'
+import { uploadAvatar } from './upload'
 
 type Snapshot = { user: MiniappUserRead | null; epoch: number; busy: boolean; error: string }
 let snapshot: Snapshot = { user: null, epoch: 0, busy: false, error: '' }
@@ -71,24 +72,35 @@ async function refresh() {
   refreshing = flight
   try { await flight } finally { if (refreshing === flight) refreshing = null }
 }
-export async function privateRequest<R extends Envelope>(path: string, options: { signal?: RequestSignal; method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'; data?: object } = {}): Promise<R['data']> {
+async function privateCall<T>(operation: (accessToken: string, signal: RequestSignal) => Promise<T>, signal?: RequestSignal): Promise<T> {
   const epoch = snapshot.epoch
   if (!credentials) throw new ApiError('请先登录', 'http', 401)
   if (Date.parse(credentials.access_expires_at) <= Date.now() + 30_000) await refresh()
   if (!credentials || epoch !== snapshot.epoch) throw new ApiError('会话已改变，请重新操作', 'protocol')
   const controller = requestController()
   const abort = () => controller.abort()
-  options.signal?.addEventListener('abort', abort, { once: true })
-  if (options.signal?.aborted) controller.abort()
+  signal?.addEventListener('abort', abort, { once: true })
+  if (signal?.aborted) controller.abort()
   pending.add(controller)
   try {
-    const result = await request<R>(`/miniapp${path}`, { ...options, signal: controller.signal, accessToken: credentials.access_token })
+    const result = await operation(credentials.access_token, controller.signal)
     if (epoch !== snapshot.epoch) throw new ApiError('会话已改变，请重新读取', 'protocol')
     return result
   } catch (error) {
     if (error instanceof ApiError && (error.status === 401 || error.code === 'AUTH_ACCOUNT_DISABLED') && epoch === snapshot.epoch) clear('登录状态已失效，请重新登录')
     throw error
-  } finally { pending.delete(controller); options.signal?.removeEventListener('abort', abort) }
+  } finally { pending.delete(controller); signal?.removeEventListener('abort', abort) }
+}
+export function privateRequest<R extends Envelope>(path: string, options: { signal?: RequestSignal; method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'; data?: object } = {}): Promise<R['data']> {
+  return privateCall((accessToken, signal) => request<R>(`/miniapp${path}`, { ...options, signal, accessToken }), options.signal)
+}
+export function privateAvatarUpload(filePath: string, signal?: RequestSignal) {
+  return privateCall((accessToken, uploadSignal) => uploadAvatar(filePath, accessToken, uploadSignal), signal)
+}
+export function updateSessionUser(user: MiniappUserRead, epoch: number) {
+  if (!credentials || epoch !== snapshot.epoch || user.id !== credentials.user.id) throw new ApiError('会话已改变，请重新读取资料', 'protocol')
+  credentials = { ...credentials, user }
+  emit({ user })
 }
 export async function logout() {
   const epoch = snapshot.epoch

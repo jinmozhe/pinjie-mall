@@ -14,8 +14,12 @@ from app.db.repositories import SessionRepository
 from app.db.repositories.commerce_access import CommerceAccessRepository
 from app.domains.addresses.repository import AddressRepository
 from app.domains.addresses.service import AddressService
+from app.domains.assets.schemas import UploaderType
+from app.services.accounts import UserProfileService
+from app.services.assets import AssetUploader
 from app.services.commerce import AddressApplicationService
 from app.services.miniapp_auth import MiniappAuthService, bearer_error
+from app.services.miniapp_finance import MiniappFinanceService
 from app.services.miniapp_trade import MiniappTradeQueryService
 from app.services.miniapp_trade_schemas import MiniappHelpRead
 
@@ -104,3 +108,20 @@ def miniapp_help(request: Request) -> MiniappHelpRead:
 
 MiniappTrade = Annotated[MiniappTradeQueryService, Depends(miniapp_trade)]
 MiniappHelp = Annotated[MiniappHelpRead, Depends(miniapp_help)]
+
+
+def miniapp_profile(request: Request, session: DatabaseSession) -> UserProfileService:
+    return UserProfileService(session=session, settings=get_request_settings(request))
+
+
+def miniapp_finance(session: DatabaseSession) -> MiniappFinanceService:
+    return MiniappFinanceService(session)
+
+
+def miniapp_avatar_uploader(current: MiniappPrincipal) -> AssetUploader:
+    return AssetUploader(type=UploaderType.USER, id=current.user.id)
+
+
+MiniappProfile = Annotated[UserProfileService, Depends(miniapp_profile)]
+MiniappFinance = Annotated[MiniappFinanceService, Depends(miniapp_finance)]
+MiniappAvatarUploader = Annotated[AssetUploader, Depends(miniapp_avatar_uploader)]
