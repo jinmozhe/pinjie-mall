@@ -46,6 +46,8 @@
 
 推荐与积分端点使用同一 MiniappBearer 和 no-store 边界。推荐安全投影只返回本人邀请码、时间及原码匹配布尔值，不能查询他人资料；写入仍由领域事务内校验 active user、首次绑定、自邀与循环。积分读取按本人 user_id 定位账户，再按本人 account_id 查询流水，排除内部来源标识、备注和幂等键。绑定意图在当前账户确认后保存，客户端不自动绑定或跨身份重放，见[推荐积分手册](../operations/miniapp-referral-and-points.md)。
 
+本人小程序会话列表与撤销只匹配 miniapp_bearer、pinjie-miniapp、csrf_digest=NULL。撤销接受已确认的 1 至 100 个唯一目标，锁用户后复核当前会话、凭据版本、状态与过期，固定顺序锁目标；拒绝当前、他人、Browser 和缺失会话，审计及撤销同事务。未知结果只读查询原集合，后来登录的会话不加入；父 Session 撤销同时阻断后续 Access/Refresh，已执行请求仍需查询事实。注销前置仅本人交易权益只读聚合，不授予删除或权益放弃能力，实际注销关闭，见[账户安全手册](../operations/miniapp-account-security.md)。
+
 ## 5. JWT、密码与 Session
 
 - Access JWT 使用 PyJWT 与固定 `HS256` allowlist。Web 和 Admin 分别使用独立 Secret 与 `pinjie-web`、`pinjie-admin` audience。

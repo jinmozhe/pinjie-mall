@@ -15239,6 +15239,185 @@
         }
       }
     },
+    "/api/v1/miniapp/sessions": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "分页查询本人小程序登录会话",
+        "operationId": "login_sessions_api_v1_miniapp_sessions_get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappLoginSessionsRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/sessions/revoke": {
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "撤销本人已确认的其他小程序会话集合",
+        "operationId": "revoke_login_sessions_api_v1_miniapp_sessions_revoke_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiniappSessionTargets"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappSessionRevocationRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/sessions/revocation-status": {
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "只读查询原目标会话状态，不执行撤销",
+        "operationId": "login_session_revocation_status_api_v1_miniapp_sessions_revocation_status_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MiniappSessionTargets"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappSessionRevocationRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/account/closure-precheck": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "只读核对本人注销咨询事项，自助注销保持关闭",
+        "operationId": "account_closure_precheck_api_v1_miniapp_account_closure_precheck_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappClosurePrecheckRead_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/miniapp/referral": {
       "get": {
         "tags": [
@@ -23892,6 +24071,87 @@
         ],
         "title": "MiniappCheckoutIntentRead"
       },
+      "MiniappClosureCheckRead": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "orders",
+              "payments",
+              "refunds",
+              "refund_execution",
+              "withdrawals",
+              "commissions",
+              "wallets",
+              "points"
+            ],
+            "title": "Key",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "needs_review": {
+            "type": "boolean",
+            "title": "Needs Review",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "needs_review"
+        ],
+        "title": "MiniappClosureCheckRead"
+      },
+      "MiniappClosurePrecheckRead": {
+        "properties": {
+          "self_service_enabled": {
+            "type": "boolean",
+            "const": false,
+            "title": "Self Service Enabled",
+            "default": false,
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "checked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Checked At",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "wallet_state": {
+            "type": "string",
+            "enum": [
+              "not_opened",
+              "opened"
+            ],
+            "title": "Wallet State",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "points_state": {
+            "type": "string",
+            "enum": [
+              "not_opened",
+              "opened"
+            ],
+            "title": "Points State",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/MiniappClosureCheckRead"
+            },
+            "type": "array",
+            "title": "Checks",
+            "description": "各项就绪依赖的安全状态摘要"
+          }
+        },
+        "type": "object",
+        "required": [
+          "checked_at",
+          "wallet_state",
+          "points_state",
+          "checks"
+        ],
+        "title": "MiniappClosurePrecheckRead"
+      },
       "MiniappCommissionRead": {
         "properties": {
           "id": {
@@ -24091,6 +24351,171 @@
           "code"
         ],
         "title": "MiniappLoginIn"
+      },
+      "MiniappLoginSessionRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "资源唯一标识"
+          },
+          "device_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Name",
+            "description": "登录设备名称"
+          },
+          "ip_masked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip Masked",
+            "description": "脱敏后的请求来源 IP 地址"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "创建时间"
+          },
+          "last_seen_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Seen At",
+            "description": "会话最近活动时间"
+          },
+          "idle_expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Idle Expires At",
+            "description": "会话空闲过期时间"
+          },
+          "absolute_expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Absolute Expires At",
+            "description": "会话绝对过期时间"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At",
+            "description": "会话撤销时间"
+          },
+          "is_current": {
+            "type": "boolean",
+            "title": "Is Current",
+            "description": "是否为当前登录会话"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "expired",
+              "revoked"
+            ],
+            "title": "State",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "device_name",
+          "ip_masked",
+          "created_at",
+          "last_seen_at",
+          "idle_expires_at",
+          "absolute_expires_at",
+          "revoked_at",
+          "is_current",
+          "state"
+        ],
+        "title": "MiniappLoginSessionRead"
+      },
+      "MiniappLoginSessionsRead": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MiniappLoginSessionRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          },
+          "other_active_total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Other Active Total",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "other_active_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Other Active Ids",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages",
+          "other_active_total",
+          "other_active_ids"
+        ],
+        "title": "MiniappLoginSessionsRead"
       },
       "MiniappMemberRead": {
         "properties": {
@@ -24710,6 +25135,73 @@
           "absolute_expires_at"
         ],
         "title": "MiniappSessionRead"
+      },
+      "MiniappSessionRevocationRead": {
+        "properties": {
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/MiniappSessionStateRead"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Sessions",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sessions"
+        ],
+        "title": "MiniappSessionRevocationRead"
+      },
+      "MiniappSessionStateRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "资源唯一标识"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "expired",
+              "revoked",
+              "not_found"
+            ],
+            "title": "State",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "state"
+        ],
+        "title": "MiniappSessionStateRead"
+      },
+      "MiniappSessionTargets": {
+        "properties": {
+          "session_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Session Ids",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "session_ids"
+        ],
+        "title": "MiniappSessionTargets"
       },
       "MiniappTradeOrderRead": {
         "properties": {
@@ -31120,6 +31612,38 @@
         ],
         "title": "ResponseModel[MiniappCheckoutIntentRead]"
       },
+      "ResponseModel_MiniappClosurePrecheckRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappClosurePrecheckRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappClosurePrecheckRead]"
+      },
       "ResponseModel_MiniappHelpRead_": {
         "properties": {
           "code": {
@@ -31151,6 +31675,38 @@
           "request_id"
         ],
         "title": "ResponseModel[MiniappHelpRead]"
+      },
+      "ResponseModel_MiniappLoginSessionsRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappLoginSessionsRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappLoginSessionsRead]"
       },
       "ResponseModel_MiniappMemberRead_": {
         "properties": {
@@ -31375,6 +31931,38 @@
           "request_id"
         ],
         "title": "ResponseModel[MiniappSessionRead]"
+      },
+      "ResponseModel_MiniappSessionRevocationRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappSessionRevocationRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappSessionRevocationRead]"
       },
       "ResponseModel_MiniappTradeOrderRead_": {
         "properties": {

@@ -17,5 +17,6 @@ export function AuthGate({ children }: PropsWithChildren) {
     <Button block type='primary' loading={session.busy} disabled={!consent || session.busy} onClick={() => { void login() }}>微信登录</Button>
     <Button block fill='outline' onClick={() => { void Taro.switchTab({ url: '/pages/home/index' }) }}>继续浏览商品</Button>
     <Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/service/help/index' }) }}>帮助与支持</Button>
+    <Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/account/settings/index' }) }}>账户设置与隐私</Button>
   </View></View>
 }

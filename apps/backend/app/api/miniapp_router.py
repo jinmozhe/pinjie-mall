@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from app.api.dependencies import AssetServiceDependency
 from app.api.lifecycle_dependencies import Lifecycle
 from app.api.miniapp_dependencies import (
+    MiniappAccount,
     MiniappAddresses,
     MiniappAuth,
     MiniappAvatarUploader,
@@ -44,6 +45,12 @@ from app.domains.lifecycle.schemas import (
 )
 from app.domains.orders import CheckoutQuote, CheckoutRequest, OrderRead
 from app.domains.users.schemas import UserAvatarUpdateIn, UserUpdateIn
+from app.services.miniapp_account_schemas import (
+    MiniappClosurePrecheckRead,
+    MiniappLoginSessionsRead,
+    MiniappSessionRevocationRead,
+    MiniappSessionTargets,
+)
 from app.services.miniapp_engagement_schemas import (
     MiniappPointsLedgerRead,
     MiniappPointsRead,
@@ -74,6 +81,62 @@ class MiniappCheckoutIntentRead(BaseModel):
 
 
 router = APIRouter(prefix="/miniapp", tags=["小程序"], dependencies=[Depends(require_miniapp_profile)])
+
+
+@router.get("/sessions", response_model=ResponseModel[MiniappLoginSessionsRead], summary="分页查询本人小程序登录会话")
+async def login_sessions(
+    service: MiniappAccount,
+    current: MiniappPrincipal,
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 10,
+) -> ResponseModel[MiniappLoginSessionsRead]:
+    return success_response(
+        data=await service.list_sessions(current.user.id, current.login_session.id, page, page_size),
+        request_id=current_request_id(),
+    )
+
+
+@router.post(
+    "/sessions/revoke",
+    response_model=ResponseModel[MiniappSessionRevocationRead],
+    summary="撤销本人已确认的其他小程序会话集合",
+)
+async def revoke_login_sessions(
+    payload: MiniappSessionTargets,
+    service: MiniappAccount,
+    current: MiniappPrincipal,
+) -> ResponseModel[MiniappSessionRevocationRead]:
+    return success_response(
+        data=await service.revoke(current.user.id, current.login_session.id, current.user.credential_version, payload),
+        request_id=current_request_id(),
+        message="指定会话已撤销",
+    )
+
+
+@router.post(
+    "/sessions/revocation-status",
+    response_model=ResponseModel[MiniappSessionRevocationRead],
+    summary="只读查询原目标会话状态，不执行撤销",
+)
+async def login_session_revocation_status(
+    payload: MiniappSessionTargets,
+    service: MiniappAccount,
+    current: MiniappPrincipal,
+) -> ResponseModel[MiniappSessionRevocationRead]:
+    return success_response(
+        data=await service.revocation_status(current.user.id, payload), request_id=current_request_id()
+    )
+
+
+@router.get(
+    "/account/closure-precheck",
+    response_model=ResponseModel[MiniappClosurePrecheckRead],
+    summary="只读核对本人注销咨询事项，自助注销保持关闭",
+)
+async def account_closure_precheck(
+    service: MiniappAccount, current: MiniappPrincipal
+) -> ResponseModel[MiniappClosurePrecheckRead]:
+    return success_response(data=await service.closure_precheck(current.user.id), request_id=current_request_id())
 
 
 @router.get("/referral", response_model=ResponseModel[MiniappReferralRead], summary="查询本人推荐码及绑定事实")

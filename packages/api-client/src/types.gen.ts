@@ -4380,6 +4380,60 @@ export type MiniappCheckoutIntentRead = {
 };
 
 /**
+ * MiniappClosureCheckRead
+ */
+export type MiniappClosureCheckRead = {
+    /**
+     * Key
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    key: 'orders' | 'payments' | 'refunds' | 'refund_execution' | 'withdrawals' | 'commissions' | 'wallets' | 'points';
+    /**
+     * Needs Review
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    needs_review: boolean;
+};
+
+/**
+ * MiniappClosurePrecheckRead
+ */
+export type MiniappClosurePrecheckRead = {
+    /**
+     * Self Service Enabled
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    self_service_enabled?: false;
+    /**
+     * Checked At
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    checked_at: string;
+    /**
+     * Wallet State
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    wallet_state: 'not_opened' | 'opened';
+    /**
+     * Points State
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    points_state: 'not_opened' | 'opened';
+    /**
+     * Checks
+     *
+     * 各项就绪依赖的安全状态摘要
+     */
+    checks: Array<MiniappClosureCheckRead>;
+};
+
+/**
  * MiniappCommissionRead
  */
 export type MiniappCommissionRead = {
@@ -4501,6 +4555,120 @@ export type MiniappLoginIn = {
      * 微信一次性登录 code，不接受客户端 OpenID
      */
     code: string;
+};
+
+/**
+ * MiniappLoginSessionRead
+ */
+export type MiniappLoginSessionRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Device Name
+     *
+     * 登录设备名称
+     */
+    device_name: string | null;
+    /**
+     * Ip Masked
+     *
+     * 脱敏后的请求来源 IP 地址
+     */
+    ip_masked: string | null;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Last Seen At
+     *
+     * 会话最近活动时间
+     */
+    last_seen_at: string;
+    /**
+     * Idle Expires At
+     *
+     * 会话空闲过期时间
+     */
+    idle_expires_at: string;
+    /**
+     * Absolute Expires At
+     *
+     * 会话绝对过期时间
+     */
+    absolute_expires_at: string;
+    /**
+     * Revoked At
+     *
+     * 会话撤销时间
+     */
+    revoked_at: string | null;
+    /**
+     * Is Current
+     *
+     * 是否为当前登录会话
+     */
+    is_current: boolean;
+    /**
+     * State
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    state: 'active' | 'expired' | 'revoked';
+};
+
+/**
+ * MiniappLoginSessionsRead
+ */
+export type MiniappLoginSessionsRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MiniappLoginSessionRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+    /**
+     * Other Active Total
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    other_active_total: number;
+    /**
+     * Other Active Ids
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    other_active_ids: Array<string>;
 };
 
 /**
@@ -4921,6 +5089,48 @@ export type MiniappSessionRead = {
      * 会话绝对过期时间
      */
     absolute_expires_at: string;
+};
+
+/**
+ * MiniappSessionRevocationRead
+ */
+export type MiniappSessionRevocationRead = {
+    /**
+     * Sessions
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    sessions: Array<MiniappSessionStateRead>;
+};
+
+/**
+ * MiniappSessionStateRead
+ */
+export type MiniappSessionStateRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * State
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    state: 'active' | 'expired' | 'revoked' | 'not_found';
+};
+
+/**
+ * MiniappSessionTargets
+ */
+export type MiniappSessionTargets = {
+    /**
+     * Session Ids
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    session_ids: Array<string>;
 };
 
 /**
@@ -9802,6 +10012,34 @@ export type ResponseModelMiniappCheckoutIntentRead = {
 };
 
 /**
+ * ResponseModel[MiniappClosurePrecheckRead]
+ */
+export type ResponseModelMiniappClosurePrecheckRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappClosurePrecheckRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[MiniappHelpRead]
  */
 export type ResponseModelMiniappHelpRead = {
@@ -9821,6 +10059,34 @@ export type ResponseModelMiniappHelpRead = {
      * 响应业务数据
      */
     data: MiniappHelpRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MiniappLoginSessionsRead]
+ */
+export type ResponseModelMiniappLoginSessionsRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappLoginSessionsRead;
     /**
      * Request Id
      *
@@ -10017,6 +10283,34 @@ export type ResponseModelMiniappSessionRead = {
      * 响应业务数据
      */
     data: MiniappSessionRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MiniappSessionRevocationRead]
+ */
+export type ResponseModelMiniappSessionRevocationRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappSessionRevocationRead;
     /**
      * Request Id
      *
@@ -20921,6 +21215,106 @@ export type GetSystemStatusApiV1SystemStatusGetResponses = {
 };
 
 export type GetSystemStatusApiV1SystemStatusGetResponse = GetSystemStatusApiV1SystemStatusGetResponses[keyof GetSystemStatusApiV1SystemStatusGetResponses];
+
+export type LoginSessionsApiV1MiniappSessionsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/miniapp/sessions';
+};
+
+export type LoginSessionsApiV1MiniappSessionsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type LoginSessionsApiV1MiniappSessionsGetError = LoginSessionsApiV1MiniappSessionsGetErrors[keyof LoginSessionsApiV1MiniappSessionsGetErrors];
+
+export type LoginSessionsApiV1MiniappSessionsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappLoginSessionsRead;
+};
+
+export type LoginSessionsApiV1MiniappSessionsGetResponse = LoginSessionsApiV1MiniappSessionsGetResponses[keyof LoginSessionsApiV1MiniappSessionsGetResponses];
+
+export type RevokeLoginSessionsApiV1MiniappSessionsRevokePostData = {
+    body: MiniappSessionTargets;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/sessions/revoke';
+};
+
+export type RevokeLoginSessionsApiV1MiniappSessionsRevokePostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type RevokeLoginSessionsApiV1MiniappSessionsRevokePostError = RevokeLoginSessionsApiV1MiniappSessionsRevokePostErrors[keyof RevokeLoginSessionsApiV1MiniappSessionsRevokePostErrors];
+
+export type RevokeLoginSessionsApiV1MiniappSessionsRevokePostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappSessionRevocationRead;
+};
+
+export type RevokeLoginSessionsApiV1MiniappSessionsRevokePostResponse = RevokeLoginSessionsApiV1MiniappSessionsRevokePostResponses[keyof RevokeLoginSessionsApiV1MiniappSessionsRevokePostResponses];
+
+export type LoginSessionRevocationStatusApiV1MiniappSessionsRevocationStatusPostData = {
+    body: MiniappSessionTargets;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/sessions/revocation-status';
+};
+
+export type LoginSessionRevocationStatusApiV1MiniappSessionsRevocationStatusPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type LoginSessionRevocationStatusApiV1MiniappSessionsRevocationStatusPostError = LoginSessionRevocationStatusApiV1MiniappSessionsRevocationStatusPostErrors[keyof LoginSessionRevocationStatusApiV1MiniappSessionsRevocationStatusPostErrors];
+
+export type LoginSessionRevocationStatusApiV1MiniappSessionsRevocationStatusPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappSessionRevocationRead;
+};
+
+export type LoginSessionRevocationStatusApiV1MiniappSessionsRevocationStatusPostResponse = LoginSessionRevocationStatusApiV1MiniappSessionsRevocationStatusPostResponses[keyof LoginSessionRevocationStatusApiV1MiniappSessionsRevocationStatusPostResponses];
+
+export type AccountClosurePrecheckApiV1MiniappAccountClosurePrecheckGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/account/closure-precheck';
+};
+
+export type AccountClosurePrecheckApiV1MiniappAccountClosurePrecheckGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappClosurePrecheckRead;
+};
+
+export type AccountClosurePrecheckApiV1MiniappAccountClosurePrecheckGetResponse = AccountClosurePrecheckApiV1MiniappAccountClosurePrecheckGetResponses[keyof AccountClosurePrecheckApiV1MiniappAccountClosurePrecheckGetResponses];
 
 export type ReferralApiV1MiniappReferralGetData = {
     body?: never;

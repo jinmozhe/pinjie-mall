@@ -118,6 +118,8 @@ UI tokens 与业务组件必须遵循[小程序 UI 规范](miniapp-ui-standard.m
 
 ## 8. 验证与交付
 
+账户安全 Feature 与 account 分包沿用既有栈及内存认证层，恢复记录只保存本人原会话 ID 集合，不保存凭据或自动重放。注销仅只读核对，实际注销关闭，机制与验收边界见[账户安全手册](../operations/miniapp-account-security.md)。
+
 日常只运行适用 typecheck、lint、边界与契约漂移轻量检查。公开接口变化按 Backend 实现、导出根 OpenAPI、generate-api、消费者适配顺序完成。production build、Vitest、pytest、微信自动化、真机与数据库验证仅在当前任务明确点名后执行，不通过 CI、定时任务或上传脚本间接扩大。
 
 工程首次验收应在授权范围核对精确依赖与冻结安装、微信构建产物、NutUI 控件/图标尺寸、mp-html 原生组件、Query 生命周期、主包与分包及 iOS/Android 关键旅程。性能预算和基础库下限由 E0 实测与上线环境定版，不能虚构已支持机型或包体证据。

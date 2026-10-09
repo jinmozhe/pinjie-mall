@@ -165,6 +165,10 @@ def test_commission_and_ledger_exclude_operational_identifiers_and_raw_snapshots
         ("GET", "/wallets/commission/ledgers", None),
         ("GET", "/commissions", None),
         ("GET", "/withdrawals", None),
+        ("GET", "/sessions", None),
+        ("POST", "/sessions/revoke", {"session_ids": [str(new_uuid7())]}),
+        ("POST", "/sessions/revocation-status", {"session_ids": [str(new_uuid7())]}),
+        ("GET", "/account/closure-precheck", None),
         ("POST", "/me/avatar-assets", None),
     ],
 )
