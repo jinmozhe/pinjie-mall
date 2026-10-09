@@ -10,6 +10,7 @@ from app.api.miniapp_dependencies import (
     MiniappAddresses,
     MiniappAuth,
     MiniappAvatarUploader,
+    MiniappEngagement,
     MiniappFinance,
     MiniappHelp,
     MiniappPrincipal,
@@ -32,6 +33,7 @@ from app.domains.auth.miniapp_schemas import (
     MiniappUserRead,
 )
 from app.domains.cart.schemas import CartItemInput, CartItemRead, CartItemUpdate, MiniappCartItemRead
+from app.domains.distribution import ReferralBindIn
 from app.domains.lifecycle.schemas import (
     FulfillmentRead,
     ProductReviewCreate,
@@ -42,6 +44,11 @@ from app.domains.lifecycle.schemas import (
 )
 from app.domains.orders import CheckoutQuote, CheckoutRequest, OrderRead
 from app.domains.users.schemas import UserAvatarUpdateIn, UserUpdateIn
+from app.services.miniapp_engagement_schemas import (
+    MiniappPointsLedgerRead,
+    MiniappPointsRead,
+    MiniappReferralRead,
+)
 from app.services.miniapp_finance_schemas import (
     MiniappAvatarAssetRead,
     MiniappAvatarUpdate,
@@ -67,6 +74,50 @@ class MiniappCheckoutIntentRead(BaseModel):
 
 
 router = APIRouter(prefix="/miniapp", tags=["小程序"], dependencies=[Depends(require_miniapp_profile)])
+
+
+@router.get("/referral", response_model=ResponseModel[MiniappReferralRead], summary="查询本人推荐码及绑定事实")
+async def referral(
+    service: MiniappEngagement,
+    current: MiniappPrincipal,
+    invitation_code: str | None = Query(default=None, min_length=8, max_length=16, pattern=r"^[A-Z0-9]+$"),
+) -> ResponseModel[MiniappReferralRead]:
+    return success_response(
+        data=await service.referral(current.user.id, invitation_code), request_id=current_request_id()
+    )
+
+
+@router.post(
+    "/referral",
+    response_model=ResponseModel[MiniappReferralRead],
+    summary="主动首次绑定本人推荐关系",
+    description="服务端校验首次绑定、自邀与循环；同码幂等。未知结果查询本人关系与原码是否匹配，不自动换码重试。",
+)
+async def referral_bind(
+    payload: ReferralBindIn, service: MiniappEngagement, current: MiniappPrincipal
+) -> ResponseModel[MiniappReferralRead]:
+    return success_response(data=await service.bind(current.user.id, payload), request_id=current_request_id())
+
+
+@router.get("/points", response_model=ResponseModel[MiniappPointsRead], summary="查询本人积分账户与精确余额")
+async def points(service: MiniappEngagement, current: MiniappPrincipal) -> ResponseModel[MiniappPointsRead]:
+    return success_response(data=await service.points(current.user.id), request_id=current_request_id())
+
+
+@router.get(
+    "/points/ledgers",
+    response_model=ResponseModel[PageResult[MiniappPointsLedgerRead]],
+    summary="分页查询本人积分流水安全投影",
+)
+async def points_ledgers(
+    service: MiniappEngagement,
+    current: MiniappPrincipal,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+) -> ResponseModel[PageResult[MiniappPointsLedgerRead]]:
+    return success_response(
+        data=await service.points_ledgers(current.user.id, page, page_size), request_id=current_request_id()
+    )
 
 
 @router.patch("/me", response_model=ResponseModel[MiniappUserRead], summary="修改本人小程序昵称")

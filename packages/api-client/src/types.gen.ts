@@ -4546,6 +4546,106 @@ export type MiniappMemberRead = {
 };
 
 /**
+ * MiniappPointsAccountRead
+ */
+export type MiniappPointsAccountRead = {
+    /**
+     * Available Points
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    available_points: string;
+    /**
+     * Frozen Points
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    frozen_points: string;
+    /**
+     * Debt Points
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    debt_points: string;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Updated At
+     *
+     * 最近更新时间
+     */
+    updated_at: string;
+};
+
+/**
+ * MiniappPointsLedgerRead
+ */
+export type MiniappPointsLedgerRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Entry Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    entry_type: 'grant' | 'spend' | 'freeze' | 'release' | 'reverse' | 'expire';
+    /**
+     * Available Delta
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    available_delta: string;
+    /**
+     * Frozen Delta
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    frozen_delta: string;
+    /**
+     * Debt Delta
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    debt_delta: string;
+    /**
+     * Source Type
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    source_type: 'invite' | 'order' | 'refund' | 'redemption' | 'manual';
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+};
+
+/**
+ * MiniappPointsRead
+ */
+export type MiniappPointsRead = {
+    /**
+     * State
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    state: 'not_opened' | 'opened';
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    account: MiniappPointsAccountRead | null;
+};
+
+/**
  * MiniappProfileUpdate
  */
 export type MiniappProfileUpdate = {
@@ -4555,6 +4655,36 @@ export type MiniappProfileUpdate = {
      * 展示名称
      */
     display_name: string;
+};
+
+/**
+ * MiniappReferralRead
+ */
+export type MiniappReferralRead = {
+    /**
+     * State
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    state: 'not_opened' | 'unbound' | 'bound';
+    /**
+     * Invitation Code
+     *
+     * 会员邀请码
+     */
+    invitation_code: string | null;
+    /**
+     * Bound At
+     *
+     * 推荐关系首次绑定时间
+     */
+    bound_at: string | null;
+    /**
+     * Matches Invitation
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    matches_invitation: boolean | null;
 };
 
 /**
@@ -6145,6 +6275,42 @@ export type PageResultMiniappCommissionRead = {
      * 当前分页中的资源列表
      */
     items: Array<MiniappCommissionRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[MiniappPointsLedgerRead]
+ */
+export type PageResultMiniappPointsLedgerRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MiniappPointsLedgerRead>;
     /**
      * Page
      *
@@ -9692,6 +9858,62 @@ export type ResponseModelMiniappMemberRead = {
 };
 
 /**
+ * ResponseModel[MiniappPointsRead]
+ */
+export type ResponseModelMiniappPointsRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappPointsRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MiniappReferralRead]
+ */
+export type ResponseModelMiniappReferralRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappReferralRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[MiniappRefundLookupRead]
  */
 export type ResponseModelMiniappRefundLookupRead = {
@@ -10497,6 +10719,34 @@ export type ResponseModelPageResultMiniappCommissionRead = {
      * 响应业务数据
      */
     data: PageResultMiniappCommissionRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[MiniappPointsLedgerRead]]
+ */
+export type ResponseModelPageResultMiniappPointsLedgerRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultMiniappPointsLedgerRead;
     /**
      * Request Id
      *
@@ -20671,6 +20921,111 @@ export type GetSystemStatusApiV1SystemStatusGetResponses = {
 };
 
 export type GetSystemStatusApiV1SystemStatusGetResponse = GetSystemStatusApiV1SystemStatusGetResponses[keyof GetSystemStatusApiV1SystemStatusGetResponses];
+
+export type ReferralApiV1MiniappReferralGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Invitation Code
+         */
+        invitation_code?: string | null;
+    };
+    url: '/api/v1/miniapp/referral';
+};
+
+export type ReferralApiV1MiniappReferralGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ReferralApiV1MiniappReferralGetError = ReferralApiV1MiniappReferralGetErrors[keyof ReferralApiV1MiniappReferralGetErrors];
+
+export type ReferralApiV1MiniappReferralGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappReferralRead;
+};
+
+export type ReferralApiV1MiniappReferralGetResponse = ReferralApiV1MiniappReferralGetResponses[keyof ReferralApiV1MiniappReferralGetResponses];
+
+export type ReferralBindApiV1MiniappReferralPostData = {
+    body: ReferralBindIn;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/referral';
+};
+
+export type ReferralBindApiV1MiniappReferralPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ReferralBindApiV1MiniappReferralPostError = ReferralBindApiV1MiniappReferralPostErrors[keyof ReferralBindApiV1MiniappReferralPostErrors];
+
+export type ReferralBindApiV1MiniappReferralPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappReferralRead;
+};
+
+export type ReferralBindApiV1MiniappReferralPostResponse = ReferralBindApiV1MiniappReferralPostResponses[keyof ReferralBindApiV1MiniappReferralPostResponses];
+
+export type PointsApiV1MiniappPointsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/points';
+};
+
+export type PointsApiV1MiniappPointsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappPointsRead;
+};
+
+export type PointsApiV1MiniappPointsGetResponse = PointsApiV1MiniappPointsGetResponses[keyof PointsApiV1MiniappPointsGetResponses];
+
+export type PointsLedgersApiV1MiniappPointsLedgersGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+    };
+    url: '/api/v1/miniapp/points/ledgers';
+};
+
+export type PointsLedgersApiV1MiniappPointsLedgersGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PointsLedgersApiV1MiniappPointsLedgersGetError = PointsLedgersApiV1MiniappPointsLedgersGetErrors[keyof PointsLedgersApiV1MiniappPointsLedgersGetErrors];
+
+export type PointsLedgersApiV1MiniappPointsLedgersGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultMiniappPointsLedgerRead;
+};
+
+export type PointsLedgersApiV1MiniappPointsLedgersGetResponse = PointsLedgersApiV1MiniappPointsLedgersGetResponses[keyof PointsLedgersApiV1MiniappPointsLedgersGetResponses];
 
 export type MeApiV1MiniappMeGetData = {
     body?: never;

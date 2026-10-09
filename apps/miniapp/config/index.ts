@@ -24,7 +24,10 @@ export default defineConfig<'webpack5'>((_, { mode }) => {
     sass: { resource: [resolve(__dirname, '../node_modules/@nutui/nutui-react-taro/dist/styles/variables.scss')] },
     defineConstants: { __API_BASE_URL__: JSON.stringify(apiBase), __ASSET_BASE_URL__: JSON.stringify(assetBase) },
     cache: { enable: false },
-    copy: { patterns: [{ from: resolve(__dirname, '../node_modules/mp-html/dist/mp-weixin'), to: 'dist/components/mp-html' }] },
+    copy: { patterns: [
+      { from: resolve(__dirname, '../node_modules/mp-html/dist/mp-weixin'), to: 'dist/components/mp-html' },
+      { from: resolve(__dirname, '../src/assets/share-mall.png'), to: 'dist/assets/share-mall.png' },
+    ] },
     mini: {
       postcss: { pxtransform: { enable: true }, cssModules: { enable: false } },
       compile: { include: [resolve(__dirname, '../node_modules/@nutui')] },

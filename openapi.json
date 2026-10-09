@@ -15239,6 +15239,195 @@
         }
       }
     },
+    "/api/v1/miniapp/referral": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "查询本人推荐码及绑定事实",
+        "operationId": "referral_api_v1_miniapp_referral_get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "invitation_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 8,
+                  "maxLength": 16,
+                  "pattern": "^[A-Z0-9]+$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Invitation Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappReferralRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "主动首次绑定本人推荐关系",
+        "description": "服务端校验首次绑定、自邀与循环；同码幂等。未知结果查询本人关系与原码是否匹配，不自动换码重试。",
+        "operationId": "referral_bind_api_v1_miniapp_referral_post",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferralBindIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappReferralRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/points": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "查询本人积分账户与精确余额",
+        "operationId": "points_api_v1_miniapp_points_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappPointsRead_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/points/ledgers": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "分页查询本人积分流水安全投影",
+        "operationId": "points_ledgers_api_v1_miniapp_points_ledgers_get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_MiniappPointsLedgerRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/miniapp/me": {
       "get": {
         "tags": [
@@ -23984,6 +24173,142 @@
         ],
         "title": "MiniappMemberRead"
       },
+      "MiniappPointsAccountRead": {
+        "properties": {
+          "available_points": {
+            "type": "string",
+            "title": "Available Points",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "frozen_points": {
+            "type": "string",
+            "title": "Frozen Points",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "debt_points": {
+            "type": "string",
+            "title": "Debt Points",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "最近更新时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available_points",
+          "frozen_points",
+          "debt_points",
+          "revision",
+          "updated_at"
+        ],
+        "title": "MiniappPointsAccountRead"
+      },
+      "MiniappPointsLedgerRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "资源唯一标识"
+          },
+          "entry_type": {
+            "type": "string",
+            "enum": [
+              "grant",
+              "spend",
+              "freeze",
+              "release",
+              "reverse",
+              "expire"
+            ],
+            "title": "Entry Type",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "available_delta": {
+            "type": "string",
+            "title": "Available Delta",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "frozen_delta": {
+            "type": "string",
+            "title": "Frozen Delta",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "debt_delta": {
+            "type": "string",
+            "title": "Debt Delta",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "invite",
+              "order",
+              "refund",
+              "redemption",
+              "manual"
+            ],
+            "title": "Source Type",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "创建时间"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "entry_type",
+          "available_delta",
+          "frozen_delta",
+          "debt_delta",
+          "source_type",
+          "created_at"
+        ],
+        "title": "MiniappPointsLedgerRead"
+      },
+      "MiniappPointsRead": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "not_opened",
+              "opened"
+            ],
+            "title": "State",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "account": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MiniappPointsAccountRead"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "account"
+        ],
+        "title": "MiniappPointsRead"
+      },
       "MiniappProfileUpdate": {
         "properties": {
           "display_name": {
@@ -24000,6 +24325,65 @@
           "display_name"
         ],
         "title": "MiniappProfileUpdate"
+      },
+      "MiniappReferralRead": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "not_opened",
+              "unbound",
+              "bound"
+            ],
+            "title": "State",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "invitation_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitation Code",
+            "description": "会员邀请码"
+          },
+          "bound_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bound At",
+            "description": "推荐关系首次绑定时间"
+          },
+          "matches_invitation": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matches Invitation",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "invitation_code",
+          "bound_at",
+          "matches_invitation"
+        ],
+        "title": "MiniappReferralRead"
       },
       "MiniappRefreshIn": {
         "properties": {
@@ -26169,6 +26553,53 @@
           "total_pages"
         ],
         "title": "PageResult[MiniappCommissionRead]"
+      },
+      "PageResult_MiniappPointsLedgerRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MiniappPointsLedgerRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[MiniappPointsLedgerRead]"
       },
       "PageResult_MiniappRefundRead_": {
         "properties": {
@@ -30753,6 +31184,70 @@
         ],
         "title": "ResponseModel[MiniappMemberRead]"
       },
+      "ResponseModel_MiniappPointsRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappPointsRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappPointsRead]"
+      },
+      "ResponseModel_MiniappReferralRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappReferralRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappReferralRead]"
+      },
       "ResponseModel_MiniappRefundLookupRead_": {
         "properties": {
           "code": {
@@ -31681,6 +32176,38 @@
           "request_id"
         ],
         "title": "ResponseModel[PageResult[MiniappCommissionRead]]"
+      },
+      "ResponseModel_PageResult_MiniappPointsLedgerRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_MiniappPointsLedgerRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[MiniappPointsLedgerRead]]"
       },
       "ResponseModel_PageResult_MiniappRefundRead__": {
         "properties": {

@@ -16,6 +16,8 @@ PRD 定义用户需要什么、业务边界和验收结果；本文定义代码�
 
 Backend 的 MiniappFinanceService 是跨域本人只读查询，会员等级、钱包、流水、佣金和提现均采用安全白名单投影；主动开通复用 DistributionService，资料写入复用不依赖浏览器凭据的 UserProfileService。上传与绑定分开，lib/upload 使用原生任务取消与字符串信封解析，privateCall 统一刷新和会话代次校验。操作与状态边界见[资料会员资金手册](../operations/miniapp-profile-and-finance.md)。
 
+engagement Feature 与 finance 分包的 referral、points 页面承载推荐分享和积分。MiniappEngagementService 按本人档案/积分账户过滤，推荐绑定复用 DistributionService 的单一事务；查询只返回本人码与指定码的关系匹配，不暴露他人身份。分享钩子在页面组件注册，落地参数仅为意图；发送前持久化按用户隔离的非秘密原码，未知结果先查再由用户主动同码恢复。积分采用精确字符串传输，完整链路与官方依据见[推荐积分手册](../operations/miniapp-referral-and-points.md)。
+
 Backend 的 MiniappTradeQueryService 是显式跨域只读投影，使用本人订单与履约 JOIN 进行真实筛选和分页，批量加载商品、退款阻断与本人评价，避免 N+1。原订单接口保留，页面消费 trade-orders 展示契约；写操作复用 LifecycleService，资格提示不替代事务授权。退款安全投影不暴露商户退款号或渠道流水；原请求恢复与支持配置见[接入手册](../operations/miniapp-fulfillment-and-aftersales.md)。
 
 前后端都需要数据所有权、职责边界与明确依赖。后端强调权威业务规则和事务，前端还需要处理异步请求、缓存、交互状态和平台生命周期。不能用“后端只管命令、前端只管状态”划分全部职责，也不能假定 API 或平台能力长期不变。
