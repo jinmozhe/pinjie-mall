@@ -15239,6 +15239,535 @@
         }
       }
     },
+    "/api/v1/miniapp/help": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "查询公开支持联系方式",
+        "operationId": "help_read_api_v1_miniapp_help_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappHelpRead_"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/trade-orders": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "按订单与履约事实分页本人订单",
+        "operationId": "trade_orders_api_v1_miniapp_trade_orders_get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending_payment",
+                    "paid",
+                    "cancelled",
+                    "awaiting_shipment",
+                    "awaiting_delivery",
+                    "shipped",
+                    "delivered"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_MiniappTradeOrderRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/trade-orders/{order_id}": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "读取本人订单履约与操作资格",
+        "operationId": "trade_order_api_v1_miniapp_trade_orders__order_id__get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappTradeOrderRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/orders/{order_id}/receipt": {
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "按版本确认本人实物订单收货",
+        "operationId": "receipt_api_v1_miniapp_orders__order_id__receipt_post",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiptConfirm"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_FulfillmentRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/refunds/intent": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "取得新的退款请求号",
+        "operationId": "refund_intent_api_v1_miniapp_refunds_intent_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappCheckoutIntentRead_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/miniapp/orders/{order_id}/refunds": {
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "幂等申请本人未发货或未交付整单退款",
+        "operationId": "refund_create_api_v1_miniapp_orders__order_id__refunds_post",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundRequestCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_RefundRequestRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/refunds": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "分页读取本人整单售后记录",
+        "operationId": "refund_list_api_v1_miniapp_refunds_get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 10,
+              "title": "Page Size"
+            }
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PageResult_MiniappRefundRead__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/refunds/by-request/{request_id}": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "按原请求号确认本人退款受理事实",
+        "operationId": "refund_lookup_api_v1_miniapp_refunds_by_request__request_id__get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappRefundLookupRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/refunds/{refund_id}": {
+      "get": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "读取本人售后审核与资金事实",
+        "operationId": "refund_detail_api_v1_miniapp_refunds__refund_id__get",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "refund_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Refund Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_MiniappRefundRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/miniapp/order-items/{item_id}/review": {
+      "post": {
+        "tags": [
+          "小程序"
+        ],
+        "summary": "评价本人已交付订单明细",
+        "operationId": "review_create_api_v1_miniapp_order_items__item_id__review_post",
+        "security": [
+          {
+            "MiniappBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductReviewCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ProductReviewRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/miniapp/auth/capabilities": {
       "get": {
         "tags": [
@@ -22706,6 +23235,73 @@
         ],
         "title": "MiniappCheckoutIntentRead"
       },
+      "MiniappHelpRead": {
+        "properties": {
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "description": "电子邮箱地址"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phone",
+          "email"
+        ],
+        "title": "MiniappHelpRead"
+      },
+      "MiniappItemReviewRead": {
+        "properties": {
+          "order_item_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Order Item Id",
+            "description": "订单明细标识"
+          },
+          "can_review": {
+            "type": "boolean",
+            "title": "Can Review",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductReviewRead"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order_item_id",
+          "can_review",
+          "review"
+        ],
+        "title": "MiniappItemReviewRead"
+      },
       "MiniappLoginIn": {
         "properties": {
           "code": {
@@ -22739,6 +23335,204 @@
           "refresh_token"
         ],
         "title": "MiniappRefreshIn"
+      },
+      "MiniappRefundLookupRead": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "found",
+              "not_found"
+            ],
+            "title": "State",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "refund": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MiniappRefundRead"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "refund"
+        ],
+        "title": "MiniappRefundLookupRead"
+      },
+      "MiniappRefundRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "资源唯一标识"
+          },
+          "order_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Order Id",
+            "description": "订单标识"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "当前状态代码"
+          },
+          "review_mode": {
+            "type": "string",
+            "title": "Review Mode",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "items_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Items Amount",
+            "description": "商品合计金额，单位人民币元"
+          },
+          "freight_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Freight Amount",
+            "description": "订单运费，单位人民币元"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "description": "业务金额，单位人民币元"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "货币代码"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "申请原因"
+          },
+          "review_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Note",
+            "description": "审核说明"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "创建时间"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At",
+            "description": "审核时间"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At",
+            "description": "操作完成时间"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          },
+          "execution_status": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "created",
+              "processing",
+              "succeeded",
+              "abnormal",
+              "unknown",
+              "closed"
+            ],
+            "title": "Execution Status",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "funds_status": {
+            "type": "string",
+            "enum": [
+              "not_confirmed",
+              "confirmed",
+              "no_funds"
+            ],
+            "title": "Funds Status",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "funds_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Funds Confirmed At",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "order_id",
+          "status",
+          "review_mode",
+          "items_amount",
+          "freight_amount",
+          "amount",
+          "currency",
+          "reason",
+          "review_note",
+          "created_at",
+          "reviewed_at",
+          "completed_at",
+          "revision",
+          "request_id",
+          "execution_status",
+          "funds_status",
+          "funds_confirmed_at"
+        ],
+        "title": "MiniappRefundRead"
       },
       "MiniappRegistrationPatch": {
         "properties": {
@@ -22850,6 +23644,193 @@
           "absolute_expires_at"
         ],
         "title": "MiniappSessionRead"
+      },
+      "MiniappTradeOrderRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "资源唯一标识"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "当前状态代码"
+          },
+          "product_type": {
+            "type": "string",
+            "title": "Product Type",
+            "description": "实物或虚拟商品类型"
+          },
+          "items_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Items Amount",
+            "description": "商品合计金额，单位人民币元"
+          },
+          "freight_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Freight Amount",
+            "description": "订单运费，单位人民币元"
+          },
+          "total_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Amount",
+            "description": "订单应付总金额，单位人民币元"
+          },
+          "address_snapshot": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address Snapshot",
+            "description": "下单时固化的收货地址快照"
+          },
+          "shipping_snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Shipping Snapshot",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "buyer_level_snapshot": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Buyer Level Snapshot",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "settlement_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settlement Kind",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At",
+            "description": "凭据过期时间"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "创建时间"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision",
+            "description": "资源并发控制版本"
+          },
+          "acceptance_status": {
+            "type": "string",
+            "title": "Acceptance Status",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "display_status": {
+            "type": "string",
+            "enum": [
+              "pending_payment",
+              "cancelled",
+              "awaiting_fulfillment",
+              "awaiting_shipment",
+              "awaiting_delivery",
+              "shipped",
+              "delivered",
+              "refund_completed"
+            ],
+            "title": "Display Status",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "paid_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid At",
+            "description": "可信支付确认时间"
+          },
+          "fulfillment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FulfillmentRead"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "can_confirm_receipt": {
+            "type": "boolean",
+            "title": "Can Confirm Receipt",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "can_refund": {
+            "type": "boolean",
+            "title": "Can Refund",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "item_reviews": {
+            "items": {
+              "$ref": "#/components/schemas/MiniappItemReviewRead"
+            },
+            "type": "array",
+            "title": "Item Reviews",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "product_type",
+          "items_amount",
+          "freight_amount",
+          "total_amount",
+          "address_snapshot",
+          "shipping_snapshot",
+          "buyer_level_snapshot",
+          "settlement_kind",
+          "expires_at",
+          "created_at",
+          "revision",
+          "acceptance_status",
+          "items",
+          "display_status",
+          "paid_at",
+          "fulfillment",
+          "can_confirm_receipt",
+          "can_refund",
+          "item_reviews"
+        ],
+        "title": "MiniappTradeOrderRead"
       },
       "MiniappUserRead": {
         "properties": {
@@ -24215,6 +25196,100 @@
           "total_pages"
         ],
         "title": "PageResult[MembershipQualificationEventRead]"
+      },
+      "PageResult_MiniappRefundRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MiniappRefundRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[MiniappRefundRead]"
+      },
+      "PageResult_MiniappTradeOrderRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MiniappTradeOrderRead"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "当前分页中的资源列表"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "当前页码，从 1 开始"
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "每页资源数量"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "符合条件的资源总数"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total Pages",
+            "description": "符合条件的总页数"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "title": "PageResult[MiniappTradeOrderRead]"
       },
       "PageResult_OrderRead_": {
         "properties": {
@@ -28515,6 +29590,102 @@
         ],
         "title": "ResponseModel[MiniappCheckoutIntentRead]"
       },
+      "ResponseModel_MiniappHelpRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappHelpRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappHelpRead]"
+      },
+      "ResponseModel_MiniappRefundLookupRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappRefundLookupRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappRefundLookupRead]"
+      },
+      "ResponseModel_MiniappRefundRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappRefundRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappRefundRead]"
+      },
       "ResponseModel_MiniappRegistrationRead_": {
         "properties": {
           "code": {
@@ -28578,6 +29749,38 @@
           "request_id"
         ],
         "title": "ResponseModel[MiniappSessionRead]"
+      },
+      "ResponseModel_MiniappTradeOrderRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/MiniappTradeOrderRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[MiniappTradeOrderRead]"
       },
       "ResponseModel_MiniappUserRead_": {
         "properties": {
@@ -29315,6 +30518,70 @@
           "request_id"
         ],
         "title": "ResponseModel[PageResult[MembershipQualificationEventRead]]"
+      },
+      "ResponseModel_PageResult_MiniappRefundRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_MiniappRefundRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[MiniappRefundRead]]"
+      },
+      "ResponseModel_PageResult_MiniappTradeOrderRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PageResult_MiniappTradeOrderRead_",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PageResult[MiniappTradeOrderRead]]"
       },
       "ResponseModel_PageResult_OrderRead__": {
         "properties": {

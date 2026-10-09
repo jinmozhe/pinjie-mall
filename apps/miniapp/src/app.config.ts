@@ -4,6 +4,7 @@ export default defineAppConfig({
     { root: 'subpackages/catalog', pages: ['detail/index'] },
     { root: 'subpackages/account', pages: ['addresses/index', 'privacy/index'] },
     { root: 'subpackages/trade', pages: ['checkout/index', 'orders/index', 'order-detail/index'] },
+    { root: 'subpackages/service', pages: ['refund-apply/index', 'refunds/index', 'refund-detail/index', 'review/index', 'help/index'] },
   ],
   window: { navigationBarTitleText: '拼捷商城', navigationBarBackgroundColor: '#FFFFFF', navigationBarTextStyle: 'black', backgroundColor: '#F7F8FA' },
   tabBar: {

@@ -3,7 +3,7 @@
 | 项目 | 内容 |
 | --- | --- |
 | 适用应用 | `apps/miniapp`，建议包名 `@pinjie/miniapp` |
-| 文档状态 | 工程、公开浏览、独立会话、本人地址/购物车/结算/基础订单与受限说明已有源码；资金与平台验收未完成 |
+| 文档状态 | 工程、公开浏览、独立会话、本人地址/购物车/结算/订单、履约售后评价、公开帮助与受限说明已有源码；资金、数据库与平台验收未完成 |
 | 产品依据 | [微信小程序 PRD](../MINIAPP_PRD.md)与[产品需求基线](../PROJECT_REQUIREMENTS.md) |
 | 通用边界 | [模块与依赖边界](module-boundaries.md)、[认证机制](authentication-authorization.md)、[错误模型](error-model.md) |
 | 核对日期 | 2026-10-09 |
@@ -12,7 +12,9 @@
 
 PRD 定义用户需要什么、业务边界和验收结果；本文定义代码放在哪里、依赖方向、状态所有者及执行链路。技术取舍见[ADR 0017](../adr/0017-小程序采用TaroReact与NutUI决策.md)，精确版本与执行要求见[工程标准](miniapp-engineering-standard.md)，视觉与交互见[UI 规范](miniapp-ui-standard.md)。各文档按职责维护，具体实施、验证与未决事项进入活动全栈计划。
 
-应用名称统一为 miniapp。当前四项 TabBar、商品详情、账户地址/隐私及结算订单分包已配置，Feature 和身份传输入口见第 3 节实际目录说明。下文履约售后、资金和发布仍是后续设计，不提前建立空目录。
+应用名称统一为 miniapp。当前四项 TabBar、商品详情、账户地址/隐私、结算订单及 service 分包已配置。service 分包承载退款申请/记录/详情、评价和公开帮助，Feature 为 aftersales、reviews、help，只经公开 index 入口消费。资金和发布仍是后续设计，不提前建立空目录。
+
+Backend 的 MiniappTradeQueryService 是显式跨域只读投影，使用本人订单与履约 JOIN 进行真实筛选和分页，批量加载商品、退款阻断与本人评价，避免 N+1。原订单接口保留，页面消费 trade-orders 展示契约；写操作复用 LifecycleService，资格提示不替代事务授权。退款安全投影不暴露商户退款号或渠道流水；原请求恢复与支持配置见[接入手册](../operations/miniapp-fulfillment-and-aftersales.md)。
 
 前后端都需要数据所有权、职责边界与明确依赖。后端强调权威业务规则和事务，前端还需要处理异步请求、缓存、交互状态和平台生命周期。不能用“后端只管命令、前端只管状态”划分全部职责，也不能假定 API 或平台能力长期不变。
 

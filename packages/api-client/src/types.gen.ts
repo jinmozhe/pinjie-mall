@@ -4338,6 +4338,46 @@ export type MiniappCheckoutIntentRead = {
 };
 
 /**
+ * MiniappHelpRead
+ */
+export type MiniappHelpRead = {
+    /**
+     * Phone
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    phone: string | null;
+    /**
+     * Email
+     *
+     * 电子邮箱地址
+     */
+    email: string | null;
+};
+
+/**
+ * MiniappItemReviewRead
+ */
+export type MiniappItemReviewRead = {
+    /**
+     * Order Item Id
+     *
+     * 订单明细标识
+     */
+    order_item_id: string;
+    /**
+     * Can Review
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    can_review: boolean;
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    review: ProductReviewRead | null;
+};
+
+/**
  * MiniappLoginIn
  */
 export type MiniappLoginIn = {
@@ -4359,6 +4399,136 @@ export type MiniappRefreshIn = {
      * 当前业务字段，具体语义由所属请求或响应模型定义
      */
     refresh_token: string;
+};
+
+/**
+ * MiniappRefundLookupRead
+ */
+export type MiniappRefundLookupRead = {
+    /**
+     * State
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    state: 'found' | 'not_found';
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    refund: MiniappRefundRead | null;
+};
+
+/**
+ * MiniappRefundRead
+ */
+export type MiniappRefundRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Order Id
+     *
+     * 订单标识
+     */
+    order_id: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: string;
+    /**
+     * Review Mode
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    review_mode: string;
+    /**
+     * Items Amount
+     *
+     * 商品合计金额，单位人民币元
+     */
+    items_amount: string;
+    /**
+     * Freight Amount
+     *
+     * 订单运费，单位人民币元
+     */
+    freight_amount: string;
+    /**
+     * Amount
+     *
+     * 业务金额，单位人民币元
+     */
+    amount: string;
+    /**
+     * Currency
+     *
+     * 货币代码
+     */
+    currency: string;
+    /**
+     * Reason
+     *
+     * 申请原因
+     */
+    reason: string;
+    /**
+     * Review Note
+     *
+     * 审核说明
+     */
+    review_note: string | null;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Reviewed At
+     *
+     * 审核时间
+     */
+    reviewed_at: string | null;
+    /**
+     * Completed At
+     *
+     * 操作完成时间
+     */
+    completed_at: string | null;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+    /**
+     * Execution Status
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    execution_status: 'not_started' | 'created' | 'processing' | 'succeeded' | 'abnormal' | 'unknown' | 'closed';
+    /**
+     * Funds Status
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    funds_status: 'not_confirmed' | 'confirmed' | 'no_funds';
+    /**
+     * Funds Confirmed At
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    funds_confirmed_at: string | null;
 };
 
 /**
@@ -4453,6 +4623,142 @@ export type MiniappSessionRead = {
      * 会话绝对过期时间
      */
     absolute_expires_at: string;
+};
+
+/**
+ * MiniappTradeOrderRead
+ */
+export type MiniappTradeOrderRead = {
+    /**
+     * Id
+     *
+     * 资源唯一标识
+     */
+    id: string;
+    /**
+     * Status
+     *
+     * 当前状态代码
+     */
+    status: string;
+    /**
+     * Product Type
+     *
+     * 实物或虚拟商品类型
+     */
+    product_type: string;
+    /**
+     * Items Amount
+     *
+     * 商品合计金额，单位人民币元
+     */
+    items_amount: string;
+    /**
+     * Freight Amount
+     *
+     * 订单运费，单位人民币元
+     */
+    freight_amount: string;
+    /**
+     * Total Amount
+     *
+     * 订单应付总金额，单位人民币元
+     */
+    total_amount: string;
+    /**
+     * Address Snapshot
+     *
+     * 下单时固化的收货地址快照
+     */
+    address_snapshot: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Shipping Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    shipping_snapshot: {
+        [key: string]: unknown;
+    };
+    /**
+     * Buyer Level Snapshot
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    buyer_level_snapshot: {
+        [key: string]: unknown;
+    };
+    /**
+     * Settlement Kind
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    settlement_kind: string | null;
+    /**
+     * Expires At
+     *
+     * 凭据过期时间
+     */
+    expires_at: string;
+    /**
+     * Created At
+     *
+     * 创建时间
+     */
+    created_at: string;
+    /**
+     * Revision
+     *
+     * 资源并发控制版本
+     */
+    revision: number;
+    /**
+     * Acceptance Status
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    acceptance_status: string;
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<OrderItemRead>;
+    /**
+     * Display Status
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    display_status: 'pending_payment' | 'cancelled' | 'awaiting_fulfillment' | 'awaiting_shipment' | 'awaiting_delivery' | 'shipped' | 'delivered' | 'refund_completed';
+    /**
+     * Paid At
+     *
+     * 可信支付确认时间
+     */
+    paid_at: string | null;
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    fulfillment: FulfillmentRead | null;
+    /**
+     * Can Confirm Receipt
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    can_confirm_receipt: boolean;
+    /**
+     * Can Refund
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    can_refund: boolean;
+    /**
+     * Item Reviews
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    item_reviews: Array<MiniappItemReviewRead>;
 };
 
 /**
@@ -5457,6 +5763,78 @@ export type PageResultMembershipQualificationEventRead = {
      * 当前分页中的资源列表
      */
     items: Array<MembershipQualificationEventRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[MiniappRefundRead]
+ */
+export type PageResultMiniappRefundRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MiniappRefundRead>;
+    /**
+     * Page
+     *
+     * 当前页码，从 1 开始
+     */
+    page: number;
+    /**
+     * Page Size
+     *
+     * 每页资源数量
+     */
+    page_size: number;
+    /**
+     * Total
+     *
+     * 符合条件的资源总数
+     */
+    total: number;
+    /**
+     * Total Pages
+     *
+     * 符合条件的总页数
+     */
+    total_pages: number;
+};
+
+/**
+ * PageResult[MiniappTradeOrderRead]
+ */
+export type PageResultMiniappTradeOrderRead = {
+    /**
+     * Items
+     *
+     * 当前分页中的资源列表
+     */
+    items: Array<MiniappTradeOrderRead>;
     /**
      * Page
      *
@@ -8776,6 +9154,90 @@ export type ResponseModelMiniappCheckoutIntentRead = {
 };
 
 /**
+ * ResponseModel[MiniappHelpRead]
+ */
+export type ResponseModelMiniappHelpRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappHelpRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MiniappRefundLookupRead]
+ */
+export type ResponseModelMiniappRefundLookupRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappRefundLookupRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MiniappRefundRead]
+ */
+export type ResponseModelMiniappRefundRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappRefundRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[MiniappRegistrationRead]
  */
 export type ResponseModelMiniappRegistrationRead = {
@@ -8823,6 +9285,34 @@ export type ResponseModelMiniappSessionRead = {
      * 响应业务数据
      */
     data: MiniappSessionRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[MiniappTradeOrderRead]
+ */
+export type ResponseModelMiniappTradeOrderRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: MiniappTradeOrderRead;
     /**
      * Request Id
      *
@@ -9469,6 +9959,62 @@ export type ResponseModelPageResultMembershipQualificationEventRead = {
      * 响应业务数据
      */
     data: PageResultMembershipQualificationEventRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[MiniappRefundRead]]
+ */
+export type ResponseModelPageResultMiniappRefundRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultMiniappRefundRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[PageResult[MiniappTradeOrderRead]]
+ */
+export type ResponseModelPageResultMiniappTradeOrderRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PageResultMiniappTradeOrderRead;
     /**
      * Request Id
      *
@@ -19501,6 +20047,294 @@ export type GetSystemStatusApiV1SystemStatusGetResponses = {
 };
 
 export type GetSystemStatusApiV1SystemStatusGetResponse = GetSystemStatusApiV1SystemStatusGetResponses[keyof GetSystemStatusApiV1SystemStatusGetResponses];
+
+export type HelpReadApiV1MiniappHelpGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/help';
+};
+
+export type HelpReadApiV1MiniappHelpGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappHelpRead;
+};
+
+export type HelpReadApiV1MiniappHelpGetResponse = HelpReadApiV1MiniappHelpGetResponses[keyof HelpReadApiV1MiniappHelpGetResponses];
+
+export type TradeOrdersApiV1MiniappTradeOrdersGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Status
+         */
+        status?: 'pending_payment' | 'paid' | 'cancelled' | 'awaiting_shipment' | 'awaiting_delivery' | 'shipped' | 'delivered' | null;
+    };
+    url: '/api/v1/miniapp/trade-orders';
+};
+
+export type TradeOrdersApiV1MiniappTradeOrdersGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type TradeOrdersApiV1MiniappTradeOrdersGetError = TradeOrdersApiV1MiniappTradeOrdersGetErrors[keyof TradeOrdersApiV1MiniappTradeOrdersGetErrors];
+
+export type TradeOrdersApiV1MiniappTradeOrdersGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultMiniappTradeOrderRead;
+};
+
+export type TradeOrdersApiV1MiniappTradeOrdersGetResponse = TradeOrdersApiV1MiniappTradeOrdersGetResponses[keyof TradeOrdersApiV1MiniappTradeOrdersGetResponses];
+
+export type TradeOrderApiV1MiniappTradeOrdersOrderIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/miniapp/trade-orders/{order_id}';
+};
+
+export type TradeOrderApiV1MiniappTradeOrdersOrderIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type TradeOrderApiV1MiniappTradeOrdersOrderIdGetError = TradeOrderApiV1MiniappTradeOrdersOrderIdGetErrors[keyof TradeOrderApiV1MiniappTradeOrdersOrderIdGetErrors];
+
+export type TradeOrderApiV1MiniappTradeOrdersOrderIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappTradeOrderRead;
+};
+
+export type TradeOrderApiV1MiniappTradeOrdersOrderIdGetResponse = TradeOrderApiV1MiniappTradeOrdersOrderIdGetResponses[keyof TradeOrderApiV1MiniappTradeOrdersOrderIdGetResponses];
+
+export type ReceiptApiV1MiniappOrdersOrderIdReceiptPostData = {
+    body: ReceiptConfirm;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/miniapp/orders/{order_id}/receipt';
+};
+
+export type ReceiptApiV1MiniappOrdersOrderIdReceiptPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ReceiptApiV1MiniappOrdersOrderIdReceiptPostError = ReceiptApiV1MiniappOrdersOrderIdReceiptPostErrors[keyof ReceiptApiV1MiniappOrdersOrderIdReceiptPostErrors];
+
+export type ReceiptApiV1MiniappOrdersOrderIdReceiptPostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelFulfillmentRead;
+};
+
+export type ReceiptApiV1MiniappOrdersOrderIdReceiptPostResponse = ReceiptApiV1MiniappOrdersOrderIdReceiptPostResponses[keyof ReceiptApiV1MiniappOrdersOrderIdReceiptPostResponses];
+
+export type RefundIntentApiV1MiniappRefundsIntentGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/miniapp/refunds/intent';
+};
+
+export type RefundIntentApiV1MiniappRefundsIntentGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappCheckoutIntentRead;
+};
+
+export type RefundIntentApiV1MiniappRefundsIntentGetResponse = RefundIntentApiV1MiniappRefundsIntentGetResponses[keyof RefundIntentApiV1MiniappRefundsIntentGetResponses];
+
+export type RefundCreateApiV1MiniappOrdersOrderIdRefundsPostData = {
+    body: RefundRequestCreate;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/miniapp/orders/{order_id}/refunds';
+};
+
+export type RefundCreateApiV1MiniappOrdersOrderIdRefundsPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type RefundCreateApiV1MiniappOrdersOrderIdRefundsPostError = RefundCreateApiV1MiniappOrdersOrderIdRefundsPostErrors[keyof RefundCreateApiV1MiniappOrdersOrderIdRefundsPostErrors];
+
+export type RefundCreateApiV1MiniappOrdersOrderIdRefundsPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelRefundRequestRead;
+};
+
+export type RefundCreateApiV1MiniappOrdersOrderIdRefundsPostResponse = RefundCreateApiV1MiniappOrdersOrderIdRefundsPostResponses[keyof RefundCreateApiV1MiniappOrdersOrderIdRefundsPostResponses];
+
+export type RefundListApiV1MiniappRefundsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Page Size
+         */
+        page_size?: number;
+        /**
+         * Order Id
+         */
+        order_id?: string | null;
+    };
+    url: '/api/v1/miniapp/refunds';
+};
+
+export type RefundListApiV1MiniappRefundsGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type RefundListApiV1MiniappRefundsGetError = RefundListApiV1MiniappRefundsGetErrors[keyof RefundListApiV1MiniappRefundsGetErrors];
+
+export type RefundListApiV1MiniappRefundsGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPageResultMiniappRefundRead;
+};
+
+export type RefundListApiV1MiniappRefundsGetResponse = RefundListApiV1MiniappRefundsGetResponses[keyof RefundListApiV1MiniappRefundsGetResponses];
+
+export type RefundLookupApiV1MiniappRefundsByRequestRequestIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Request Id
+         */
+        request_id: string;
+    };
+    query?: never;
+    url: '/api/v1/miniapp/refunds/by-request/{request_id}';
+};
+
+export type RefundLookupApiV1MiniappRefundsByRequestRequestIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type RefundLookupApiV1MiniappRefundsByRequestRequestIdGetError = RefundLookupApiV1MiniappRefundsByRequestRequestIdGetErrors[keyof RefundLookupApiV1MiniappRefundsByRequestRequestIdGetErrors];
+
+export type RefundLookupApiV1MiniappRefundsByRequestRequestIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappRefundLookupRead;
+};
+
+export type RefundLookupApiV1MiniappRefundsByRequestRequestIdGetResponse = RefundLookupApiV1MiniappRefundsByRequestRequestIdGetResponses[keyof RefundLookupApiV1MiniappRefundsByRequestRequestIdGetResponses];
+
+export type RefundDetailApiV1MiniappRefundsRefundIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Refund Id
+         */
+        refund_id: string;
+    };
+    query?: never;
+    url: '/api/v1/miniapp/refunds/{refund_id}';
+};
+
+export type RefundDetailApiV1MiniappRefundsRefundIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type RefundDetailApiV1MiniappRefundsRefundIdGetError = RefundDetailApiV1MiniappRefundsRefundIdGetErrors[keyof RefundDetailApiV1MiniappRefundsRefundIdGetErrors];
+
+export type RefundDetailApiV1MiniappRefundsRefundIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelMiniappRefundRead;
+};
+
+export type RefundDetailApiV1MiniappRefundsRefundIdGetResponse = RefundDetailApiV1MiniappRefundsRefundIdGetResponses[keyof RefundDetailApiV1MiniappRefundsRefundIdGetResponses];
+
+export type ReviewCreateApiV1MiniappOrderItemsItemIdReviewPostData = {
+    body: ProductReviewCreate;
+    path: {
+        /**
+         * Item Id
+         */
+        item_id: string;
+    };
+    query?: never;
+    url: '/api/v1/miniapp/order-items/{item_id}/review';
+};
+
+export type ReviewCreateApiV1MiniappOrderItemsItemIdReviewPostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ReviewCreateApiV1MiniappOrderItemsItemIdReviewPostError = ReviewCreateApiV1MiniappOrderItemsItemIdReviewPostErrors[keyof ReviewCreateApiV1MiniappOrderItemsItemIdReviewPostErrors];
+
+export type ReviewCreateApiV1MiniappOrderItemsItemIdReviewPostResponses = {
+    /**
+     * 请求成功
+     */
+    201: ResponseModelProductReviewRead;
+};
+
+export type ReviewCreateApiV1MiniappOrderItemsItemIdReviewPostResponse = ReviewCreateApiV1MiniappOrderItemsItemIdReviewPostResponses[keyof ReviewCreateApiV1MiniappOrderItemsItemIdReviewPostResponses];
 
 export type CapabilitiesApiV1MiniappAuthCapabilitiesGetData = {
     body?: never;
