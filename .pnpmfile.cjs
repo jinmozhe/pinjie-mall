@@ -8,6 +8,14 @@ const VITE_BUNDLER_VERSION = "4.7.5";
 module.exports = {
   hooks: {
     readPackage(pkg) {
+      if (pkg.name === "@nutui/nutui-react-taro") {
+        if (pkg.version !== "3.0.20" || pkg.dependencies?.codesandbox !== "^2.2.3") {
+          throw new Error("NutUI changed. Re-evaluate the unused CodeSandbox dependency removal before upgrading.");
+        }
+        const dependencies = { ...pkg.dependencies };
+        delete dependencies.codesandbox;
+        return { ...pkg, dependencies };
+      }
       if (pkg.name !== PRESET_NAME) {
         return pkg;
       }

@@ -33,6 +33,8 @@ icons-react-taro 发布包未声明 React 运行 peer，不能依赖它从工作
 
 Taro 传递 normalize-url 2.0.1 的 query-string 使用限定为 parse/stringify，根 scoped override 指向仓库已有修复版 6.14.1 与 CJS 补丁，避免重新引入 decode-uri-component 0.2.2；依赖策略门禁继续拒绝旧版本。
 
+线上安全复核后，固定版本 Hook 移除 NutUI 未引用的 CodeSandbox 工具依赖；Taro 浏览器 swiper 传递依赖固定至 12.1.2，微信仍使用原生组件。download 7.1.0 通过精确补丁与 alias 使用已修复的 @xhmikosr/decompress 10.2.2，ESM 动态导入及调用失败正常传播。PostCSS、序列化、ZIP、缓存和开发中间件安全覆盖由根锁文件与依赖门禁管理，准入理由、短期冷却例外、未修复项及实际复验统一见[活动依赖安全计划](../../plans/2026-10-08_依赖安全门禁修复计划.md)。不得用早于此次依赖变化的开发编译证据宣称新锁文件已完成平台或生产验证。
+
 根 `pnpm-workspace.yaml` 当前 `minimumReleaseAge: 10080` 为七天。Taro 4.3.0 和 Sass 1.105.1 已超过观察期；所有传递依赖仍需实际检查。依赖解析失败、peer 冲突、安装脚本未准入和线上 Security 失败必须如实传播，不关闭信任策略、忽略冲突或无范围更新 allowBuilds。
 
 安装脚本已逐项读取：Taro CLI 的联网统计插件安装、NutUI/usage-stats 的统计执行禁止；binding、SWC 和 Parcel 的源码构建或联网回退禁止，采用锁定的本机原生预编译包。Taro runner 的 detect-port 选用其声明范围内带 provenance 的 1.6.0。Rollup 3.30.0 为 Taro 的 3.x 维护线安全修复，官方 tag、gitHead 和 npm 签名已核对，精确 trustPolicyExclude 仅适用于该版本；不关闭全仓信任策略。既有 Admin/Web 传递 peer 告警不代表小程序 React 冲突，当前范围不升级这些应用。Security 继续仅在线上执行。

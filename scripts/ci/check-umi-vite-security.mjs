@@ -2,12 +2,17 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const require = createRequire(import.meta.url);
 const pnpmfile = require(resolve(root, ".pnpmfile.cjs"));
 const readPackage = pnpmfile.hooks.readPackage;
+
+const nutui = readPackage({ name: "@nutui/nutui-react-taro", version: "3.0.20", dependencies: { codesandbox: "^2.2.3", classnames: "^2.5.1" } });
+assert.equal(nutui.dependencies.codesandbox, undefined);
+assert.equal(nutui.dependencies.classnames, "^2.5.1");
+assert.throws(() => readPackage({ name: "@nutui/nutui-react-taro", version: "3.0.21", dependencies: {} }), /Re-evaluate the unused CodeSandbox/);
 
 const transformed = readPackage({
   name: "@umijs/preset-umi",
@@ -25,7 +30,7 @@ assert.throws(
 );
 
 const lockfile = await readFile(resolve(root, "pnpm-lock.yaml"), "utf8");
-for (const forbidden of ["'@umijs/bundler-vite@4.7.5':", "vite@4.5.2:"]) {
+for (const forbidden of ["'@umijs/bundler-vite@4.7.5':", "vite@4.5.2:", "codesandbox@2.2.3:", "swiper@11.1.15:", "http-cache-semantics@3.8.1:", "webpack-dev-middleware@5.3.4:", "decompress@4.2.1:"]) {
   assert.equal(lockfile.includes(forbidden), false, `Forbidden dependency remains in pnpm-lock.yaml: ${forbidden}`);
 }
 assert.equal(lockfile.includes("vite@6.4.3:"), true, "The supported Vitest Vite version is missing");
@@ -39,6 +44,13 @@ const webpackPatch = await readFile(resolve(root, "patches", "@umijs__bundler-we
 assert.match(webpackPatch, /server\.listen\(port, opts\.host/);
 
 const expectedSecurePackages = [
+  "'@xhmikosr/decompress@10.2.2':",
+  "swiper@12.1.2:",
+  "http-cache-semantics@4.3.0:",
+  "serialize-javascript@7.1.2:",
+  "adm-zip@0.6.1:",
+  "postcss@8.5.27:",
+  "webpack-dev-middleware@7.4.6:",
   "decode-uri-component@0.5.0:",
   "qs@6.16.0:",
   "hono@4.13.5:",
@@ -57,6 +69,17 @@ const queryStringPatch = await readFile(resolve(root, "patches", "query-string@6
 assert.match(queryStringPatch, /require\('\.\/decode-uri-component\.cjs'\)/);
 assert.match(queryStringPatch, /new file mode 100644/);
 assert.match(queryStringPatch, /module\.exports = function decodeUriComponent/);
+
+const downloadPatch = await readFile(resolve(root, "patches", "download@7.1.0.patch"), "utf8");
+assert.match(downloadPatch, /import\('decompress'\)/);
+const miniappRequire = createRequire(resolve(root, "apps", "miniapp", "package.json"));
+const cliRequire = createRequire(miniappRequire.resolve("@tarojs/cli/package.json"));
+const gitDownloadRequire = createRequire(cliRequire.resolve("download-git-repo/package.json"));
+const downloadPath = gitDownloadRequire.resolve("download");
+assert.match(downloadPath, /download@7\.1\.0_patch_/);
+const downloadRequire = createRequire(downloadPath);
+const extractor = await import(pathToFileURL(downloadRequire.resolve("decompress")).href);
+assert.equal(typeof extractor.default, "function");
 
 const adminRequire = createRequire(resolve(root, "apps", "admin", "package.json"));
 const maxRequire = createRequire(adminRequire.resolve("@umijs/max/package.json"));
