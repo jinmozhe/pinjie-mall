@@ -2,17 +2,18 @@
 
 > 文档归属：`docs/architecture/project-structure.md`
 > 适用仓库：`pinjie-mall`
-> 最后更新：2026-09-17
+> 最后更新：2026-10-09
 
 ## 1. 当前结构
 
-Pinjie Mall 是独立维护的 pnpm Monorepo。商城面向用户的唯一 C 端形态是微信小程序，当前仓库前阶段只建设 Backend 和 Admin。小程序工程会在后续专项计划中引入。
+Pinjie Mall 是独立维护的 pnpm Monorepo。商城面向用户的唯一 C 端形态是微信小程序，Backend 与 Admin 已有本地实现。小程序开发与 UI 标准已定版，应用只有规则文件，工程由后续专项计划初始化。
 
 ```text
 .
 ├── apps/
 │   ├── backend/       FastAPI 模块化单体、Alembic、uv.lock
 │   ├── admin/         Umi Max 与 Ant Design Pro 管理后台
+│   ├── miniapp/       仅 AGENTS.md；微信小程序工程尚未初始化
 │   └── web/           冻结的历史骨架，禁止启动、构建、测试、发布与部署
 ├── packages/
 │   ├── api-client/    由根 openapi.json 自动生成的客户端
@@ -22,6 +23,7 @@ Pinjie Mall 是独立维护的 pnpm Monorepo。商城面向用户的唯一 C 端
 │   ├── adr/           架构决策
 │   ├── architecture/  当前架构机制
 │   ├── blueprints/    后续商城业务蓝图
+│   ├── design/        页面设计图与后续离线原型；小程序资产集中于 miniapp/
 │   └── operations/    本地开发、发布和恢复步骤
 ├── plans/             永久保留的实施计划及索引
 ├── scripts/
@@ -43,11 +45,11 @@ Pinjie Mall 是独立维护的 pnpm Monorepo。商城面向用户的唯一 C 端
 | `apps/backend` | FastAPI API、领域模型、认证授权、数据访问、迁移和 OpenAPI 导出 | 当前开发重点 |
 | `apps/admin` | 运营管理、权限、系统设置与安全审计 | 当前开发重点 |
 | `apps/web` | 历史 Next.js 用户端代码 | 永久冻结 |
-| `apps/miniapp` | 面向消费者的微信商城交互 | 本地目录存在，尚未初始化工程 |
+| `apps/miniapp` | 面向消费者的微信商城交互 | 已有 AGENTS.md，尚未初始化工程 |
 
 Backend 与 Admin 不得相互直接引用。跨应用共享只能经由 `packages/` 中的公共包，详细依赖规则以[模块边界](module-boundaries.md)为准。
 
-小程序的目标目录与执行链路见[小程序目录与应用架构](miniapp-architecture.md)，产品范围见[微信小程序 PRD](../MINIAPP_PRD.md)。本地空目录不属于已交付应用结构；初始化时按实际功能创建文件，不为目录示例增加空占位工程，也不使用另一套 `apps/miniprogram` 命名。
+小程序的目标目录与执行链路见[小程序目录与应用架构](miniapp-architecture.md)，版本与执行要求见[工程标准](miniapp-engineering-standard.md)，视觉见[UI 规范](miniapp-ui-standard.md)，产品范围见[微信小程序 PRD](../MINIAPP_PRD.md)。规则文件不构成可运行应用；初始化时按实际功能创建文件，不为目录示例增加空占位工程，也不使用另一套 `apps/miniprogram` 命名。
 
 冻结 Web 的规则由根 [AGENTS.md](../../AGENTS.md)、`apps/web/AGENTS.md` 与 [ADR 0016](../adr/0016-独立商城基线与Web停用决策.md)共同定义：
 

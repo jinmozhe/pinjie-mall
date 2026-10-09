@@ -40,7 +40,7 @@ Model 沿用项目 db/models 路径，路径集中不授予跨领域写权限。
 
 ### 商品详情内容
 
-商品说明保持纯文本和 20,000 字符上限。详情切片通过 `product_detail_images` 有序引用统一资产，与轮播独立；绑定预算和解码机制见[文件资产架构](file-asset-storage.md#8-商品详情图片与历史元数据)。商品保存沿用权限、审计、revision 和同一事务，合并两组资产并按 UUID 顺序锁定；单条及批量上架复核详情预算，空详情不阻断既有商品。
+商品 description 保持字符串与 20,000 字符上限，现有 Admin 已输出 Tiptap HTML；字段注释仍为纯文本，Backend 当前直接保存，服务端受限内容净化与历史格式尚未对齐。小程序接入以[工程标准第 6 节](miniapp-engineering-standard.md#6-商品富文本与图片)规定的受限 HTML 为目标，不能把文档定版当作净化已实现。详情切片通过 `product_detail_images` 有序引用统一资产，与轮播独立；绑定预算和解码机制见[文件资产架构](file-asset-storage.md#8-商品详情图片与历史元数据)。商品保存沿用权限、审计、revision 和同一事务，合并两组资产并按 UUID 顺序锁定；单条及批量上架复核详情预算，空详情不阻断既有商品。
 
 管理 GET 详情返回 `ProductDetailRead`，含两组展示元数据；公开 GET 详情返回 `PublicProductDetailRead`，详情图片仅含 URL 和宽高。列表和写入响应继续沿用原模型。创建可省略详情集合，更新必须显式提交完整 `detail_image_asset_ids`，空数组解除全部详情关联；Admin 同批完成迁移，禁止旧请求缺字段时默认为清空。
 

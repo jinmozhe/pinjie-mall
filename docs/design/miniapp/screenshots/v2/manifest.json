@@ -1,0 +1,3791 @@
+{
+  "version": "v2",
+  "purpose": "static-design-metadata-not-api-contract",
+  "count": 188,
+  "groups": {
+    "01-browse": "浏览与商品",
+    "02-purchase": "购物车与结算",
+    "03-orders": "订单、支付与履约",
+    "04-aftercare": "售后与评价",
+    "05-account": "个人中心、身份与设置",
+    "06-address": "收货地址",
+    "07-member": "会员、推荐与积分",
+    "08-wallet": "钱包、佣金与提现",
+    "09-service": "帮助、隐私与服务",
+    "10-states": "通用加载、空态与异常"
+  },
+  "status": {
+    "existing": "已有消费端接口，仍需微信会话适配",
+    "gap": "已有领域能力，页面展示或查询契约待补齐",
+    "target": "PRD 目标流程，当前消费端能力未接通",
+    "unavailable": "当前不可用状态或渠道接入前的限制",
+    "local": "本地交互或静态说明，无独立业务 API"
+  },
+  "pages": [
+    {
+      "group": "01-browse",
+      "slug": "home",
+      "title": "首页",
+      "kind": "home",
+      "api": [
+        "GET /api/v1/product-categories",
+        "GET /api/v1/products"
+      ],
+      "status": "existing",
+      "note": "公开浏览；不添加搜索、优惠券或装修轮播。",
+      "data": {},
+      "number": 1,
+      "file": "screenshots/v2/01-browse/001-home.png"
+    },
+    {
+      "group": "01-browse",
+      "slug": "category",
+      "title": "分类",
+      "kind": "category",
+      "api": [
+        "GET /api/v1/product-categories",
+        "GET /api/v1/products"
+      ],
+      "status": "gap",
+      "note": "分类存在；商品列表只有 page/page_size，按分类过滤待后端扩展。",
+      "data": {},
+      "number": 2,
+      "file": "screenshots/v2/01-browse/002-category.png"
+    },
+    {
+      "group": "01-browse",
+      "slug": "subcategory",
+      "title": "分类商品列表",
+      "kind": "category",
+      "api": [
+        "GET /api/v1/product-categories",
+        "GET /api/v1/products"
+      ],
+      "status": "gap",
+      "note": "三级分类与图标展示；不能用当前页过滤冒充完整分类结果。",
+      "data": {
+        "sub": true
+      },
+      "number": 3,
+      "file": "screenshots/v2/01-browse/003-subcategory.png"
+    },
+    {
+      "group": "01-browse",
+      "slug": "product",
+      "title": "商品详情",
+      "kind": "product",
+      "api": [
+        "GET /api/v1/products/{product_id}"
+      ],
+      "status": "existing",
+      "note": "基础价格、规格、主图已有；富文本内容边界待完成。",
+      "data": {},
+      "number": 4,
+      "file": "screenshots/v2/01-browse/004-product.png"
+    },
+    {
+      "group": "01-browse",
+      "slug": "product-content",
+      "title": "详情说明与图集",
+      "kind": "content",
+      "api": [
+        "GET /api/v1/products/{product_id}"
+      ],
+      "status": "gap",
+      "note": "复用 description/detail_images/attributes；受限 HTML 净化仍需后端落实。",
+      "data": {},
+      "number": 5,
+      "file": "screenshots/v2/01-browse/005-product-content.png"
+    },
+    {
+      "group": "01-browse",
+      "slug": "sku-add",
+      "title": "选择规格：加入购物车",
+      "kind": "sku",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {},
+      "number": 6,
+      "file": "screenshots/v2/01-browse/006-sku-add.png"
+    },
+    {
+      "group": "01-browse",
+      "slug": "sku-buy",
+      "title": "选择规格：立即购买",
+      "kind": "sku",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "action": "确认并进入结算"
+      },
+      "number": 7,
+      "file": "screenshots/v2/01-browse/007-sku-buy.png"
+    },
+    {
+      "group": "01-browse",
+      "slug": "sku-unavailable",
+      "title": "规格无库存反馈",
+      "kind": "sku",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "gap",
+      "note": "公开 SKU 不含可用库存；数量校验错误已存在，展示原因需补齐。",
+      "data": {
+        "warning": "当前规格库存不足，请重新选择"
+      },
+      "number": 8,
+      "file": "screenshots/v2/01-browse/008-sku-unavailable.png"
+    },
+    {
+      "group": "01-browse",
+      "slug": "image-preview",
+      "title": "商品图片预览",
+      "kind": "image",
+      "api": [
+        "GET /api/v1/products/{product_id}"
+      ],
+      "status": "local",
+      "note": "点击主图或详情切片使用微信原生预览；关闭返回原位置。",
+      "data": {},
+      "number": 9,
+      "file": "screenshots/v2/01-browse/009-image-preview.png"
+    },
+    {
+      "group": "01-browse",
+      "slug": "product-virtual",
+      "title": "虚拟商品详情",
+      "kind": "virtual",
+      "api": [
+        "GET /api/v1/products/{product_id}"
+      ],
+      "status": "existing",
+      "note": "虚拟商品不索取配送地址；交付事实经 fulfillment 查询。",
+      "data": {},
+      "number": 10,
+      "file": "screenshots/v2/01-browse/010-product-virtual.png"
+    },
+    {
+      "group": "01-browse",
+      "slug": "product-unavailable",
+      "title": "商品已下架或不存在",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/products/{product_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "商品暂时无法浏览",
+        "message": "商品可能已下架或不存在。\n你可以返回商城继续浏览。",
+        "action": "返回商城",
+        "mood": "neutral"
+      },
+      "number": 11,
+      "file": "screenshots/v2/01-browse/011-product-unavailable.png"
+    },
+    {
+      "group": "01-browse",
+      "slug": "product-price",
+      "title": "会员报价说明",
+      "kind": "info",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "报价由后端返回，不能按等级自行计算折扣。",
+      "data": {
+        "rows": [
+          [
+            "参考价格",
+            "¥129.00"
+          ],
+          [
+            "当前适用单价",
+            "¥119.00"
+          ],
+          [
+            "适用数量",
+            "1 件"
+          ],
+          [
+            "报价来源",
+            "服务端当前结果"
+          ]
+        ],
+        "body": "商品详情价格用于参考，结算将重新报价。\n等级、数量或配送地区变化后需刷新报价。"
+      },
+      "number": 12,
+      "file": "screenshots/v2/01-browse/012-product-price.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "cart",
+      "title": "购物车",
+      "kind": "cart",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "gap",
+      "note": "quantity/selected/revision 已有；商品缩略图、名称和失效原因需有界查询视图。",
+      "data": {},
+      "number": 13,
+      "file": "screenshots/v2/02-purchase/013-cart.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "cart-edit",
+      "title": "购物车管理",
+      "kind": "cart",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "gap",
+      "note": "只存在单条删除；设计使用单条确认，不伪造批量删除 API。",
+      "data": {
+        "edit": true
+      },
+      "number": 14,
+      "file": "screenshots/v2/02-purchase/014-cart-edit.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "cart-invalid",
+      "title": "购物车失效商品",
+      "kind": "cart",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "gap",
+      "note": "",
+      "data": {
+        "invalid": true
+      },
+      "number": 15,
+      "file": "screenshots/v2/02-purchase/015-cart-invalid.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "cart-conflict",
+      "title": "购物车版本冲突",
+      "kind": "dialog",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "base": "cart",
+        "heading": "购物车已变更",
+        "body": "此条目已在其他设备更新。\n请读取最新数量，再确认你的选择。",
+        "confirm": "刷新购物车"
+      },
+      "number": 16,
+      "file": "screenshots/v2/02-purchase/016-cart-conflict.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "cart-remove",
+      "title": "删除购物车条目",
+      "kind": "dialog",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "base": "cart",
+        "heading": "删除这件商品？",
+        "body": "将从购物车移除基础圆领短袖。\n不会修改已创建的订单。",
+        "confirm": "确认删除",
+        "danger": true
+      },
+      "number": 17,
+      "file": "screenshots/v2/02-purchase/017-cart-remove.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "cart-added-refresh-error",
+      "title": "加购成功但刷新失败",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "已加入，购物车刷新失败",
+        "message": "本次加购已完成，请勿重复加入。\n可以刷新购物车查看最新条目。",
+        "action": "刷新购物车",
+        "mood": "warning"
+      },
+      "number": 18,
+      "file": "screenshots/v2/02-purchase/018-cart-added-refresh-error.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "checkout-physical",
+      "title": "实物商品结算",
+      "kind": "checkout",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "商品金额 ¥129.00、运费 ¥8.00、应付 ¥137.00 均为示例报价。",
+      "data": {},
+      "number": 19,
+      "file": "screenshots/v2/02-purchase/019-checkout-physical.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "checkout-virtual",
+      "title": "虚拟商品结算",
+      "kind": "checkout",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "virtual": true
+      },
+      "number": 20,
+      "file": "screenshots/v2/02-purchase/020-checkout-virtual.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "checkout-zero",
+      "title": "零应付结算",
+      "kind": "checkout",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "zero": true
+      },
+      "number": 21,
+      "file": "screenshots/v2/02-purchase/021-checkout-zero.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "checkout-no-address",
+      "title": "结算缺少地址",
+      "kind": "checkout",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "no_address": true
+      },
+      "number": 22,
+      "file": "screenshots/v2/02-purchase/022-checkout-no-address.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "checkout-region",
+      "title": "配送地区不支持",
+      "kind": "checkout",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "warning": "该地址暂不支持配送，请更换地址",
+        "blocked": true
+      },
+      "number": 23,
+      "file": "screenshots/v2/02-purchase/023-checkout-region.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "checkout-mixed",
+      "title": "混合商品类型拒绝",
+      "kind": "result",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "请分开结算",
+        "message": "实物与虚拟商品不能混合下单。\n请返回购物车分别选择商品。",
+        "action": "返回购物车",
+        "mood": "warning"
+      },
+      "number": 24,
+      "file": "screenshots/v2/02-purchase/024-checkout-mixed.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "quote-changed",
+      "title": "报价变化重新确认",
+      "kind": "dialog",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "base": "checkout",
+        "heading": "报价已更新",
+        "body": "原应付 ¥137.00 → 新应付 ¥139.00\n请查看最新报价后重新确认。\n取消不会提交订单。",
+        "confirm": "查看最新报价"
+      },
+      "number": 25,
+      "file": "screenshots/v2/02-purchase/025-quote-changed.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "checkout-submitting",
+      "title": "下单提交中",
+      "kind": "checkout",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "busy": true
+      },
+      "number": 26,
+      "file": "screenshots/v2/02-purchase/026-checkout-submitting.png"
+    },
+    {
+      "group": "02-purchase",
+      "slug": "order-create-unknown",
+      "title": "下单结果确认中",
+      "kind": "result",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "gap",
+      "note": "request_id 已有，未知结果确认查询或安全同键恢复契约仍需专项。",
+      "data": {
+        "title_line": "订单结果确认中",
+        "message": "本次提交的结果尚未确认。\n请保留当前操作，不要再次下单。",
+        "action": "查询本次结果",
+        "mood": "warning"
+      },
+      "number": 27,
+      "file": "screenshots/v2/02-purchase/027-order-create-unknown.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "orders-list",
+      "title": "我的订单",
+      "kind": "orders-list",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "target",
+      "note": "当前只存在本人单笔订单查询；分页、状态筛选与总数待实现，不调用 Admin 列表。",
+      "data": {},
+      "number": 28,
+      "file": "screenshots/v2/03-orders/028-orders-list.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "order-pending",
+      "title": "待付款订单",
+      "kind": "order",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "state": "pending"
+      },
+      "number": 29,
+      "file": "screenshots/v2/03-orders/029-order-pending.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "order-paid",
+      "title": "已付款待发货",
+      "kind": "order",
+      "api": [
+        "GET /api/v1/orders/{order_id}/fulfillment",
+        "POST /api/v1/orders/{order_id}/fulfillment/confirm-receipt"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "state": "paid"
+      },
+      "number": 30,
+      "file": "screenshots/v2/03-orders/030-order-paid.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "order-shipped",
+      "title": "待收货订单",
+      "kind": "order",
+      "api": [
+        "GET /api/v1/orders/{order_id}/fulfillment",
+        "POST /api/v1/orders/{order_id}/fulfillment/confirm-receipt"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "state": "shipped"
+      },
+      "number": 31,
+      "file": "screenshots/v2/03-orders/031-order-shipped.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "order-delivered",
+      "title": "已完成订单",
+      "kind": "order",
+      "api": [
+        "GET /api/v1/orders/{order_id}/fulfillment",
+        "POST /api/v1/orders/{order_id}/fulfillment/confirm-receipt"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "state": "delivered"
+      },
+      "number": 32,
+      "file": "screenshots/v2/03-orders/032-order-delivered.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "order-cancelled",
+      "title": "已取消订单",
+      "kind": "order",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "state": "cancelled"
+      },
+      "number": 33,
+      "file": "screenshots/v2/03-orders/033-order-cancelled.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "order-zero",
+      "title": "零元内部成交订单",
+      "kind": "order",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "state": "zero"
+      },
+      "number": 34,
+      "file": "screenshots/v2/03-orders/034-order-zero.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "order-virtual",
+      "title": "虚拟订单已交付",
+      "kind": "order",
+      "api": [
+        "GET /api/v1/orders/{order_id}/fulfillment",
+        "POST /api/v1/orders/{order_id}/fulfillment/confirm-receipt"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "state": "virtual"
+      },
+      "number": 35,
+      "file": "screenshots/v2/03-orders/035-order-virtual.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "order-snapshot",
+      "title": "订单快照与收货信息",
+      "kind": "info",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "rows": [
+          [
+            "订单商品",
+            "基础圆领短袖 ×1"
+          ],
+          [
+            "成交规格",
+            "白色 / M"
+          ],
+          [
+            "收件人",
+            "示例收件人"
+          ],
+          [
+            "联系电话",
+            "138****0000"
+          ],
+          [
+            "收货地区",
+            "示例省 / 示例市 / 示例区"
+          ]
+        ],
+        "body": "收货地址：示例路 1 号。\n商品和地址后续变更不会改变本笔订单快照。"
+      },
+      "number": 36,
+      "file": "screenshots/v2/03-orders/036-order-snapshot.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "order-cancel",
+      "title": "取消订单确认",
+      "kind": "dialog",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "base": "order",
+        "heading": "取消这笔订单？",
+        "body": "确认后由服务端取消待付款订单。\n支付结果未确认时可能无法取消。",
+        "confirm": "确认取消",
+        "danger": true
+      },
+      "number": 37,
+      "file": "screenshots/v2/03-orders/037-order-cancel.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "order-expiry",
+      "title": "订单支付时限提示",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "订单已超过支付时限",
+        "message": "请刷新订单查看服务端最新状态。\n页面倒计时不会自行取消订单。",
+        "action": "刷新订单",
+        "mood": "warning"
+      },
+      "number": 38,
+      "file": "screenshots/v2/03-orders/038-order-expiry.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "payment-unavailable",
+      "title": "支付渠道未开放",
+      "kind": "result",
+      "api": [
+        "POST /api/v1/orders/{order_id}/payment-attempts"
+      ],
+      "status": "unavailable",
+      "note": "当前支付意图 status=unavailable；未返回微信调起参数。",
+      "data": {
+        "title_line": "暂时无法付款",
+        "message": "支付服务暂未开放。\n订单状态以订单详情为准。",
+        "action": "查看订单",
+        "mood": "warning"
+      },
+      "number": 39,
+      "file": "screenshots/v2/03-orders/039-payment-unavailable.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "payment-confirming",
+      "title": "付款结果确认中",
+      "kind": "result",
+      "api": [
+        "POST /api/v1/orders/{order_id}/payment-attempts"
+      ],
+      "status": "target",
+      "note": "真实支付调起、通知与查单尚未接通；目标状态须保留。",
+      "data": {
+        "title_line": "正在确认付款结果",
+        "message": "请勿重复付款。\n平台返回后仍需确认商城订单状态。",
+        "action": "查询订单状态",
+        "mood": "warning"
+      },
+      "number": 40,
+      "file": "screenshots/v2/03-orders/040-payment-confirming.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "payment-success",
+      "title": "已确认付款成功",
+      "kind": "result",
+      "api": [
+        "POST /api/v1/orders/{order_id}/payment-attempts"
+      ],
+      "status": "target",
+      "note": "仅可信后端资金事实成功时显示，不能按平台弹窗返回成功显示。",
+      "data": {
+        "title_line": "付款已确认",
+        "message": "订单已确认支付 ¥137.00。\n你可以查看订单的履约进度。",
+        "action": "查看订单",
+        "mood": "success"
+      },
+      "number": 41,
+      "file": "screenshots/v2/03-orders/041-payment-success.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "payment-cancelled",
+      "title": "支付弹窗已关闭",
+      "kind": "result",
+      "api": [
+        "POST /api/v1/orders/{order_id}/payment-attempts"
+      ],
+      "status": "target",
+      "note": "",
+      "data": {
+        "title_line": "付款尚未确认",
+        "message": "关闭支付弹窗不会取消商城订单。\n请返回订单查看最新资金状态。",
+        "action": "查看订单",
+        "mood": "neutral"
+      },
+      "number": 42,
+      "file": "screenshots/v2/03-orders/042-payment-cancelled.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "payment-late",
+      "title": "取消后收到付款异常",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "target",
+      "note": "后端已有异常收款与补偿机制，真实渠道和消费端资金查询投影待接通。",
+      "data": {
+        "title_line": "异常资金处理中",
+        "message": "此订单已取消，后续收款需要核实处理。\n请查询处理进度或联系售后。",
+        "action": "查看处理进度",
+        "mood": "warning"
+      },
+      "number": 43,
+      "file": "screenshots/v2/03-orders/043-payment-late.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "fulfillment-physical",
+      "title": "发货信息",
+      "kind": "fulfillment",
+      "api": [
+        "GET /api/v1/orders/{order_id}/fulfillment",
+        "POST /api/v1/orders/{order_id}/fulfillment/confirm-receipt"
+      ],
+      "status": "existing",
+      "note": "仅承运人与运单号，不设计实时物流轨迹。",
+      "data": {},
+      "number": 44,
+      "file": "screenshots/v2/03-orders/044-fulfillment-physical.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "fulfillment-virtual",
+      "title": "虚拟交付信息",
+      "kind": "fulfillment",
+      "api": [
+        "GET /api/v1/orders/{order_id}/fulfillment",
+        "POST /api/v1/orders/{order_id}/fulfillment/confirm-receipt"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "virtual": true
+      },
+      "number": 45,
+      "file": "screenshots/v2/03-orders/045-fulfillment-virtual.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "confirm-receipt",
+      "title": "确认收货弹窗",
+      "kind": "dialog",
+      "api": [
+        "GET /api/v1/orders/{order_id}/fulfillment",
+        "POST /api/v1/orders/{order_id}/fulfillment/confirm-receipt"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "base": "order",
+        "base_state": "shipped",
+        "heading": "确认已收到商品？",
+        "body": "请确认实际收到商品后再继续。\n提交时将校验最新履约版本。",
+        "confirm": "确认收货"
+      },
+      "number": 46,
+      "file": "screenshots/v2/03-orders/046-confirm-receipt.png"
+    },
+    {
+      "group": "03-orders",
+      "slug": "receipt-conflict",
+      "title": "确认收货状态冲突",
+      "kind": "dialog",
+      "api": [
+        "GET /api/v1/orders/{order_id}/fulfillment",
+        "POST /api/v1/orders/{order_id}/fulfillment/confirm-receipt"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "base": "order",
+        "base_state": "shipped",
+        "heading": "订单履约状态已变化",
+        "body": "请读取最新履约信息后再确认。\n已经完成的收货不会重复执行。",
+        "confirm": "刷新履约信息"
+      },
+      "number": 47,
+      "file": "screenshots/v2/03-orders/047-receipt-conflict.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "refund-form",
+      "title": "整单退款申请",
+      "kind": "refund-form",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "只输入原因，不能选择部分商品、数量或自行填写退款金额。",
+      "data": {},
+      "number": 48,
+      "file": "screenshots/v2/04-aftercare/048-refund-form.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "refund-automatic",
+      "title": "未接单退款自动审核",
+      "kind": "refund-detail",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "state": "approved",
+        "automatic": true
+      },
+      "number": 49,
+      "file": "screenshots/v2/04-aftercare/049-refund-automatic.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "refund-form-rejected",
+      "title": "退款申请校验失败",
+      "kind": "refund-form",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "invalid": true
+      },
+      "number": 50,
+      "file": "screenshots/v2/04-aftercare/050-refund-form-rejected.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "refund-review",
+      "title": "退款待审核",
+      "kind": "refund-detail",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "申请状态 requested/approved/rejected/completed 来自当前 Schema 与业务实现；真实渠道仍未接通。",
+      "data": {
+        "state": "requested"
+      },
+      "number": 51,
+      "file": "screenshots/v2/04-aftercare/051-refund-review.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "refund-approved",
+      "title": "审核通过退款处理中",
+      "kind": "refund-detail",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "申请状态 requested/approved/rejected/completed 来自当前 Schema 与业务实现；真实渠道仍未接通。",
+      "data": {
+        "state": "approved"
+      },
+      "number": 52,
+      "file": "screenshots/v2/04-aftercare/052-refund-approved.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "refund-rejected",
+      "title": "退款审核未通过",
+      "kind": "refund-detail",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "申请状态 requested/approved/rejected/completed 来自当前 Schema 与业务实现；真实渠道仍未接通。",
+      "data": {
+        "state": "rejected"
+      },
+      "number": 53,
+      "file": "screenshots/v2/04-aftercare/053-refund-rejected.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "refund-completed",
+      "title": "退款已完成",
+      "kind": "refund-detail",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "申请状态 requested/approved/rejected/completed 来自当前 Schema 与业务实现；真实渠道仍未接通。",
+      "data": {
+        "state": "completed"
+      },
+      "number": 54,
+      "file": "screenshots/v2/04-aftercare/054-refund-completed.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "refund-unknown",
+      "title": "退款资金结果未知",
+      "kind": "refund-detail",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "target",
+      "note": "申请查询无渠道执行详情；未知资金状态需消费端展示投影，不能将 approved 等同到账。",
+      "data": {
+        "state": "unknown"
+      },
+      "number": 55,
+      "file": "screenshots/v2/04-aftercare/055-refund-unknown.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "refund-ineligible",
+      "title": "已发货不可申请退款",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "当前订单不支持退款申请",
+        "message": "本期仅支持未发货或未交付订单的整单退款。\n如需帮助，请联系售后。",
+        "action": "查看订单",
+        "mood": "warning"
+      },
+      "number": 56,
+      "file": "screenshots/v2/04-aftercare/056-refund-ineligible.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "refund-history",
+      "title": "本单售后记录",
+      "kind": "refund-list",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "由单笔订单的退款申请列表展示，不伪造本人全量售后列表。",
+      "data": {},
+      "number": 57,
+      "file": "screenshots/v2/04-aftercare/057-refund-history.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "reviews",
+      "title": "商品评价列表",
+      "kind": "reviews",
+      "api": [
+        "GET /api/v1/products/{product_id}/reviews",
+        "POST /api/v1/order-items/{order_item_id}/review"
+      ],
+      "status": "existing",
+      "note": "只有 rating/content/published_at；不虚构评价照片、用户头像或好评率。",
+      "data": {},
+      "number": 58,
+      "file": "screenshots/v2/04-aftercare/058-reviews.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "review-form",
+      "title": "评价已交付商品",
+      "kind": "review-form",
+      "api": [
+        "GET /api/v1/products/{product_id}/reviews",
+        "POST /api/v1/order-items/{order_item_id}/review"
+      ],
+      "status": "existing",
+      "note": "评分 1 至 5，正文最多 1000 字；不增加图片上传。",
+      "data": {},
+      "number": 59,
+      "file": "screenshots/v2/04-aftercare/059-review-form.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "review-success",
+      "title": "评价提交成功",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/products/{product_id}/reviews",
+        "POST /api/v1/order-items/{order_item_id}/review"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "评价已提交",
+        "message": "感谢你的真实反馈。\n每条已交付订单明细仅可评价一次。",
+        "action": "返回订单",
+        "mood": "success"
+      },
+      "number": 60,
+      "file": "screenshots/v2/04-aftercare/060-review-success.png"
+    },
+    {
+      "group": "04-aftercare",
+      "slug": "review-denied",
+      "title": "评价资格不满足",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/products/{product_id}/reviews",
+        "POST /api/v1/order-items/{order_item_id}/review"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "当前商品暂不可评价",
+        "message": "仅本人已交付且未评价的明细可提交。\n请查看最新订单和履约状态。",
+        "action": "查看订单",
+        "mood": "warning"
+      },
+      "number": 61,
+      "file": "screenshots/v2/04-aftercare/061-review-denied.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "mine",
+      "title": "个人中心",
+      "kind": "mine",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "gap",
+      "note": "订单入口可设计；全量统计、积分与会员等级展示需独立 C 端查询，不伪造角标。",
+      "data": {},
+      "number": 62,
+      "file": "screenshots/v2/05-account/062-mine.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "mine-guest",
+      "title": "未登录个人中心",
+      "kind": "mine",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "guest": true
+      },
+      "number": 63,
+      "file": "screenshots/v2/05-account/063-mine-guest.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "wechat-login",
+      "title": "微信登录与协议确认",
+      "kind": "login",
+      "api": [],
+      "status": "target",
+      "note": "现有 auth/login 是用户名密码 Cookie，尚无微信 code 交换与 Bearer；不复用为小程序登录。",
+      "data": {},
+      "number": 64,
+      "file": "screenshots/v2/05-account/064-wechat-login.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "login-cancelled",
+      "title": "登录取消保留浏览",
+      "kind": "result",
+      "api": [],
+      "status": "local",
+      "note": "",
+      "data": {
+        "title_line": "你可以继续浏览",
+        "message": "登录已取消，公开商品仍可查看。\n再次购买时可主动发起登录。",
+        "action": "返回商品",
+        "mood": "neutral"
+      },
+      "number": 65,
+      "file": "screenshots/v2/05-account/065-login-cancelled.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "profile",
+      "title": "个人资料",
+      "kind": "profile",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {},
+      "number": 66,
+      "file": "screenshots/v2/05-account/066-profile.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "profile-edit",
+      "title": "修改昵称与邮箱",
+      "kind": "form",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "fields": [
+          [
+            "昵称",
+            "商城用户"
+          ],
+          [
+            "邮箱（选填）",
+            "请输入邮箱"
+          ]
+        ],
+        "action": "保存资料",
+        "intro": "资料只修改当前账户，不自动绑定其他身份。"
+      },
+      "number": 67,
+      "file": "screenshots/v2/05-account/067-profile-edit.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "avatar-actions",
+      "title": "头像操作弹层",
+      "kind": "sheet",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "existing",
+      "note": "先上传本人头像资产再更新 avatar；权限按用户动作申请。",
+      "data": {
+        "base": "profile",
+        "choices": [
+          "拍摄照片",
+          "从相册选择",
+          "移除当前头像"
+        ]
+      },
+      "number": 68,
+      "file": "screenshots/v2/05-account/068-avatar-actions.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "avatar-submitting",
+      "title": "头像上传保存中",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "正在保存头像",
+        "message": "本次修改仍在处理中。\n保存完成前请勿重复上传。",
+        "action": "保存处理中…",
+        "mood": "neutral",
+        "busy": true
+      },
+      "number": 69,
+      "file": "screenshots/v2/05-account/069-avatar-submitting.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "settings",
+      "title": "设置",
+      "kind": "menu",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "entries": [
+          "个人资料",
+          "账号安全",
+          "隐私说明",
+          "服务协议",
+          "帮助与售后",
+          "关于商城"
+        ],
+        "action": "退出登录"
+      },
+      "number": 70,
+      "file": "screenshots/v2/05-account/070-settings.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "security",
+      "title": "账号安全",
+      "kind": "menu",
+      "api": [
+        "GET /api/v1/users/me/sessions",
+        "DELETE /api/v1/users/me/sessions/{session_id}",
+        "POST /api/v1/users/me/sessions/revoke-others",
+        "POST /api/v1/users/me/password",
+        "DELETE /api/v1/users/me"
+      ],
+      "status": "gap",
+      "note": "密码与注销当前需要 current_password；无密码微信账户必须专项适配。",
+      "data": {
+        "entries": [
+          "登录设备",
+          "退出其他设备",
+          "修改密码（已有密码账户）",
+          "注销账户"
+        ]
+      },
+      "number": 71,
+      "file": "screenshots/v2/05-account/071-security.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "sessions",
+      "title": "登录设备",
+      "kind": "sessions",
+      "api": [
+        "GET /api/v1/users/me/sessions",
+        "DELETE /api/v1/users/me/sessions/{session_id}",
+        "POST /api/v1/users/me/sessions/revoke-others",
+        "POST /api/v1/users/me/password",
+        "DELETE /api/v1/users/me"
+      ],
+      "status": "gap",
+      "note": "当前会话模型只允许 browser_cookie，微信设备会话适配未实现。",
+      "data": {},
+      "number": 72,
+      "file": "screenshots/v2/05-account/072-sessions.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "session-revoke",
+      "title": "退出其他设备确认",
+      "kind": "dialog",
+      "api": [
+        "GET /api/v1/users/me/sessions",
+        "DELETE /api/v1/users/me/sessions/{session_id}",
+        "POST /api/v1/users/me/sessions/revoke-others",
+        "POST /api/v1/users/me/password",
+        "DELETE /api/v1/users/me"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "base": "sessions",
+        "heading": "退出其他登录设备？",
+        "body": "其他设备将需要重新登录。\n当前设备会话将保留。",
+        "confirm": "确认退出"
+      },
+      "number": 73,
+      "file": "screenshots/v2/05-account/073-session-revoke.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "password",
+      "title": "已有密码账户修改密码",
+      "kind": "form",
+      "api": [
+        "GET /api/v1/users/me/sessions",
+        "DELETE /api/v1/users/me/sessions/{session_id}",
+        "POST /api/v1/users/me/sessions/revoke-others",
+        "POST /api/v1/users/me/password",
+        "DELETE /api/v1/users/me"
+      ],
+      "status": "gap",
+      "note": "仅具有密码凭据的既有账户适用；不要求微信无密码账户填不存在的密码。",
+      "data": {
+        "fields": [
+          [
+            "当前密码",
+            "请输入当前密码"
+          ],
+          [
+            "新密码",
+            "6 至 64 个字符"
+          ],
+          [
+            "确认新密码",
+            "再次输入新密码"
+          ]
+        ],
+        "action": "确认修改",
+        "intro": "仅已有密码凭据的账户显示此入口。"
+      },
+      "number": 74,
+      "file": "screenshots/v2/05-account/074-password.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "logout",
+      "title": "退出登录确认",
+      "kind": "dialog",
+      "api": [
+        "POST /api/v1/auth/logout",
+        "POST /api/v1/auth/refresh"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "base": "mine",
+        "heading": "退出当前账户？",
+        "body": "退出后将清除本机私有内容。\n商品公开浏览仍可继续。",
+        "confirm": "退出登录"
+      },
+      "number": 75,
+      "file": "screenshots/v2/05-account/075-logout.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "account-delete",
+      "title": "注销账户说明",
+      "kind": "info",
+      "api": [
+        "GET /api/v1/users/me/sessions",
+        "DELETE /api/v1/users/me/sessions/{session_id}",
+        "POST /api/v1/users/me/sessions/revoke-others",
+        "POST /api/v1/users/me/password",
+        "DELETE /api/v1/users/me"
+      ],
+      "status": "gap",
+      "note": "当前注销是软删除并要求密码；微信账户证明与资金前置检查必须专项确认。",
+      "data": {
+        "rows": [
+          [
+            "注销对象",
+            "当前本人账户"
+          ],
+          [
+            "历史交易",
+            "按适用规则保留"
+          ],
+          [
+            "资金与售后",
+            "先核实未结事项"
+          ]
+        ],
+        "body": "请先处理未完成交易、售后与资金事项。\n注销不会立即物理删除全部历史记录。",
+        "action": "继续核对注销条件"
+      },
+      "number": 76,
+      "file": "screenshots/v2/05-account/076-account-delete.png"
+    },
+    {
+      "group": "05-account",
+      "slug": "account-disabled",
+      "title": "账户停用反馈",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "当前账户无法使用",
+        "message": "账户已停用或会话被撤销。\n私有内容已停止展示，请联系运营。",
+        "action": "查看帮助",
+        "mood": "warning"
+      },
+      "number": 77,
+      "file": "screenshots/v2/05-account/077-account-disabled.png"
+    },
+    {
+      "group": "06-address",
+      "slug": "addresses",
+      "title": "收货地址管理",
+      "kind": "address-list",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {},
+      "number": 78,
+      "file": "screenshots/v2/06-address/078-addresses.png"
+    },
+    {
+      "group": "06-address",
+      "slug": "address-select",
+      "title": "选择收货地址",
+      "kind": "address-list",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "select": true
+      },
+      "number": 79,
+      "file": "screenshots/v2/06-address/079-address-select.png"
+    },
+    {
+      "group": "06-address",
+      "slug": "address-add",
+      "title": "新增收货地址",
+      "kind": "address-form",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {},
+      "number": 80,
+      "file": "screenshots/v2/06-address/080-address-add.png"
+    },
+    {
+      "group": "06-address",
+      "slug": "address-edit",
+      "title": "编辑收货地址",
+      "kind": "address-form",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "edit": true
+      },
+      "number": 81,
+      "file": "screenshots/v2/06-address/081-address-edit.png"
+    },
+    {
+      "group": "06-address",
+      "slug": "address-region",
+      "title": "省市区选择",
+      "kind": "region",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "gap",
+      "note": "AddressInput 要求三级六位行政编码；行政区数据来源尚需工程专项确认。",
+      "data": {},
+      "number": 82,
+      "file": "screenshots/v2/06-address/082-address-region.png"
+    },
+    {
+      "group": "06-address",
+      "slug": "address-delete",
+      "title": "删除地址确认",
+      "kind": "dialog",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "base": "address-list",
+        "heading": "删除这条收货地址？",
+        "body": "将删除当前默认地址。\n如有其他地址，服务端将确定替补默认地址。",
+        "confirm": "确认删除",
+        "danger": true
+      },
+      "number": 83,
+      "file": "screenshots/v2/06-address/083-address-delete.png"
+    },
+    {
+      "group": "06-address",
+      "slug": "address-conflict",
+      "title": "地址版本冲突",
+      "kind": "dialog",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "base": "address-form",
+        "heading": "地址已在其他设备修改",
+        "body": "请读取最新地址再编辑。\n本次输入可保留，不能覆盖新版本。",
+        "confirm": "读取最新地址"
+      },
+      "number": 84,
+      "file": "screenshots/v2/06-address/084-address-conflict.png"
+    },
+    {
+      "group": "06-address",
+      "slug": "address-limit",
+      "title": "收货地址数量上限",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "收货地址已达上限",
+        "message": "最多保存 20 条收货地址。\n请编辑或删除不再使用的地址。",
+        "action": "管理收货地址",
+        "mood": "warning"
+      },
+      "number": 85,
+      "file": "screenshots/v2/06-address/085-address-limit.png"
+    },
+    {
+      "group": "06-address",
+      "slug": "address-validation",
+      "title": "地址表单校验",
+      "kind": "address-form",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "invalid": true
+      },
+      "number": 86,
+      "file": "screenshots/v2/06-address/086-address-validation.png"
+    },
+    {
+      "group": "07-member",
+      "slug": "membership",
+      "title": "会员与分销档案",
+      "kind": "membership",
+      "api": [
+        "GET /api/v1/distribution/me/profile",
+        "POST /api/v1/distribution/me/profile"
+      ],
+      "status": "gap",
+      "note": "档案返回 level_id 与邀请码，不含等级名称、权益、有效邀请统计；不调用 Admin 等级接口。",
+      "data": {},
+      "number": 87,
+      "file": "screenshots/v2/07-member/087-membership.png"
+    },
+    {
+      "group": "07-member",
+      "slug": "membership-open",
+      "title": "开通分销档案",
+      "kind": "info",
+      "api": [
+        "GET /api/v1/distribution/me/profile",
+        "POST /api/v1/distribution/me/profile"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "rows": [
+          [
+            "当前档案",
+            "尚未开通"
+          ],
+          [
+            "开通方式",
+            "本人主动确认"
+          ],
+          [
+            "会员等级",
+            "由服务端资格决定"
+          ]
+        ],
+        "body": "开通分销档案不等于获得付费会员等级。\n不承诺收益，不自动绑定推荐人。",
+        "action": "确认开通档案"
+      },
+      "number": 88,
+      "file": "screenshots/v2/07-member/088-membership-open.png"
+    },
+    {
+      "group": "07-member",
+      "slug": "membership-disabled",
+      "title": "会员等级停用",
+      "kind": "info",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "rows": [
+          [
+            "等级状态",
+            "已停用"
+          ],
+          [
+            "适用价格",
+            "按当前服务端报价"
+          ],
+          [
+            "原有交易",
+            "保留历史快照"
+          ]
+        ],
+        "body": "停用等级的价格权益不再用于新报价。\n已有订单继续按原快照展示。"
+      },
+      "number": 89,
+      "file": "screenshots/v2/07-member/089-membership-disabled.png"
+    },
+    {
+      "group": "07-member",
+      "slug": "referrer-bind",
+      "title": "首次绑定推荐人",
+      "kind": "form",
+      "api": [
+        "POST /api/v1/distribution/me/referrer",
+        "GET /api/v1/distribution/me/profile"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "fields": [
+          [
+            "推荐人邀请码",
+            "ABCD1234"
+          ]
+        ],
+        "intro": "推荐关系只允许首次绑定。\n请核对邀请码后主动确认。",
+        "action": "核对并确认绑定"
+      },
+      "number": 90,
+      "file": "screenshots/v2/07-member/090-referrer-bind.png"
+    },
+    {
+      "group": "07-member",
+      "slug": "referrer-confirm",
+      "title": "推荐绑定确认弹窗",
+      "kind": "dialog",
+      "api": [
+        "POST /api/v1/distribution/me/referrer",
+        "GET /api/v1/distribution/me/profile"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "base": "membership",
+        "heading": "绑定此推荐人？",
+        "body": "邀请码：ABCD1234（设计示例）\n首次绑定后不能随意更改。\n服务端将校验自邀与循环关系。",
+        "confirm": "确认绑定"
+      },
+      "number": 91,
+      "file": "screenshots/v2/07-member/091-referrer-confirm.png"
+    },
+    {
+      "group": "07-member",
+      "slug": "referrer-bound",
+      "title": "已绑定推荐关系",
+      "kind": "info",
+      "api": [
+        "GET /api/v1/distribution/me/profile",
+        "POST /api/v1/distribution/me/profile"
+      ],
+      "status": "existing",
+      "note": "当前 inviter_id 不应直接展示完整 UUID；昵称/脱敏投影待补齐。",
+      "data": {
+        "rows": [
+          [
+            "推荐关系",
+            "已首次绑定"
+          ],
+          [
+            "绑定时间",
+            "2026-10-09 10:00"
+          ],
+          [
+            "推荐人",
+            "已绑定，身份信息受保护"
+          ]
+        ],
+        "body": "推荐关系已经确认，不能自行更换。\n推荐人完整身份资料受隐私保护。"
+      },
+      "number": 92,
+      "file": "screenshots/v2/07-member/092-referrer-bound.png"
+    },
+    {
+      "group": "07-member",
+      "slug": "referrer-invalid",
+      "title": "邀请码失效或绑定拒绝",
+      "kind": "result",
+      "api": [
+        "POST /api/v1/distribution/me/referrer",
+        "GET /api/v1/distribution/me/profile"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "暂时无法绑定推荐人",
+        "message": "邀请码无效、自邀、循环或已绑定时会被拒绝。\n请核对服务端返回的具体原因。",
+        "action": "返回核对邀请码",
+        "mood": "warning"
+      },
+      "number": 93,
+      "file": "screenshots/v2/07-member/093-referrer-invalid.png"
+    },
+    {
+      "group": "07-member",
+      "slug": "invite-share",
+      "title": "分享邀请说明",
+      "kind": "share",
+      "api": [
+        "GET /api/v1/distribution/me/profile",
+        "POST /api/v1/distribution/me/profile"
+      ],
+      "status": "target",
+      "note": "邀请码已有；微信分享参数与有效邀请政策待专项，不画伪造二维码或收益统计。",
+      "data": {},
+      "number": 94,
+      "file": "screenshots/v2/07-member/094-invite-share.png"
+    },
+    {
+      "group": "07-member",
+      "slug": "points",
+      "title": "积分账户接入前",
+      "kind": "result",
+      "api": [],
+      "status": "unavailable",
+      "note": "仅有 Admin 积分账户/流水接口，无本人 C 端查询；不展示假余额、兑换或抵扣。",
+      "data": {
+        "title_line": "积分服务暂未开放",
+        "message": "积分账户的本人查询尚未开放。\n当前不提供兑换、抵扣或到期操作。",
+        "action": "返回个人中心",
+        "mood": "neutral"
+      },
+      "number": 95,
+      "file": "screenshots/v2/07-member/095-points.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "wallets",
+      "title": "我的钱包",
+      "kind": "wallets",
+      "api": [
+        "GET /api/v1/distribution/me/wallets"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {},
+      "number": 96,
+      "file": "screenshots/v2/08-wallet/096-wallets.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "wallet-commission",
+      "title": "佣金钱包",
+      "kind": "wallet",
+      "api": [
+        "GET /api/v1/distribution/me/wallets"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "wallet_type": "commission"
+      },
+      "number": 97,
+      "file": "screenshots/v2/08-wallet/097-wallet-commission.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "wallet-consumption",
+      "title": "消费钱包",
+      "kind": "wallet",
+      "api": [
+        "GET /api/v1/distribution/me/wallets"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "wallet_type": "consumption"
+      },
+      "number": 98,
+      "file": "screenshots/v2/08-wallet/098-wallet-consumption.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "wallet-debt",
+      "title": "钱包欠款限制",
+      "kind": "wallet",
+      "api": [
+        "GET /api/v1/distribution/me/wallets"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "wallet_type": "commission",
+        "debt": true
+      },
+      "number": 99,
+      "file": "screenshots/v2/08-wallet/099-wallet-debt.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "commissions",
+      "title": "佣金记录",
+      "kind": "commissions",
+      "api": [
+        "GET /api/v1/distribution/me/commissions"
+      ],
+      "status": "existing",
+      "note": "只有 page/page_size；不添加服务端尚不支持的状态筛选和全量收入汇总。",
+      "data": {},
+      "number": 100,
+      "file": "screenshots/v2/08-wallet/100-commissions.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "commission-frozen",
+      "title": "冻结佣金详情",
+      "kind": "commission",
+      "api": [
+        "GET /api/v1/distribution/me/commissions"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "state": "frozen"
+      },
+      "number": 101,
+      "file": "screenshots/v2/08-wallet/101-commission-frozen.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "commission-settled",
+      "title": "已结算佣金详情",
+      "kind": "commission",
+      "api": [
+        "GET /api/v1/distribution/me/commissions"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "state": "settled"
+      },
+      "number": 102,
+      "file": "screenshots/v2/08-wallet/102-commission-settled.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "commission-recovered",
+      "title": "已追回佣金详情",
+      "kind": "commission",
+      "api": [
+        "GET /api/v1/distribution/me/commissions"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "state": "recovered"
+      },
+      "number": 103,
+      "file": "screenshots/v2/08-wallet/103-commission-recovered.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "withdrawal-form",
+      "title": "提现申请预备页",
+      "kind": "withdraw-form",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "unavailable",
+      "note": "申请/审核/人工完成已有；自动打款与收款引用接入未完成，当前设计禁用提交。",
+      "data": {},
+      "number": 104,
+      "file": "screenshots/v2/08-wallet/104-withdrawal-form.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "withdrawal-records",
+      "title": "提现记录",
+      "kind": "withdraw-list",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {},
+      "number": 105,
+      "file": "screenshots/v2/08-wallet/105-withdrawal-records.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "withdrawal-review",
+      "title": "提现待审核",
+      "kind": "withdraw-detail",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "existing",
+      "note": "状态枚举已有；succeeded 可由已授权人工凭证确认，不能将 approved 当到账；真实自动打款未接通。",
+      "data": {
+        "state": "requested"
+      },
+      "number": 106,
+      "file": "screenshots/v2/08-wallet/106-withdrawal-review.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "withdrawal-approved",
+      "title": "提现审核通过",
+      "kind": "withdraw-detail",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "existing",
+      "note": "状态枚举已有；succeeded 可由已授权人工凭证确认，不能将 approved 当到账；真实自动打款未接通。",
+      "data": {
+        "state": "approved"
+      },
+      "number": 107,
+      "file": "screenshots/v2/08-wallet/107-withdrawal-approved.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "withdrawal-rejected",
+      "title": "提现审核未通过",
+      "kind": "withdraw-detail",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "existing",
+      "note": "状态枚举已有；succeeded 可由已授权人工凭证确认，不能将 approved 当到账；真实自动打款未接通。",
+      "data": {
+        "state": "rejected"
+      },
+      "number": 108,
+      "file": "screenshots/v2/08-wallet/108-withdrawal-rejected.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "withdrawal-processing",
+      "title": "提现执行处理中",
+      "kind": "withdraw-detail",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "target",
+      "note": "状态枚举已有；succeeded 可由已授权人工凭证确认，不能将 approved 当到账；真实自动打款未接通。",
+      "data": {
+        "state": "processing"
+      },
+      "number": 109,
+      "file": "screenshots/v2/08-wallet/109-withdrawal-processing.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "withdrawal-unknown",
+      "title": "提现结果未知",
+      "kind": "withdraw-detail",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "target",
+      "note": "状态枚举已有；succeeded 可由已授权人工凭证确认，不能将 approved 当到账；真实自动打款未接通。",
+      "data": {
+        "state": "unknown"
+      },
+      "number": 110,
+      "file": "screenshots/v2/08-wallet/110-withdrawal-unknown.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "withdrawal-completed",
+      "title": "提现确认完成",
+      "kind": "withdraw-detail",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "existing",
+      "note": "状态枚举已有；succeeded 可由已授权人工凭证确认，不能将 approved 当到账；真实自动打款未接通。",
+      "data": {
+        "state": "succeeded"
+      },
+      "number": 111,
+      "file": "screenshots/v2/08-wallet/111-withdrawal-completed.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "withdrawal-balance",
+      "title": "提现余额不足或欠款",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "当前无法申请提现",
+        "message": "可用佣金不足或存在欠款时不能申请。\n请查询钱包的可用、冻结与欠款金额。",
+        "action": "查看佣金钱包",
+        "mood": "warning"
+      },
+      "number": 112,
+      "file": "screenshots/v2/08-wallet/112-withdrawal-balance.png"
+    },
+    {
+      "group": "08-wallet",
+      "slug": "wallet-ledger-unavailable",
+      "title": "钱包流水接入前",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/distribution/me/wallets"
+      ],
+      "status": "unavailable",
+      "note": "钱包账本在后端存在，但没有本人钱包流水 API；不拼凑佣金列表冒充资金流水。",
+      "data": {
+        "title_line": "钱包流水查询暂未开放",
+        "message": "当前可查看钱包余额与佣金、提现记录。\n完整钱包资金流水入口尚未开放。",
+        "action": "返回钱包",
+        "mood": "neutral"
+      },
+      "number": 113,
+      "file": "screenshots/v2/08-wallet/113-wallet-ledger-unavailable.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "help",
+      "title": "帮助与售后",
+      "kind": "menu",
+      "api": [],
+      "status": "local",
+      "note": "帮助内容为草案，真实服务联系方式需运营配置确认。",
+      "data": {
+        "entries": [
+          "下单与付款说明",
+          "配送与交付说明",
+          "退款申请规则",
+          "会员与钱包说明",
+          "联系售后"
+        ]
+      },
+      "number": 114,
+      "file": "screenshots/v2/09-service/114-help.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "help-refund",
+      "title": "退款规则说明",
+      "kind": "info",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "local",
+      "note": "",
+      "data": {
+        "rows": [
+          [
+            "适用订单",
+            "已成交且未发货/交付"
+          ],
+          [
+            "退款范围",
+            "整单商品及原运费"
+          ],
+          [
+            "审核方式",
+            "按接单事实判定"
+          ]
+        ],
+        "body": "已接单需人工审核，未接单可自动审核。\n审核通过后仍需确认退款资金结果。\n已发货或已交付订单本期不能新增申请。"
+      },
+      "number": 115,
+      "file": "screenshots/v2/09-service/115-help-refund.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "contact",
+      "title": "联系售后",
+      "kind": "info",
+      "api": [],
+      "status": "unavailable",
+      "note": "site-profile 未提供联系方式字段；不虚构电话、在线聊天或营业时间。",
+      "data": {
+        "rows": [
+          [
+            "服务方式",
+            "等待运营公布"
+          ],
+          [
+            "订单求助",
+            "提供脱敏订单摘要"
+          ],
+          [
+            "隐私提醒",
+            "勿提供密码或付款秘密"
+          ]
+        ],
+        "body": "当前联系方式尚未配置。\n具体服务方式以商城正式公布的信息为准。"
+      },
+      "number": 116,
+      "file": "screenshots/v2/09-service/116-contact.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "privacy",
+      "title": "隐私说明草案",
+      "kind": "info",
+      "api": [],
+      "status": "local",
+      "note": "",
+      "data": {
+        "rows": [
+          [
+            "公开浏览",
+            "无需强制登录"
+          ],
+          [
+            "资料与地址",
+            "用于本人资料与履约"
+          ],
+          [
+            "设备权限",
+            "按实际操作申请"
+          ]
+        ],
+        "body": "仅获取完成对应业务必要的信息。\n拒绝非必要权限不影响公开商品浏览。\n退出清除本机私有缓存；历史交易按规则保留。\n此为设计结构草案，正式文本需审核。"
+      },
+      "number": 117,
+      "file": "screenshots/v2/09-service/117-privacy.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "terms",
+      "title": "服务协议草案",
+      "kind": "info",
+      "api": [],
+      "status": "local",
+      "note": "",
+      "data": {
+        "rows": [
+          [
+            "商品与成交",
+            "以服务端报价为准"
+          ],
+          [
+            "退款与履约",
+            "遵守已公布的规则"
+          ],
+          [
+            "资金结果",
+            "以可信事实为准"
+          ]
+        ],
+        "body": "请阅读商城正式发布的服务协议。\n本设计仅说明页面结构，不形成法律承诺。"
+      },
+      "number": 118,
+      "file": "screenshots/v2/09-service/118-terms.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "about",
+      "title": "关于商城",
+      "kind": "info",
+      "api": [
+        "GET /api/v1/system/site-profile",
+        "GET /api/v1/system/status"
+      ],
+      "status": "gap",
+      "note": "site-profile 当前为 Web 通用字段；小程序信息与联系方式须专项适配。",
+      "data": {
+        "rows": [
+          [
+            "商城名称",
+            "拼捷商城（设计示例）"
+          ],
+          [
+            "客户端形态",
+            "微信小程序"
+          ],
+          [
+            "相关说明",
+            "隐私与服务协议"
+          ]
+        ],
+        "body": "商品、订单和资金状态由商城服务提供。\n版本与主体信息以正式发布内容为准。"
+      },
+      "number": 119,
+      "file": "screenshots/v2/09-service/119-about.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "permission-photo",
+      "title": "头像权限拒绝",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "local",
+      "note": "",
+      "data": {
+        "title_line": "未允许使用相册",
+        "message": "本次头像修改未完成。\n可以继续使用原头像并浏览商城。",
+        "action": "返回个人资料",
+        "mood": "neutral"
+      },
+      "number": 120,
+      "file": "screenshots/v2/09-service/120-permission-photo.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "service-unavailable",
+      "title": "服务暂时不可用",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/system/site-profile",
+        "GET /api/v1/system/status"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "服务暂时不可用",
+        "message": "请稍后重试，当前内容未能刷新。\n网络故障不会自动清除你的登录状态。",
+        "action": "重试查询",
+        "mood": "warning"
+      },
+      "number": 121,
+      "file": "screenshots/v2/09-service/121-service-unavailable.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "rate-limited",
+      "title": "请求过于频繁",
+      "kind": "result",
+      "api": [],
+      "status": "local",
+      "note": "",
+      "data": {
+        "title_line": "操作有点频繁",
+        "message": "请按提示稍后重试。\n未确认的交易请查询结果，不要重复提交。",
+        "action": "返回原页面",
+        "mood": "warning"
+      },
+      "number": 122,
+      "file": "screenshots/v2/09-service/122-rate-limited.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "image-error",
+      "title": "商品图片加载失败",
+      "kind": "result",
+      "api": [
+        "GET /api/v1/products/{product_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "图片暂未加载成功",
+        "message": "商品文字信息仍可查看。\n可以重试加载图片或返回商品详情。",
+        "action": "重新加载图片",
+        "mood": "neutral"
+      },
+      "number": 123,
+      "file": "screenshots/v2/09-service/123-image-error.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "offline",
+      "title": "断网恢复提示",
+      "kind": "result",
+      "api": [],
+      "status": "local",
+      "note": "",
+      "data": {
+        "title_line": "网络连接已断开",
+        "message": "暂时不能刷新数据或提交交易。\n恢复网络后请核对最新订单与报价。",
+        "action": "检查网络后重试",
+        "mood": "warning"
+      },
+      "number": 124,
+      "file": "screenshots/v2/09-service/124-offline.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "session-expired",
+      "title": "登录恢复失败",
+      "kind": "result",
+      "api": [
+        "POST /api/v1/auth/logout",
+        "POST /api/v1/auth/refresh"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "title_line": "需要重新登录",
+        "message": "当前登录状态已失效。\n原操作尚未自动提交，登录后请重新确认。",
+        "action": "主动重新登录",
+        "mood": "warning"
+      },
+      "number": 125,
+      "file": "screenshots/v2/09-service/125-session-expired.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "refresh-error",
+      "title": "已有内容刷新失败",
+      "kind": "dialog",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "existing",
+      "note": "",
+      "data": {
+        "base": "cart",
+        "heading": "当前内容未能刷新",
+        "body": "页面保留上次成功读取的内容。\n请重新查询后再进行交易确认。",
+        "confirm": "重试刷新"
+      },
+      "number": 126,
+      "file": "screenshots/v2/09-service/126-refresh-error.png"
+    },
+    {
+      "group": "09-service",
+      "slug": "update-prompt",
+      "title": "小程序更新提示",
+      "kind": "dialog",
+      "api": [],
+      "status": "local",
+      "note": "",
+      "data": {
+        "base": "mine",
+        "heading": "新版本已准备好",
+        "body": "请在交易结果确认后再更新。\n更新前保留待确认的订单操作意图。",
+        "confirm": "稍后更新"
+      },
+      "number": 127,
+      "file": "screenshots/v2/09-service/127-update-prompt.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "home-loading",
+      "title": "首页：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/product-categories",
+        "GET /api/v1/products"
+      ],
+      "status": "existing",
+      "note": "复用 home 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "home",
+        "page_title": "首页",
+        "tab": "home"
+      },
+      "number": 128,
+      "file": "screenshots/v2/10-states/128-home-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "home-error",
+      "title": "首页：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/product-categories",
+        "GET /api/v1/products"
+      ],
+      "status": "existing",
+      "note": "复用 home 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "home",
+        "page_title": "首页",
+        "tab": "home"
+      },
+      "number": 129,
+      "file": "screenshots/v2/10-states/129-home-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "home-empty",
+      "title": "首页：无数据",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/product-categories",
+        "GET /api/v1/products"
+      ],
+      "status": "existing",
+      "note": "复用 home 的能力边界；无数据独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "empty",
+        "parent": "home",
+        "page_title": "首页",
+        "tab": "home"
+      },
+      "number": 130,
+      "file": "screenshots/v2/10-states/130-home-empty.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "category-loading",
+      "title": "分类：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/product-categories",
+        "GET /api/v1/products"
+      ],
+      "status": "gap",
+      "note": "复用 category 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "category",
+        "page_title": "分类",
+        "tab": "grid"
+      },
+      "number": 131,
+      "file": "screenshots/v2/10-states/131-category-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "category-error",
+      "title": "分类：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/product-categories",
+        "GET /api/v1/products"
+      ],
+      "status": "gap",
+      "note": "复用 category 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "category",
+        "page_title": "分类",
+        "tab": "grid"
+      },
+      "number": 132,
+      "file": "screenshots/v2/10-states/132-category-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "category-empty",
+      "title": "分类：无数据",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/product-categories",
+        "GET /api/v1/products"
+      ],
+      "status": "gap",
+      "note": "复用 category 的能力边界；无数据独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "empty",
+        "parent": "category",
+        "page_title": "分类",
+        "tab": "grid"
+      },
+      "number": 133,
+      "file": "screenshots/v2/10-states/133-category-empty.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "product-loading",
+      "title": "商品详情：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/products/{product_id}"
+      ],
+      "status": "existing",
+      "note": "复用 product 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "product",
+        "page_title": "商品详情",
+        "tab": null
+      },
+      "number": 134,
+      "file": "screenshots/v2/10-states/134-product-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "product-error",
+      "title": "商品详情：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/products/{product_id}"
+      ],
+      "status": "existing",
+      "note": "复用 product 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "product",
+        "page_title": "商品详情",
+        "tab": null
+      },
+      "number": 135,
+      "file": "screenshots/v2/10-states/135-product-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "product-empty",
+      "title": "商品详情：无数据",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/products/{product_id}"
+      ],
+      "status": "existing",
+      "note": "复用 product 的能力边界；无数据独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "empty",
+        "parent": "product",
+        "page_title": "商品详情",
+        "tab": null
+      },
+      "number": 136,
+      "file": "screenshots/v2/10-states/136-product-empty.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "cart-loading",
+      "title": "购物车：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "gap",
+      "note": "复用 cart 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "cart",
+        "page_title": "购物车",
+        "tab": "cart"
+      },
+      "number": 137,
+      "file": "screenshots/v2/10-states/137-cart-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "cart-error",
+      "title": "购物车：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "gap",
+      "note": "复用 cart 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "cart",
+        "page_title": "购物车",
+        "tab": "cart"
+      },
+      "number": 138,
+      "file": "screenshots/v2/10-states/138-cart-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "cart-empty",
+      "title": "购物车：无数据",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "gap",
+      "note": "复用 cart 的能力边界；无数据独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "empty",
+        "parent": "cart",
+        "page_title": "购物车",
+        "tab": "cart"
+      },
+      "number": 139,
+      "file": "screenshots/v2/10-states/139-cart-empty.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "cart-login",
+      "title": "购物车：未登录",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/cart-items",
+        "POST /api/v1/cart-items",
+        "PATCH /api/v1/cart-items/{item_id}",
+        "DELETE /api/v1/cart-items/{item_id}"
+      ],
+      "status": "gap",
+      "note": "复用 cart 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "cart",
+        "page_title": "购物车",
+        "tab": "cart"
+      },
+      "number": 140,
+      "file": "screenshots/v2/10-states/140-cart-login.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "checkout-physical-loading",
+      "title": "实物商品结算：首次加载",
+      "kind": "state",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "复用 checkout-physical 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "checkout-physical",
+        "page_title": "实物商品结算",
+        "tab": null
+      },
+      "number": 141,
+      "file": "screenshots/v2/10-states/141-checkout-physical-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "checkout-physical-error",
+      "title": "实物商品结算：查询失败",
+      "kind": "state",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "复用 checkout-physical 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "checkout-physical",
+        "page_title": "实物商品结算",
+        "tab": null
+      },
+      "number": 142,
+      "file": "screenshots/v2/10-states/142-checkout-physical-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "checkout-physical-login",
+      "title": "实物商品结算：未登录",
+      "kind": "state",
+      "api": [
+        "POST /api/v1/checkout/preview",
+        "POST /api/v1/orders",
+        "POST /api/v1/commerce/quotes"
+      ],
+      "status": "existing",
+      "note": "复用 checkout-physical 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "checkout-physical",
+        "page_title": "实物商品结算",
+        "tab": null
+      },
+      "number": 143,
+      "file": "screenshots/v2/10-states/143-checkout-physical-login.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "orders-list-loading",
+      "title": "我的订单：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "target",
+      "note": "复用 orders-list 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "orders-list",
+        "page_title": "我的订单",
+        "tab": null
+      },
+      "number": 144,
+      "file": "screenshots/v2/10-states/144-orders-list-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "orders-list-error",
+      "title": "我的订单：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "target",
+      "note": "复用 orders-list 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "orders-list",
+        "page_title": "我的订单",
+        "tab": null
+      },
+      "number": 145,
+      "file": "screenshots/v2/10-states/145-orders-list-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "orders-list-empty",
+      "title": "我的订单：无数据",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "target",
+      "note": "复用 orders-list 的能力边界；无数据独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "empty",
+        "parent": "orders-list",
+        "page_title": "我的订单",
+        "tab": null
+      },
+      "number": 146,
+      "file": "screenshots/v2/10-states/146-orders-list-empty.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "orders-list-login",
+      "title": "我的订单：未登录",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "target",
+      "note": "复用 orders-list 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "orders-list",
+        "page_title": "我的订单",
+        "tab": null
+      },
+      "number": 147,
+      "file": "screenshots/v2/10-states/147-orders-list-login.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "order-pending-loading",
+      "title": "待付款订单：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "existing",
+      "note": "复用 order-pending 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "order-pending",
+        "page_title": "待付款订单",
+        "tab": null
+      },
+      "number": 148,
+      "file": "screenshots/v2/10-states/148-order-pending-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "order-pending-error",
+      "title": "待付款订单：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "existing",
+      "note": "复用 order-pending 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "order-pending",
+        "page_title": "待付款订单",
+        "tab": null
+      },
+      "number": 149,
+      "file": "screenshots/v2/10-states/149-order-pending-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "order-pending-login",
+      "title": "待付款订单：未登录",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}",
+        "POST /api/v1/orders/{order_id}/cancel"
+      ],
+      "status": "existing",
+      "note": "复用 order-pending 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "order-pending",
+        "page_title": "待付款订单",
+        "tab": null
+      },
+      "number": 150,
+      "file": "screenshots/v2/10-states/150-order-pending-login.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "fulfillment-physical-loading",
+      "title": "发货信息：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}/fulfillment",
+        "POST /api/v1/orders/{order_id}/fulfillment/confirm-receipt"
+      ],
+      "status": "existing",
+      "note": "复用 fulfillment-physical 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "fulfillment-physical",
+        "page_title": "发货信息",
+        "tab": null
+      },
+      "number": 151,
+      "file": "screenshots/v2/10-states/151-fulfillment-physical-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "fulfillment-physical-error",
+      "title": "发货信息：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}/fulfillment",
+        "POST /api/v1/orders/{order_id}/fulfillment/confirm-receipt"
+      ],
+      "status": "existing",
+      "note": "复用 fulfillment-physical 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "fulfillment-physical",
+        "page_title": "发货信息",
+        "tab": null
+      },
+      "number": 152,
+      "file": "screenshots/v2/10-states/152-fulfillment-physical-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "refund-history-loading",
+      "title": "本单售后记录：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "复用 refund-history 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "refund-history",
+        "page_title": "本单售后记录",
+        "tab": null
+      },
+      "number": 153,
+      "file": "screenshots/v2/10-states/153-refund-history-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "refund-history-error",
+      "title": "本单售后记录：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "复用 refund-history 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "refund-history",
+        "page_title": "本单售后记录",
+        "tab": null
+      },
+      "number": 154,
+      "file": "screenshots/v2/10-states/154-refund-history-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "refund-history-empty",
+      "title": "本单售后记录：无数据",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "复用 refund-history 的能力边界；无数据独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "empty",
+        "parent": "refund-history",
+        "page_title": "本单售后记录",
+        "tab": null
+      },
+      "number": 155,
+      "file": "screenshots/v2/10-states/155-refund-history-empty.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "refund-history-login",
+      "title": "本单售后记录：未登录",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/orders/{order_id}/refunds",
+        "POST /api/v1/orders/{order_id}/refunds"
+      ],
+      "status": "existing",
+      "note": "复用 refund-history 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "refund-history",
+        "page_title": "本单售后记录",
+        "tab": null
+      },
+      "number": 156,
+      "file": "screenshots/v2/10-states/156-refund-history-login.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "reviews-loading",
+      "title": "商品评价列表：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/products/{product_id}/reviews",
+        "POST /api/v1/order-items/{order_item_id}/review"
+      ],
+      "status": "existing",
+      "note": "复用 reviews 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "reviews",
+        "page_title": "商品评价列表",
+        "tab": null
+      },
+      "number": 157,
+      "file": "screenshots/v2/10-states/157-reviews-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "reviews-error",
+      "title": "商品评价列表：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/products/{product_id}/reviews",
+        "POST /api/v1/order-items/{order_item_id}/review"
+      ],
+      "status": "existing",
+      "note": "复用 reviews 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "reviews",
+        "page_title": "商品评价列表",
+        "tab": null
+      },
+      "number": 158,
+      "file": "screenshots/v2/10-states/158-reviews-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "reviews-empty",
+      "title": "商品评价列表：无数据",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/products/{product_id}/reviews",
+        "POST /api/v1/order-items/{order_item_id}/review"
+      ],
+      "status": "existing",
+      "note": "复用 reviews 的能力边界；无数据独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "empty",
+        "parent": "reviews",
+        "page_title": "商品评价列表",
+        "tab": null
+      },
+      "number": 159,
+      "file": "screenshots/v2/10-states/159-reviews-empty.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "mine-loading",
+      "title": "个人中心：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "gap",
+      "note": "复用 mine 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "mine",
+        "page_title": "个人中心",
+        "tab": "user"
+      },
+      "number": 160,
+      "file": "screenshots/v2/10-states/160-mine-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "mine-error",
+      "title": "个人中心：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "gap",
+      "note": "复用 mine 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "mine",
+        "page_title": "个人中心",
+        "tab": "user"
+      },
+      "number": 161,
+      "file": "screenshots/v2/10-states/161-mine-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "mine-login",
+      "title": "个人中心：未登录",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "gap",
+      "note": "复用 mine 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "mine",
+        "page_title": "个人中心",
+        "tab": "user"
+      },
+      "number": 162,
+      "file": "screenshots/v2/10-states/162-mine-login.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "profile-loading",
+      "title": "个人资料：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "existing",
+      "note": "复用 profile 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "profile",
+        "page_title": "个人资料",
+        "tab": null
+      },
+      "number": 163,
+      "file": "screenshots/v2/10-states/163-profile-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "profile-error",
+      "title": "个人资料：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "existing",
+      "note": "复用 profile 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "profile",
+        "page_title": "个人资料",
+        "tab": null
+      },
+      "number": 164,
+      "file": "screenshots/v2/10-states/164-profile-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "profile-login",
+      "title": "个人资料：未登录",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/users/me",
+        "PATCH /api/v1/users/me",
+        "PUT /api/v1/users/me/avatar"
+      ],
+      "status": "existing",
+      "note": "复用 profile 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "profile",
+        "page_title": "个人资料",
+        "tab": null
+      },
+      "number": 165,
+      "file": "screenshots/v2/10-states/165-profile-login.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "sessions-loading",
+      "title": "登录设备：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/users/me/sessions",
+        "DELETE /api/v1/users/me/sessions/{session_id}",
+        "POST /api/v1/users/me/sessions/revoke-others",
+        "POST /api/v1/users/me/password",
+        "DELETE /api/v1/users/me"
+      ],
+      "status": "gap",
+      "note": "复用 sessions 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "sessions",
+        "page_title": "登录设备",
+        "tab": null
+      },
+      "number": 166,
+      "file": "screenshots/v2/10-states/166-sessions-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "sessions-error",
+      "title": "登录设备：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/users/me/sessions",
+        "DELETE /api/v1/users/me/sessions/{session_id}",
+        "POST /api/v1/users/me/sessions/revoke-others",
+        "POST /api/v1/users/me/password",
+        "DELETE /api/v1/users/me"
+      ],
+      "status": "gap",
+      "note": "复用 sessions 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "sessions",
+        "page_title": "登录设备",
+        "tab": null
+      },
+      "number": 167,
+      "file": "screenshots/v2/10-states/167-sessions-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "sessions-empty",
+      "title": "登录设备：无数据",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/users/me/sessions",
+        "DELETE /api/v1/users/me/sessions/{session_id}",
+        "POST /api/v1/users/me/sessions/revoke-others",
+        "POST /api/v1/users/me/password",
+        "DELETE /api/v1/users/me"
+      ],
+      "status": "gap",
+      "note": "复用 sessions 的能力边界；无数据独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "empty",
+        "parent": "sessions",
+        "page_title": "登录设备",
+        "tab": null
+      },
+      "number": 168,
+      "file": "screenshots/v2/10-states/168-sessions-empty.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "sessions-login",
+      "title": "登录设备：未登录",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/users/me/sessions",
+        "DELETE /api/v1/users/me/sessions/{session_id}",
+        "POST /api/v1/users/me/sessions/revoke-others",
+        "POST /api/v1/users/me/password",
+        "DELETE /api/v1/users/me"
+      ],
+      "status": "gap",
+      "note": "复用 sessions 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "sessions",
+        "page_title": "登录设备",
+        "tab": null
+      },
+      "number": 169,
+      "file": "screenshots/v2/10-states/169-sessions-login.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "addresses-loading",
+      "title": "收货地址管理：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "existing",
+      "note": "复用 addresses 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "addresses",
+        "page_title": "收货地址管理",
+        "tab": null
+      },
+      "number": 170,
+      "file": "screenshots/v2/10-states/170-addresses-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "addresses-error",
+      "title": "收货地址管理：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "existing",
+      "note": "复用 addresses 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "addresses",
+        "page_title": "收货地址管理",
+        "tab": null
+      },
+      "number": 171,
+      "file": "screenshots/v2/10-states/171-addresses-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "addresses-empty",
+      "title": "收货地址管理：无数据",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "existing",
+      "note": "复用 addresses 的能力边界；无数据独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "empty",
+        "parent": "addresses",
+        "page_title": "收货地址管理",
+        "tab": null
+      },
+      "number": 172,
+      "file": "screenshots/v2/10-states/172-addresses-empty.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "addresses-login",
+      "title": "收货地址管理：未登录",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/addresses",
+        "POST /api/v1/addresses",
+        "PUT /api/v1/addresses/{address_id}",
+        "DELETE /api/v1/addresses/{address_id}"
+      ],
+      "status": "existing",
+      "note": "复用 addresses 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "addresses",
+        "page_title": "收货地址管理",
+        "tab": null
+      },
+      "number": 173,
+      "file": "screenshots/v2/10-states/173-addresses-login.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "membership-loading",
+      "title": "会员与分销档案：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/profile",
+        "POST /api/v1/distribution/me/profile"
+      ],
+      "status": "gap",
+      "note": "复用 membership 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "membership",
+        "page_title": "会员与分销档案",
+        "tab": null
+      },
+      "number": 174,
+      "file": "screenshots/v2/10-states/174-membership-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "membership-error",
+      "title": "会员与分销档案：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/profile",
+        "POST /api/v1/distribution/me/profile"
+      ],
+      "status": "gap",
+      "note": "复用 membership 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "membership",
+        "page_title": "会员与分销档案",
+        "tab": null
+      },
+      "number": 175,
+      "file": "screenshots/v2/10-states/175-membership-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "membership-empty",
+      "title": "会员与分销档案：无数据",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/profile",
+        "POST /api/v1/distribution/me/profile"
+      ],
+      "status": "gap",
+      "note": "复用 membership 的能力边界；无数据独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "empty",
+        "parent": "membership",
+        "page_title": "会员与分销档案",
+        "tab": null
+      },
+      "number": 176,
+      "file": "screenshots/v2/10-states/176-membership-empty.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "membership-login",
+      "title": "会员与分销档案：未登录",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/profile",
+        "POST /api/v1/distribution/me/profile"
+      ],
+      "status": "gap",
+      "note": "复用 membership 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "membership",
+        "page_title": "会员与分销档案",
+        "tab": null
+      },
+      "number": 177,
+      "file": "screenshots/v2/10-states/177-membership-login.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "wallets-loading",
+      "title": "我的钱包：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/wallets"
+      ],
+      "status": "existing",
+      "note": "复用 wallets 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "wallets",
+        "page_title": "我的钱包",
+        "tab": null
+      },
+      "number": 178,
+      "file": "screenshots/v2/10-states/178-wallets-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "wallets-error",
+      "title": "我的钱包：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/wallets"
+      ],
+      "status": "existing",
+      "note": "复用 wallets 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "wallets",
+        "page_title": "我的钱包",
+        "tab": null
+      },
+      "number": 179,
+      "file": "screenshots/v2/10-states/179-wallets-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "wallets-login",
+      "title": "我的钱包：未登录",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/wallets"
+      ],
+      "status": "existing",
+      "note": "复用 wallets 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "wallets",
+        "page_title": "我的钱包",
+        "tab": null
+      },
+      "number": 180,
+      "file": "screenshots/v2/10-states/180-wallets-login.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "commissions-loading",
+      "title": "佣金记录：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/commissions"
+      ],
+      "status": "existing",
+      "note": "复用 commissions 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "commissions",
+        "page_title": "佣金记录",
+        "tab": null
+      },
+      "number": 181,
+      "file": "screenshots/v2/10-states/181-commissions-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "commissions-error",
+      "title": "佣金记录：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/commissions"
+      ],
+      "status": "existing",
+      "note": "复用 commissions 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "commissions",
+        "page_title": "佣金记录",
+        "tab": null
+      },
+      "number": 182,
+      "file": "screenshots/v2/10-states/182-commissions-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "commissions-empty",
+      "title": "佣金记录：无数据",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/commissions"
+      ],
+      "status": "existing",
+      "note": "复用 commissions 的能力边界；无数据独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "empty",
+        "parent": "commissions",
+        "page_title": "佣金记录",
+        "tab": null
+      },
+      "number": 183,
+      "file": "screenshots/v2/10-states/183-commissions-empty.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "commissions-login",
+      "title": "佣金记录：未登录",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/commissions"
+      ],
+      "status": "existing",
+      "note": "复用 commissions 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "commissions",
+        "page_title": "佣金记录",
+        "tab": null
+      },
+      "number": 184,
+      "file": "screenshots/v2/10-states/184-commissions-login.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "withdrawal-records-loading",
+      "title": "提现记录：首次加载",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "existing",
+      "note": "复用 withdrawal-records 的能力边界；首次加载独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "loading",
+        "parent": "withdrawal-records",
+        "page_title": "提现记录",
+        "tab": null
+      },
+      "number": 185,
+      "file": "screenshots/v2/10-states/185-withdrawal-records-loading.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "withdrawal-records-error",
+      "title": "提现记录：查询失败",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "existing",
+      "note": "复用 withdrawal-records 的能力边界；查询失败独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "error",
+        "parent": "withdrawal-records",
+        "page_title": "提现记录",
+        "tab": null
+      },
+      "number": 186,
+      "file": "screenshots/v2/10-states/186-withdrawal-records-error.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "withdrawal-records-empty",
+      "title": "提现记录：无数据",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "existing",
+      "note": "复用 withdrawal-records 的能力边界；无数据独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "empty",
+        "parent": "withdrawal-records",
+        "page_title": "提现记录",
+        "tab": null
+      },
+      "number": 187,
+      "file": "screenshots/v2/10-states/187-withdrawal-records-empty.png"
+    },
+    {
+      "group": "10-states",
+      "slug": "withdrawal-records-login",
+      "title": "提现记录：未登录",
+      "kind": "state",
+      "api": [
+        "GET /api/v1/distribution/me/withdrawals",
+        "POST /api/v1/distribution/me/withdrawals"
+      ],
+      "status": "existing",
+      "note": "复用 withdrawal-records 的能力边界；未登录独立呈现，不伪造业务结果。",
+      "data": {
+        "state": "login",
+        "parent": "withdrawal-records",
+        "page_title": "提现记录",
+        "tab": null
+      },
+      "number": 188,
+      "file": "screenshots/v2/10-states/188-withdrawal-records-login.png"
+    }
+  ],
+  "boards": [
+    "screenshots/v2/01-browse-board-01.png",
+    "screenshots/v2/01-browse-board-02.png",
+    "screenshots/v2/02-purchase-board-01.png",
+    "screenshots/v2/02-purchase-board-02.png",
+    "screenshots/v2/02-purchase-board-03.png",
+    "screenshots/v2/03-orders-board-01.png",
+    "screenshots/v2/03-orders-board-02.png",
+    "screenshots/v2/03-orders-board-03.png",
+    "screenshots/v2/03-orders-board-04.png",
+    "screenshots/v2/04-aftercare-board-01.png",
+    "screenshots/v2/04-aftercare-board-02.png",
+    "screenshots/v2/04-aftercare-board-03.png",
+    "screenshots/v2/05-account-board-01.png",
+    "screenshots/v2/05-account-board-02.png",
+    "screenshots/v2/05-account-board-03.png",
+    "screenshots/v2/06-address-board-01.png",
+    "screenshots/v2/06-address-board-02.png",
+    "screenshots/v2/07-member-board-01.png",
+    "screenshots/v2/07-member-board-02.png",
+    "screenshots/v2/08-wallet-board-01.png",
+    "screenshots/v2/08-wallet-board-02.png",
+    "screenshots/v2/08-wallet-board-03.png",
+    "screenshots/v2/09-service-board-01.png",
+    "screenshots/v2/09-service-board-02.png",
+    "screenshots/v2/09-service-board-03.png",
+    "screenshots/v2/10-states-board-01.png",
+    "screenshots/v2/10-states-board-02.png",
+    "screenshots/v2/10-states-board-03.png",
+    "screenshots/v2/10-states-board-04.png",
+    "screenshots/v2/10-states-board-05.png",
+    "screenshots/v2/10-states-board-06.png",
+    "screenshots/v2/10-states-board-07.png",
+    "screenshots/v2/10-states-board-08.png",
+    "screenshots/v2/10-states-board-09.png",
+    "screenshots/v2/10-states-board-10.png",
+    "screenshots/v2/10-states-board-11.png"
+  ]
+}
