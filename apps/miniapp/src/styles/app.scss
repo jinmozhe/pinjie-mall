@@ -68,3 +68,6 @@ page {
 .finance-balances > view { min-width: 0; color: $secondary; }
 .finance-facts > view { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; margin: 16px 0; }
 .finance-facts text { overflow-wrap: anywhere; }
+.referral-code { font-size: 36px; font-weight: 600; letter-spacing: 2px; margin: 24px 0; }
+.share-button { min-height: 88px; margin: 24px 0; padding: 16px 24px; font-size: 28px; line-height: 1.5; border-radius: 12px; background: $primary; color: $surface; }
+.share-button[disabled] { background: $background; color: $secondary; }

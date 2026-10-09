@@ -19,6 +19,7 @@ from app.services.accounts import UserProfileService
 from app.services.assets import AssetUploader
 from app.services.commerce import AddressApplicationService
 from app.services.miniapp_auth import MiniappAuthService, bearer_error
+from app.services.miniapp_engagement import MiniappEngagementService
 from app.services.miniapp_finance import MiniappFinanceService
 from app.services.miniapp_trade import MiniappTradeQueryService
 from app.services.miniapp_trade_schemas import MiniappHelpRead
@@ -125,3 +126,10 @@ def miniapp_avatar_uploader(current: MiniappPrincipal) -> AssetUploader:
 MiniappProfile = Annotated[UserProfileService, Depends(miniapp_profile)]
 MiniappFinance = Annotated[MiniappFinanceService, Depends(miniapp_finance)]
 MiniappAvatarUploader = Annotated[AssetUploader, Depends(miniapp_avatar_uploader)]
+
+
+def miniapp_engagement(session: DatabaseSession) -> MiniappEngagementService:
+    return MiniappEngagementService(session)
+
+
+MiniappEngagement = Annotated[MiniappEngagementService, Depends(miniapp_engagement)]

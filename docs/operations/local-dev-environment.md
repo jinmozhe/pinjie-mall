@@ -231,6 +231,8 @@ pnpm --filter @pinjie/admin dev
 
 本人资料头像、会员开通、双钱包流水、佣金和历史提现查询也沿用同一 watch 命令，无需另开 HTTP 服务或逐次手工构建。头像上传域名、本人资产绑定、资金权利及未知结果查询见[资料会员资金手册](miniapp-profile-and-finance.md)；默认登录关闭，新提现申请未开放。
 
+推荐分享与本人积分查询同样沿用上述命令，页面入口位于个人中心。AppID 继续预留 touristappid；当前阶段先完成源码与轻量门禁，取得实际 AppID 后再按[推荐积分手册](miniapp-referral-and-points.md)进行本地微信平台验收。页面分享配置及封面复制配置变更后需重启 watch，无需新增服务。
+
 1. 使用 Codex 或 VS Code 编辑同一工作区；Backend 与 Admin 按前两节独立运行。
 2. 初始化专项完成后，在仓库根目录的独立终端启动小程序 watch：
 

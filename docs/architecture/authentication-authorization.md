@@ -44,6 +44,8 @@
 
 小程序资料与头像使用独立 MiniappBearer：上传固定 avatar 场景与当前用户 uploader，绑定必须显式提供本人资产 ID 或 null。共享 UserProfileService 在事务内锁用户并重新拒绝停用账户，保留资产场景、归属及 URL 校验。会员与资金查询先校验本人账户有效，再按 user_id、beneficiary_user_id 或本人 wallet_id 过滤；安全投影排除他人身份、收款与渠道资料。客户端原生上传纳入会话取消与旧响应拒绝，具体接口见[资料会员资金手册](../operations/miniapp-profile-and-finance.md)。
 
+推荐与积分端点使用同一 MiniappBearer 和 no-store 边界。推荐安全投影只返回本人邀请码、时间及原码匹配布尔值，不能查询他人资料；写入仍由领域事务内校验 active user、首次绑定、自邀与循环。积分读取按本人 user_id 定位账户，再按本人 account_id 查询流水，排除内部来源标识、备注和幂等键。绑定意图在当前账户确认后保存，客户端不自动绑定或跨身份重放，见[推荐积分手册](../operations/miniapp-referral-and-points.md)。
+
 ## 5. JWT、密码与 Session
 
 - Access JWT 使用 PyJWT 与固定 `HS256` allowlist。Web 和 Admin 分别使用独立 Secret 与 `pinjie-web`、`pinjie-admin` audience。

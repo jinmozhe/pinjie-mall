@@ -10,6 +10,8 @@
 
 个人资料、会员开通、双钱包流水、佣金及历史提现查询已有六个页面源码，实施与验证见[资料会员资金计划](../../plans/2026-10-09_小程序个人资料会员与钱包查询接入计划.md)，使用与身份/域名前置见[资料会员资金手册](../operations/miniapp-profile-and-finance.md)。头像使用原生上传和本人资产绑定，沿用会话取消与代次隔离；新提现申请继续关闭。
 
+推荐分享与本人积分查询已沿用现有技术基线实现。分享使用页面级 useShareAppMessage、enableShareAppMessage 和原生 openType=share；固定无账户数据的 5:4 PNG 由编译配置显式复制。推荐写入保留本人原码并主动确认，积分不转为 JavaScript Number。2026-10-09 已核验微信/Taro 当前官方文档与锁定版本类型，来源与平台待验收项见[推荐积分手册](../operations/miniapp-referral-and-points.md)，未升级依赖或执行微信编译。
+
 ## 2. 初始化技术栈与版本
 
 | 能力 | 确定基线 | 执行要求 |

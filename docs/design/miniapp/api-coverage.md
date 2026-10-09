@@ -36,12 +36,12 @@
 | 安全/设备/注销 | `GET /api/v1/users/me/sessions`、会话单条撤销及 revoke-others、`POST /api/v1/users/me/password`、`DELETE /api/v1/users/me` | 设备脱敏摘要、撤销确认、已有密码账户修改密码、注销说明 | 会话模型为 browser_cookie；密码和注销要求 current_password，微信无密码凭据证明未完成 |
 | 收货地址 | `GET/POST /api/v1/addresses`、`PUT/DELETE /api/v1/addresses/{address_id}` | 收件人、联系号码、三级区域名称/编码、详细地址、默认值与 revision | 最多 20 条；删除默认地址由后端选替补；区域数据源需工程专项确定 |
 | 分销档案 | `GET/POST /api/v1/miniapp/membership` | 主动开通、等级名称与有效状态、已有推荐关系及绑定时间 | 已有源码；开通不等于获得等级；不输出推荐人 ID/邀请码，不绑定推荐人；无有效邀请统计 |
-| 推荐关系 | `POST /api/v1/distribution/me/referrer`、档案查询 | 主动确认首次绑定、服务端拒绝自邀/循环/重复绑定 | 当前只有 inviter_id，脱敏昵称展示仍需投影；不提供换绑或团队个人信息列表 |
-| 微信分享 | 档案邀请码已有，无独立分享接口 | 设计分享入口、邀请码与失效反馈，不画假二维码 | 微信分享参数、身份接入和有效邀请政策需专项；不做收益承诺 |
+| 推荐关系 | `GET/POST /api/v1/miniapp/referral` | 本人码、主动确认首次绑定、已绑定事实及指定原码匹配查询 | 已有安全投影与页面源码；服务端拒绝自邀/循环/换绑；平台及数据库动态验证未执行，不输出推荐人身份 |
+| 微信分享 | 本人推荐查询与页面原生分享，无独立发码接口 | 固定落地路径、本人邀请码、登录后主动确认、非法参数反馈 | 已有页面钩子、按钮与固定 5:4 封面源码；AppID 预留、平台未验收；有效邀请政策未定义，不做收益承诺 |
 | 双钱包/流水 | `GET /api/v1/miniapp/wallets`、`GET /api/v1/miniapp/wallets/{wallet_type}/ledgers` | 两轨可用/冻结/欠款、本人分页流水、三类变化与历史余额快照 | 已有源码；无充值、互转或抵扣；读取失败不伪造余额；不输出幂等键或关联订单 |
 | 佣金 | `GET /api/v1/miniapp/commissions` | amount、level、base_amount、rate、recovered_amount、状态与时间 | 已有本人分页源码；无状态筛选或收益汇总，不输出买家、订单或完整规则快照；动态验收未执行 |
 | 提现 | `GET /api/v1/miniapp/withdrawals` | 金额、审核/执行状态、人工或渠道确认事实、时间与分页 | 已有历史查询源码；不输出收款目标、运营身份、自由文本或渠道引用；新申请关闭，真实自动渠道未接通 |
-| 积分 | 只有管理端账户/流水查询与内部账本能力 | 接入前不可用页面 | 未有本人 C 端余额/流水，不调用 Admin；不展示假积分、兑换、抵扣或到期功能 |
+| 积分 | `GET /api/v1/miniapp/points`、`GET /api/v1/miniapp/points/ledgers` | 本人账户状态、可用/冻结/追回欠款、分页三类变动 | 已有安全查询与页面源码，大整数使用精确字符串；平台和动态验证未执行；不开放兑换/抵扣/到期功能 |
 | 关于/帮助/隐私 | `GET /api/v1/miniapp/help`；原 system/site-profile 仅资料参考 | 公开帮助、问题展开、电话/邮箱操作或未配置提示、隐私说明 | 已有帮助源码；联系方式由 Backend Settings 配置，未配置明确 null；正式协议与主体需运营确认，无聊天客服 |
 
 ## 源码证据入口
