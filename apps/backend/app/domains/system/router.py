@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 
+from app.api.dependencies import get_request_settings
 from app.core.context import current_request_id
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.health import check_readiness
 from app.core.response import ResponseModel, success_response
+from app.domains.system.schemas import ConsumerHelpRead
 
 from .schemas import SystemStatus
 
@@ -34,3 +36,13 @@ async def get_system_status(request: Request) -> ResponseModel[SystemStatus]:
 
 def readiness_response(*, status_code: int, status: str, checks: dict[str, str]) -> JSONResponse:
     return JSONResponse(status_code=status_code, content={"status": status, "checks": checks})
+
+
+@router.get("/help", response_model=ResponseModel[ConsumerHelpRead], summary="查询公开支持联系方式")
+async def help_read(request: Request, response: Response) -> ResponseModel[ConsumerHelpRead]:
+    response.headers["Cache-Control"] = "no-store"
+    settings = get_request_settings(request)
+    return success_response(
+        data=ConsumerHelpRead(phone=settings.support_phone, email=settings.support_email),
+        request_id=current_request_id(),
+    )

@@ -3,7 +3,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.dependencies import require_admin_csrf, require_permission
+from app.api.dependencies import UserPrincipal, require_admin_csrf, require_permission
+from app.api.distribution_dependencies import ConsumerEngagement
 from app.api.membership_dependencies import AdminMembership, AdminPoints, Membership, UserMembership
 from app.core.context import current_request_id
 from app.core.pagination import PageResult
@@ -28,6 +29,10 @@ from app.domains.membership.schemas import (
     PointsAccountRead,
     PointsLedgerRead,
     PointsManualAdjustment,
+)
+from app.services.engagement_schemas import (
+    ConsumerPointsLedgerRead,
+    ConsumerPointsRead,
 )
 
 router = APIRouter(tags=["会员价格与运费"])
@@ -247,3 +252,24 @@ async def quote(
 
 
 __all__ = ["router"]
+
+
+@router.get("/users/me/points", response_model=ResponseModel[ConsumerPointsRead], summary="查询本人积分账户与精确余额")
+async def points(service: ConsumerEngagement, current: UserPrincipal) -> ResponseModel[ConsumerPointsRead]:
+    return success_response(data=await service.points(current.user.id), request_id=current_request_id())
+
+
+@router.get(
+    "/users/me/points/ledgers",
+    response_model=ResponseModel[PageResult[ConsumerPointsLedgerRead]],
+    summary="分页查询本人积分流水安全投影",
+)
+async def consumer_points_ledgers(
+    service: ConsumerEngagement,
+    current: UserPrincipal,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+) -> ResponseModel[PageResult[ConsumerPointsLedgerRead]]:
+    return success_response(
+        data=await service.points_ledgers(current.user.id, page, page_size), request_id=current_request_id()
+    )

@@ -17,8 +17,8 @@ from app.core.identifiers import new_uuid7
 from app.core.request_metadata import RequestMetadata
 from app.db.models import User, UserSession
 from app.db.models.distribution import PointsAccount, WalletAccount
-from app.services.miniapp_account import MiniappAccountService
-from app.services.miniapp_account_schemas import MiniappSessionTargets
+from app.domains.users.security_schemas import ConsumerSessionTargets
+from app.services.account_security import ConsumerAccountService
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -45,9 +45,9 @@ async def factory() -> AsyncIterator[async_sessionmaker[AsyncSession]]:
 
 
 @asynccontextmanager
-async def account(factory: async_sessionmaker[AsyncSession]) -> AsyncIterator[MiniappAccountService]:
+async def account(factory: async_sessionmaker[AsyncSession]) -> AsyncIterator[ConsumerAccountService]:
     async with factory() as session:
-        yield MiniappAccountService(
+        yield ConsumerAccountService(
             session=session,
             session_factory=factory,
             metadata=RequestMetadata("account-test", "account-test", None, None, None),
@@ -87,11 +87,11 @@ async def test_original_targets_owner_profile_and_current_rechecks(factory: asyn
     for forbidden in [current.id, browser.id, foreign.id, new_uuid7()]:
         async with account(factory) as service:
             with pytest.raises(AppException):
-                await service.revoke(owner, current.id, 1, MiniappSessionTargets(session_ids=[target.id, forbidden]))
+                await service.revoke(owner, current.id, 1, ConsumerSessionTargets(session_ids=[target.id, forbidden]))
         async with factory() as session:
             unchanged = await session.get(UserSession, target.id)
             assert unchanged is not None and unchanged.revoked_at is None
-    original = MiniappSessionTargets(session_ids=[target.id, expired.id])
+    original = ConsumerSessionTargets(session_ids=[target.id, expired.id])
     async with account(factory) as service:
         result = await service.revoke(owner, current.id, 1, original)
         assert [item.state for item in result.sessions] == ["revoked", "revoked"]
@@ -115,10 +115,10 @@ async def test_original_targets_owner_profile_and_current_rechecks(factory: asyn
         await session.commit()
     async with account(factory) as service:
         with pytest.raises(AppException):
-            await service.revoke(owner, current.id, 1, MiniappSessionTargets(session_ids=[new_login.id]))
+            await service.revoke(owner, current.id, 1, ConsumerSessionTargets(session_ids=[new_login.id]))
     async with account(factory) as service:
         status = await service.revocation_status(
-            owner, MiniappSessionTargets(session_ids=[target.id, foreign.id, browser.id])
+            owner, ConsumerSessionTargets(session_ids=[target.id, foreign.id, browser.id])
         )
         assert [item.state for item in status.sessions] == ["revoked", "not_found", "not_found"]
     async with factory() as session:

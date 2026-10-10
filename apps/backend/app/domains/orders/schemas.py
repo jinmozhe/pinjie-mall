@@ -127,3 +127,7 @@ class OrderItemFact(OrderItemRead):
 
 class AdminOrderSummary(OrderFact):
     """管理端订单发现入口，不包含收货地址与订单明细。"""
+
+
+class OperationIntentRead(BaseModel):
+    request_id: UUID

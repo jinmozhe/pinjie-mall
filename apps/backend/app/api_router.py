@@ -7,7 +7,6 @@ from app.api.commissioning_router import router as commissioning_router
 from app.api.distribution_router import router as distribution_router
 from app.api.lifecycle_router import router as lifecycle_router
 from app.api.membership_router import router as membership_router
-from app.api.miniapp_router import router as miniapp_router
 from app.api.transaction_router import router as transaction_router
 from app.domains.admin.auth_router import router as admin_auth_router
 from app.domains.admin.management_router import router as admin_management_router
@@ -35,4 +34,3 @@ api_router.include_router(admin_management_router)
 api_router.include_router(admin_settings_router)
 api_router.include_router(public_settings_router)
 api_router.include_router(system_router)
-api_router.include_router(miniapp_router)

@@ -26,33 +26,28 @@ RefundExecutionStatus = Literal["not_started", "created", "processing", "succeed
 RefundFundsStatus = Literal["not_confirmed", "confirmed", "no_funds"]
 
 
-class MiniappItemReviewRead(BaseModel):
+class ConsumerItemReviewRead(BaseModel):
     order_item_id: UUID
     can_review: bool
     review: ProductReviewRead | None
 
 
-class MiniappTradeOrderRead(OrderRead):
+class ConsumerTradeOrderRead(OrderRead):
     display_status: DisplayStatus
     paid_at: datetime | None
     fulfillment: FulfillmentRead | None
     can_confirm_receipt: bool
     can_refund: bool
-    item_reviews: list[MiniappItemReviewRead]
+    item_reviews: list[ConsumerItemReviewRead]
 
 
-class MiniappRefundRead(RefundRequestRead):
+class ConsumerRefundRead(RefundRequestRead):
     request_id: UUID
     execution_status: RefundExecutionStatus
     funds_status: RefundFundsStatus
     funds_confirmed_at: datetime | None
 
 
-class MiniappRefundLookupRead(BaseModel):
+class ConsumerRefundLookupRead(BaseModel):
     state: Literal["found", "not_found"]
-    refund: MiniappRefundRead | None
-
-
-class MiniappHelpRead(BaseModel):
-    phone: str | None
-    email: str | None
+    refund: ConsumerRefundRead | None

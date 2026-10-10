@@ -3,103 +3,33 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.dependencies import require_admin_csrf, require_permission, require_web_csrf
-from app.api.distribution_dependencies import AdminDistribution, Distribution, UserDistribution
-from app.api.transaction_dependencies import UserPrincipal
+from app.api.dependencies import UserPrincipal, require_admin_csrf, require_permission
+from app.api.distribution_dependencies import AdminDistribution, ConsumerEngagement, ConsumerFinance
 from app.core.context import current_request_id
+from app.core.pagination import PageResult
 from app.core.response import ResponseModel, success_response
 from app.domains.admin.permissions import PermissionCode
 from app.domains.distribution import (
-    CommissionPage,
-    MemberProfileRead,
     ReferralBindIn,
-    WalletAccountRead,
-    WithdrawalCreate,
     WithdrawalManualCompletion,
-    WithdrawalPage,
     WithdrawalRead,
     WithdrawalReview,
+)
+from app.services.engagement_schemas import (
+    ConsumerReferralRead,
+)
+from app.services.finance_query_schemas import (
+    ConsumerCommissionRead,
+    ConsumerMemberRead,
+    ConsumerWalletLedgerRead,
+    ConsumerWalletRead,
+    ConsumerWithdrawalRead,
+    WalletType,
 )
 
 router = APIRouter(tags=["会员分销"])
 Page = Annotated[int, Query(ge=1, description="页码，从一开始")]
 PageSize = Annotated[int, Query(ge=1, le=100, description="每页数量")]
-
-
-@router.post(
-    "/distribution/me/profile",
-    response_model=ResponseModel[MemberProfileRead],
-    status_code=201,
-    summary="开通本人会员分销档案",
-    dependencies=[Depends(require_web_csrf)],
-)
-async def activate_profile(service: Distribution, current: UserPrincipal) -> ResponseModel[MemberProfileRead]:
-    return success_response(
-        data=await service.activate_profile(current.user.id),
-        request_id=current_request_id(),
-        message="会员分销档案已开通",
-    )
-
-
-@router.get("/distribution/me/profile", response_model=ResponseModel[MemberProfileRead], summary="查看本人会员分销档案")
-async def profile_read(service: Distribution, current: UserPrincipal) -> ResponseModel[MemberProfileRead]:
-    return success_response(data=await service.profile_for_user(current.user.id), request_id=current_request_id())
-
-
-@router.post(
-    "/distribution/me/referrer",
-    response_model=ResponseModel[MemberProfileRead],
-    summary="首次绑定推荐人",
-    dependencies=[Depends(require_web_csrf)],
-)
-async def bind_referrer(
-    payload: ReferralBindIn, service: Distribution, current: UserPrincipal
-) -> ResponseModel[MemberProfileRead]:
-    return success_response(
-        data=await service.bind_referrer(current.user.id, payload),
-        request_id=current_request_id(),
-        message="推荐关系已绑定",
-    )
-
-
-@router.get(
-    "/distribution/me/wallets", response_model=ResponseModel[list[WalletAccountRead]], summary="查看本人双轨钱包"
-)
-async def wallets_read(service: Distribution, current: UserPrincipal) -> ResponseModel[list[WalletAccountRead]]:
-    return success_response(data=await service.wallets_for_user(current.user.id), request_id=current_request_id())
-
-
-@router.get("/distribution/me/commissions", response_model=ResponseModel[CommissionPage], summary="查看本人佣金记录")
-async def commissions_read(
-    service: Distribution, current: UserPrincipal, page: Page = 1, page_size: PageSize = 20
-) -> ResponseModel[CommissionPage]:
-    return success_response(
-        data=await service.commissions_for_user(current.user.id, page, page_size), request_id=current_request_id()
-    )
-
-
-@router.post(
-    "/distribution/me/withdrawals",
-    response_model=ResponseModel[WithdrawalRead],
-    status_code=201,
-    summary="申请佣金钱包提现",
-    dependencies=[Depends(require_web_csrf)],
-)
-async def withdrawal_create(payload: WithdrawalCreate, service: UserDistribution) -> ResponseModel[WithdrawalRead]:
-    return success_response(
-        data=await service.create_withdrawal(payload),
-        request_id=current_request_id(),
-        message="提现申请已提交",
-    )
-
-
-@router.get("/distribution/me/withdrawals", response_model=ResponseModel[WithdrawalPage], summary="查看本人提现申请")
-async def withdrawals_read(
-    service: Distribution, current: UserPrincipal, page: Page = 1, page_size: PageSize = 20
-) -> ResponseModel[WithdrawalPage]:
-    return success_response(
-        data=await service.withdrawals_for_user(current.user.id, page, page_size), request_id=current_request_id()
-    )
 
 
 @router.post(
@@ -150,4 +80,101 @@ async def admin_complete_withdrawal_manually(
         data=await service.complete_withdrawal_manually(withdrawal_id, payload),
         request_id=current_request_id(),
         message="线下转账已确认",
+    )
+
+
+@router.get(
+    "/distribution/me/referrer", response_model=ResponseModel[ConsumerReferralRead], summary="查询本人推荐码及绑定事实"
+)
+async def referral(
+    service: ConsumerEngagement,
+    current: UserPrincipal,
+    invitation_code: str | None = Query(default=None, min_length=8, max_length=16, pattern=r"^[A-Z0-9]+$"),
+) -> ResponseModel[ConsumerReferralRead]:
+    return success_response(
+        data=await service.referral(current.user.id, invitation_code), request_id=current_request_id()
+    )
+
+
+@router.post(
+    "/distribution/me/referrer",
+    response_model=ResponseModel[ConsumerReferralRead],
+    summary="主动首次绑定本人推荐关系",
+    description="服务端校验首次绑定、自邀与循环；同码幂等。未知结果查询本人关系与原码是否匹配，不自动换码重试。",
+)
+async def referral_bind(
+    payload: ReferralBindIn, service: ConsumerEngagement, current: UserPrincipal
+) -> ResponseModel[ConsumerReferralRead]:
+    return success_response(data=await service.bind(current.user.id, payload), request_id=current_request_id())
+
+
+@router.get(
+    "/distribution/me/profile",
+    response_model=ResponseModel[ConsumerMemberRead],
+    summary="读取本人档案和会员等级有效状态",
+)
+async def membership(service: ConsumerFinance, current: UserPrincipal) -> ResponseModel[ConsumerMemberRead]:
+    return success_response(data=await service.member(current.user.id), request_id=current_request_id())
+
+
+@router.post(
+    "/distribution/me/profile", response_model=ResponseModel[ConsumerMemberRead], summary="主动幂等开通本人会员分销档案"
+)
+async def membership_activate(service: ConsumerFinance, current: UserPrincipal) -> ResponseModel[ConsumerMemberRead]:
+    return success_response(data=await service.activate(current.user.id), request_id=current_request_id())
+
+
+@router.get(
+    "/distribution/me/wallets", response_model=ResponseModel[list[ConsumerWalletRead]], summary="查询本人双轨钱包"
+)
+async def wallets(service: ConsumerFinance, current: UserPrincipal) -> ResponseModel[list[ConsumerWalletRead]]:
+    return success_response(data=await service.wallets(current.user.id), request_id=current_request_id())
+
+
+@router.get(
+    "/distribution/me/wallets/{wallet_type}/ledgers",
+    response_model=ResponseModel[PageResult[ConsumerWalletLedgerRead]],
+    summary="分页查询本人指定轨道钱包流水",
+)
+async def wallet_ledgers(
+    wallet_type: WalletType,
+    service: ConsumerFinance,
+    current: UserPrincipal,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+) -> ResponseModel[PageResult[ConsumerWalletLedgerRead]]:
+    return success_response(
+        data=await service.ledgers(current.user.id, wallet_type, page, page_size), request_id=current_request_id()
+    )
+
+
+@router.get(
+    "/distribution/me/commissions",
+    response_model=ResponseModel[PageResult[ConsumerCommissionRead]],
+    summary="分页查询本人安全佣金记录",
+)
+async def commissions(
+    service: ConsumerFinance,
+    current: UserPrincipal,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+) -> ResponseModel[PageResult[ConsumerCommissionRead]]:
+    return success_response(
+        data=await service.commissions(current.user.id, page, page_size), request_id=current_request_id()
+    )
+
+
+@router.get(
+    "/distribution/me/withdrawals",
+    response_model=ResponseModel[PageResult[ConsumerWithdrawalRead]],
+    summary="分页查询本人历史提现审核和确认事实",
+)
+async def withdrawals(
+    service: ConsumerFinance,
+    current: UserPrincipal,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+) -> ResponseModel[PageResult[ConsumerWithdrawalRead]]:
+    return success_response(
+        data=await service.withdrawals(current.user.id, page, page_size), request_id=current_request_id()
     )

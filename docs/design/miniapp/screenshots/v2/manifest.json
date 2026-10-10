@@ -916,7 +916,7 @@
       "title": "整单退款申请",
       "kind": "refund-form",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -931,7 +931,7 @@
       "title": "未接单退款自动审核",
       "kind": "refund-detail",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -949,7 +949,7 @@
       "title": "退款申请校验失败",
       "kind": "refund-form",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -966,7 +966,7 @@
       "title": "退款待审核",
       "kind": "refund-detail",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -983,7 +983,7 @@
       "title": "审核通过退款处理中",
       "kind": "refund-detail",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -1000,7 +1000,7 @@
       "title": "退款审核未通过",
       "kind": "refund-detail",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -1017,7 +1017,7 @@
       "title": "退款已完成",
       "kind": "refund-detail",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -1034,7 +1034,7 @@
       "title": "退款资金结果未知",
       "kind": "refund-detail",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "target",
@@ -1051,7 +1051,7 @@
       "title": "已发货不可申请退款",
       "kind": "result",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -1071,7 +1071,7 @@
       "title": "本单售后记录",
       "kind": "refund-list",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -1336,13 +1336,12 @@
       "kind": "menu",
       "api": [
         "GET /api/v1/users/me/sessions",
-        "DELETE /api/v1/users/me/sessions/{session_id}",
-        "POST /api/v1/users/me/sessions/revoke-others",
-        "POST /api/v1/users/me/password",
-        "DELETE /api/v1/users/me"
+        "POST /api/v1/users/me/sessions/revoke",
+        "POST /api/v1/users/me/sessions/revocation-status",
+        "GET /api/v1/users/me/closure-precheck"
       ],
       "status": "gap",
-      "note": "密码与注销当前需要 current_password；无密码微信账户必须专项适配。",
+      "note": "统一消费者会话与只读注销前置已接入；旧密码入口退役，实际注销保持关闭。",
       "data": {
         "entries": [
           "登录设备",
@@ -1361,10 +1360,9 @@
       "kind": "sessions",
       "api": [
         "GET /api/v1/users/me/sessions",
-        "DELETE /api/v1/users/me/sessions/{session_id}",
-        "POST /api/v1/users/me/sessions/revoke-others",
-        "POST /api/v1/users/me/password",
-        "DELETE /api/v1/users/me"
+        "POST /api/v1/users/me/sessions/revoke",
+        "POST /api/v1/users/me/sessions/revocation-status",
+        "GET /api/v1/users/me/closure-precheck"
       ],
       "status": "gap",
       "note": "当前会话模型只允许 browser_cookie，微信设备会话适配未实现。",
@@ -1379,10 +1377,9 @@
       "kind": "dialog",
       "api": [
         "GET /api/v1/users/me/sessions",
-        "DELETE /api/v1/users/me/sessions/{session_id}",
-        "POST /api/v1/users/me/sessions/revoke-others",
-        "POST /api/v1/users/me/password",
-        "DELETE /api/v1/users/me"
+        "POST /api/v1/users/me/sessions/revoke",
+        "POST /api/v1/users/me/sessions/revocation-status",
+        "GET /api/v1/users/me/closure-precheck"
       ],
       "status": "existing",
       "note": "",
@@ -1402,10 +1399,9 @@
       "kind": "form",
       "api": [
         "GET /api/v1/users/me/sessions",
-        "DELETE /api/v1/users/me/sessions/{session_id}",
-        "POST /api/v1/users/me/sessions/revoke-others",
-        "POST /api/v1/users/me/password",
-        "DELETE /api/v1/users/me"
+        "POST /api/v1/users/me/sessions/revoke",
+        "POST /api/v1/users/me/sessions/revocation-status",
+        "GET /api/v1/users/me/closure-precheck"
       ],
       "status": "gap",
       "note": "仅具有密码凭据的既有账户适用；不要求微信无密码账户填不存在的密码。",
@@ -1457,10 +1453,9 @@
       "kind": "info",
       "api": [
         "GET /api/v1/users/me/sessions",
-        "DELETE /api/v1/users/me/sessions/{session_id}",
-        "POST /api/v1/users/me/sessions/revoke-others",
-        "POST /api/v1/users/me/password",
-        "DELETE /api/v1/users/me"
+        "POST /api/v1/users/me/sessions/revoke",
+        "POST /api/v1/users/me/sessions/revocation-status",
+        "GET /api/v1/users/me/closure-precheck"
       ],
       "status": "gap",
       "note": "当前注销是软删除并要求密码；微信账户证明与资金前置检查必须专项确认。",
@@ -2018,8 +2013,7 @@
       "title": "提现申请预备页",
       "kind": "withdraw-form",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "unavailable",
       "note": "申请/审核/人工完成已有；自动打款与收款引用接入未完成，当前设计禁用提交。",
@@ -2033,8 +2027,7 @@
       "title": "提现记录",
       "kind": "withdraw-list",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "existing",
       "note": "",
@@ -2048,8 +2041,7 @@
       "title": "提现待审核",
       "kind": "withdraw-detail",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "existing",
       "note": "状态枚举已有；succeeded 可由已授权人工凭证确认，不能将 approved 当到账；真实自动打款未接通。",
@@ -2065,8 +2057,7 @@
       "title": "提现审核通过",
       "kind": "withdraw-detail",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "existing",
       "note": "状态枚举已有；succeeded 可由已授权人工凭证确认，不能将 approved 当到账；真实自动打款未接通。",
@@ -2082,8 +2073,7 @@
       "title": "提现审核未通过",
       "kind": "withdraw-detail",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "existing",
       "note": "状态枚举已有；succeeded 可由已授权人工凭证确认，不能将 approved 当到账；真实自动打款未接通。",
@@ -2099,8 +2089,7 @@
       "title": "提现执行处理中",
       "kind": "withdraw-detail",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "target",
       "note": "状态枚举已有；succeeded 可由已授权人工凭证确认，不能将 approved 当到账；真实自动打款未接通。",
@@ -2116,8 +2105,7 @@
       "title": "提现结果未知",
       "kind": "withdraw-detail",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "target",
       "note": "状态枚举已有；succeeded 可由已授权人工凭证确认，不能将 approved 当到账；真实自动打款未接通。",
@@ -2133,8 +2121,7 @@
       "title": "提现确认完成",
       "kind": "withdraw-detail",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "existing",
       "note": "状态枚举已有；succeeded 可由已授权人工凭证确认，不能将 approved 当到账；真实自动打款未接通。",
@@ -2150,8 +2137,7 @@
       "title": "提现余额不足或欠款",
       "kind": "result",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "existing",
       "note": "",
@@ -2209,7 +2195,7 @@
       "title": "退款规则说明",
       "kind": "info",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "local",
@@ -3016,7 +3002,7 @@
       "title": "本单售后记录：首次加载",
       "kind": "state",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -3036,7 +3022,7 @@
       "title": "本单售后记录：查询失败",
       "kind": "state",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -3056,7 +3042,7 @@
       "title": "本单售后记录：无数据",
       "kind": "state",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -3076,7 +3062,7 @@
       "title": "本单售后记录：未登录",
       "kind": "state",
       "api": [
-        "GET /api/v1/orders/{order_id}/refunds",
+        "GET /api/v1/refunds",
         "POST /api/v1/orders/{order_id}/refunds"
       ],
       "status": "existing",
@@ -3283,10 +3269,9 @@
       "kind": "state",
       "api": [
         "GET /api/v1/users/me/sessions",
-        "DELETE /api/v1/users/me/sessions/{session_id}",
-        "POST /api/v1/users/me/sessions/revoke-others",
-        "POST /api/v1/users/me/password",
-        "DELETE /api/v1/users/me"
+        "POST /api/v1/users/me/sessions/revoke",
+        "POST /api/v1/users/me/sessions/revocation-status",
+        "GET /api/v1/users/me/closure-precheck"
       ],
       "status": "gap",
       "note": "复用 sessions 的能力边界；首次加载独立呈现，不伪造业务结果。",
@@ -3306,10 +3291,9 @@
       "kind": "state",
       "api": [
         "GET /api/v1/users/me/sessions",
-        "DELETE /api/v1/users/me/sessions/{session_id}",
-        "POST /api/v1/users/me/sessions/revoke-others",
-        "POST /api/v1/users/me/password",
-        "DELETE /api/v1/users/me"
+        "POST /api/v1/users/me/sessions/revoke",
+        "POST /api/v1/users/me/sessions/revocation-status",
+        "GET /api/v1/users/me/closure-precheck"
       ],
       "status": "gap",
       "note": "复用 sessions 的能力边界；查询失败独立呈现，不伪造业务结果。",
@@ -3329,10 +3313,9 @@
       "kind": "state",
       "api": [
         "GET /api/v1/users/me/sessions",
-        "DELETE /api/v1/users/me/sessions/{session_id}",
-        "POST /api/v1/users/me/sessions/revoke-others",
-        "POST /api/v1/users/me/password",
-        "DELETE /api/v1/users/me"
+        "POST /api/v1/users/me/sessions/revoke",
+        "POST /api/v1/users/me/sessions/revocation-status",
+        "GET /api/v1/users/me/closure-precheck"
       ],
       "status": "gap",
       "note": "复用 sessions 的能力边界；无数据独立呈现，不伪造业务结果。",
@@ -3352,10 +3335,9 @@
       "kind": "state",
       "api": [
         "GET /api/v1/users/me/sessions",
-        "DELETE /api/v1/users/me/sessions/{session_id}",
-        "POST /api/v1/users/me/sessions/revoke-others",
-        "POST /api/v1/users/me/password",
-        "DELETE /api/v1/users/me"
+        "POST /api/v1/users/me/sessions/revoke",
+        "POST /api/v1/users/me/sessions/revocation-status",
+        "GET /api/v1/users/me/closure-precheck"
       ],
       "status": "gap",
       "note": "复用 sessions 的能力边界；未登录独立呈现，不伪造业务结果。",
@@ -3675,8 +3657,7 @@
       "title": "提现记录：首次加载",
       "kind": "state",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "existing",
       "note": "复用 withdrawal-records 的能力边界；首次加载独立呈现，不伪造业务结果。",
@@ -3695,8 +3676,7 @@
       "title": "提现记录：查询失败",
       "kind": "state",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "existing",
       "note": "复用 withdrawal-records 的能力边界；查询失败独立呈现，不伪造业务结果。",
@@ -3715,8 +3695,7 @@
       "title": "提现记录：无数据",
       "kind": "state",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "existing",
       "note": "复用 withdrawal-records 的能力边界；无数据独立呈现，不伪造业务结果。",
@@ -3735,8 +3714,7 @@
       "title": "提现记录：未登录",
       "kind": "state",
       "api": [
-        "GET /api/v1/distribution/me/withdrawals",
-        "POST /api/v1/distribution/me/withdrawals"
+        "GET /api/v1/distribution/me/withdrawals"
       ],
       "status": "existing",
       "note": "复用 withdrawal-records 的能力边界；未登录独立呈现，不伪造业务结果。",

@@ -5,12 +5,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.api.dependencies import get_public_system_settings_service
 from app.core.config import Settings
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.domains.admin.schemas import AdminUserCreateIn
-from app.main import app
 from app.services.admin_management import AdminManagementService
 
 
@@ -109,15 +107,7 @@ async def test_admin_create_user_requires_authentication(client) -> None:
     assert response.status_code == 401
 
 
-@pytest.mark.parametrize("enabled", [True, False])
 @pytest.mark.asyncio
-async def test_public_capabilities_report_registration_setting(client, enabled: bool) -> None:
-    service = SimpleNamespace(registration_enabled=AsyncMock(return_value=enabled))
-    app.dependency_overrides[get_public_system_settings_service] = lambda: service
-    try:
-        response = await client.get("/api/v1/system/capabilities")
-    finally:
-        app.dependency_overrides.pop(get_public_system_settings_service, None)
-
-    assert response.status_code == 200
-    assert response.json()["data"] == {"registration_enabled": enabled}
+async def test_browser_registration_capability_is_retired(client) -> None:
+    response = await client.get("/api/v1/system/capabilities")
+    assert response.status_code == 404

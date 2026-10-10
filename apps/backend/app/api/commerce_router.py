@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 
 from app.api.commerce_dependencies import AdminCommerce, PublicCommerce, UserAddresses
-from app.api.dependencies import require_admin_csrf, require_permission, require_web_csrf
+from app.api.dependencies import require_admin_csrf, require_permission
 from app.core.batch import ActiveStatusBatch, BatchCompleted
 from app.core.context import current_request_id
 from app.core.pagination import PageResult
@@ -336,7 +336,6 @@ async def addresses_list(service: UserAddresses) -> ResponseModel[list[AddressRe
     response_model=ResponseModel[AddressRead],
     status_code=201,
     summary="新增本人收货地址",
-    dependencies=[Depends(require_web_csrf)],
 )
 async def address_create(payload: AddressInput, service: UserAddresses) -> ResponseModel[AddressRead]:
     return success_response(data=await service.create(payload), request_id=current_request_id())
@@ -346,7 +345,6 @@ async def address_create(payload: AddressInput, service: UserAddresses) -> Respo
     "/addresses/{address_id}",
     response_model=ResponseModel[AddressRead],
     summary="更新本人收货地址",
-    dependencies=[Depends(require_web_csrf)],
 )
 async def address_update(
     address_id: UUID, payload: AddressUpdate, service: UserAddresses
@@ -358,7 +356,6 @@ async def address_update(
     "/addresses/{address_id}",
     response_model=ResponseModel[None],
     summary="删除本人收货地址",
-    dependencies=[Depends(require_web_csrf)],
 )
 async def address_delete(
     address_id: UUID, revision: Annotated[int, Query(gt=0)], service: UserAddresses

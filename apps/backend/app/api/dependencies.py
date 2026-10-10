@@ -4,13 +4,14 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Annotated, cast
 
-from fastapi import Cookie, Depends, Request
+from fastapi import Cookie, Depends, Request, Response
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
-from app.core.cookies import ADMIN_COOKIES, WEB_COOKIES
+from app.core.cookies import ADMIN_COOKIES
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.request_metadata import request_metadata
@@ -21,10 +22,11 @@ from app.db.repositories import SessionRepository
 from app.db.session import session_scope
 from app.domains.admin.permissions import PERMISSION_CODES, PermissionCode
 from app.domains.assets.schemas import UploaderType
-from app.services.accounts import AdminAccountService, UserAccountService
+from app.services.accounts import AdminAccountService
 from app.services.admin_management import AdminManagementService
 from app.services.assets import AssetService, AssetUploader
-from app.services.authentication import AdminAuthService, WebAuthService
+from app.services.authentication import AdminAuthService
+from app.services.consumer_auth import ConsumerAuthService, bearer_error
 from app.services.settings_media import SettingsMediaStore
 from app.services.storage import StorageProvider
 from app.services.system_settings import SystemSettingsService
@@ -90,34 +92,12 @@ def require_admin_access_token(
 AdminAccessToken = Annotated[str, Depends(require_admin_access_token)]
 
 
-def get_web_auth_service(request: Request, session: DatabaseSession) -> WebAuthService:
-    resources = get_resources(request)
-    return WebAuthService(
-        session=session,
-        session_factory=resources.session_factory,
-        redis=resources.redis,
-        settings=get_request_settings(request),
-        password_manager=resources.password_manager,
-        metadata=request_metadata(request),
-    )
-
-
 def get_admin_auth_service(request: Request, session: DatabaseSession) -> AdminAuthService:
     resources = get_resources(request)
     return AdminAuthService(
         session=session,
         session_factory=resources.session_factory,
         redis=resources.redis,
-        settings=get_request_settings(request),
-        password_manager=resources.password_manager,
-        metadata=request_metadata(request),
-    )
-
-
-def get_user_account_service(request: Request, session: DatabaseSession) -> UserAccountService:
-    resources = get_resources(request)
-    return UserAccountService(
-        session=session,
         settings=get_request_settings(request),
         password_manager=resources.password_manager,
         metadata=request_metadata(request),
@@ -136,9 +116,8 @@ def get_admin_account_service(request: Request, session: DatabaseSession) -> Adm
     )
 
 
-WebAuthServiceDependency = Annotated[WebAuthService, Depends(get_web_auth_service)]
 AdminAuthServiceDependency = Annotated[AdminAuthService, Depends(get_admin_auth_service)]
-UserAccountServiceDependency = Annotated[UserAccountService, Depends(get_user_account_service)]
+
 AdminAccountServiceDependency = Annotated[AdminAccountService, Depends(get_admin_account_service)]
 
 
@@ -174,10 +153,6 @@ def _require_browser_origin(request: Request, *, allowed_origins: list[str]) -> 
         raise AppException(status_code=403, code=ErrorCode.CSRF_REJECTED, message="请求来源不在允许范围内")
 
 
-def require_web_origin(request: Request) -> None:
-    _require_browser_origin(request, allowed_origins=get_request_settings(request).web_origins)
-
-
 def require_admin_origin(request: Request) -> None:
     _require_browser_origin(request, allowed_origins=get_request_settings(request).admin_origins)
 
@@ -191,14 +166,6 @@ def _csrf_pair(request: Request, *, cookie_name: str, allowed_origins: list[str]
     return header_token
 
 
-def require_web_csrf_pair(request: Request) -> str:
-    return _csrf_pair(
-        request,
-        cookie_name=WEB_COOKIES.csrf,
-        allowed_origins=get_request_settings(request).web_origins,
-    )
-
-
 def require_admin_csrf_pair(request: Request) -> str:
     return _csrf_pair(
         request,
@@ -207,93 +174,74 @@ def require_admin_csrf_pair(request: Request) -> str:
     )
 
 
+def require_consumer_profile(request: Request, response: Response) -> None:
+    response.headers["Cache-Control"] = "no-store"
+    request.state.private_response = True
+    if request.headers.get("cookie"):
+        raise AppException(status_code=400, code=ErrorCode.VALIDATION_ERROR, message="消费者接口不接受 Cookie 凭据")
+
+
 async def get_current_user(
     request: Request,
     session: DatabaseSession,
-    access_token: Annotated[str | None, Cookie(alias=WEB_COOKIES.access)] = None,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None, Depends(HTTPBearer(auto_error=False, scheme_name="ConsumerBearer"))
+    ],
+    profile: Annotated[None, Depends(require_consumer_profile)],
 ) -> CurrentUser:
-    if not access_token:
-        raise AppException(
-            status_code=401,
-            code=ErrorCode.AUTH_REQUIRED,
-            message="需要用户身份认证",
-            headers={"WWW-Authenticate": "Cookie"},
-        )
     settings = get_request_settings(request)
-    resources = get_resources(request)
-    if resources.redis is None:
-        raise AppException(
-            status_code=503,
-            code=ErrorCode.SERVICE_UNAVAILABLE,
-            message="认证服务暂时不可用",
-        )
-    web_secret, _, _, _ = settings.authentication_secrets()
+    if not settings.miniapp_login_enabled:
+        raise AppException(status_code=503, code=ErrorCode.SERVICE_UNAVAILABLE, message="微信登录尚未开放")
+    if get_resources(request).redis is None:
+        raise AppException(status_code=503, code=ErrorCode.SERVICE_UNAVAILABLE, message="认证服务暂时不可用")
+    if credentials is None or credentials.scheme.lower() != "bearer" or len(credentials.credentials) > 4096:
+        raise bearer_error(ErrorCode.AUTH_REQUIRED)
+    secret, _ = settings.miniapp_secrets()
     try:
         claims = decode_access_token(
-            access_token,
-            audience="pinjie-web",
-            issuer=settings.jwt_issuer,
-            secret=web_secret,
+            credentials.credentials, audience="pinjie-miniapp", issuer=settings.jwt_issuer, secret=secret
         )
-        login_session = await SessionRepository(session).get_web(claims.session_id)
-    except InvalidTokenError as exc:
-        request.state.clear_auth_profile = "web"
-        raise AppException(
-            status_code=401,
-            code=ErrorCode.AUTH_TOKEN_INVALID,
-            message="身份认证令牌无效",
-            headers={"WWW-Authenticate": "Cookie"},
-        ) from exc
+    except InvalidTokenError:
+        raise bearer_error() from None
+    try:
+        current = await SessionRepository(session).get_web(claims.session_id)
     except SQLAlchemyError as exc:
-        raise AppException(
-            status_code=503,
-            code=ErrorCode.SERVICE_UNAVAILABLE,
-            message="认证服务暂时不可用",
-        ) from exc
+        raise AppException(status_code=503, code=ErrorCode.SERVICE_UNAVAILABLE, message="认证服务暂时不可用") from exc
     if (
-        login_session is None
-        or login_session.user_id != claims.subject_id
-        or login_session.credential_profile != "browser_cookie"
-        or login_session.client_id != "pinjie-web"
+        current is None
+        or current.user_id != claims.subject_id
+        or current.credential_profile != "miniapp_bearer"
+        or current.client_id != "pinjie-miniapp"
+        or current.csrf_digest is not None
     ):
-        request.state.clear_auth_profile = "web"
-        raise AppException(
-            status_code=401,
-            code=ErrorCode.AUTH_SESSION_REVOKED,
-            message="身份认证会话已失效",
-            headers={"WWW-Authenticate": "Cookie"},
-        )
+        raise bearer_error()
     now = datetime.now(UTC)
-    if login_session.revoked_at is not None:
-        request.state.clear_auth_profile = "web"
-        raise AppException(
-            status_code=401,
-            code=ErrorCode.AUTH_SESSION_REVOKED,
-            message="身份认证会话已失效",
-            headers={"WWW-Authenticate": "Cookie"},
-        )
-    if login_session.idle_expires_at <= now or login_session.absolute_expires_at <= now:
-        request.state.clear_auth_profile = "web"
-        raise AppException(
-            status_code=401,
-            code=ErrorCode.AUTH_SESSION_EXPIRED,
-            message="身份认证会话已过期",
-            headers={"WWW-Authenticate": "Cookie"},
-        )
-    user = login_session.user
-    if claims.credential_version != user.credential_version:
-        request.state.clear_auth_profile = "web"
-        raise AppException(
-            status_code=401,
-            code=ErrorCode.AUTH_SESSION_REVOKED,
-            message="身份认证会话已失效",
-            headers={"WWW-Authenticate": "Cookie"},
-        )
-    if not user.is_active or user.deleted_at is not None:
+    if current.revoked_at is not None or claims.credential_version != current.user.credential_version:
+        raise bearer_error(ErrorCode.AUTH_SESSION_REVOKED)
+    if current.idle_expires_at <= now or current.absolute_expires_at <= now:
+        raise bearer_error(ErrorCode.AUTH_SESSION_EXPIRED)
+    if not current.user.is_active or current.user.deleted_at is not None:
         raise AppException(status_code=403, code=ErrorCode.AUTH_ACCOUNT_DISABLED, message="账户已停用")
-    request.state.current_user_id = str(user.id)
-    request.state.current_session_id = str(login_session.id)
-    return CurrentUser(user=user, login_session=login_session)
+    request.state.current_user_id, request.state.current_session_id = str(current.user_id), str(current.id)
+    return CurrentUser(user=current.user, login_session=current)
+
+
+UserPrincipal = Annotated[CurrentUser, Depends(get_current_user)]
+
+
+def get_consumer_auth_service(request: Request, session: DatabaseSession) -> ConsumerAuthService:
+    resources = get_resources(request)
+    return ConsumerAuthService(
+        session=session,
+        session_factory=resources.session_factory,
+        redis=resources.redis,
+        settings=get_request_settings(request),
+        http=resources.wechat_http,
+        metadata=request_metadata(request),
+    )
+
+
+ConsumerAuth = Annotated[ConsumerAuthService, Depends(get_consumer_auth_service)]
 
 
 async def get_current_admin(
@@ -383,37 +331,6 @@ async def get_current_admin(
     return CurrentAdmin(admin=admin, login_session=login_session, permissions=permissions)
 
 
-async def get_asset_uploader(
-    request: Request,
-    session: DatabaseSession,
-    web_access_token: Annotated[str | None, Cookie(alias=WEB_COOKIES.access)] = None,
-    admin_access_token: Annotated[str | None, Cookie(alias=ADMIN_COOKIES.access)] = None,
-) -> AssetUploader:
-    settings = get_request_settings(request)
-    origin = request.headers.get("origin")
-    if origin in settings.web_origins and web_access_token:
-        current_user = await get_current_user(request, session, web_access_token)
-        require_web_csrf(request, current_user)
-        return AssetUploader(type=UploaderType.USER, id=current_user.user.id)
-    if origin in settings.admin_origins and admin_access_token:
-        current_admin = await get_current_admin(
-            request=request,
-            access_token=admin_access_token,
-            session=session,
-        )
-        require_admin_csrf(request, current_admin)
-        return AssetUploader(type=UploaderType.ADMIN, id=current_admin.admin.id)
-    raise AppException(
-        status_code=401 if not web_access_token and not admin_access_token else 403,
-        code=ErrorCode.AUTH_REQUIRED if not web_access_token and not admin_access_token else ErrorCode.CSRF_REJECTED,
-        message="需要匹配当前来源的已认证上传会话",
-        headers={"WWW-Authenticate": "Cookie"} if not web_access_token and not admin_access_token else None,
-    )
-
-
-AssetUploaderDependency = Annotated[AssetUploader, Depends(get_asset_uploader)]
-
-
 def get_admin_management_service(
     request: Request,
     session: DatabaseSession,
@@ -479,20 +396,6 @@ PublicSystemSettingsServiceDependency = Annotated[SystemSettingsService, Depends
 AdminSystemSettingsServiceDependency = Annotated[SystemSettingsService, Depends(get_admin_system_settings_service)]
 
 
-def require_web_csrf(
-    request: Request,
-    current: Annotated[CurrentUser, Depends(get_current_user)],
-) -> CurrentUser:
-    token = require_web_csrf_pair(request)
-    settings = get_request_settings(request)
-    _, _, web_hmac, _ = settings.authentication_secrets()
-    if current.login_session.csrf_digest is None or not hmac.compare_digest(
-        token_digest(token, web_hmac), current.login_session.csrf_digest
-    ):
-        raise AppException(status_code=403, code=ErrorCode.CSRF_REJECTED, message="CSRF 校验失败")
-    return current
-
-
 def require_admin_csrf(
     request: Request,
     current: Annotated[CurrentAdmin, Depends(get_current_admin)],
@@ -544,9 +447,11 @@ __all__ = [
     "require_admin_access_token",
     "require_admin_origin",
     "require_permission",
-    "require_web_csrf",
-    "require_web_csrf_pair",
-    "require_web_origin",
-    "UserAccountServiceDependency",
-    "WebAuthServiceDependency",
 ]
+
+
+def get_asset_uploader(current: Annotated[CurrentAdmin, Depends(require_admin_csrf)]) -> AssetUploader:
+    return AssetUploader(type=UploaderType.ADMIN, id=current.admin.id)
+
+
+AssetUploaderDependency = Annotated[AssetUploader, Depends(get_asset_uploader)]

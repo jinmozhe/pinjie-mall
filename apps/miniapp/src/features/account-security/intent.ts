@@ -1,8 +1,8 @@
 import Taro from '@tarojs/taro'
-import type { MiniappSessionTargets } from '@pinjie/api-client'
+import type { ConsumerSessionTargets } from '@pinjie/api-client'
 import { validSessionIds } from './domain'
 
-export type RevocationIntent = { version: 1; userId: string; target: MiniappSessionTargets }
+export type RevocationIntent = { version: 1; userId: string; target: ConsumerSessionTargets }
 const key = (userId: string) => `pinjie.session-revocation.${userId}`
 
 export function loadRevocation(userId: string): RevocationIntent | null {

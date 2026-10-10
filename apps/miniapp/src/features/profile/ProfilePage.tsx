@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { Input, View } from '@tarojs/components'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import type { MiniappAvatarAssetRead, ResponseModelMiniappUserRead } from '@pinjie/api-client'
+import type { ConsumerAvatarAssetRead, ResponseModelConsumerUserRead } from '@pinjie/api-client'
 import { AuthGate } from '@/components/AuthGate'
 import { AccountAvatar } from '@/components/AccountAvatar'
 import { Button } from '@/components/Button'
@@ -13,12 +13,12 @@ import { queryClient } from '@/lib/query'
 function Content() {
   const session = useSession()
   const [name, setName] = useState<string | null>(null)
-  const [asset, setAsset] = useState<MiniappAvatarAssetRead | null>(null)
+  const [asset, setAsset] = useState<ConsumerAvatarAssetRead | null>(null)
   const [notice, setNotice] = useState('')
   const [unknown, setUnknown] = useState(false)
-  const query = useQuery({ queryKey: ['private', 'me', session.epoch], gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelMiniappUserRead>('/me', { signal }) })
+  const query = useQuery({ queryKey: ['private', 'me', session.epoch], gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerUserRead>('/users/me', { signal }) })
   useDidShow(() => { void query.refetch() })
-  async function accepted(user: ResponseModelMiniappUserRead['data']) {
+  async function accepted(user: ResponseModelConsumerUserRead['data']) {
     await queryClient.cancelQueries({ queryKey: ['private', 'me', session.epoch] })
     updateSessionUser(user, session.epoch)
     queryClient.setQueryData(['private', 'me', session.epoch], user)
@@ -29,7 +29,7 @@ function Content() {
     const displayName = (name ?? query.data?.display_name ?? '').trim()
     if (!displayName || displayName.length > 100 || unknown) throw new Error('请填写 1 至 100 字昵称，并先查询未确认的修改结果')
     setUnknown(true)
-    const user = await privateRequest<ResponseModelMiniappUserRead>('/me', { method: 'PATCH', data: { display_name: displayName } })
+    const user = await privateRequest<ResponseModelConsumerUserRead>('/users/me', { method: 'PATCH', data: { display_name: displayName } })
     await accepted(user)
     setName(null)
   } })
@@ -50,7 +50,7 @@ function Content() {
       if (!answer.confirm || session.epoch !== sessionScope()) return
     }
     setUnknown(true)
-    const user = await privateRequest<ResponseModelMiniappUserRead>('/me/avatar', { method: 'PUT', data: { asset_id: remove ? null : asset!.id } })
+    const user = await privateRequest<ResponseModelConsumerUserRead>('/users/me/avatar', { method: 'PUT', data: { asset_id: remove ? null : asset!.id } })
     await accepted(user)
     setAsset(null)
   } })

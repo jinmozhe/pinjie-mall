@@ -298,8 +298,8 @@ async def test_upload_api_rejects_cookie_from_wrong_origin(client, asset_api_ser
         files={"file": ("avatar.png", _PNG, "image/png")},
     )
 
-    assert response.status_code == 403
-    assert response.json()["code"] == ErrorCode.CSRF_REJECTED
+    assert response.status_code == 401
+    assert response.json()["code"] == ErrorCode.AUTH_REQUIRED
     asset_api_service.upload.assert_not_awaited()
 
 
@@ -309,16 +309,16 @@ async def test_upload_api_rejects_missing_csrf_pair(
     asset_api_service: AsyncMock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    current = _current_principal(admin=False, csrf_token="web-csrf-token")
+    current = _current_principal(admin=True, csrf_token="admin-csrf-token")
 
     async def fake_current_user(*_args, **_kwargs):
         return current
 
-    monkeypatch.setattr(api_dependencies, "get_current_user", fake_current_user)
-    client.cookies.set("pinjie_web_access", "web-access-token")
+    monkeypatch.setitem(app.dependency_overrides, api_dependencies.get_current_admin, fake_current_user)
+    client.cookies.set("pinjie_admin_access", "admin-access-token")
     response = await client.post(
         "/api/v1/assets/upload",
-        headers={"Origin": "http://localhost:3000"},
+        headers={"Origin": "http://localhost:3001"},
         data={"scene": "avatar"},
         files={"file": ("avatar.png", _PNG, "image/png")},
     )
@@ -331,12 +331,11 @@ async def test_upload_api_rejects_missing_csrf_pair(
 @pytest.mark.parametrize(
     ("admin", "origin", "access_cookie", "csrf_cookie"),
     [
-        (False, "http://localhost:3000", "pinjie_web_access", "pinjie_web_csrf"),
         (True, "http://localhost:3001", "pinjie_admin_access", "pinjie_admin_csrf"),
     ],
 )
 @pytest.mark.asyncio
-async def test_upload_api_accepts_authenticated_dual_domain_session(
+async def test_upload_api_accepts_authenticated_admin_session(
     client,
     asset_api_service: AsyncMock,
     monkeypatch: pytest.MonkeyPatch,
@@ -351,11 +350,7 @@ async def test_upload_api_accepts_authenticated_dual_domain_session(
     async def fake_current(*_args, **_kwargs):
         return current
 
-    monkeypatch.setattr(
-        api_dependencies,
-        "get_current_admin" if admin else "get_current_user",
-        fake_current,
-    )
+    monkeypatch.setitem(app.dependency_overrides, api_dependencies.get_current_admin, fake_current)
     client.cookies.set(access_cookie, "domain-access-token")
     client.cookies.set(csrf_cookie, csrf_token)
     response = await client.post(

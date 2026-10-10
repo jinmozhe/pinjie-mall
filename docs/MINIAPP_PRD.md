@@ -92,11 +92,11 @@ R1 与 R2 表达开发顺序，不取消产品基线中的任何长期能力。�
 | 工程工具 | pnpm workspace、Turborepo、Node 24 基线、根锁文件、依赖观察期与安装脚本白名单 | 新应用沿用现有治理，不绕过 peer 冲突或全局强制统一 React |
 | Admin | Umi Max、Ant Design、React 19、TanStack Query；商品、交易履约、售后、会员分销等运营页面已有本地实现 | 复用已有运营能力，仅在小程序专项补齐已核实缺口，不重建后台 |
 | 类型消费 | API Client 生成 Axios SDK 和类型；Admin 实际使用生成类型加应用内 fetch 管道 | Miniapp 可复用类型，独立使用 Taro 传输，不直接导入 Admin 源码 |
-| 用户与会话 | /api/v1/miniapp 独立 Bearer、可信微信换码、无密码独立建号、轮换、退出、本人会话管理已有源码；会话迁移 head 20261009_01 | 真实 AppID/服务端秘密、权限同步与数据库升级需准备；会话与平台动态验收未执行，旧账户绑定及实际注销仍需专项 |
+| 用户与会话 | 统一 /api/v1/auth、/api/v1/users/me 下的 ConsumerBearer、可信微信换码、无密码建号、轮换、退出和本人会话管理已有源码；会话迁移 head 20261009_01 | 真实 AppID/服务端秘密、权限同步与数据库升级需准备；会话与平台动态验收未执行，旧账户绑定及实际注销仍需专项 |
 | 商城领域 | 商品、库存、地址、购物车、统一会员价格/运费报价、订单、履约、整单售后、会员资格、积分账本与分销已有本地实现 | 可复用领域，仍须适配身份、补充本人查询与展示视图；积分兑换/到期/抵扣不因账本存在而开放 |
 | 商品内容 | Admin Tiptap 保留，Backend 新写严格校验受限 HTML v1；Miniapp 使用 mp-html；旧内容有明确 legacy 标记 | 历史说明不公开渲染，数据审计迁移与微信原生组件验收未执行 |
 | 外部资金 | 支付创建返回 unavailable；没有真实支付回调适配器；真实退款和提现打款未接通 | 页面接入不能证明收款或资金退出可用 |
-| 本人资料与会员资金 | MiniappBearer 资料/头像、主动开通档案、等级有效状态、推荐分享/首次绑定、本人积分、双钱包流水、佣金与历史提现查询已有源码 | 安全投影不暴露他人和渠道资料；新提现申请关闭，有效邀请政策与实际注销仍需专项；详见[资料手册](operations/miniapp-profile-and-finance.md)及[推荐积分手册](operations/miniapp-referral-and-points.md) |
+| 本人资料与会员资金 | ConsumerBearer 资料/头像、主动开通档案、等级有效状态、推荐分享/首次绑定、本人积分、双钱包流水、佣金与历史提现查询已有源码 | 安全投影不暴露他人和渠道资料；新提现申请关闭，有效邀请政策与实际注销仍需专项；详见[资料手册](operations/miniapp-profile-and-finance.md)及[推荐积分手册](operations/miniapp-referral-and-points.md) |
 | 运维与数据 | 有 Alembic 迁移与显式单轮持久任务 Worker；已有数据库迁移和专项验证的历史记录，常驻调度与真实渠道处理仍未完成 | 复用已交付基础；当前数据库版本、权限、任务部署及渠道必须在上线专项重新核验 |
 
 ## 5. 信息架构与关键旅程
@@ -242,16 +242,16 @@ R1 与 R2 表达开发顺序，不取消产品基线中的任何长期能力。�
 
 | 能力 | 当前接口或源码事实 | 需要补齐的能力 | 关联需求 |
 | --- | --- | --- | --- |
-| 微信身份与会话 | /api/v1/miniapp/auth、me、sessions 已有独立 Bearer、内存凭据、准确安全声明及明确集合撤销/原目标恢复 | 真实微信/数据库与并发撤销验收、已有账户绑定 | MP-AUTH-001 至 MP-AUTH-005 |
-| 设置与注销前置 | settings/sessions/closure 三页及 account/closure-precheck 只读本人核对已有源码，实际注销关闭 | 平台隐私指引、动态核对验收；实际注销身份重新确认、权益处置与保留政策需专项确定 | MP-AUTH-004、MP-AUTH-005、MP-PRIV-001 |
+| 微信身份与会话 | /api/v1/auth 与 /api/v1/users/me、sessions 已有统一消费者 Bearer、内存凭据、准确安全声明及明确集合撤销/原目标恢复 | 真实微信/数据库与并发撤销验收、已有账户绑定 | MP-AUTH-001 至 MP-AUTH-005 |
+| 设置与注销前置 | settings/sessions/closure 三页及 /api/v1/users/me/closure-precheck 只读本人核对已有源码，实际注销关闭 | 平台隐私指引、动态核对验收；实际注销身份重新确认、权益处置与保留政策需专项确定 | MP-AUTH-004、MP-AUTH-005、MP-PRIV-001 |
 | 商品浏览 | GET /api/v1/products 支持分类分页；公开浏览、详情图集、评价、SKU 与受限 HTML 已接入 | 历史说明审计迁移、原生组件与适用会员价格展示验收；其他搜索排序按范围确认 | MP-CAT-001、MP-CAT-002 |
-| 购物车 | /api/v1/miniapp/cart-items 支持本人展示与读写，明确不可售及库存不足 | 真实环境与未知加购结果的旅程验收 | MP-CART-001、MP-CART-002 |
-| 地址与上传 | /api/v1/miniapp/addresses 已有本人 CRUD、区域 Picker 与 revision；me 已接入昵称、主动头像上传与绑定/移除 | 上传权限、取消/平台响应与地址动态验收 | MP-AUTH-005、MP-ADDR-001 |
-| 本人订单 | /api/v1/miniapp/orders 保留基础交易；trade-orders 已提供本人订单与履约组合分页、详情与动作资格，receipt 已接入版本确认 | 动态恢复、取消竞争、实物/虚拟履约与平台验收 | MP-CHK-003、MP-ORD-001、MP-ORD-002、MP-FUL-001 |
+| 购物车 | /api/v1/cart-items 支持本人展示与读写，明确不可售及库存不足 | 真实环境与未知加购结果的旅程验收 | MP-CART-001、MP-CART-002 |
+| 地址与上传 | /api/v1/addresses 已有本人 CRUD、区域 Picker 与 revision；me 已接入昵称、主动头像上传与绑定/移除 | 上传权限、取消/平台响应与地址动态验收 | MP-AUTH-005、MP-ADDR-001 |
+| 本人订单 | /api/v1/orders 统一基础交易、本人订单与履约组合分页、详情与动作资格，fulfillment/confirm-receipt 支持版本确认 | 动态恢复、取消竞争、实物/虚拟履约与平台验收 | MP-CHK-003、MP-ORD-001、MP-ORD-002、MP-FUL-001 |
 | 支付 | POST /api/v1/orders/{order_id}/payment-attempts 返回不可用意图 | 真实渠道下单、调起参数、状态查询、通知、查单、关单及恢复 | MP-PAY-001 至 MP-PAY-003 |
 | 售后与评价 | miniapp 已接入整单退款、本人分页/详情/原请求查询、资金安全投影、本人评价资格与写入；复用原补偿服务 | 动态资格与未知结果恢复、真实渠道资金执行、重复评价与并发验收 | MP-AFT-001、MP-AFT-002、MP-REV-001 |
-| 帮助与支持 | 公开 /api/v1/miniapp/help 与帮助分包已有源码，联系方式可配置或明确未配置 | 正式运营联系人与平台隐私指引，界面和联系操作验收 | R1 |
-| 会员分销 | 已有 /api/v1/miniapp 本人会员、推荐、积分、佣金、钱包与历史提现源码 | 主动分享绑定与原码恢复；平台/数据库验收仍未执行，真实打款及结果恢复作为开放提现前置 | MP-MEM-001、MP-REF-001、MP-PTS-001、MP-COM-001、MP-WAL-001、MP-WDR-001 |
+| 帮助与支持 | 公开 /api/v1/system/help 与帮助分包已有源码，联系方式可配置或明确未配置 | 正式运营联系人与平台隐私指引，界面和联系操作验收 | R1 |
+| 会员分销 | /api/v1/distribution/me 提供本人会员、推荐、佣金、钱包与历史提现，/api/v1/users/me/points 提供积分 | 主动分享绑定与原码恢复；平台/数据库验收仍未执行，真实打款及结果恢复作为开放提现前置 | MP-MEM-001、MP-REF-001、MP-PTS-001、MP-COM-001、MP-WAL-001、MP-WDR-001 |
 
 ### 8.2 Admin、Backend 与运维配套
 
@@ -280,7 +280,7 @@ R1 与 R2 表达开发顺序，不取消产品基线中的任何长期能力。�
 
 | 编号 | 要求与验收 | 基线 |
 | --- | --- | --- |
-| MP-SEC-001 | 小程序采用独立 Public Client Bearer Profile，明确 audience、客户端证明、期限、轮换、撤销和重放；Admin Cookie、Origin 与 CSRF 边界保持完整 | BASE-BE-003 |
+| MP-SEC-001 | C 端仅使用微信登录与 Public Client Bearer Profile，业务路径统一，旧浏览器认证退役；明确 audience、客户端证明、期限、轮换、撤销和重放；Admin Cookie、Origin 与 CSRF 边界保持完整 | BASE-BE-003 |
 | MP-SEC-002 | Access Token 优先仅在内存；持久 Refresh Token 仅在专项设计明确风险与轮换后采用；小程序存储不等同 HttpOnly，客户端内置加密密钥不视为秘密保护 | BASE-BE-003、BASE-QUAL-001 |
 | MP-SEC-003 | AppSecret、微信 session_key、支付及上传私钥只在服务端或受控 CI；客户端、日志、错误、截图与产物不泄露凭据及完整收款信息 | BASE-BE-003、BASE-OPS-003 |
 | MP-SEC-004 | 分享、页面参数和本地草稿校验类型、版本与权限；用户隐藏入口不代替服务端授权，错误不泄露其他主体资源 | BASE-BE-003、BASE-API-002 |

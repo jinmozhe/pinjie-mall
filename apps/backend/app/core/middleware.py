@@ -7,7 +7,7 @@ from loguru import logger
 
 from .context import request_id_context, trace_id_context
 from .identifiers import new_uuid7
-from .payload_sanitizer import capture_error_request_body
+from .payload_sanitizer import capture_error_request_body, is_sensitive_route
 from .request_metadata import publish_request_log
 
 _REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
@@ -30,6 +30,8 @@ async def request_context_middleware(request: Request, call_next: Callable[[Requ
         duration_ms = max(0, round((time.perf_counter() - started_at) * 1000))
         route = request.scope.get("route")
         route_template = getattr(route, "path", request.url.path)
+        if is_sensitive_route(route_template) or getattr(request.state, "private_response", False):
+            response.headers["Cache-Control"] = "no-store"
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Trace-ID"] = trace_id
         response.headers["X-Content-Type-Options"] = "nosniff"

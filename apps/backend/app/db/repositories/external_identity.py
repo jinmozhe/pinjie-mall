@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models.identity import UserExternalIdentity
 
 
-class MiniappIdentityRepository:
+class WechatIdentityRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 

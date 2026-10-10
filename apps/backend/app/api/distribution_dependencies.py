@@ -14,6 +14,8 @@ from app.core.request_metadata import request_metadata
 from app.db.repositories.commerce_access import CommerceAccessRepository
 from app.domains.distribution import DistributionService
 from app.services.distribution import AdminDistributionApplicationService, UserDistributionApplicationService
+from app.services.engagement import ConsumerEngagementService
+from app.services.finance_queries import ConsumerFinanceService
 from app.services.security_events import AuditCoordinator
 
 
@@ -59,3 +61,15 @@ def get_user_distribution_service(
 Distribution = Annotated[DistributionService, Depends(get_distribution_service)]
 AdminDistribution = Annotated[AdminDistributionApplicationService, Depends(get_admin_distribution_service)]
 UserDistribution = Annotated[UserDistributionApplicationService, Depends(get_user_distribution_service)]
+
+
+def consumer_finance(session: DatabaseSession) -> ConsumerFinanceService:
+    return ConsumerFinanceService(session)
+
+
+def consumer_engagement(session: DatabaseSession) -> ConsumerEngagementService:
+    return ConsumerEngagementService(session)
+
+
+ConsumerFinance = Annotated[ConsumerFinanceService, Depends(consumer_finance)]
+ConsumerEngagement = Annotated[ConsumerEngagementService, Depends(consumer_engagement)]

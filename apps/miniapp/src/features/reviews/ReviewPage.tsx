@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Taro, { useDidShow, useRouter } from '@tarojs/taro'
 import { Textarea, View } from '@tarojs/components'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import type { ResponseModelMiniappTradeOrderRead, ResponseModelProductReviewRead } from '@pinjie/api-client'
+import type { ResponseModelConsumerTradeOrderRead, ResponseModelProductReviewRead } from '@pinjie/api-client'
 import { AuthGate } from '@/components/AuthGate'
 import { Button } from '@/components/Button'
 import { QueryState } from '@/components/QueryState'
@@ -18,7 +18,7 @@ function Content() {
   const [content, setContent] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [accepted, setAccepted] = useState(false)
-  const query = useQuery({ queryKey: ['private', 'order-detail', session.epoch, orderId], enabled: valid, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelMiniappTradeOrderRead>(`/trade-orders/${orderId}`, { signal }) })
+  const query = useQuery({ queryKey: ['private', 'order-detail', session.epoch, orderId], enabled: valid, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerTradeOrderRead>(`/orders/${orderId}`, { signal }) })
   useDidShow(() => { if (valid) void query.refetch() })
   const item = query.data?.item_reviews.find((row) => row.order_item_id === itemId)
   const submit = useMutation({ mutationFn: async () => {

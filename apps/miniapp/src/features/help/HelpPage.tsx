@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Taro from '@tarojs/taro'
 import { View } from '@tarojs/components'
 import { useQuery } from '@tanstack/react-query'
-import type { ResponseModelMiniappHelpRead } from '@pinjie/api-client'
+import type { ResponseModelConsumerHelpRead } from '@pinjie/api-client'
 import { Button } from '@/components/Button'
 import { QueryState } from '@/components/QueryState'
 import { getPublic } from '@/lib/api'
@@ -19,7 +19,7 @@ const topics = [
 export function HelpPage() {
   const [open, setOpen] = useState<number | null>(null)
   const [contactError, setContactError] = useState('')
-  const query = useQuery({ queryKey: ['help'], gcTime: 0, queryFn: ({ signal }) => getPublic<ResponseModelMiniappHelpRead>('/miniapp/help', signal) })
+  const query = useQuery({ queryKey: ['help'], gcTime: 0, queryFn: ({ signal }) => getPublic<ResponseModelConsumerHelpRead>('/system/help', signal) })
   async function contact(kind: 'phone' | 'email') {
     setContactError('')
     try {

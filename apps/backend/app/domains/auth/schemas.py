@@ -1,10 +1,9 @@
 import re
 import uuid
 from datetime import datetime
+from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-from app.core.password_policy import PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH
+from pydantic import BaseModel, ConfigDict, Field
 
 _USERNAME_PATTERN = re.compile(r"^[a-z0-9._-]{3,50}$")
 
@@ -14,41 +13,6 @@ def normalize_username(value: str) -> str:
     if not _USERNAME_PATTERN.fullmatch(normalized):
         raise ValueError("username must be 3-50 lowercase letters, digits, dot, underscore, or hyphen")
     return normalized
-
-
-class UserRegisterIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    username: str
-    password: str = Field(
-        min_length=PASSWORD_MIN_LENGTH,
-        max_length=PASSWORD_MAX_LENGTH,
-        description="登录密码，长度为 6 至 64 个字符",
-    )
-    display_name: str | None = Field(default=None, max_length=100)
-    email: str | None = Field(default=None, max_length=320)
-
-    @field_validator("username")
-    @classmethod
-    def validate_username(cls, value: str) -> str:
-        return normalize_username(value)
-
-    @field_validator("email")
-    @classmethod
-    def normalize_email(cls, value: str | None) -> str | None:
-        return value.strip().lower() if value else None
-
-
-class UserLoginIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    username: str
-    password: str = Field(min_length=1, max_length=PASSWORD_MAX_LENGTH, description="登录密码，最多 64 个字符")
-
-    @field_validator("username")
-    @classmethod
-    def validate_username(cls, value: str) -> str:
-        return normalize_username(value)
 
 
 class UserPrincipalOut(BaseModel):
@@ -64,16 +28,6 @@ class UserPrincipalOut(BaseModel):
     updated_at: datetime
 
 
-class UserAuthSessionOut(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    principal: UserPrincipalOut
-    session_id: uuid.UUID
-    access_expires_at: datetime
-    idle_expires_at: datetime
-    absolute_expires_at: datetime
-
-
 class RefreshSessionOut(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -83,11 +37,32 @@ class RefreshSessionOut(BaseModel):
     absolute_expires_at: datetime
 
 
-__all__ = [
-    "RefreshSessionOut",
-    "UserAuthSessionOut",
-    "UserLoginIn",
-    "UserPrincipalOut",
-    "UserRegisterIn",
-    "normalize_username",
-]
+class WechatLoginIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    code: str = Field(min_length=1, max_length=256, repr=False, description="微信一次性登录 code，不接受客户端 OpenID")
+
+
+class ConsumerRefreshIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    refresh_token: str = Field(min_length=64, max_length=64, repr=False)
+
+
+class ConsumerUserRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    display_name: str | None
+    avatar: str | None
+
+
+class ConsumerSessionRead(BaseModel):
+    user: ConsumerUserRead
+    session_id: UUID
+    access_token: str = Field(repr=False)
+    refresh_token: str = Field(repr=False)
+    access_expires_at: datetime
+    idle_expires_at: datetime
+    absolute_expires_at: datetime
+
+
+class ConsumerCapabilitiesRead(BaseModel):
+    login_enabled: bool

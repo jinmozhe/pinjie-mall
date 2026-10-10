@@ -8,20 +8,20 @@
 
 ## 本人查询与操作
 
-全部路径位于 `/api/v1/miniapp`，拒绝浏览器 Cookie，响应 no-store。私有操作使用独立 MiniappBearer，服务端检查本人归属；资格字段只作界面提示，写服务在事务内再次裁决。
+以下路径相对于 `/api/v1`，已并入原业务模块。私有操作拒绝 Cookie，响应 no-store，使用统一 ConsumerBearer，服务端检查本人归属；资格字段只作界面提示，写服务在事务内再次裁决。
 
 | 接口 | 用途 |
 | --- | --- |
-| `GET /trade-orders` | 服务端按订单主状态或履约事实筛选分页；相同筛选用于 total 与当前页 |
-| `GET /trade-orders/{order_id}` | 本人快照、成交时间、nullable 履约事实、确认收货/退款资格、本人明细评价 |
-| `POST /orders/{order_id}/receipt` | 仅实物已发货，携带履约 revision；之后读取最新事实 |
+| `GET /orders` | 服务端按订单主状态或履约事实筛选分页；相同筛选用于 total 与当前页 |
+| `GET /orders/{order_id}` | 本人快照、成交时间、nullable 履约事实、确认收货/退款资格、本人明细评价 |
+| `POST /orders/{order_id}/fulfillment/confirm-receipt` | 仅实物已发货，携带履约 revision；之后读取最新事实 |
 | `GET /refunds/intent` | 取得服务端生成的新退款 request_id |
 | `POST /orders/{order_id}/refunds` | 原 request_id 与 reason，服务端展开全部商品和原运费，无客户端金额/数量 |
 | `GET /refunds` | 本人全量售后分页，可限定本人 order_id |
 | `GET /refunds/{refund_id}` | 本人申请、审核、金额与安全资金投影 |
 | `GET /refunds/by-request/{request_id}` | 显式 found/not_found，不把查询失败解释为未受理 |
-| `POST /order-items/{item_id}/review` | 本人已交付明细，1 至 5 分、最多 1000 字，仅评价一次 |
-| `GET /help` | 公开电话/邮箱配置，无联系人时返回明确 null |
+| `POST /order-items/{order_item_id}/review` | 本人已交付明细，1 至 5 分、最多 1000 字，仅评价一次 |
+| `GET /system/help` | 公开电话/邮箱配置，无联系人时返回明确 null |
 
 订单主状态仍只有 pending_payment、paid、cancelled。display_status 为展示投影，待发货、待交付、待收货、已完成来自 paid 与履约事实；尚无履约时显示待确认，不能自行推定已完成。售后完成后的 paid 主状态保留，履约 cancelled 对应售后已完成。实物运单可复制，不提供实时轨迹；虚拟交付信息仅本人读取，界面仅在已交付时展示。
 

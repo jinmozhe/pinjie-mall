@@ -329,14 +329,14 @@ class Settings(BaseSettings):
         values = (self.miniapp_jwt_secret, self.miniapp_token_hmac_key)
         for value in values:
             if value is None or len(value.encode("utf-8")) < 32:
-                raise ValueError("Miniapp JWT and HMAC keys must contain at least 32 UTF-8 bytes")
+                raise ValueError("Consumer JWT and HMAC keys must contain at least 32 UTF-8 bytes")
             if any(marker in value.lower() for marker in {"replace_with", "change_me", "example", "placeholder"}):
-                raise ValueError("Miniapp keys must not use template values")
+                raise ValueError("Consumer keys must not use template values")
         jwt_key, hmac_key = values
         if jwt_key is None or hmac_key is None:
-            raise RuntimeError("Miniapp keys were not validated")
+            raise RuntimeError("Consumer keys were not validated")
         if jwt_key == hmac_key or any(value in self.authentication_secrets() for value in (jwt_key, hmac_key)):
-            raise ValueError("Miniapp keys must be independent from each other and Browser keys")
+            raise ValueError("Consumer keys must be independent from each other and Browser keys")
         return jwt_key, hmac_key
 
     @property

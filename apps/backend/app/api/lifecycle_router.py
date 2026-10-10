@@ -3,10 +3,11 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.dependencies import require_admin_csrf, require_permission, require_web_csrf
+from app.api.dependencies import UserPrincipal, require_admin_csrf, require_permission
 from app.api.lifecycle_dependencies import AdminLifecycle, Lifecycle
-from app.api.transaction_dependencies import UserPrincipal
+from app.api.transaction_dependencies import ConsumerTrade
 from app.core.context import current_request_id
+from app.core.identifiers import new_uuid7
 from app.core.pagination import PageResult
 from app.core.response import ResponseModel, success_response
 from app.domains.admin.permissions import PermissionCode
@@ -27,6 +28,11 @@ from app.domains.lifecycle import (
     VirtualDeliveryCreate,
 )
 from app.domains.orders import OrderAcceptance, OrderRead
+from app.domains.orders.schemas import OperationIntentRead
+from app.services.trade_query_schemas import (
+    ConsumerRefundLookupRead,
+    ConsumerRefundRead,
+)
 
 router = APIRouter(tags=["支付与售后"])
 Page = Annotated[int, Query(ge=1, description="页码，从一开始")]
@@ -48,7 +54,6 @@ async def admin_fulfillment_read(order_id: UUID, service: Lifecycle) -> Response
     response_model=ResponseModel[PaymentAttemptRead],
     status_code=201,
     summary="创建支付意图",
-    dependencies=[Depends(require_web_csrf)],
 )
 async def initiate_payment(
     order_id: UUID, payload: PaymentAttemptCreate, service: Lifecycle, current: UserPrincipal
@@ -79,7 +84,6 @@ async def fulfillment_read(
     "/orders/{order_id}/fulfillment/confirm-receipt",
     response_model=ResponseModel[FulfillmentRead],
     summary="确认收货",
-    dependencies=[Depends(require_web_csrf)],
 )
 async def confirm_receipt(
     order_id: UUID, payload: ReceiptConfirm, service: Lifecycle, current: UserPrincipal
@@ -95,7 +99,6 @@ async def confirm_receipt(
     response_model=ResponseModel[RefundRequestRead],
     status_code=201,
     summary="申请退款",
-    dependencies=[Depends(require_web_csrf)],
 )
 async def refund_create(
     order_id: UUID, payload: RefundRequestCreate, service: Lifecycle, current: UserPrincipal
@@ -106,28 +109,11 @@ async def refund_create(
     )
 
 
-@router.get(
-    "/orders/{order_id}/refunds",
-    response_model=ResponseModel[list[RefundRequestRead]],
-    summary="查看本人订单退款申请",
-)
-async def refund_list(
-    order_id: UUID, service: Lifecycle, current: UserPrincipal
-) -> ResponseModel[list[RefundRequestRead]]:
-    # 资源归属校验：service.refunds_for_user 内部通过 user_order(user_id, order_id)
-    # 联合过滤 user_id + order_id，非本人订单返回 404，不存在 IDOR 越权风险。
-    return success_response(
-        data=await service.refunds_for_user(current.user.id, order_id),
-        request_id=current_request_id(),
-    )
-
-
 @router.post(
     "/order-items/{order_item_id}/review",
     response_model=ResponseModel[ProductReviewRead],
     status_code=201,
     summary="评价已交付订单明细",
-    dependencies=[Depends(require_web_csrf)],
 )
 async def review_create(
     order_item_id: UUID, payload: ProductReviewCreate, service: Lifecycle, current: UserPrincipal
@@ -239,3 +225,45 @@ async def admin_resolve_reconciliation(
     return success_response(
         data=await service.resolve_reconciliation(record_id, payload), request_id=current_request_id()
     )
+
+
+@router.get("/refunds/intent", response_model=ResponseModel[OperationIntentRead], summary="取得新的退款请求号")
+async def refund_intent(current: UserPrincipal) -> ResponseModel[OperationIntentRead]:
+    return success_response(data=OperationIntentRead(request_id=new_uuid7()), request_id=current_request_id())
+
+
+@router.get(
+    "/refunds", response_model=ResponseModel[PageResult[ConsumerRefundRead]], summary="分页读取本人整单售后记录"
+)
+async def refund_list(
+    trade: ConsumerTrade,
+    current: UserPrincipal,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=100),
+    order_id: UUID | None = None,
+) -> ResponseModel[PageResult[ConsumerRefundRead]]:
+    return success_response(
+        data=await trade.refunds(current.user.id, page, page_size, order_id), request_id=current_request_id()
+    )
+
+
+@router.get(
+    "/refunds/by-request/{request_id}",
+    response_model=ResponseModel[ConsumerRefundLookupRead],
+    summary="按原请求号确认本人退款受理事实",
+)
+async def refund_lookup(
+    request_id: UUID, trade: ConsumerTrade, current: UserPrincipal
+) -> ResponseModel[ConsumerRefundLookupRead]:
+    return success_response(
+        data=await trade.refund_by_request(current.user.id, request_id), request_id=current_request_id()
+    )
+
+
+@router.get(
+    "/refunds/{refund_id}", response_model=ResponseModel[ConsumerRefundRead], summary="读取本人售后审核与资金事实"
+)
+async def refund_detail(
+    refund_id: UUID, trade: ConsumerTrade, current: UserPrincipal
+) -> ResponseModel[ConsumerRefundRead]:
+    return success_response(data=await trade.refund(current.user.id, refund_id), request_id=current_request_id())

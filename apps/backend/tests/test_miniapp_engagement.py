@@ -7,8 +7,8 @@ import pytest
 from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
 from app.db.models.distribution import MemberProfile, PointsAccount, PointsLedger
-from app.services.miniapp_engagement import referral_read
-from app.services.miniapp_engagement_schemas import MiniappPointsAccountRead, MiniappPointsLedgerRead
+from app.services.engagement import referral_read
+from app.services.engagement_schemas import ConsumerPointsAccountRead, ConsumerPointsLedgerRead
 
 
 def test_bound_referral_requires_exact_original_code_without_exposing_inviter() -> None:
@@ -42,7 +42,7 @@ def test_points_json_preserves_bigint_precision_and_excludes_private_source_data
         revision=1,
         updated_at=now,
     )
-    data = MiniappPointsAccountRead.model_validate(account).model_dump(mode="json")
+    data = ConsumerPointsAccountRead.model_validate(account).model_dump(mode="json")
     assert data["available_points"] == str(exact) and data["frozen_points"] == "0"
     assert not set(data) & {"user_id", "id"}
     ledger = PointsLedger(
@@ -59,6 +59,6 @@ def test_points_json_preserves_bigint_precision_and_excludes_private_source_data
         reverses_ledger_id=new_uuid7(),
         created_at=now,
     )
-    data = MiniappPointsLedgerRead.model_validate(ledger).model_dump(mode="json")
+    data = ConsumerPointsLedgerRead.model_validate(ledger).model_dump(mode="json")
     assert data["available_delta"] == str(-exact) and data["debt_delta"] == "2"
     assert not set(data) & {"account_id", "source_id", "idempotency_key", "note", "reverses_ledger_id"}

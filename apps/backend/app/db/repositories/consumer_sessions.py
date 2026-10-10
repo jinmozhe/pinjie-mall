@@ -10,7 +10,7 @@ from sqlalchemy.sql.elements import ColumnElement
 from app.db.models import UserSession
 
 
-def miniapp_session_filters(user_id: UUID) -> tuple[ColumnElement[bool], ...]:
+def consumer_session_filters(user_id: UUID) -> tuple[ColumnElement[bool], ...]:
     return (
         UserSession.user_id == user_id,
         UserSession.credential_profile == "miniapp_bearer",
@@ -19,12 +19,12 @@ def miniapp_session_filters(user_id: UUID) -> tuple[ColumnElement[bool], ...]:
     )
 
 
-class MiniappSessionRepository:
+class ConsumerSessionRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
     async def page(self, user_id: UUID, page: int, page_size: int) -> tuple[list[UserSession], int]:
-        filters = miniapp_session_filters(user_id)
+        filters = consumer_session_filters(user_id)
         total = (await self.session.execute(select(func.count()).select_from(UserSession).where(*filters))).scalar_one()
         rows = await self.session.scalars(
             select(UserSession)
@@ -37,7 +37,7 @@ class MiniappSessionRepository:
 
     async def active_others(self, user_id: UUID, current_id: UUID, now: datetime) -> tuple[list[UUID], int]:
         filters = (
-            *miniapp_session_filters(user_id),
+            *consumer_session_filters(user_id),
             UserSession.id != current_id,
             UserSession.revoked_at.is_(None),
             UserSession.idle_expires_at > now,
@@ -52,7 +52,7 @@ class MiniappSessionRepository:
     async def targets(self, user_id: UUID, ids: list[UUID], *, for_update: bool = False) -> list[UserSession]:
         stmt = (
             select(UserSession)
-            .where(*miniapp_session_filters(user_id), UserSession.id.in_(ids))
+            .where(*consumer_session_filters(user_id), UserSession.id.in_(ids))
             .order_by(UserSession.id)
         )
         if for_update:

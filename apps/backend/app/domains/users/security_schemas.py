@@ -14,7 +14,7 @@ ClosureCheckKey = Literal[
 ]
 
 
-class MiniappLoginSessionRead(BaseModel):
+class ConsumerLoginSessionRead(BaseModel):
     id: UUID
     device_name: str | None
     ip_masked: str | None
@@ -27,12 +27,12 @@ class MiniappLoginSessionRead(BaseModel):
     state: Literal["active", "expired", "revoked"]
 
 
-class MiniappLoginSessionsRead(PageResult[MiniappLoginSessionRead]):
+class ConsumerLoginSessionsRead(PageResult[ConsumerLoginSessionRead]):
     other_active_total: int = Field(ge=0)
     other_active_ids: list[UUID] = Field(max_length=100)
 
 
-class MiniappSessionTargets(BaseModel):
+class ConsumerSessionTargets(BaseModel):
     model_config = ConfigDict(extra="forbid")
     session_ids: list[UUID] = Field(min_length=1, max_length=100)
 
@@ -44,23 +44,23 @@ class MiniappSessionTargets(BaseModel):
         return values
 
 
-class MiniappSessionStateRead(BaseModel):
+class ConsumerSessionStateRead(BaseModel):
     id: UUID
     state: SessionState
 
 
-class MiniappSessionRevocationRead(BaseModel):
-    sessions: list[MiniappSessionStateRead] = Field(min_length=1, max_length=100)
+class ConsumerSessionRevocationRead(BaseModel):
+    sessions: list[ConsumerSessionStateRead] = Field(min_length=1, max_length=100)
 
 
-class MiniappClosureCheckRead(BaseModel):
+class ConsumerClosureCheckRead(BaseModel):
     key: ClosureCheckKey
     needs_review: bool
 
 
-class MiniappClosurePrecheckRead(BaseModel):
+class ConsumerClosurePrecheckRead(BaseModel):
     self_service_enabled: Literal[False] = False
     checked_at: datetime
     wallet_state: Literal["not_opened", "opened"]
     points_state: Literal["not_opened", "opened"]
-    checks: list[MiniappClosureCheckRead]
+    checks: list[ConsumerClosureCheckRead]

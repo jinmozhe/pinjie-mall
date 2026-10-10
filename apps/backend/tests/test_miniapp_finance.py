@@ -14,26 +14,25 @@ from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
 from app.core.resources import AppResources
 from app.db.models.distribution import CommissionRecord, MemberLevel, MemberProfile, WalletLedger, WithdrawalRequest
+from app.domains.users.schemas import ConsumerAvatarUpdate, ConsumerProfileUpdate
 from app.main import create_app
-from app.services.miniapp_finance import member_read, withdrawal_read
-from app.services.miniapp_finance_schemas import (
-    MiniappAvatarUpdate,
-    MiniappCommissionRead,
-    MiniappProfileUpdate,
-    MiniappWalletLedgerRead,
+from app.services.finance_queries import member_read, withdrawal_read
+from app.services.finance_query_schemas import (
+    ConsumerCommissionRead,
+    ConsumerWalletLedgerRead,
 )
 
 
 def test_profile_inputs_require_explicit_valid_changes() -> None:
-    assert MiniappProfileUpdate(display_name="  大仙  ").display_name == "大仙"
+    assert ConsumerProfileUpdate(display_name="  大仙  ").display_name == "大仙"
     for value in [" ", "x" * 101]:
         with pytest.raises(ValidationError):
-            MiniappProfileUpdate(display_name=value)
+            ConsumerProfileUpdate(display_name=value)
     with pytest.raises(ValidationError):
-        MiniappProfileUpdate.model_validate({"display_name": "name", "email": "private@example.test"})
+        ConsumerProfileUpdate.model_validate({"display_name": "name", "email": "private@example.test"})
     with pytest.raises(ValidationError):
-        MiniappAvatarUpdate.model_validate({})
-    assert MiniappAvatarUpdate(asset_id=None).asset_id is None
+        ConsumerAvatarUpdate.model_validate({})
+    assert ConsumerAvatarUpdate(asset_id=None).asset_id is None
 
 
 def test_membership_state_and_private_relationship_projection() -> None:
@@ -117,7 +116,7 @@ def test_commission_and_ledger_exclude_operational_identifiers_and_raw_snapshots
         order_id=new_uuid7(),
         order_item_id=new_uuid7(),
     )
-    assert not set(MiniappCommissionRead.model_validate(row).model_dump()) & {
+    assert not set(ConsumerCommissionRead.model_validate(row).model_dump()) & {
         "source_user_id",
         "beneficiary_user_id",
         "policy_id",
@@ -143,7 +142,7 @@ def test_commission_and_ledger_exclude_operational_identifiers_and_raw_snapshots
             "private": "value",
         },
     )
-    read = MiniappWalletLedgerRead.model_validate(ledger).model_dump()
+    read = ConsumerWalletLedgerRead.model_validate(ledger).model_dump()
     assert not set(read) & {"idempotency_key", "reference_id", "reference_type"}
     assert "private" not in read["balance_after"]
 
@@ -153,23 +152,23 @@ def test_commission_and_ledger_exclude_operational_identifiers_and_raw_snapshots
 @pytest.mark.parametrize(
     ("method", "path", "payload"),
     [
-        ("PATCH", "/me", {"display_name": "name"}),
-        ("PUT", "/me/avatar", {"asset_id": None}),
-        ("GET", "/membership", None),
-        ("POST", "/membership", None),
-        ("GET", "/referral", None),
-        ("POST", "/referral", {"invitation_code": "ABC12345"}),
-        ("GET", "/points", None),
-        ("GET", "/points/ledgers", None),
-        ("GET", "/wallets", None),
-        ("GET", "/wallets/commission/ledgers", None),
-        ("GET", "/commissions", None),
-        ("GET", "/withdrawals", None),
-        ("GET", "/sessions", None),
-        ("POST", "/sessions/revoke", {"session_ids": [str(new_uuid7())]}),
-        ("POST", "/sessions/revocation-status", {"session_ids": [str(new_uuid7())]}),
-        ("GET", "/account/closure-precheck", None),
-        ("POST", "/me/avatar-assets", None),
+        ("PATCH", "/users/me", {"display_name": "name"}),
+        ("PUT", "/users/me/avatar", {"asset_id": None}),
+        ("GET", "/distribution/me/profile", None),
+        ("POST", "/distribution/me/profile", None),
+        ("GET", "/distribution/me/referrer", None),
+        ("POST", "/distribution/me/referrer", {"invitation_code": "ABC12345"}),
+        ("GET", "/users/me/points", None),
+        ("GET", "/users/me/points/ledgers", None),
+        ("GET", "/distribution/me/wallets", None),
+        ("GET", "/distribution/me/wallets/commission/ledgers", None),
+        ("GET", "/distribution/me/commissions", None),
+        ("GET", "/distribution/me/withdrawals", None),
+        ("GET", "/users/me/sessions", None),
+        ("POST", "/users/me/sessions/revoke", {"session_ids": [str(new_uuid7())]}),
+        ("POST", "/users/me/sessions/revocation-status", {"session_ids": [str(new_uuid7())]}),
+        ("GET", "/users/me/closure-precheck", None),
+        ("POST", "/users/me/avatar-assets", None),
     ],
 )
 async def test_new_private_routes_reject_missing_auth_and_browser_cookies(method, path, payload, login_enabled) -> None:
@@ -181,9 +180,7 @@ async def test_new_private_routes_reject_missing_auth_and_browser_cookies(method
 
     app.dependency_overrides[get_db_session] = no_database
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://testserver") as client:
-        response = await client.request(method, f"/api/v1/miniapp{path}", json=payload)
+        response = await client.request(method, f"/api/v1{path}", json=payload)
         assert response.status_code == (401 if login_enabled else 503)
-        response = await client.request(
-            method, f"/api/v1/miniapp{path}", json=payload, headers={"Cookie": "browser=unit"}
-        )
+        response = await client.request(method, f"/api/v1{path}", json=payload, headers={"Cookie": "browser=unit"})
         assert response.status_code == 400

@@ -9,7 +9,7 @@ from fastapi import Response
 from jwt import InvalidTokenError
 from pydantic import ValidationError
 
-from app.api.miniapp_dependencies import require_miniapp_profile
+from app.api.dependencies import require_consumer_profile
 from app.core.config import Settings
 from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
@@ -18,8 +18,8 @@ from app.core.payload_sanitizer import is_sensitive_route
 from app.core.request_metadata import RequestMetadata
 from app.core.restricted_html import legacy_text_to_html, restricted_html
 from app.core.security import create_access_token, decode_access_token
-from app.domains.auth.miniapp_schemas import MiniappLoginIn, MiniappRefreshIn
-from app.services.miniapp_auth import MiniappAuthService
+from app.domains.auth.schemas import ConsumerRefreshIn, WechatLoginIn
+from app.services.consumer_auth import ConsumerAuthService
 from tests.conftest import TEST_SECRETS
 
 
@@ -89,17 +89,17 @@ def test_profile_and_key_separation() -> None:
         miniapp_settings(MINIAPP_JWT_SECRET=settings.web_jwt_secret).miniapp_secrets()
     request = MagicMock(headers={"cookie": "pinjie_web_access=unit-only"})
     with pytest.raises(AppException) as failure:
-        require_miniapp_profile(request, Response())
+        require_consumer_profile(request, Response())
     assert failure.value.status_code == 400
 
 
 def test_secrets_are_not_repr_or_error_body_candidates() -> None:
-    assert "unit-code" not in repr(MiniappLoginIn(code="unit-code"))
-    assert "x" * 64 not in repr(MiniappRefreshIn(refresh_token="x" * 64))
-    assert is_sensitive_route("/api/v1/miniapp/auth/login")
-    assert is_sensitive_route("/api/v1/miniapp/addresses")
+    assert "unit-code" not in repr(WechatLoginIn(code="unit-code"))
+    assert "x" * 64 not in repr(ConsumerRefreshIn(refresh_token="x" * 64))
+    assert is_sensitive_route("/api/v1/auth/login")
+    assert is_sensitive_route("/api/v1/addresses")
     with pytest.raises(ValidationError):
-        MiniappLoginIn(code="unit", openid="client-forged")
+        WechatLoginIn(code="unit", openid="client-forged")
     settings = miniapp_settings()
     configure_logging(settings)
     assert logging.getLogger("httpx").level >= logging.WARNING
@@ -119,7 +119,7 @@ async def test_exchange_failures_hide_external_payload(failure: str) -> None:
         return httpx.Response(500, json={"errmsg": "unit-secret"})
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(transport)) as http:
-        service = MiniappAuthService(
+        service = ConsumerAuthService(
             session=MagicMock(),
             session_factory=MagicMock(),
             redis=None,
@@ -147,7 +147,7 @@ async def test_exchange_accepts_only_trusted_openid() -> None:
         return httpx.Response(200, json={"openid": "unit-trusted-openid", "session_key": "never-store-this"})
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(transport)) as http:
-        service = MiniappAuthService(
+        service = ConsumerAuthService(
             session=MagicMock(),
             session_factory=MagicMock(),
             redis=None,

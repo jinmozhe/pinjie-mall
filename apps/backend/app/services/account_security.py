@@ -16,23 +16,23 @@ from app.db.models.commerce_lifecycle import Fulfillment, PaymentAttempt, Refund
 from app.db.models.distribution import CommissionRecord, PointsAccount, WalletAccount, WithdrawalRequest
 from app.db.models.order import Order
 from app.db.repositories import SecurityRepository, SessionRepository, UserRepository
-from app.db.repositories.miniapp_sessions import MiniappSessionRepository
+from app.db.repositories.consumer_sessions import ConsumerSessionRepository
 from app.domains.users import UserAccessService
-from app.services.miniapp_account_schemas import (
+from app.domains.users.security_schemas import (
     ClosureCheckKey,
-    MiniappClosureCheckRead,
-    MiniappClosurePrecheckRead,
-    MiniappLoginSessionRead,
-    MiniappLoginSessionsRead,
-    MiniappSessionRevocationRead,
-    MiniappSessionStateRead,
-    MiniappSessionTargets,
+    ConsumerClosureCheckRead,
+    ConsumerClosurePrecheckRead,
+    ConsumerLoginSessionRead,
+    ConsumerLoginSessionsRead,
+    ConsumerSessionRevocationRead,
+    ConsumerSessionStateRead,
+    ConsumerSessionTargets,
 )
-from app.services.miniapp_auth import bearer_error
+from app.services.consumer_auth import bearer_error
 from app.services.security_events import AuditCoordinator, login_event
 
 
-def login_session_read(row: UserSession, current_id: UUID, now: datetime) -> MiniappLoginSessionRead:
+def login_session_read(row: UserSession, current_id: UUID, now: datetime) -> ConsumerLoginSessionRead:
     state: Literal["active", "expired", "revoked"] = (
         "revoked"
         if row.revoked_at is not None
@@ -40,7 +40,7 @@ def login_session_read(row: UserSession, current_id: UUID, now: datetime) -> Min
         if min(row.idle_expires_at, row.absolute_expires_at) <= now
         else "active"
     )
-    return MiniappLoginSessionRead(
+    return ConsumerLoginSessionRead(
         id=row.id,
         device_name=row.device_name,
         ip_masked=masked_ip(row.ip_address),
@@ -54,24 +54,24 @@ def login_session_read(row: UserSession, current_id: UUID, now: datetime) -> Min
     )
 
 
-class MiniappAccountService:
+class ConsumerAccountService:
     def __init__(
         self, *, session: AsyncSession, session_factory: async_sessionmaker[AsyncSession], metadata: RequestMetadata
     ) -> None:
         self.session = session
         self.session_factory = session_factory
         self.metadata = metadata
-        self.sessions = MiniappSessionRepository(session)
+        self.sessions = ConsumerSessionRepository(session)
         self.access = UserAccessService(session)
 
     async def list_sessions(
         self, user_id: UUID, current_id: UUID, page: int, page_size: int
-    ) -> MiniappLoginSessionsRead:
+    ) -> ConsumerLoginSessionsRead:
         await self.access.require_active_user(user_id)
         now = datetime.now(UTC)
         rows, total = await self.sessions.page(user_id, page, page_size)
         ids, other_total = await self.sessions.active_others(user_id, current_id, now)
-        return MiniappLoginSessionsRead(
+        return ConsumerLoginSessionsRead(
             items=[login_session_read(row, current_id, now) for row in rows],
             page=page,
             page_size=page_size,
@@ -81,13 +81,13 @@ class MiniappAccountService:
             other_active_ids=ids,
         )
 
-    async def revocation_status(self, user_id: UUID, payload: MiniappSessionTargets) -> MiniappSessionRevocationRead:
+    async def revocation_status(self, user_id: UUID, payload: ConsumerSessionTargets) -> ConsumerSessionRevocationRead:
         await self.access.require_active_user(user_id)
         rows = {row.id: row for row in await self.sessions.targets(user_id, payload.session_ids)}
         now = datetime.now(UTC)
-        return MiniappSessionRevocationRead(
+        return ConsumerSessionRevocationRead(
             sessions=[
-                MiniappSessionStateRead(
+                ConsumerSessionStateRead(
                     id=target,
                     state=login_session_read(rows[target], target, now).state if target in rows else "not_found",
                 )
@@ -96,14 +96,14 @@ class MiniappAccountService:
         )
 
     async def revoke(
-        self, user_id: UUID, current_id: UUID, credential_version: int, payload: MiniappSessionTargets
-    ) -> MiniappSessionRevocationRead:
+        self, user_id: UUID, current_id: UUID, credential_version: int, payload: ConsumerSessionTargets
+    ) -> ConsumerSessionRevocationRead:
         if current_id in payload.session_ids:
             raise AppException(
                 status_code=409, code=ErrorCode.STATE_CONFLICT, message="当前会话请使用退出登录，不可在此撤销"
             )
 
-        async def operation() -> MiniappSessionRevocationRead:
+        async def operation() -> ConsumerSessionRevocationRead:
             # Login and other account writes use the same user lock. No refresh-token locks are taken:
             # Refresh locks token -> session, and already rejects a revoked parent session.
             user = await UserRepository(self.session).get(user_id, for_update=True)
@@ -142,8 +142,8 @@ class MiniappAccountService:
                     now=now,
                 )
             )
-            return MiniappSessionRevocationRead(
-                sessions=[MiniappSessionStateRead(id=target, state="revoked") for target in payload.session_ids]
+            return ConsumerSessionRevocationRead(
+                sessions=[ConsumerSessionStateRead(id=target, state="revoked") for target in payload.session_ids]
             )
 
         return await AuditCoordinator(
@@ -157,7 +157,7 @@ class MiniappAccountService:
             operation=operation,
         )
 
-    async def closure_precheck(self, user_id: UUID) -> MiniappClosurePrecheckRead:
+    async def closure_precheck(self, user_id: UUID) -> ConsumerClosurePrecheckRead:
         await self.access.require_active_user(user_id)
         # A single SELECT observes all source tables in one PostgreSQL statement snapshot.
         # These are consultation flags, never an authorization to delete or waive rights.
@@ -239,9 +239,9 @@ class MiniappAccountService:
             "wallets",
             "points",
         )
-        return MiniappClosurePrecheckRead(
+        return ConsumerClosurePrecheckRead(
             checked_at=datetime.now(UTC),
             wallet_state="opened" if facts["wallet_opened"] else "not_opened",
             points_state="opened" if facts["points_opened"] else "not_opened",
-            checks=[MiniappClosureCheckRead(key=key, needs_review=facts[key]) for key in keys],
+            checks=[ConsumerClosureCheckRead(key=key, needs_review=facts[key]) for key in keys],
         )

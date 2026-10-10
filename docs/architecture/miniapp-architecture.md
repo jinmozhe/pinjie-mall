@@ -10,17 +10,19 @@
 
 ## 1. 文档职责与设计依据
 
+后端按业务职责组织消费者能力：`consumer_auth` 负责微信凭据，`account_security` 负责会话与注销前置，`trade_queries`、`finance_queries`、`engagement` 提供本人查询。小程序直接调用 `/auth`、`/users/me`、`/orders`、`/distribution/me` 等统一路径，`lib/session.ts` 不追加客户端路径前缀。架构决策见 [ADR 0019](../adr/0019-消费者接口统一与浏览器认证退役决策.md)。
+
 PRD 定义用户需要什么、业务边界和验收结果；本文定义代码放在哪里、依赖方向、状态所有者及执行链路。技术取舍见[ADR 0017](../adr/0017-小程序采用TaroReact与NutUI决策.md)，精确版本与执行要求见[工程标准](miniapp-engineering-standard.md)，视觉与交互见[UI 规范](miniapp-ui-standard.md)。各文档按职责维护，具体实施、验证与未决事项进入活动全栈计划。
 
 应用名称统一为 miniapp。当前四项 TabBar、商品详情、账户地址/隐私/资料、结算订单、service 和 finance 分包已配置。service 分包承载退款申请/记录/详情、评价和公开帮助，Feature 为 aftersales、reviews、help；profile 承载资料编辑，finance 承载会员、双钱包、流水、佣金和历史提现，只经公开 index 入口消费。真实资金与发布仍需专项，不提前建立空目录。
 
-Backend 的 MiniappFinanceService 是跨域本人只读查询，会员等级、钱包、流水、佣金和提现均采用安全白名单投影；主动开通复用 DistributionService，资料写入复用不依赖浏览器凭据的 UserProfileService。上传与绑定分开，lib/upload 使用原生任务取消与字符串信封解析，privateCall 统一刷新和会话代次校验。操作与状态边界见[资料会员资金手册](../operations/miniapp-profile-and-finance.md)。
+Backend 的 ConsumerFinanceService 是跨域本人只读查询，会员等级、钱包、流水、佣金和提现均采用安全白名单投影；主动开通复用 DistributionService，资料写入复用不依赖浏览器凭据的 UserProfileService。上传与绑定分开，lib/upload 使用原生任务取消与字符串信封解析，privateCall 统一刷新和会话代次校验。操作与状态边界见[资料会员资金手册](../operations/miniapp-profile-and-finance.md)。
 
-账户分包 settings、sessions、closure 通过 features/account-security 公开入口组合页面。MiniappAccountService 编排本人小程序会话安全投影、明确集合撤销与只读注销核对；撤销锁用户及当前会话并复核凭据，原目标按固定顺序锁定，审计失败关闭。恢复意图按本人保存原 ID 集合，先查再主动恢复，不包含后来登录的会话；注销只读聚合使用单条 SELECT，self_service_enabled 恒为 false。接口、锁顺序和权益边界以[账户安全手册](../operations/miniapp-account-security.md)为准。
+账户分包 settings、sessions、closure 通过 features/account-security 公开入口组合页面。ConsumerAccountService 编排本人小程序会话安全投影、明确集合撤销与只读注销核对；撤销锁用户及当前会话并复核凭据，原目标按固定顺序锁定，审计失败关闭。恢复意图按本人保存原 ID 集合，先查再主动恢复，不包含后来登录的会话；注销只读聚合使用单条 SELECT，self_service_enabled 恒为 false。接口、锁顺序和权益边界以[账户安全手册](../operations/miniapp-account-security.md)为准。
 
-engagement Feature 与 finance 分包的 referral、points 页面承载推荐分享和积分。MiniappEngagementService 按本人档案/积分账户过滤，推荐绑定复用 DistributionService 的单一事务；查询只返回本人码与指定码的关系匹配，不暴露他人身份。分享钩子在页面组件注册，落地参数仅为意图；发送前持久化按用户隔离的非秘密原码，未知结果先查再由用户主动同码恢复。积分采用精确字符串传输，完整链路与官方依据见[推荐积分手册](../operations/miniapp-referral-and-points.md)。
+engagement Feature 与 finance 分包的 referral、points 页面承载推荐分享和积分。ConsumerEngagementService 按本人档案/积分账户过滤，推荐绑定复用 DistributionService 的单一事务；查询只返回本人码与指定码的关系匹配，不暴露他人身份。分享钩子在页面组件注册，落地参数仅为意图；发送前持久化按用户隔离的非秘密原码，未知结果先查再由用户主动同码恢复。积分采用精确字符串传输，完整链路与官方依据见[推荐积分手册](../operations/miniapp-referral-and-points.md)。
 
-Backend 的 MiniappTradeQueryService 是显式跨域只读投影，使用本人订单与履约 JOIN 进行真实筛选和分页，批量加载商品、退款阻断与本人评价，避免 N+1。原订单接口保留，页面消费 trade-orders 展示契约；写操作复用 LifecycleService，资格提示不替代事务授权。退款安全投影不暴露商户退款号或渠道流水；原请求恢复与支持配置见[接入手册](../operations/miniapp-fulfillment-and-aftersales.md)。
+Backend 的 ConsumerTradeQueryService 是显式跨域只读投影，使用本人订单与履约 JOIN 进行真实筛选和分页，批量加载商品、退款阻断与本人评价，避免 N+1。订单列表与详情统一消费 `/orders` 展示契约，原请求查询继续返回订单写入事实；写操作复用 LifecycleService，资格提示不替代事务授权。退款安全投影不暴露商户退款号或渠道流水；原请求恢复与支持配置见[接入手册](../operations/miniapp-fulfillment-and-aftersales.md)。
 
 前后端都需要数据所有权、职责边界与明确依赖。后端强调权威业务规则和事务，前端还需要处理异步请求、缓存、交互状态和平台生命周期。不能用“后端只管命令、前端只管状态”划分全部职责，也不能假定 API 或平台能力长期不变。
 
@@ -249,7 +251,7 @@ auth/session -> auth-api -> transport（认证请求，无自动恢复）
 
 底层 Transport 不依赖 session、request、Feature 或 UI。`auth-api` 不调用带自动恢复的 request，避免 `request -> refresh -> request` 递归。登录失效通知由应用装配接收并清理缓存，不让 auth 反向依赖具体订单或购物车 Feature。
 
-微信 code 在后端换取可信身份；AppSecret 和 session_key 不进入客户端。后端只在确有用途时按受控策略保存 session_key，不把永久保存它作为登录的无条件要求。小程序会话的 audience、密钥策略、建号和现有账户迁移在认证专项中统一设计，不改变 Admin Cookie、Origin 与 CSRF 机制。
+微信 code 在后端换取可信身份；AppSecret 和 session_key 不进入客户端。后端只在确有用途时按受控策略保存 session_key，不把永久保存它作为登录的无条件要求。消费者会话的 audience、密钥、建号与撤销由统一认证服务管理；旧账户不自动合并，不改变 Admin Cookie、Origin 与 CSRF 机制。
 
 ### 7.2 Transport 与重试
 

@@ -17,9 +17,9 @@ from app.core.request_metadata import RequestMetadata
 from app.core.security import create_access_token, new_opaque_token, token_digest
 from app.db.models import User, UserRefreshToken, UserSession
 from app.db.repositories import SecurityRepository, SessionRepository, SystemSettingRepository, UserRepository
-from app.db.repositories.miniapp import MiniappIdentityRepository
+from app.db.repositories.external_identity import WechatIdentityRepository
 from app.db.transaction import transaction_scope
-from app.domains.auth.miniapp_schemas import MiniappSessionRead, MiniappUserRead
+from app.domains.auth.schemas import ConsumerSessionRead, ConsumerUserRead
 from app.domains.settings.schemas import MiniappRegistrationValue
 from app.services.security_events import SecurityEventWriter, login_event
 
@@ -38,7 +38,7 @@ class WechatIdentity(BaseModel):
     unionid: str | None = Field(default=None, min_length=1, max_length=128, repr=False)
 
 
-class MiniappAuthService:
+class ConsumerAuthService:
     def __init__(
         self,
         *,
@@ -51,7 +51,7 @@ class MiniappAuthService:
     ) -> None:
         self.session, self.redis, self.settings, self.http, self.metadata = session, redis, settings, http, metadata
         self.sessions, self.users = SessionRepository(session), UserRepository(session)
-        self.identities = MiniappIdentityRepository(session)
+        self.identities = WechatIdentityRepository(session)
         self.events = SecurityEventWriter(session_factory)
         self.keys = cache_keys(settings)
 
@@ -115,7 +115,7 @@ class MiniappAuthService:
             )
         )
 
-    def _artifacts(self, user: User, login_session: UserSession, raw_refresh: str) -> MiniappSessionRead:
+    def _artifacts(self, user: User, login_session: UserSession, raw_refresh: str) -> ConsumerSessionRead:
         secret, _ = self._keys()
         access, expiry = create_access_token(
             subject_id=user.id,
@@ -126,8 +126,8 @@ class MiniappAuthService:
             secret=secret,
             ttl_seconds=self.settings.web_access_ttl_seconds,
         )
-        return MiniappSessionRead(
-            user=MiniappUserRead.model_validate(user),
+        return ConsumerSessionRead(
+            user=ConsumerUserRead.model_validate(user),
             session_id=login_session.id,
             access_token=access,
             refresh_token=raw_refresh,
@@ -136,7 +136,7 @@ class MiniappAuthService:
             absolute_expires_at=login_session.absolute_expires_at,
         )
 
-    async def login(self, code: str) -> MiniappSessionRead:
+    async def login(self, code: str) -> ConsumerSessionRead:
         try:
             return await self._login(code)
         except AppException as exc:
@@ -153,7 +153,7 @@ class MiniappAuthService:
             )
             raise
 
-    async def _login(self, code: str) -> MiniappSessionRead:
+    async def _login(self, code: str) -> ConsumerSessionRead:
         _, hmac_key = self._keys()
         await enforce_rate_limit(
             self.redis,
@@ -237,7 +237,7 @@ class MiniappAuthService:
             result = self._artifacts(user, login_session, raw)
         return result
 
-    async def refresh(self, raw_refresh: str) -> MiniappSessionRead:
+    async def refresh(self, raw_refresh: str) -> ConsumerSessionRead:
         _, hmac_key = self._keys()
         digest = token_digest(raw_refresh, hmac_key)
         lock_key, owner = self.keys.miniapp("refresh-lock", digest), str(new_uuid7())
@@ -246,7 +246,7 @@ class MiniappAuthService:
                 status_code=429, code=ErrorCode.RATE_LIMITED, message="会话刷新正在进行中", headers={"Retry-After": "1"}
             )
         terminal: ErrorCode | None = None
-        result: MiniappSessionRead | None = None
+        result: ConsumerSessionRead | None = None
         try:
             async with transaction_scope(self.session):
                 current = await self.sessions.get_web_refresh_for_update(digest)
@@ -257,6 +257,7 @@ class MiniappAuthService:
                     login_session is None
                     or login_session.credential_profile != "miniapp_bearer"
                     or login_session.client_id != "pinjie-miniapp"
+                    or login_session.csrf_digest is not None
                 ):
                     raise bearer_error()
                 now = datetime.now(UTC)
@@ -298,7 +299,7 @@ class MiniappAuthService:
             if terminal is not None:
                 raise bearer_error(terminal)
             if result is None:
-                raise RuntimeError("Miniapp refresh did not produce credentials")
+                raise RuntimeError("Consumer refresh did not produce credentials")
             return result
         finally:
             await release_refresh_lock(self.redis, key=lock_key, owner=owner)
@@ -306,7 +307,13 @@ class MiniappAuthService:
     async def logout(self, user_id: UUID, session_id: UUID) -> None:
         async with transaction_scope(self.session):
             current = await self.sessions.get_web(session_id, for_update=True)
-            if current is None or current.user_id != user_id or current.credential_profile != "miniapp_bearer":
+            if (
+                current is None
+                or current.user_id != user_id
+                or current.credential_profile != "miniapp_bearer"
+                or current.client_id != "pinjie-miniapp"
+                or current.csrf_digest is not None
+            ):
                 raise bearer_error()
             now = datetime.now(UTC)
             current.revoked_at, current.revoke_reason = current.revoked_at or now, "logout"

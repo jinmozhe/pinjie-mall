@@ -1,5 +1,5 @@
 import Taro from '@tarojs/taro'
-import type { CheckoutLine, CheckoutRequest, ResponseModelMiniappCheckoutIntentRead, ResponseModelMiniappUserRead } from '@pinjie/api-client'
+import type { CheckoutLine, CheckoutRequest, ResponseModelOperationIntentRead, ResponseModelConsumerUserRead } from '@pinjie/api-client'
 import { privateRequest, sessionScope } from '@/lib/session'
 
 export type Draft = { schemaVersion: 1; userId: string; productType: 'physical' | 'virtual'; request: CheckoutRequest; submitted: boolean }
@@ -20,10 +20,10 @@ export async function startCheckout(items: CheckoutLine[], productType: 'physica
   if (!items.length || items.length > 50) throw new Error('请选择 1 至 50 种商品')
   const epoch = sessionScope()
   // The user id is read from the authenticated server, never from a caller-supplied identity.
-  const me = await privateRequest<ResponseModelMiniappUserRead>('/me')
+  const me = await privateRequest<ResponseModelConsumerUserRead>('/users/me')
   const old = loadDraft(me.id)
   if (old?.submitted) { await Taro.navigateTo({ url: '/subpackages/trade/checkout/index' }); return }
-  const intent = await privateRequest<ResponseModelMiniappCheckoutIntentRead>('/checkout/intent')
+  const intent = await privateRequest<ResponseModelOperationIntentRead>('/checkout/intent')
   if (epoch !== sessionScope()) throw new Error('登录状态已改变，请重新选择商品')
   saveDraft({ schemaVersion: 1, userId: me.id, productType, request: { request_id: intent.request_id, items }, submitted: false })
   await Taro.navigateTo({ url: '/subpackages/trade/checkout/index' })

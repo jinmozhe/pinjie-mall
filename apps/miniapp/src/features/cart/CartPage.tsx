@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import type { MiniappCartItemRead, CartItemUpdate, ResponseModelListMiniappCartItemRead, ResponseModelCartItemRead, ResponseModelNoneType } from '@pinjie/api-client'
+import type { ConsumerCartItemRead, CartItemUpdate, ResponseModelListConsumerCartItemRead, ResponseModelCartItemRead, ResponseModelNoneType } from '@pinjie/api-client'
 import { Button } from '@/components/Button'
 import { AuthGate } from '@/components/AuthGate'
 import { ProductImage } from '@/components/ProductImage'
@@ -14,7 +14,7 @@ import { startCheckout } from '@/features/checkout'
 function useCart() {
   const session = useSession()
   return useQuery({ queryKey: ['private', 'cart', session.epoch], enabled: !!session.user, gcTime: 0,
-    queryFn: ({ signal }) => privateRequest<ResponseModelListMiniappCartItemRead>('/cart-items', { signal }) })
+    queryFn: ({ signal }) => privateRequest<ResponseModelListConsumerCartItemRead>('/cart-items', { signal }) })
 }
 export function CartBadge() {
   const session = useSession()
@@ -30,7 +30,7 @@ export function CartBadge() {
 function Content() {
   const query = useCart()
   const mutation = useMutation({
-    mutationFn: async (action: { item: MiniappCartItemRead; patch?: CartItemUpdate }) => {
+    mutationFn: async (action: { item: ConsumerCartItemRead; patch?: CartItemUpdate }) => {
       if (action.patch) return privateRequest<ResponseModelCartItemRead>(`/cart-items/${action.item.id}`, { method: 'PATCH', data: action.patch })
       await privateRequest<ResponseModelNoneType>(`/cart-items/${action.item.id}`, { method: 'DELETE' })
     },

@@ -24,7 +24,7 @@ router = APIRouter(prefix="/assets", tags=["文件资产"])
     response_model=ResponseModel[AssetRead],
     status_code=201,
     summary="上传文件资产",
-    description="按受控场景校验扩展名、真实文件头、体积与双域上传身份后保存文件资产。",
+    description="按受控场景校验扩展名、真实文件头、体积与管理员上传权限后保存文件资产；消费者头像使用本人资料上传入口。",
 )
 async def upload_asset(
     file: Annotated[UploadFile, File(description="需要上传的文件")],

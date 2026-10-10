@@ -15,7 +15,7 @@ from app.core.identifiers import new_uuid7
 from app.core.resources import AppResources
 from app.db.models.commerce_lifecycle import RefundAttempt, RefundRequest
 from app.main import create_app
-from app.services.miniapp_trade import display_status, refund_read
+from app.services.trade_queries import display_status, refund_read
 
 
 @pytest.mark.parametrize(
@@ -116,13 +116,13 @@ def test_support_config_rejects_invalid_public_contacts() -> None:
 @pytest.mark.parametrize(
     ("method", "path", "payload"),
     [
-        ("GET", "/trade-orders", None),
-        ("GET", f"/trade-orders/{new_uuid7()}", None),
+        ("GET", "/orders", None),
+        ("GET", f"/orders/{new_uuid7()}", None),
         ("GET", "/refunds/intent", None),
         ("GET", "/refunds", None),
         ("GET", f"/refunds/{new_uuid7()}", None),
         ("GET", f"/refunds/by-request/{new_uuid7()}", None),
-        ("POST", f"/orders/{new_uuid7()}/receipt", {"revision": 1}),
+        ("POST", f"/orders/{new_uuid7()}/fulfillment/confirm-receipt", {"revision": 1}),
         ("POST", f"/orders/{new_uuid7()}/refunds", {"request_id": str(new_uuid7()), "reason": "unit"}),
         ("POST", f"/order-items/{new_uuid7()}/review", {"rating": 5, "content": "unit"}),
     ],
@@ -138,11 +138,9 @@ async def test_private_trade_endpoints_refuse_missing_auth_and_browser_cookie(
 
     app.dependency_overrides[get_db_session] = no_database
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://testserver") as client:
-        disabled = await client.request(method, f"/api/v1/miniapp{path}", json=payload)
+        disabled = await client.request(method, f"/api/v1{path}", json=payload)
         assert disabled.status_code == (401 if login_enabled else 503)
-        cookie = await client.request(
-            method, f"/api/v1/miniapp{path}", json=payload, headers={"Cookie": "browser-only=unit"}
-        )
+        cookie = await client.request(method, f"/api/v1{path}", json=payload, headers={"Cookie": "browser-only=unit"})
         assert cookie.status_code == 400
 
 
@@ -150,7 +148,7 @@ async def test_private_trade_endpoints_refuse_missing_auth_and_browser_cookie(
 async def test_help_is_public_and_absent_contacts_are_explicit() -> None:
     app = create_app(Settings.model_construct())
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://testserver") as client:
-        response = await client.get("/api/v1/miniapp/help")
+        response = await client.get("/api/v1/system/help")
         assert response.status_code == 200
         assert response.json()["data"] == {"phone": None, "email": None}
         assert response.headers["cache-control"] == "no-store"

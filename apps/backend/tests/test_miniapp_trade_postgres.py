@@ -13,7 +13,7 @@ from app.core.identifiers import new_uuid7
 from app.db.models import User
 from app.db.models.commerce_lifecycle import Fulfillment, RefundRequest
 from app.db.models.order import Order
-from app.services.miniapp_trade import MiniappTradeQueryService
+from app.services.trade_queries import ConsumerTradeQueryService
 
 
 @pytest.mark.integration
@@ -94,7 +94,7 @@ async def test_owner_pagination_fulfillment_and_refund_lookup_are_isolated() -> 
                 )
                 session.add(foreign_refund)
                 await session.flush()
-                query = MiniappTradeQueryService(session)
+                query = ConsumerTradeQueryService(session)
                 first = await query.orders(owner, 1, 1, None)
                 second = await query.orders(owner, 2, 1, None)
                 assert first.total == 2 and first.total_pages == 2
