@@ -55,6 +55,9 @@ jobs:
       - name: Verify full and smoke validation modes
         run: pnpm check:validation-mode
 
+      - name: Verify frozen Web rejection cases
+        run: pnpm check:frozen-web:guards
+
       - name: Verify strict evidence rejection cases
         shell: pwsh
         run: ./scripts/ci/test-full-validation-evidence.ps1

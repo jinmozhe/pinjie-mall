@@ -10,7 +10,7 @@
 
 本项目采用“默认轻量、重型验证显式授权”的分层策略：
 
-1. **默认自动门禁**：Admin 与 Web 只运行 typecheck 和 lint；Backend 只运行 Ruff、格式、Mypy、导入边界、编译、应用导入和 OpenAPI 契约检查。公开 API 变化继续执行契约导出、API Client 生成、漂移与 Breaking Change 检查。
+1. **默认自动门禁**：Admin 与 Miniapp 运行 typecheck 和 lint；Backend 运行 Ruff、格式、Mypy、导入边界、编译、应用导入和 OpenAPI 契约检查。冻结 Web 不消费当前契约，只运行 `check:frozen-web` 校验代码冻结与运行入口禁用，治理 CI 同时验证其拒绝用例。公开 API 变化继续执行契约导出、API Client 生成、漂移与 Breaking Change 检查。
 2. **统一触发边界**：日常开发、普通提交、`$git-sync`、Push 和 Pull Request 均使用默认轻量门禁。`$git-sync` 只扩展 Git 交付动作，不自动扩展测试范围。
 3. **重型验证授权**：Admin/Web production build、任何 Vitest、任何 pytest、Playwright、浏览器自动化和测试数据库验证，只有用户在当前任务中明确点名后才能执行。授权只覆盖被点名的应用、命令和范围，不延续到后续任务。
 4. **线上边界**：GitHub Actions 的 Push、Pull Request 和定时任务不得执行重型验证，也不得通过 Workflow 调用链间接触发。完整验证只保留人工 `workflow_dispatch`，并要求输入默认分支历史中的完整 Commit SHA。

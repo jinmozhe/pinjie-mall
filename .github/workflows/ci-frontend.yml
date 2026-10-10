@@ -38,33 +38,25 @@ jobs:
         run: echo "One or more frontend applications are explicit empty skeletons. Their application quality checks have not passed."
 
   web-quality:
-    name: Frozen Web static checks
+    name: Frozen Web isolation
     needs: frontend-state
     if: needs.frontend-state.outputs.web == 'ready'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:
-          version: 11.17.0
+          fetch-depth: 0
 
       - name: Install Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "24"
-          cache: pnpm
 
-      - name: Install locked dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint Web
-        run: pnpm --filter @pinjie/web lint
-
-      - name: Typecheck Web
-        run: pnpm --filter @pinjie/web typecheck
+      - name: Reject frozen Web changes and runtime entry points
+        env:
+          FROZEN_WEB_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: node scripts/ci/check-frozen-web.mjs --base "$FROZEN_WEB_BASE"
 
   admin-quality:
     name: Admin quality
