@@ -12,7 +12,7 @@
 | --- | --- | --- | --- |
 | CI - Governance | [ci-governance.yml](../../.github/workflows/ci-governance.yml) | `main` Push、目标为 `main` 的 Pull Request | 文档、工作区、依赖与治理门禁 |
 | CI - Backend | [ci-backend.yml](../../.github/workflows/ci-backend.yml) | `main` Push、目标为 `main` 的 Pull Request | Backend 静态、导入边界、应用导入与 OpenAPI 契约检查 |
-| CI - Frontend | [ci-frontend.yml](../../.github/workflows/ci-frontend.yml) | `main` Push、目标为 `main` 的 Pull Request | Admin、Miniapp lint/typecheck 与冻结 Web 的静态检查 |
+| CI - Frontend | [ci-frontend.yml](../../.github/workflows/ci-frontend.yml) | `main` Push、目标为 `main` 的 Pull Request | Admin、Miniapp lint/typecheck 与冻结 Web 的隔离检查 |
 | CI - Full Validation | [ci-e2e.yml](../../.github/workflows/ci-e2e.yml) | 人工触发 | Backend pytest、Admin Vitest 和 production build、Admin 浏览器验证 |
 | Security | [security.yml](../../.github/workflows/security.yml) | `main` Push、目标为 `main` 的 Pull Request、定时 | 密钥、依赖和静态安全检查 |
 | Handoff Source to CNB | [publish-images.yml](../../.github/workflows/publish-images.yml) | 人工触发 | 以固定 Commit SHA 交接商城源码到 CNB |
@@ -24,7 +24,7 @@
 
 目标为 `main` 的 Pull Request 和 `main` Push 会独立运行 Governance、Backend、Frontend 和 Security。它们只运行轻量检查，不运行 pytest、Vitest、production build、Playwright、数据库迁移或镜像发布。
 
-Frontend 工作流会读取工作区状态。Admin 与 Miniapp 分别为 `ready` 时运行 lint 与 typecheck，不自动编译微信产物或运行应用测试。冻结 Web 只允许静态检查，任何 Web 运行时命令均由 `scripts/disabled-web.mjs` 明确失败。
+Frontend 工作流会读取工作区状态。Admin 与 Miniapp 分别为 `ready` 时运行 lint 与 typecheck，不自动编译微信产物或运行应用测试。冻结 Web 不再消费当前契约或运行 lint/typecheck，`Frozen Web isolation` 基于 PR base SHA 或 Push before SHA 运行 `check:frozen-web`；非法或不存在的基线、冻结文件变化及运行入口重新启用均失败。仅允许 `apps/web/AGENTS.md` 规则同步，业务源码与禁用脚本不得修改，任何 Web 运行时命令均由 `scripts/disabled-web.mjs` 明确失败。Governance CI 执行 `check:frozen-web:guards`，用隔离临时 Git 仓库验证拒绝行为，不启动 Web。
 
 Backend 工作流根据工作区状态运行 Ruff、格式、Mypy、导入边界、编译、应用导入及 OpenAPI 契约检查。公开 API 变化还会导出 `openapi.json`、生成 `packages/api-client/src/` 并检查漂移。
 
@@ -67,7 +67,7 @@ CNB 对每个应用独立构建候选镜像、执行扫描、生成 SBOM、prove
 
 - Governance 失败：根据具体脚本输出处理文档、工作区、依赖或 Compose 配置漂移。
 - Backend 失败：处理静态、导入、应用导入或契约问题；不要用跳过检查或手工修改 `openapi.json` 绕过。
-- Frontend 失败：先区分 Admin lint/typecheck 与冻结 Web 静态检查。Web 运行时失败属于预期阻断。
+- Frontend 失败：先区分 Admin/Miniapp lint/typecheck 与冻结 Web 隔离检查。冻结检查失败时核对基线、文件变化与禁用入口，禁止恢复旧认证契约或以忽略失败解围。Web 运行时失败属于预期阻断。
 - Handoff 失败：检查 Commit SHA、自动门禁、full 证据、CNB 仓库地址及受保护环境权限。
 - CNB 或部署失败：核对商城专属 TCR 命名空间、固定 digest、Secret 和生产变量；不得回退到母版仓库、镜像或凭据。
 
