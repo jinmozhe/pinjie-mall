@@ -25,14 +25,14 @@ function Membership() {
   const session = useSession()
   const [unknown, setUnknown] = useState(false)
   const [accepted, setAccepted] = useState(false)
-  const query = useQuery({ queryKey: ['private', 'membership', session.epoch], gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerMemberRead>('/users/membership', { signal }) })
+  const query = useQuery({ queryKey: ['private', 'membership', session.epoch], gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerMemberRead>('/distribution/me/profile', { signal }) })
   useDidShow(() => { void query.refetch() })
   const activate = useMutation({ mutationFn: async () => {
     if (query.data?.state !== 'not_opened' || unknown) throw new Error('请先查询当前档案状态')
     const answer = await Taro.showModal({ title: '开通会员分销档案', content: '创建本人档案及双轨钱包。开通不保证获得会员等级或收益，不会绑定推荐人。' })
     if (!answer.confirm || session.epoch !== sessionScope()) return
     setUnknown(true)
-    const result = await privateRequest<ResponseModelConsumerMemberRead>('/users/membership', { method: 'POST' })
+    const result = await privateRequest<ResponseModelConsumerMemberRead>('/distribution/me/profile', { method: 'POST' })
     if (result.state === 'not_opened') throw new Error('服务端尚未确认档案开通')
     await queryClient.cancelQueries({ queryKey: ['private', 'membership', session.epoch] })
     if (session.epoch !== sessionScope()) throw new Error('会话已改变，请重新读取会员状态')

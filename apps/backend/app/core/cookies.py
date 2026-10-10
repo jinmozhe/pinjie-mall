@@ -13,12 +13,6 @@ class CookieNames:
     refresh_path: str
 
 
-WEB_COOKIES = CookieNames(
-    access="pinjie_web_access",
-    refresh="pinjie_web_refresh",
-    csrf="pinjie_web_csrf",
-    refresh_path="/api/v1/auth",
-)
 ADMIN_COOKIES = CookieNames(
     access="pinjie_admin_access",
     refresh="pinjie_admin_refresh",
@@ -93,4 +87,4 @@ def clear_auth_cookies(response: Response, *, names: CookieNames, settings: Sett
     response.headers["Cache-Control"] = "no-store"
 
 
-__all__ = ["ADMIN_COOKIES", "WEB_COOKIES", "CookieNames", "clear_auth_cookies", "set_auth_cookies"]
+__all__ = ["ADMIN_COOKIES", "CookieNames", "clear_auth_cookies", "set_auth_cookies"]
