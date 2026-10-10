@@ -1,7 +1,7 @@
 import Taro, { useDidShow } from '@tarojs/taro'
 import { View } from '@tarojs/components'
 import { useQuery } from '@tanstack/react-query'
-import type { ResponseModelMiniappUserRead } from '@pinjie/api-client'
+import type { ResponseModelConsumerUserRead } from '@pinjie/api-client'
 import { AuthGate } from '@/components/AuthGate'
 import { AccountAvatar } from '@/components/AccountAvatar'
 import { Button } from '@/components/Button'
@@ -10,7 +10,7 @@ import { logout, privateRequest, sessionScope, useSession } from '@/lib/session'
 
 function Content() {
   const session = useSession()
-  const profile = useQuery({ queryKey: ['private', 'me', session.epoch], gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelMiniappUserRead>('/me', { signal }) })
+  const profile = useQuery({ queryKey: ['private', 'me', session.epoch], gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerUserRead>('/users/me', { signal }) })
   useDidShow(() => { void profile.refetch() })
   return <View className='page'>
     <View className='surface'><AccountAvatar url={profile.data?.avatar} /><View className='title wrap'>{profile.data?.display_name || '微信商城用户'}</View><View className='muted'>欢迎来到拼捷商城</View>{profile.isPending && <QueryState title='正在读取账户信息' />}{profile.isError && <QueryState title='账户信息读取失败' error={profile.error} retry={() => { void profile.refetch() }} />}<Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/account/profile/index' }) }}>编辑个人资料</Button></View>

@@ -8,11 +8,11 @@
 
 ## 2. 本人推荐关系
 
-| 操作 | MiniappBearer 接口 | 边界 |
+| 操作 | ConsumerBearer 接口 | 边界 |
 | --- | --- | --- |
-| 本人推荐查询 | `GET /api/v1/miniapp/referral` | not_opened、unbound、bound；只返回本人邀请码、绑定时间，不输出推荐人身份 |
+| 本人推荐查询 | `GET /api/v1/distribution/me/referrer` | not_opened、unbound、bound；只返回本人邀请码、绑定时间，不输出推荐人身份 |
 | 确认原码匹配 | 同路径，带 invitation_code 查询参数 | 8 至 16 位大写字母或数字；matches_invitation 仅表示当前已绑定关系是否匹配指定码，不预览陌生推荐人资料或判断陌生码存在 |
-| 主动首次绑定 | `POST /api/v1/miniapp/referral` | invitation_code 输入复用既有领域契约；首次绑定、同码幂等、自邀与循环保护由领域服务裁决 |
+| 主动首次绑定 | `POST /api/v1/distribution/me/referrer` | invitation_code 输入复用既有领域契约；首次绑定、同码幂等、自邀与循环保护由领域服务裁决 |
 
 打开分享页只保留绑定意图。页面参数仅接收 invite，格式受控，不反复 URL 解码、不跳转用户提供的网址。用户登录后核对当前账户，点击确认并在弹窗再次确认；页面加载、登录成功和分享返回都不会自动绑定。无档案时可以主动到会员中心开通；绑定也按既有领域语义创建本人档案及双钱包。
 
@@ -34,10 +34,10 @@
 
 ## 5. 本人积分
 
-| 操作 | MiniappBearer 接口 | 展示 |
+| 操作 | ConsumerBearer 接口 | 展示 |
 | --- | --- | --- |
-| 积分账户 | `GET /api/v1/miniapp/points` | not_opened 的 account=null；opened 返回可用、冻结、追回欠款、账户版本与更新时间 |
-| 积分流水 | `GET /api/v1/miniapp/points/ledgers` | 本人账户、page/page_size，默认 10、最多 100，ID 倒序；账户未建立返回明确 404 |
+| 积分账户 | `GET /api/v1/users/me/points` | not_opened 的 account=null；opened 返回可用、冻结、追回欠款、账户版本与更新时间 |
+| 积分流水 | `GET /api/v1/users/me/points/ledgers` | 本人账户、page/page_size，默认 10、最多 100，ID 倒序；账户未建立返回明确 404 |
 
 查询不会创建积分账户或奖励。账户未建立、零余额、真实空流水和读取失败分别展示。积分余额与三类流水变化采用精确十进制字符串，禁止用 Number 转换或前端合并成应得余额；积分与人民币钱包分开展示。
 

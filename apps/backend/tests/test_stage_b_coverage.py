@@ -1,6 +1,7 @@
 import os
 import uuid
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi import FastAPI
@@ -9,16 +10,14 @@ from sqlalchemy import select
 
 from app.core.config import Settings
 from app.core.identifiers import new_uuid7
-from app.db.models import Admin, Permission, SystemSetting
+from app.db.models import Admin, Permission, User, UserSession
 from app.db.transaction import transaction_scope
 from app.domains.admin.permissions import CATALOG_VERSION, PERMISSION_CATALOG
 from app.main import create_app
 from tests.conftest import TEST_SECRETS
 
-WEB_ORIGIN = "http://localhost:3000"
 ADMIN_ORIGIN = "http://localhost:3001"
-WEB_PASSWORD = "coverage-user-password"
-WEB_NEW_PASSWORD = "coverage-user-new-password"
+USER_NEW_PASSWORD = "coverage-user-new-password"
 ADMIN_PASSWORD = "coverage-admin-password"
 ADMIN_NEW_PASSWORD = "coverage-admin-new-password"
 
@@ -48,13 +47,6 @@ async def coverage_app() -> AsyncIterator[FastAPI]:
         resources = test_app.state.resources
         assert resources.redis is not None
         await resources.redis.flushdb()
-        async with resources.session_factory() as session, transaction_scope(session):
-            registration = await session.scalar(
-                select(SystemSetting).where(SystemSetting.setting_group == "registration").with_for_update()
-            )
-            assert registration is not None
-            registration.setting_value = {"enabled": True}
-            registration.revision += 1
         yield test_app
         await resources.redis.flushdb()
 
@@ -66,12 +58,11 @@ def _client(test_app: FastAPI) -> AsyncClient:
     )
 
 
-def _csrf_headers(client: AsyncClient, *, admin: bool = False) -> dict[str, str]:
-    cookie_name = "pinjie_admin_csrf" if admin else "pinjie_web_csrf"
-    token = client.cookies.get(cookie_name)
+def _csrf_headers(client: AsyncClient) -> dict[str, str]:
+    token = client.cookies.get("pinjie_admin_csrf")
     assert token
     return {
-        "Origin": ADMIN_ORIGIN if admin else WEB_ORIGIN,
+        "Origin": ADMIN_ORIGIN,
         "X-CSRF-Token": token,
     }
 
@@ -108,140 +99,37 @@ async def _seed_superuser(test_app: FastAPI, username: str) -> uuid.UUID:
     return admin_id
 
 
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_user_browser_api_complete_account_lifecycle(coverage_app: FastAPI) -> None:
-    suffix = uuid.uuid7().hex[:12]
-    username = f"coverage-user-{suffix}"
-    other_username = f"coverage-other-{suffix}"
-    email = f"coverage-{suffix}@example.test"
-    other_email = f"coverage-other-{suffix}@example.test"
-
-    async with _client(coverage_app) as client, _client(coverage_app) as second_client:
-        missing = await client.get("/api/v1/users/me")
-        assert missing.status_code == 401
-
-        response = await client.post(
-            "/api/v1/auth/register",
-            headers={"Origin": WEB_ORIGIN},
-            json={"username": username, "password": WEB_PASSWORD, "display_name": " Coverage User ", "email": email},
+async def _seed_managed_consumer(test_app: FastAPI, username: str) -> tuple[uuid.UUID, uuid.UUID]:
+    """Seed an existing consumer session for Admin management, without retired Web login."""
+    user_id, session_id = new_uuid7(), new_uuid7()
+    now = datetime.now(UTC)
+    async with test_app.state.resources.session_factory() as session, transaction_scope(session):
+        session.add(
+            User(
+                id=user_id,
+                username=username,
+                display_name="Managed User",
+                password_hash=None,
+                is_active=True,
+                credential_version=1,
+            )
         )
-        assert response.status_code == 201, response.text
-        user_id = response.json()["data"]["principal"]["id"]
-        first_session_id = response.json()["data"]["session_id"]
-
-        duplicate = await second_client.post(
-            "/api/v1/auth/register",
-            headers={"Origin": WEB_ORIGIN},
-            json={"username": username, "password": WEB_PASSWORD},
+        await session.flush()
+        session.add(
+            UserSession(
+                id=session_id,
+                user_id=user_id,
+                family_id=new_uuid7(),
+                credential_profile="miniapp_bearer",
+                client_id="pinjie-miniapp",
+                csrf_digest=None,
+                device_name="微信小程序",
+                last_seen_at=now,
+                idle_expires_at=now + timedelta(days=7),
+                absolute_expires_at=now + timedelta(days=30),
+            )
         )
-        assert duplicate.status_code == 409
-
-        unknown_login = await second_client.post(
-            "/api/v1/auth/login",
-            headers={"Origin": WEB_ORIGIN},
-            json={"username": f"missing-{suffix}", "password": WEB_PASSWORD},
-        )
-        assert unknown_login.status_code == 401
-        wrong_login = await second_client.post(
-            "/api/v1/auth/login",
-            headers={"Origin": WEB_ORIGIN},
-            json={"username": username, "password": "wrong-password"},
-        )
-        assert wrong_login.status_code == 401
-        good_login = await second_client.post(
-            "/api/v1/auth/login",
-            headers={"Origin": WEB_ORIGIN},
-            json={"username": username, "password": WEB_PASSWORD},
-        )
-        assert good_login.status_code == 200, good_login.text
-
-        current = await client.get("/api/v1/users/me")
-        assert current.status_code == 200
-        assert current.json()["data"]["id"] == user_id
-
-        invalid_update = await client.patch(
-            "/api/v1/users/me",
-            headers=_csrf_headers(client),
-            json={},
-        )
-        assert invalid_update.status_code == 422
-        updated = await client.patch(
-            "/api/v1/users/me",
-            headers=_csrf_headers(client),
-            json={"display_name": " Updated User ", "email": email.upper()},
-        )
-        assert updated.status_code == 200, updated.text
-        assert updated.json()["data"]["display_name"] == "Updated User"
-        assert updated.json()["data"]["email"] == email
-
-        registered_other = await second_client.post(
-            "/api/v1/auth/register",
-            headers={"Origin": WEB_ORIGIN},
-            json={"username": other_username, "password": WEB_PASSWORD, "email": other_email},
-        )
-        assert registered_other.status_code == 201
-        conflict = await client.patch(
-            "/api/v1/users/me",
-            headers=_csrf_headers(client),
-            json={"email": other_email},
-        )
-        assert conflict.status_code == 409
-
-        sessions = await client.get("/api/v1/users/me/sessions")
-        assert sessions.status_code == 200
-        session_items = sessions.json()["data"]["items"]
-        assert len(session_items) >= 2
-        other_session_id = next(item["id"] for item in session_items if not item["is_current"])
-
-        unknown_revoke = await client.delete(f"/api/v1/users/me/sessions/{uuid.uuid7()}", headers=_csrf_headers(client))
-        assert unknown_revoke.status_code == 404
-        revoked = await client.delete(f"/api/v1/users/me/sessions/{other_session_id}", headers=_csrf_headers(client))
-        assert revoked.status_code == 200
-        revoke_others = await client.post("/api/v1/users/me/sessions/revoke-others", headers=_csrf_headers(client))
-        assert revoke_others.status_code == 200
-
-        wrong_password = await client.post(
-            "/api/v1/users/me/password",
-            headers=_csrf_headers(client),
-            json={"current_password": "wrong-password", "new_password": WEB_NEW_PASSWORD},
-        )
-        assert wrong_password.status_code == 401
-        changed = await client.post(
-            "/api/v1/users/me/password",
-            headers=_csrf_headers(client),
-            json={"current_password": WEB_PASSWORD, "new_password": WEB_NEW_PASSWORD},
-        )
-        assert changed.status_code == 200, changed.text
-        assert changed.json()["data"]["session_id"] == first_session_id
-
-        refreshed = await client.post("/api/v1/auth/refresh", headers=_csrf_headers(client))
-        assert refreshed.status_code == 200, refreshed.text
-        logged_out = await client.post("/api/v1/auth/logout", headers=_csrf_headers(client))
-        assert logged_out.status_code == 200, logged_out.text
-        assert (await client.get("/api/v1/users/me")).status_code == 401
-
-        logged_in_again = await client.post(
-            "/api/v1/auth/login",
-            headers={"Origin": WEB_ORIGIN},
-            json={"username": username, "password": WEB_NEW_PASSWORD},
-        )
-        assert logged_in_again.status_code == 200
-        wrong_delete = await client.request(
-            "DELETE",
-            "/api/v1/users/me",
-            headers=_csrf_headers(client),
-            json={"current_password": "wrong-password"},
-        )
-        assert wrong_delete.status_code == 401
-        deleted = await client.request(
-            "DELETE",
-            "/api/v1/users/me",
-            headers=_csrf_headers(client),
-            json={"current_password": WEB_NEW_PASSWORD},
-        )
-        assert deleted.status_code == 200, deleted.text
-        assert (await client.get("/api/v1/users/me")).status_code == 401
+    return user_id, session_id
 
 
 @pytest.mark.integration
@@ -254,20 +142,9 @@ async def test_admin_browser_api_complete_management_lifecycle(coverage_app: Fas
     managed_username = f"managed-user-{suffix}"
     await _seed_superuser(coverage_app, root_username)
 
-    async with (
-        _client(coverage_app) as admin_client,
-        _client(coverage_app) as target_client,
-        _client(coverage_app) as managed_client,
-    ):
-        registered = await managed_client.post(
-            "/api/v1/auth/register",
-            headers={"Origin": WEB_ORIGIN},
-            json={"username": managed_username, "password": WEB_PASSWORD, "display_name": "Managed User"},
-        )
-        assert registered.status_code == 201
-        managed_user_id = registered.json()["data"]["principal"]["id"]
-        managed_session_id = registered.json()["data"]["session_id"]
+    managed_user_id, managed_session_id = await _seed_managed_consumer(coverage_app, managed_username)
 
+    async with _client(coverage_app) as admin_client, _client(coverage_app) as target_client:
         missing_admin = await admin_client.get("/api/v1/admin/auth/me")
         assert missing_admin.status_code == 401
         unknown_login = await admin_client.post(
@@ -293,22 +170,20 @@ async def test_admin_browser_api_complete_management_lifecycle(coverage_app: Fas
 
         invalid_profile = await admin_client.patch(
             "/api/v1/admin/auth/profile",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={},
         )
         assert invalid_profile.status_code == 422
         updated_profile = await admin_client.patch(
             "/api/v1/admin/auth/profile",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"display_name": "Root New Display", "avatar": "https://example.com/avatar.png"},
         )
         assert updated_profile.status_code == 200
         assert updated_profile.json()["data"]["display_name"] == "Root New Display"
         assert updated_profile.json()["data"]["avatar"] == "https://example.com/avatar.png"
 
-        refreshed = await admin_client.post(
-            "/api/v1/admin/auth/refresh", headers=_csrf_headers(admin_client, admin=True)
-        )
+        refreshed = await admin_client.post("/api/v1/admin/auth/refresh", headers=_csrf_headers(admin_client))
         assert refreshed.status_code == 200, refreshed.text
         permissions = await admin_client.get("/api/v1/admin/permissions")
         assert permissions.status_code == 200, permissions.text
@@ -316,14 +191,14 @@ async def test_admin_browser_api_complete_management_lifecycle(coverage_app: Fas
 
         role = await admin_client.post(
             "/api/v1/admin/roles",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"code": role_code, "name": " Coverage Role ", "description": " role description "},
         )
         assert role.status_code == 201, role.text
         role_id = role.json()["data"]["id"]
         duplicate_role = await admin_client.post(
             "/api/v1/admin/roles",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"code": role_code, "name": "Duplicate"},
         )
         assert duplicate_role.status_code == 409
@@ -331,14 +206,14 @@ async def test_admin_browser_api_complete_management_lifecycle(coverage_app: Fas
         assert (await admin_client.get(f"/api/v1/admin/roles/{role_id}")).status_code == 200
         updated_role = await admin_client.patch(
             f"/api/v1/admin/roles/{role_id}",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"name": "Updated Coverage Role", "description": None},
         )
         assert updated_role.status_code == 200
 
         assigned_permissions = await admin_client.put(
             f"/api/v1/admin/roles/{role_id}/permissions",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={
                 "permission_codes": [
                     "users:read",
@@ -355,14 +230,14 @@ async def test_admin_browser_api_complete_management_lifecycle(coverage_app: Fas
         assert assigned_permissions.status_code == 200, assigned_permissions.text
         system_permission_rejected = await admin_client.put(
             f"/api/v1/admin/roles/{role_id}/permissions",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"permission_codes": ["admins:superuser:change"]},
         )
         assert system_permission_rejected.status_code == 422
 
         created_admin = await admin_client.post(
             "/api/v1/admin/admins",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={
                 "username": target_username,
                 "initial_password": ADMIN_PASSWORD,
@@ -374,7 +249,7 @@ async def test_admin_browser_api_complete_management_lifecycle(coverage_app: Fas
         target_id = created_admin.json()["data"]["id"]
         duplicate_admin = await admin_client.post(
             "/api/v1/admin/admins",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"username": target_username, "initial_password": ADMIN_PASSWORD},
         )
         assert duplicate_admin.status_code == 409
@@ -387,7 +262,7 @@ async def test_admin_browser_api_complete_management_lifecycle(coverage_app: Fas
         assert target_login.status_code == 200, target_login.text
         forbidden_superuser_create = await target_client.post(
             "/api/v1/admin/admins",
-            headers=_csrf_headers(target_client, admin=True),
+            headers=_csrf_headers(target_client),
             json={
                 "username": f"forbidden-superuser-{suffix}",
                 "initial_password": ADMIN_PASSWORD,
@@ -398,33 +273,33 @@ async def test_admin_browser_api_complete_management_lifecycle(coverage_app: Fas
         protected_superuser_requests = [
             await target_client.patch(
                 f"/api/v1/admin/admins/{root_id}",
-                headers=_csrf_headers(target_client, admin=True),
+                headers=_csrf_headers(target_client),
                 json={"display_name": "Forbidden Root Update"},
             ),
             await target_client.patch(
                 f"/api/v1/admin/admins/{root_id}/status",
-                headers=_csrf_headers(target_client, admin=True),
+                headers=_csrf_headers(target_client),
                 json={"is_active": False},
             ),
             await target_client.patch(
                 "/api/v1/admin/admins/status/batch",
-                headers=_csrf_headers(target_client, admin=True),
+                headers=_csrf_headers(target_client),
                 json={"admin_ids": [root_id], "is_active": False},
             ),
             await target_client.put(
                 f"/api/v1/admin/admins/{root_id}/credentials/password",
-                headers=_csrf_headers(target_client, admin=True),
+                headers=_csrf_headers(target_client),
                 json={"new_password": ADMIN_NEW_PASSWORD},
             ),
             await target_client.put(
                 f"/api/v1/admin/admins/{root_id}/roles",
-                headers=_csrf_headers(target_client, admin=True),
+                headers=_csrf_headers(target_client),
                 json={"role_ids": [role_id]},
             ),
             await target_client.get(f"/api/v1/admin/admins/{root_id}/sessions"),
             await target_client.post(
                 f"/api/v1/admin/admins/{root_id}/sessions/revoke-all",
-                headers=_csrf_headers(target_client, admin=True),
+                headers=_csrf_headers(target_client),
             ),
         ]
         assert all(response.status_code == 403 for response in protected_superuser_requests)
@@ -434,58 +309,58 @@ async def test_admin_browser_api_complete_management_lifecycle(coverage_app: Fas
 
         updated_admin = await admin_client.patch(
             f"/api/v1/admin/admins/{target_id}",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"display_name": " Updated Administrator "},
         )
         assert updated_admin.status_code == 200
         legacy_superuser_change = await admin_client.patch(
             f"/api/v1/admin/admins/{target_id}",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"is_superuser": True},
         )
         assert legacy_superuser_change.status_code == 422
         promoted = await admin_client.patch(
             f"/api/v1/admin/admins/{target_id}/superuser",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"is_superuser": True},
         )
         assert promoted.status_code == 200
         demoted = await admin_client.patch(
             f"/api/v1/admin/admins/{target_id}/superuser",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"is_superuser": False},
         )
         assert demoted.status_code == 200
 
         own_superuser_change = await admin_client.patch(
             f"/api/v1/admin/admins/{root_id}/superuser",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"is_superuser": False},
         )
         assert own_superuser_change.status_code == 409
 
         disabled_admin = await admin_client.patch(
             f"/api/v1/admin/admins/{target_id}/status",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"is_active": False},
         )
         assert disabled_admin.status_code == 200
         enabled_admin = await admin_client.patch(
             f"/api/v1/admin/admins/{target_id}/status",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"is_active": True},
         )
         assert enabled_admin.status_code == 200
 
         assigned_roles = await admin_client.put(
             f"/api/v1/admin/admins/{target_id}/roles",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"role_ids": [role_id]},
         )
         assert assigned_roles.status_code == 200
         reset_password = await admin_client.put(
             f"/api/v1/admin/admins/{target_id}/credentials/password",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"new_password": ADMIN_NEW_PASSWORD},
         )
         assert reset_password.status_code == 200
@@ -498,7 +373,7 @@ async def test_admin_browser_api_complete_management_lifecycle(coverage_app: Fas
         assert target_relogin.status_code == 200
         revoked_admin_sessions = await admin_client.post(
             f"/api/v1/admin/admins/{target_id}/sessions/revoke-all",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
         )
         assert revoked_admin_sessions.status_code == 200
 
@@ -508,49 +383,49 @@ async def test_admin_browser_api_complete_management_lifecycle(coverage_app: Fas
         assert (await admin_client.get(f"/api/v1/admin/users/{managed_user_id}")).status_code == 200
         updated_user = await admin_client.patch(
             f"/api/v1/admin/users/{managed_user_id}",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"display_name": "Updated Managed User"},
         )
         assert updated_user.status_code == 200
         assert (await admin_client.get(f"/api/v1/admin/users/{managed_user_id}/sessions")).status_code == 200
         revoked_user_session = await admin_client.delete(
             f"/api/v1/admin/users/{managed_user_id}/sessions/{managed_session_id}",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
         )
         assert revoked_user_session.status_code == 200
         revoked_user_sessions = await admin_client.post(
             f"/api/v1/admin/users/{managed_user_id}/sessions/revoke-all",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
         )
         assert revoked_user_sessions.status_code == 200
         reset_user_password = await admin_client.put(
             f"/api/v1/admin/users/{managed_user_id}/credentials/password",
-            headers=_csrf_headers(admin_client, admin=True),
-            json={"new_password": WEB_NEW_PASSWORD},
+            headers=_csrf_headers(admin_client),
+            json={"new_password": USER_NEW_PASSWORD},
         )
         assert reset_user_password.status_code == 200
         disabled_user = await admin_client.patch(
             f"/api/v1/admin/users/{managed_user_id}/status",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"is_active": False},
         )
         assert disabled_user.status_code == 200
         enabled_user = await admin_client.patch(
             f"/api/v1/admin/users/{managed_user_id}/status",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"is_active": True},
         )
         assert enabled_user.status_code == 200
 
         assigned_none = await admin_client.put(
             f"/api/v1/admin/admins/{target_id}/roles",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"role_ids": []},
         )
         assert assigned_none.status_code == 200
         deleted_role = await admin_client.delete(
             f"/api/v1/admin/roles/{role_id}",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
         )
         assert deleted_role.status_code == 200, deleted_role.text
 
@@ -560,18 +435,16 @@ async def test_admin_browser_api_complete_management_lifecycle(coverage_app: Fas
 
         wrong_change = await admin_client.post(
             "/api/v1/admin/auth/password",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"current_password": "wrong-password", "new_password": ADMIN_NEW_PASSWORD},
         )
         assert wrong_change.status_code == 401
         changed = await admin_client.post(
             "/api/v1/admin/auth/password",
-            headers=_csrf_headers(admin_client, admin=True),
+            headers=_csrf_headers(admin_client),
             json={"current_password": ADMIN_PASSWORD, "new_password": ADMIN_NEW_PASSWORD},
         )
         assert changed.status_code == 200, changed.text
-        logged_out = await admin_client.post(
-            "/api/v1/admin/auth/logout", headers=_csrf_headers(admin_client, admin=True)
-        )
+        logged_out = await admin_client.post("/api/v1/admin/auth/logout", headers=_csrf_headers(admin_client))
         assert logged_out.status_code == 200, logged_out.text
         assert (await admin_client.get("/api/v1/admin/auth/me")).status_code == 401

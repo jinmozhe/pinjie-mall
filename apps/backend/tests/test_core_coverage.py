@@ -22,7 +22,7 @@ from app.core.request_metadata import RequestMetadata, publish_request_log, requ
 from app.core.resources import AppResources, create_resources
 from app.core.security import PasswordManager, create_access_token, decode_access_token, new_anonymized_username
 from app.main import create_app
-from app.services.authentication import WebAuthService
+from app.services.authentication import AdminAuthService
 from tests.conftest import TEST_SECRETS
 
 DATABASE_URL = "postgresql+asyncpg://u:p@localhost:5432/app"
@@ -251,7 +251,7 @@ async def test_rate_limit_failure_and_lock_states() -> None:
     [None, SimpleNamespace(delete=AsyncMock(side_effect=RedisError("offline")))],
 )
 async def test_login_limit_cleanup_is_best_effort_after_authentication(redis: object | None) -> None:
-    service = WebAuthService(
+    service = AdminAuthService(
         session=MagicMock(),
         session_factory=MagicMock(),
         redis=redis,  # type: ignore[arg-type]

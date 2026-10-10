@@ -16,7 +16,7 @@ from app.core.resources import create_resources
 from app.core.security import token_digest
 from app.db.models import SecurityLoginEvent, SystemSetting, User, UserExternalIdentity, UserRefreshToken, UserSession
 from app.db.transaction import transaction_scope
-from app.services.miniapp_auth import MiniappAuthService
+from app.services.consumer_auth import ConsumerAuthService
 from tests.conftest import TEST_SECRETS
 
 
@@ -66,7 +66,7 @@ async def test_concurrent_identity_registration_rotation_and_replay_revocation()
 
         async def login():
             async with resources.session_factory() as session:
-                return await MiniappAuthService(
+                return await ConsumerAuthService(
                     session=session,
                     session_factory=resources.session_factory,
                     redis=resources.redis,
@@ -99,7 +99,7 @@ async def test_concurrent_identity_registration_rotation_and_replay_revocation()
         third = await login()
         assert third.user.id == user_id
         async with resources.session_factory() as session:
-            service = MiniappAuthService(
+            service = ConsumerAuthService(
                 session=session,
                 session_factory=resources.session_factory,
                 redis=resources.redis,

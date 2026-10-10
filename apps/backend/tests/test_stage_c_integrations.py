@@ -29,12 +29,10 @@ from app.db.models import (
     Permission,
     RequestLog,
     Role,
-    SecurityLoginEvent,
     User,
     UserRefreshToken,
     UserSession,
 )
-from app.db.repositories import SystemSettingRepository
 from app.db.transaction import transaction_scope
 from app.domains.admin.schemas import (
     AdminBulkStatusUpdateIn,
@@ -47,9 +45,7 @@ from app.domains.admin.schemas import (
     UserBulkStatusUpdateIn,
     UserRestoreBatchIn,
 )
-from app.domains.auth.schemas import UserRegisterIn
 from app.services.admin_management import AdminManagementService
-from app.services.authentication import WebAuthService
 from scripts.cleanup_security_logs import _run as run_retention_cleanup
 from scripts.consume_request_logs import GROUP_NAME, _reclaim_pending
 from tests.conftest import TEST_SECRETS
@@ -114,73 +110,6 @@ def test_user_bulk_delete_normalizes_blank_reason() -> None:
     payload = UserBulkDeleteIn(user_ids=[new_uuid7()], deletion_reason="   ")
 
     assert payload.deletion_reason is None
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_refresh_rotation_and_reuse_revokes_session_family() -> None:
-    settings = _integration_settings()
-    resources = create_resources(settings)
-    user_id: uuid.UUID | None = None
-    metadata = _request_metadata()
-    username = f"rotation-{uuid.uuid7().hex[:16]}"
-    try:
-        async with resources.session_factory() as session, transaction_scope(session):
-            registration = await SystemSettingRepository(session).get("registration", for_update=True)
-            assert registration is not None
-            registration.setting_value = {"enabled": True}
-            registration.revision += 1
-        async with resources.session_factory() as session:
-            service = WebAuthService(
-                session=session,
-                session_factory=resources.session_factory,
-                redis=resources.redis,
-                settings=settings,
-                password_manager=resources.password_manager,
-                metadata=metadata,
-            )
-            user, initial = await service.register(
-                UserRegisterIn(username=username, password="stage-c-test-password", display_name="Rotation Test")
-            )
-            user_id = user.id
-        async with resources.session_factory() as session:
-            rotated = await WebAuthService(
-                session=session,
-                session_factory=resources.session_factory,
-                redis=resources.redis,
-                settings=settings,
-                password_manager=resources.password_manager,
-                metadata=metadata,
-            ).refresh(initial.refresh_token, initial.csrf_token)
-            assert rotated.refresh_token != initial.refresh_token
-            assert rotated.csrf_token != initial.csrf_token
-        async with resources.session_factory() as session:
-            with pytest.raises(AppException) as exc_info:
-                await WebAuthService(
-                    session=session,
-                    session_factory=resources.session_factory,
-                    redis=resources.redis,
-                    settings=settings,
-                    password_manager=resources.password_manager,
-                    metadata=metadata,
-                ).refresh(initial.refresh_token, initial.csrf_token)
-            assert exc_info.value.code == ErrorCode.AUTH_REFRESH_REUSE_DETECTED
-        async with resources.session_factory() as session:
-            stored = await session.scalar(select(UserSession).where(UserSession.id == initial.session_id))
-            assert stored is not None
-            assert stored.revoked_at is not None
-            assert stored.revoke_reason == "refresh_reuse"
-    finally:
-        if user_id is not None:
-            async with resources.session_factory() as session, transaction_scope(session):
-                session_ids = select(UserSession.id).where(UserSession.user_id == user_id)
-                await session.execute(delete(UserRefreshToken).where(UserRefreshToken.session_id.in_(session_ids)))
-                await session.execute(delete(UserSession).where(UserSession.user_id == user_id))
-                await session.execute(delete(SecurityLoginEvent).where(SecurityLoginEvent.principal_id == user_id))
-                await session.execute(delete(User).where(User.id == user_id))
-        if resources.redis is not None:
-            await resources.redis.flushdb()
-        await resources.close()
 
 
 @pytest.mark.integration

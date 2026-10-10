@@ -27,7 +27,7 @@ class CartItemRead(BaseModel):
     revision: int
 
 
-class MiniappCartItemRead(CartItemRead):
+class ConsumerCartItemRead(CartItemRead):
     product_id: UUID | None
     product_type: Literal["physical", "virtual"] | None
     product_name: str

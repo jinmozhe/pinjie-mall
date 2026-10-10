@@ -10,7 +10,7 @@ from app.core.identifiers import new_uuid7
 from app.db.models.cart import CartItem
 from app.db.transaction import transaction_scope
 from app.domains.cart.repository import CartRepository
-from app.domains.cart.schemas import CartItemInput, CartItemRead, CartItemUpdate, MiniappCartItemRead
+from app.domains.cart.schemas import CartItemInput, CartItemRead, CartItemUpdate, ConsumerCartItemRead
 from app.domains.inventory import InventoryService
 from app.domains.inventory.repository import InventoryRepository
 from app.domains.products import ProductService
@@ -36,11 +36,7 @@ class CartService:
         await self.products.checkout_skus([sku_id])
         return (await self.inventory.read(sku_id)).available
 
-    async def list(self, user_id: UUID) -> list[CartItemRead]:
-        await self.access.require_active_user(user_id)
-        return [CartItemRead.model_validate(row) for row in await self.repository.list_for_user(user_id)]
-
-    async def miniapp_list(self, user_id: UUID) -> builtins.list[MiniappCartItemRead]:
+    async def list(self, user_id: UUID) -> builtins.list[ConsumerCartItemRead]:
         await self.access.require_active_user(user_id)
         rows = await self.repository.list_for_user(user_id)
         products = {
@@ -55,7 +51,7 @@ class CartService:
         product_images = await self.products.repository.image_urls_for_products(
             list({product.id for _, product in products.values()})
         )
-        result: builtins.list[MiniappCartItemRead] = []
+        result: builtins.list[ConsumerCartItemRead] = []
         for row in rows:
             found = products.get(row.sku_id)
             reason: str | None = None
@@ -79,7 +75,7 @@ class CartService:
                         reason = "库存不足，请调整数量"
                 images = product_images.get(product.id, [])
             result.append(
-                MiniappCartItemRead(
+                ConsumerCartItemRead(
                     **CartItemRead.model_validate(row).model_dump(),
                     product_id=found[1].id if found else None,
                     product_type=cast(Literal["physical", "virtual"], found[1].product_type) if found else None,

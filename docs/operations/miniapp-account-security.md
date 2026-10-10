@@ -8,14 +8,14 @@
 
 ## 2. 本人会话接口
 
-所有接口位于 MiniappBearer 边界，拒绝 Cookie 凭据，响应 no-store；不接受前端指定用户身份。
+所有接口位于 ConsumerBearer 边界，拒绝 Cookie 凭据，响应 no-store；不接受前端指定用户身份。
 
 | 操作 | 接口 | 边界 |
 | --- | --- | --- |
-| 分页列表 | `GET /api/v1/miniapp/sessions` | page 至少 1，page_size 默认 10、最多 100；ID 倒序，只包含本人 miniapp_bearer、pinjie-miniapp 会话 |
-| 明确集合撤销 | `POST /api/v1/miniapp/sessions/revoke` | session_ids 为 1 至 100 个唯一 UUID；拒绝当前、他人、Browser 或缺失目标，整批事务回滚 |
-| 原目标查询 | `POST /api/v1/miniapp/sessions/revocation-status` | 同一集合，只读返回 active、expired、revoked 或 not_found，不执行撤销 |
-| 注销咨询核对 | `GET /api/v1/miniapp/account/closure-precheck` | 只读本人事项，self_service_enabled 恒为 false |
+| 分页列表 | `GET /api/v1/users/me/sessions` | page 至少 1，page_size 默认 10、最多 100；ID 倒序，只包含本人 miniapp_bearer、pinjie-miniapp 会话 |
+| 明确集合撤销 | `POST /api/v1/users/me/sessions/revoke` | session_ids 为 1 至 100 个唯一 UUID；拒绝当前、他人、Browser 或缺失目标，整批事务回滚 |
+| 原目标查询 | `POST /api/v1/users/me/sessions/revocation-status` | 同一集合，只读返回 active、expired、revoked 或 not_found，不执行撤销 |
+| 注销咨询核对 | `GET /api/v1/users/me/closure-precheck` | 只读本人事项，self_service_enabled 恒为 false |
 
 列表仅展示会话标识、展示名称、登录/活动/闲置截止/最长有效时间、撤销时间、当前标记与遮掩网络段。原始 IP、UA、Token、族标识及微信身份不公开。名称与网络段不能证明物理设备身份，同一设备重复登录可产生多个会话。
 

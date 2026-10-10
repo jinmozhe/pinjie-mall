@@ -10,14 +10,14 @@ from pydantic import BaseModel, ConfigDict, PlainSerializer
 PointsValue = Annotated[int, PlainSerializer(str, return_type=str, when_used="json")]
 
 
-class MiniappReferralRead(BaseModel):
+class ConsumerReferralRead(BaseModel):
     state: Literal["not_opened", "unbound", "bound"]
     invitation_code: str | None
     bound_at: datetime | None
     matches_invitation: bool | None
 
 
-class MiniappPointsAccountRead(BaseModel):
+class ConsumerPointsAccountRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     available_points: PointsValue
     frozen_points: PointsValue
@@ -26,12 +26,12 @@ class MiniappPointsAccountRead(BaseModel):
     updated_at: datetime
 
 
-class MiniappPointsRead(BaseModel):
+class ConsumerPointsRead(BaseModel):
     state: Literal["not_opened", "opened"]
-    account: MiniappPointsAccountRead | None
+    account: ConsumerPointsAccountRead | None
 
 
-class MiniappPointsLedgerRead(BaseModel):
+class ConsumerPointsLedgerRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     entry_type: Literal["grant", "spend", "freeze", "release", "reverse", "expire"]

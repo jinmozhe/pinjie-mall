@@ -1,18 +1,12 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class SystemStatus(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     status: Literal["available", "unavailable"]
-
-
-class SystemCapabilitiesRead(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    registration_enabled: bool = Field(description="是否允许 Web 公开注册普通用户")
 
 
 class LiveStatus(BaseModel):
@@ -26,3 +20,8 @@ class ReadinessStatus(BaseModel):
 
     status: Literal["ready", "unavailable"]
     checks: dict[str, str]
+
+
+class ConsumerHelpRead(BaseModel):
+    phone: str | None
+    email: str | None

@@ -15,12 +15,12 @@ from app.db.models.order import Order, OrderItem
 from app.domains.lifecycle.schemas import FulfillmentRead, ProductReviewRead, RefundRequestRead
 from app.domains.orders.schemas import OrderItemRead
 from app.domains.users import UserAccessService
-from app.services.miniapp_trade_schemas import (
+from app.services.trade_query_schemas import (
+    ConsumerItemReviewRead,
+    ConsumerRefundLookupRead,
+    ConsumerRefundRead,
+    ConsumerTradeOrderRead,
     DisplayStatus,
-    MiniappItemReviewRead,
-    MiniappRefundLookupRead,
-    MiniappRefundRead,
-    MiniappTradeOrderRead,
     RefundExecutionStatus,
     RefundFundsStatus,
     TradeFilter,
@@ -41,7 +41,7 @@ def display_status(status: str, fulfillment_status: str | None) -> DisplayStatus
     return cast(DisplayStatus, fulfillment_status)
 
 
-def refund_read(row: RefundRequest, attempt: RefundAttempt | None) -> MiniappRefundRead:
+def refund_read(row: RefundRequest, attempt: RefundAttempt | None) -> ConsumerRefundRead:
     if attempt is not None and (
         attempt.refund_request_id != row.id
         or attempt.order_id != row.order_id
@@ -54,7 +54,7 @@ def refund_read(row: RefundRequest, attempt: RefundAttempt | None) -> MiniappRef
     funds: RefundFundsStatus = "no_funds" if row.amount == 0 and row.status == "completed" else "not_confirmed"
     if row.amount > 0 and attempt is not None and attempt.status == "succeeded" and attempt.confirmed_at is not None:
         funds = "confirmed"
-    return MiniappRefundRead(
+    return ConsumerRefundRead(
         **RefundRequestRead.model_validate(row).model_dump(),
         request_id=row.request_id,
         execution_status=cast(RefundExecutionStatus, attempt.status if attempt is not None else "not_started"),
@@ -63,14 +63,14 @@ def refund_read(row: RefundRequest, attempt: RefundAttempt | None) -> MiniappRef
     )
 
 
-class MiniappTradeQueryService:
+class ConsumerTradeQueryService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.access = UserAccessService(session)
 
     async def orders(
         self, user_id: UUID, page: int, page_size: int, status: TradeFilter | None
-    ) -> PageResult[MiniappTradeOrderRead]:
+    ) -> PageResult[ConsumerTradeOrderRead]:
         await self.access.require_active_user(user_id)
         stmt = (
             select(Order, Fulfillment)
@@ -86,9 +86,9 @@ class MiniappTradeQueryService:
             await self.session.execute(stmt.order_by(Order.id.desc()).offset((page - 1) * page_size).limit(page_size))
         ).all()
         orders = await self._project(user_id, [(row[0], row[1]) for row in rows])
-        return PageResult[MiniappTradeOrderRead].create(items=orders, total=total, page=page, page_size=page_size)
+        return PageResult[ConsumerTradeOrderRead].create(items=orders, total=total, page=page, page_size=page_size)
 
-    async def order(self, user_id: UUID, order_id: UUID) -> MiniappTradeOrderRead:
+    async def order(self, user_id: UUID, order_id: UUID) -> ConsumerTradeOrderRead:
         await self.access.require_active_user(user_id)
         row = (
             await self.session.execute(
@@ -103,7 +103,7 @@ class MiniappTradeQueryService:
 
     async def _project(
         self, user_id: UUID, rows: Sequence[tuple[Order, Fulfillment | None]]
-    ) -> list[MiniappTradeOrderRead]:
+    ) -> list[ConsumerTradeOrderRead]:
         if not rows:
             return []
         order_ids = [order.id for order, _ in rows]
@@ -132,7 +132,7 @@ class MiniappTradeQueryService:
             state = display_status(order.status, fulfillment.status if fulfillment is not None else None)
             delivered = order.status == "paid" and state == "delivered"
             result.append(
-                MiniappTradeOrderRead(
+                ConsumerTradeOrderRead(
                     id=order.id,
                     status=order.status,
                     product_type=order.product_type,
@@ -157,7 +157,7 @@ class MiniappTradeQueryService:
                         and order.id not in blocked
                     ),
                     item_reviews=[
-                        MiniappItemReviewRead(
+                        ConsumerItemReviewRead(
                             order_item_id=item.id,
                             can_review=delivered and item.id not in reviews,
                             review=ProductReviewRead.model_validate(reviews[item.id]) if item.id in reviews else None,
@@ -170,7 +170,7 @@ class MiniappTradeQueryService:
 
     async def refunds(
         self, user_id: UUID, page: int, page_size: int, order_id: UUID | None
-    ) -> PageResult[MiniappRefundRead]:
+    ) -> PageResult[ConsumerRefundRead]:
         await self.access.require_active_user(user_id)
         if order_id is not None:
             # Explicit ownership before an empty per-order result.
@@ -188,11 +188,11 @@ class MiniappTradeQueryService:
                 stmt.order_by(RefundRequest.id.desc()).offset((page - 1) * page_size).limit(page_size)
             )
         )
-        return PageResult[MiniappRefundRead].create(
+        return PageResult[ConsumerRefundRead].create(
             items=await self._refunds(rows), total=total, page=page, page_size=page_size
         )
 
-    async def _refunds(self, rows: Sequence[RefundRequest]) -> list[MiniappRefundRead]:
+    async def _refunds(self, rows: Sequence[RefundRequest]) -> list[ConsumerRefundRead]:
         if not rows:
             return []
         attempts: dict[UUID, RefundAttempt] = {}
@@ -204,7 +204,7 @@ class MiniappTradeQueryService:
             attempts[attempt.refund_request_id] = attempt
         return [refund_read(row, attempts.get(row.id)) for row in rows]
 
-    async def refund(self, user_id: UUID, refund_id: UUID) -> MiniappRefundRead:
+    async def refund(self, user_id: UUID, refund_id: UUID) -> ConsumerRefundRead:
         await self.access.require_active_user(user_id)
         row = await self.session.scalar(
             select(RefundRequest)
@@ -215,7 +215,7 @@ class MiniappTradeQueryService:
             raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="售后记录不存在")
         return (await self._refunds([row]))[0]
 
-    async def refund_by_request(self, user_id: UUID, request_id: UUID) -> MiniappRefundLookupRead:
+    async def refund_by_request(self, user_id: UUID, request_id: UUID) -> ConsumerRefundLookupRead:
         await self.access.require_active_user(user_id)
         row = await self.session.scalar(
             select(RefundRequest)
@@ -223,5 +223,5 @@ class MiniappTradeQueryService:
             .where(RefundRequest.request_id == request_id, RefundRequest.user_id == user_id, Order.user_id == user_id)
         )
         if row is None:
-            return MiniappRefundLookupRead(state="not_found", refund=None)
-        return MiniappRefundLookupRead(state="found", refund=(await self._refunds([row]))[0])
+            return ConsumerRefundLookupRead(state="not_found", refund=None)
+        return ConsumerRefundLookupRead(state="found", refund=(await self._refunds([row]))[0])

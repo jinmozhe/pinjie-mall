@@ -1,9 +1,9 @@
 import Taro from '@tarojs/taro'
-import type { MiniappAvatarAssetRead } from '@pinjie/api-client'
+import type { ConsumerAvatarAssetRead } from '@pinjie/api-client'
 import { ApiError } from './api'
 import type { RequestSignal } from './cancellation'
 
-export function parseAvatarUpload(status: number, data: string): MiniappAvatarAssetRead {
+export function parseAvatarUpload(status: number, data: string): ConsumerAvatarAssetRead {
   let body: unknown
   try { body = JSON.parse(data) }
   catch { throw new ApiError('上传响应格式无效，结果尚未确认', 'protocol', status) }
@@ -14,11 +14,11 @@ export function parseAvatarUpload(status: number, data: string): MiniappAvatarAs
   return { id: body.data.id, url: body.data.url }
 }
 
-export function uploadAvatar(filePath: string, accessToken: string, signal: RequestSignal): Promise<MiniappAvatarAssetRead> {
+export function uploadAvatar(filePath: string, accessToken: string, signal: RequestSignal): Promise<ConsumerAvatarAssetRead> {
   return new Promise((resolve, reject) => {
     if (signal.aborted) { reject(new ApiError('上传已取消，结果尚未确认', 'protocol')); return }
     const task = Taro.uploadFile({
-      url: `${__API_BASE_URL__}/api/v1/miniapp/me/avatar-assets`, filePath, name: 'file', timeout: 20_000,
+      url: `${__API_BASE_URL__}/api/v1/users/me/avatar-assets`, filePath, name: 'file', timeout: 20_000,
       header: { Accept: 'application/json', Authorization: `Bearer ${accessToken}` },
       success(response) {
         try { resolve(parseAvatarUpload(response.statusCode, response.data)) }

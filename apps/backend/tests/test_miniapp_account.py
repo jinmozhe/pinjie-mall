@@ -7,8 +7,8 @@ from pydantic import ValidationError
 
 from app.core.identifiers import new_uuid7
 from app.db.models import UserSession
-from app.services.miniapp_account import login_session_read
-from app.services.miniapp_account_schemas import MiniappClosurePrecheckRead, MiniappSessionTargets
+from app.domains.users.security_schemas import ConsumerClosurePrecheckRead, ConsumerSessionTargets
+from app.services.account_security import login_session_read
 
 
 def test_session_projection_masks_network_and_distinguishes_terminal_states() -> None:
@@ -40,7 +40,7 @@ def test_session_projection_masks_network_and_distinguishes_terminal_states() ->
 
 def test_targets_and_closed_self_service_contract_fail_closed() -> None:
     first = new_uuid7()
-    assert MiniappSessionTargets(session_ids=[first]).session_ids == [first]
+    assert ConsumerSessionTargets(session_ids=[first]).session_ids == [first]
     for payload in [
         {"session_ids": []},
         {"session_ids": [first, first]},
@@ -48,9 +48,9 @@ def test_targets_and_closed_self_service_contract_fail_closed() -> None:
         {"session_ids": [first], "revoke_all": True},
     ]:
         with pytest.raises(ValidationError):
-            MiniappSessionTargets.model_validate(payload)
+            ConsumerSessionTargets.model_validate(payload)
     with pytest.raises(ValidationError):
-        MiniappClosurePrecheckRead(
+        ConsumerClosurePrecheckRead(
             self_service_enabled=True,
             checked_at=datetime.now(UTC),
             wallet_state="not_opened",

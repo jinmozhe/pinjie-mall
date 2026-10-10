@@ -10,15 +10,13 @@ from app.db.models import User
 from app.domains.assets.schemas import UploaderType, UploadScene
 from app.domains.users.schemas import UserAvatarUpdateIn
 from app.main import app
-from app.services.accounts import UserAccountService
+from app.services.accounts import UserProfileService
 
 
-def _service(user: User, asset: object | None) -> UserAccountService:
-    service = UserAccountService(
+def _service(user: User, asset: object | None) -> UserProfileService:
+    service = UserProfileService(
         session=AsyncMock(),
         settings=app.state.settings,
-        password_manager=AsyncMock(),
-        metadata=AsyncMock(),
     )
     service.users = SimpleNamespace(get=AsyncMock(return_value=user))  # type: ignore[assignment]
     service.assets = SimpleNamespace(get=AsyncMock(return_value=asset))  # type: ignore[assignment]

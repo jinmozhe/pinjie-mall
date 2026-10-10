@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { useQuery } from '@tanstack/react-query'
-import type { MiniappClosureCheckRead, MiniappSessionTargets } from '@pinjie/api-client'
+import type { ConsumerClosureCheckRead, ConsumerSessionTargets } from '@pinjie/api-client'
 import { AuthGate } from '@/components/AuthGate'
 import { Button } from '@/components/Button'
 import { QueryState } from '@/components/QueryState'
@@ -84,7 +84,7 @@ function Sessions() {
     void query.refetch()
   })
   function current(epoch: number) { return epoch === sessionScope() }
-  async function accept(target: MiniappSessionTargets, result: Awaited<ReturnType<typeof readRevocation>>, epoch: number) {
+  async function accept(target: ConsumerSessionTargets, result: Awaited<ReturnType<typeof readRevocation>>, epoch: number) {
     if (!current(epoch) || !owner) return
     if (!revocationConfirmed(target, result)) {
       setCanRecover(result.sessions.every((item) => item.state !== 'not_found'))
@@ -104,7 +104,7 @@ function Sessions() {
     const epoch = session.epoch
     let sent = false
     try {
-      const target: MiniappSessionTargets = { session_ids: [...ids] }
+      const target: ConsumerSessionTargets = { session_ids: [...ids] }
       const answer = await Taro.showModal({ title: '撤销登录会话', content: `撤销已选定的 ${ids.length} 个其他小程序会话，其登录凭据将失效。当前会话保留；重新登录会创建新会话。`, confirmText: '撤销会话', cancelText: '取消' })
       if (!answer.confirm || !current(epoch)) return
       const next: RevocationIntent = { version: 1, userId: owner, target }
@@ -147,7 +147,7 @@ function Sessions() {
   </View>
 }
 
-const checkLabels: Record<MiniappClosureCheckRead['key'], [string, string]> = {
+const checkLabels: Record<ConsumerClosureCheckRead['key'], [string, string]> = {
   orders: ['订单与履约', '/subpackages/trade/orders/index'], payments: ['待确认付款', '/subpackages/trade/orders/index'],
   refunds: ['售后申请', '/subpackages/service/refunds/index'], refund_execution: ['退款执行或异常收款退款', '/subpackages/service/help/index'],
   withdrawals: ['提现审核与资金确认', '/subpackages/finance/withdrawals/index'], commissions: ['待结算佣金', '/subpackages/finance/commissions/index'],

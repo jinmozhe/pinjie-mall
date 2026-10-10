@@ -19,19 +19,19 @@ from app.db.models.distribution import (
 )
 from app.domains.distribution import DistributionService
 from app.domains.users import UserAccessService
-from app.services.miniapp_finance_schemas import (
-    MiniappCommissionRead,
-    MiniappMemberRead,
-    MiniappWalletLedgerRead,
-    MiniappWalletRead,
-    MiniappWithdrawalRead,
+from app.services.finance_query_schemas import (
+    ConsumerCommissionRead,
+    ConsumerMemberRead,
+    ConsumerWalletLedgerRead,
+    ConsumerWalletRead,
+    ConsumerWithdrawalRead,
     WalletType,
 )
 
 
-def member_read(profile: MemberProfile | None, level: MemberLevel | None) -> MiniappMemberRead:
+def member_read(profile: MemberProfile | None, level: MemberLevel | None) -> ConsumerMemberRead:
     if profile is None:
-        return MiniappMemberRead(
+        return ConsumerMemberRead(
             state="not_opened",
             level_name=None,
             level_changed_at=None,
@@ -41,7 +41,7 @@ def member_read(profile: MemberProfile | None, level: MemberLevel | None) -> Min
         )
     if profile.level_id is not None and (level is None or level.id != profile.level_id):
         raise AppException(status_code=409, code=ErrorCode.STATE_CONFLICT, message="会员等级事实不一致")
-    return MiniappMemberRead(
+    return ConsumerMemberRead(
         state="no_level"
         if profile.level_id is None
         else "active"
@@ -55,9 +55,9 @@ def member_read(profile: MemberProfile | None, level: MemberLevel | None) -> Min
     )
 
 
-def withdrawal_read(row: WithdrawalRequest) -> MiniappWithdrawalRead:
+def withdrawal_read(row: WithdrawalRequest) -> ConsumerWithdrawalRead:
     confirmed = row.status == "succeeded" and row.confirmed_at is not None
-    return MiniappWithdrawalRead.model_validate(
+    return ConsumerWithdrawalRead.model_validate(
         {
             "id": row.id,
             "amount": row.amount,
@@ -74,13 +74,13 @@ def withdrawal_read(row: WithdrawalRequest) -> MiniappWithdrawalRead:
     )
 
 
-class MiniappFinanceService:
+class ConsumerFinanceService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.access = UserAccessService(session)
         self.distribution = DistributionService(session)
 
-    async def member(self, user_id: UUID) -> MiniappMemberRead:
+    async def member(self, user_id: UUID) -> ConsumerMemberRead:
         await self.access.require_active_user(user_id)
         row = (
             await self.session.execute(
@@ -91,20 +91,20 @@ class MiniappFinanceService:
         ).one_or_none()
         return member_read(row[0], row[1]) if row is not None else member_read(None, None)
 
-    async def activate(self, user_id: UUID) -> MiniappMemberRead:
+    async def activate(self, user_id: UUID) -> ConsumerMemberRead:
         await self.distribution.activate_profile(user_id)
         return await self.member(user_id)
 
-    async def wallets(self, user_id: UUID) -> list[MiniappWalletRead]:
+    async def wallets(self, user_id: UUID) -> list[ConsumerWalletRead]:
         await self.access.require_active_user(user_id)
         wallets = await self.distribution.wallets_for_user(user_id)
         if {wallet.wallet_type for wallet in wallets} != {"commission", "consumption"}:
             raise AppException(status_code=409, code=ErrorCode.STATE_CONFLICT, message="钱包轨道事实不一致")
-        return [MiniappWalletRead.model_validate(wallet) for wallet in wallets]
+        return [ConsumerWalletRead.model_validate(wallet) for wallet in wallets]
 
     async def ledgers(
         self, user_id: UUID, wallet_type: WalletType, page: int, page_size: int
-    ) -> PageResult[MiniappWalletLedgerRead]:
+    ) -> PageResult[ConsumerWalletLedgerRead]:
         await self.access.require_active_user(user_id)
         wallet = await self.session.scalar(
             select(WalletAccount).where(WalletAccount.user_id == user_id, WalletAccount.wallet_type == wallet_type)
@@ -120,14 +120,14 @@ class MiniappFinanceService:
                 stmt.order_by(WalletLedger.id.desc()).offset((page - 1) * page_size).limit(page_size)
             )
         ).all()
-        return PageResult[MiniappWalletLedgerRead].create(
-            items=[MiniappWalletLedgerRead.model_validate(row) for row in rows],
+        return PageResult[ConsumerWalletLedgerRead].create(
+            items=[ConsumerWalletLedgerRead.model_validate(row) for row in rows],
             total=total,
             page=page,
             page_size=page_size,
         )
 
-    async def commissions(self, user_id: UUID, page: int, page_size: int) -> PageResult[MiniappCommissionRead]:
+    async def commissions(self, user_id: UUID, page: int, page_size: int) -> PageResult[ConsumerCommissionRead]:
         await self.access.require_active_user(user_id)
         stmt = select(CommissionRecord).where(CommissionRecord.beneficiary_user_id == user_id)
         total = int(await self.session.scalar(select(func.count()).select_from(stmt.subquery())) or 0)
@@ -136,14 +136,14 @@ class MiniappFinanceService:
                 stmt.order_by(CommissionRecord.id.desc()).offset((page - 1) * page_size).limit(page_size)
             )
         ).all()
-        return PageResult[MiniappCommissionRead].create(
-            items=[MiniappCommissionRead.model_validate(row) for row in rows],
+        return PageResult[ConsumerCommissionRead].create(
+            items=[ConsumerCommissionRead.model_validate(row) for row in rows],
             total=total,
             page=page,
             page_size=page_size,
         )
 
-    async def withdrawals(self, user_id: UUID, page: int, page_size: int) -> PageResult[MiniappWithdrawalRead]:
+    async def withdrawals(self, user_id: UUID, page: int, page_size: int) -> PageResult[ConsumerWithdrawalRead]:
         await self.access.require_active_user(user_id)
         stmt = select(WithdrawalRequest).where(WithdrawalRequest.user_id == user_id)
         total = int(await self.session.scalar(select(func.count()).select_from(stmt.subquery())) or 0)
@@ -152,6 +152,6 @@ class MiniappFinanceService:
                 stmt.order_by(WithdrawalRequest.id.desc()).offset((page - 1) * page_size).limit(page_size)
             )
         ).all()
-        return PageResult[MiniappWithdrawalRead].create(
+        return PageResult[ConsumerWithdrawalRead].create(
             items=[withdrawal_read(row) for row in rows], total=total, page=page, page_size=page_size
         )

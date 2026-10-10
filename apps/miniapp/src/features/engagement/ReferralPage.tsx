@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import Taro, { useDidShow, useRouter, useShareAppMessage } from '@tarojs/taro'
 import { Button as NativeButton, Input, View } from '@tarojs/components'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import type { ResponseModelMiniappReferralRead } from '@pinjie/api-client'
+import type { ResponseModelConsumerReferralRead } from '@pinjie/api-client'
 import { AuthGate } from '@/components/AuthGate'
 import { Button } from '@/components/Button'
 import { QueryState } from '@/components/QueryState'
@@ -24,12 +24,12 @@ function Content({ invite }: { invite: string | null }) {
   const [notice, setNotice] = useState('')
   const sending = useRef(false)
   const key = ['private', 'referral', session.epoch]
-  const query = useQuery({ queryKey: key, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelMiniappReferralRead>('/referral', { signal }) })
+  const query = useQuery({ queryKey: key, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerReferralRead>('/distribution/me/referrer', { signal }) })
   useDidShow(() => { void query.refetch() })
   const code = invitationCode(input)
   const readonly = !!recovery.error || !!pending
 
-  async function accept(result: ResponseModelMiniappReferralRead['data'], original: string) {
+  async function accept(result: ResponseModelConsumerReferralRead['data'], original: string) {
     await queryClient.cancelQueries({ queryKey: key })
     if (session.epoch !== sessionScope()) throw new Error('会话已改变，请重新读取推荐关系')
     queryClient.setQueryData(key, { ...result, matches_invitation: null })
@@ -59,7 +59,7 @@ function Content({ invite }: { invite: string | null }) {
       setPending(original)
       setNotice('正在确认推荐关系，请勿换码重复提交。')
       try {
-        const result = await privateRequest<ResponseModelMiniappReferralRead>('/referral', { method: 'POST', data: { invitation_code: original } })
+        const result = await privateRequest<ResponseModelConsumerReferralRead>('/distribution/me/referrer', { method: 'POST', data: { invitation_code: original } })
         await accept(result, original)
       } catch (error) {
         // Only a definitive rejection of a NEW write releases the intent. A prior unknown write may still finish.
@@ -77,7 +77,7 @@ function Content({ invite }: { invite: string | null }) {
     bind.reset()
     copy.reset()
     const original = pending ?? code
-    const result = await privateRequest<ResponseModelMiniappReferralRead>(`/referral${original ? `?invitation_code=${encodeURIComponent(original)}` : ''}`)
+    const result = await privateRequest<ResponseModelConsumerReferralRead>(`/distribution/me/referrer${original ? `?invitation_code=${encodeURIComponent(original)}` : ''}`)
     if (original) await accept(result, original)
     else {
       await queryClient.cancelQueries({ queryKey: key })
@@ -121,7 +121,7 @@ export function ReferralPage() {
   const session = useSession()
   const raw = useRouter().params.invite
   const invite = invitationCode(raw)
-  const query = useQuery({ queryKey: ['private', 'referral', session.epoch], enabled: !!session.user, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelMiniappReferralRead>('/referral', { signal }) })
+  const query = useQuery({ queryKey: ['private', 'referral', session.epoch], enabled: !!session.user, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerReferralRead>('/distribution/me/referrer', { signal }) })
   // Register on the page component even before login. Never forward someone else's landing code.
   useShareAppMessage(() => {
     const own = session.epoch === sessionScope() && session.user && !query.isError ? query.data?.invitation_code : null

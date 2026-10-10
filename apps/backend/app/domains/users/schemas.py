@@ -81,3 +81,19 @@ __all__ = [
     "UserAvatarUpdateIn",
     "UserUpdateIn",
 ]
+
+
+class ConsumerAvatarAssetRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    url: str
+
+
+class ConsumerAvatarUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    asset_id: uuid.UUID | None
+
+
+class ConsumerProfileUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    display_name: str = Field(min_length=1, max_length=100)

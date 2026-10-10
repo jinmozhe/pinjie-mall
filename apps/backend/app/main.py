@@ -14,7 +14,7 @@ from starlette.staticfiles import StaticFiles
 from app.api_router import api_router
 from app.core.config import Settings, get_settings
 from app.core.context import current_request_id
-from app.core.cookies import ADMIN_COOKIES, WEB_COOKIES, clear_auth_cookies
+from app.core.cookies import ADMIN_COOKIES, clear_auth_cookies
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.health import check_readiness
@@ -79,9 +79,7 @@ def _register_exception_handlers(app: FastAPI) -> None:
         )
         response.headers.update(exc.headers)
         clear_profile = getattr(request.state, "clear_auth_profile", None)
-        if clear_profile == "web":
-            clear_auth_cookies(response, names=WEB_COOKIES, settings=request.app.state.settings)
-        elif clear_profile == "admin":
+        if clear_profile == "admin":
             clear_auth_cookies(response, names=ADMIN_COOKIES, settings=request.app.state.settings)
         return response
 

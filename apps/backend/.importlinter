@@ -13,11 +13,12 @@ layers =
 # HTTP routers are transport adapters colocated with their domain slices.
 ignore_imports =
     app.domains.auth.router -> app.api.dependencies
-    app.domains.auth.router -> app.services.authentication
     app.domains.admin.auth_router -> app.api.dependencies
     app.domains.admin.auth_router -> app.services.authentication
     app.domains.admin.management_router -> app.api.dependencies
     app.domains.users.router -> app.api.dependencies
+    app.domains.users.router -> app.api.account_dependencies
+    app.domains.system.router -> app.api.dependencies
     app.domains.assets.router -> app.api.dependencies
     app.domains.settings.router -> app.api.dependencies
 

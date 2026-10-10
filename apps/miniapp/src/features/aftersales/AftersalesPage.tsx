@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Taro, { useDidShow, useRouter } from '@tarojs/taro'
 import { Text, Textarea, View } from '@tarojs/components'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import type { MiniappRefundRead, ResponseModelMiniappCheckoutIntentRead, ResponseModelMiniappRefundLookupRead, ResponseModelMiniappRefundRead, ResponseModelMiniappTradeOrderRead, ResponseModelPageResultMiniappRefundRead, ResponseModelRefundRequestRead } from '@pinjie/api-client'
+import type { ConsumerRefundRead, ResponseModelOperationIntentRead, ResponseModelConsumerRefundLookupRead, ResponseModelConsumerRefundRead, ResponseModelConsumerTradeOrderRead, ResponseModelPageResultConsumerRefundRead, ResponseModelRefundRequestRead } from '@pinjie/api-client'
 import { AuthGate } from '@/components/AuthGate'
 import { Button } from '@/components/Button'
 import { QueryState } from '@/components/QueryState'
@@ -12,8 +12,8 @@ import { clearIntent, loadIntent, saveIntent, validId } from './intent'
 import type { RefundIntent } from './intent'
 
 const reviewLabels: Record<string, string> = { requested: '待审核', approved: '审核通过', rejected: '审核拒绝', completed: '售后处理完成' }
-const executionLabels: Record<MiniappRefundRead['execution_status'], string> = { not_started: '尚无资金执行记录', created: '已记录退款执行意图', processing: '渠道处理中', succeeded: '渠道已确认退款', abnormal: '渠道异常，请联系支持', unknown: '渠道结果未知，请继续查询', closed: '执行已关闭，请联系支持' }
-function Progress({ refund }: { refund: MiniappRefundRead }) {
+const executionLabels: Record<ConsumerRefundRead['execution_status'], string> = { not_started: '尚无资金执行记录', created: '已记录退款执行意图', processing: '渠道处理中', succeeded: '渠道已确认退款', abnormal: '渠道异常，请联系支持', unknown: '渠道结果未知，请继续查询', closed: '执行已关闭，请联系支持' }
+function Progress({ refund }: { refund: ConsumerRefundRead }) {
   return <><View className='trade-row spread'><Text className='section-title'>{reviewLabels[refund.status] ?? '未知审核状态'}</Text><Text className='price-small'>¥{refund.amount}</Text></View><View className='muted'>{refund.review_mode === 'automatic' ? '未接单自动审核' : '已接单人工审核'}</View><View>{executionLabels[refund.execution_status]}</View><View className='note'>{refund.funds_status === 'confirmed' ? '服务端已取得渠道退款确认事实' : refund.funds_status === 'no_funds' ? '零金额售后已完成，无资金退回' : '资金退回尚未确认，审核通过不代表到账'}</View>{refund.funds_confirmed_at && <View className='muted'>渠道确认时间：{new Date(refund.funds_confirmed_at).toLocaleString()}</View>}</>
 }
 function Apply() {
@@ -26,7 +26,7 @@ function Apply() {
   const [acceptedId, setAcceptedId] = useState<string | null>(null)
   const stored = useQuery({ queryKey: ['private', 'refund-intent', session.epoch, orderId], enabled: valid, gcTime: 0, retry: false, queryFn: () => loadIntent(session.user!.id, orderId!) })
   const active = intent ?? stored.data ?? null
-  const order = useQuery({ queryKey: ['private', 'order-detail', session.epoch, orderId], enabled: valid, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelMiniappTradeOrderRead>(`/trade-orders/${orderId}`, { signal }) })
+  const order = useQuery({ queryKey: ['private', 'order-detail', session.epoch, orderId], enabled: valid, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerTradeOrderRead>(`/orders/${orderId}`, { signal }) })
   useDidShow(() => { if (valid) { void order.refetch(); void stored.refetch() } })
   const confirmed = async (id: string) => {
     if (session.epoch !== sessionScope()) return
@@ -43,7 +43,7 @@ function Apply() {
   }
   const lookup = useMutation({ mutationFn: async () => {
     if (!active) throw new Error('暂无待确认的退款意图')
-    const result = await privateRequest<ResponseModelMiniappRefundLookupRead>(`/refunds/by-request/${active.request.request_id}`)
+    const result = await privateRequest<ResponseModelConsumerRefundLookupRead>(`/refunds/by-request/${active.request.request_id}`)
     if (result.state === 'found' && result.refund) await confirmed(result.refund.id)
     else setNotice('服务端暂未找到该请求。可以继续查询，或明确使用原请求号与原原因重试。')
   } })
@@ -51,13 +51,13 @@ function Apply() {
     if (stored.isPending || stored.isError || !order.data) throw new Error('请先完成订单与本机意图读取')
     let current = active
     if (current) {
-      const result = await privateRequest<ResponseModelMiniappRefundLookupRead>(`/refunds/by-request/${current.request.request_id}`)
+      const result = await privateRequest<ResponseModelConsumerRefundLookupRead>(`/refunds/by-request/${current.request.request_id}`)
       if (result.state === 'found' && result.refund) { await confirmed(result.refund.id); return }
     } else if (!order.data.can_refund || !reason.trim()) throw new Error('请检查退款资格并填写原因')
     const answer = await Taro.showModal({ title: current ? '使用原请求重试' : '整单退款', content: '覆盖全部商品和原运费。未接单自动审核，已接单人工审核。审核通过与资金退回分别确认。' })
     if (!answer.confirm || session.epoch !== sessionScope()) return
     if (!current) {
-      const ticket = await privateRequest<ResponseModelMiniappCheckoutIntentRead>('/refunds/intent')
+      const ticket = await privateRequest<ResponseModelOperationIntentRead>('/refunds/intent')
       current = { version: 1, userId: session.user!.id, orderId: orderId!, request: { request_id: ticket.request_id, reason: reason.trim() } }
       saveIntent(current)
       setIntent(current)
@@ -83,7 +83,7 @@ function List() {
   const orderId = useRouter().params.orderId
   const valid = !orderId || validId(orderId)
   const [page, setPage] = useState(1)
-  const query = useQuery({ queryKey: ['private', 'refunds', session.epoch, orderId, page], enabled: valid, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelPageResultMiniappRefundRead>(`/refunds?page=${page}&page_size=10${orderId ? `&order_id=${orderId}` : ''}`, { signal }) })
+  const query = useQuery({ queryKey: ['private', 'refunds', session.epoch, orderId, page], enabled: valid, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelPageResultConsumerRefundRead>(`/refunds?page=${page}&page_size=10${orderId ? `&order_id=${orderId}` : ''}`, { signal }) })
   useDidShow(() => { if (valid) void query.refetch() })
   if (!valid) return <QueryState title='订单链接无效' />
   return <View className='page'><View className='title'>售后记录</View>{query.isPending && <QueryState title='正在读取售后记录' />}{query.isError && <QueryState title='售后读取失败' error={query.error} retry={() => { void query.refetch() }} />}{query.data && !query.isError && <>{!query.data.items.length && <QueryState title='暂无售后记录' />}{query.data.items.map((refund) => <View className='surface' key={refund.id}><Progress refund={refund} /><View className='muted wrap'>{refund.reason}</View><Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: `/subpackages/service/refund-detail/index?id=${refund.id}` }) }}>查看详情</Button></View>)}{query.data.total_pages > 1 && <View className='trade-row spread'><Button fill='outline' disabled={page === 1 || query.isFetching} onClick={() => setPage(page - 1)}>上一页</Button><Text>{page} / {query.data.total_pages}</Text><Button fill='outline' disabled={page >= query.data.total_pages || query.isFetching} onClick={() => setPage(page + 1)}>下一页</Button></View>}</>}<Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/service/help/index' }) }}>获取帮助</Button></View>
@@ -92,8 +92,8 @@ function Detail() {
   const session = useSession()
   const id = useRouter().params.id
   const valid = validId(id)
-  const query = useQuery({ queryKey: ['private', 'refund-detail', session.epoch, id], enabled: valid, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelMiniappRefundRead>(`/refunds/${id}`, { signal }) })
-  const order = useQuery({ queryKey: ['private', 'order-detail', session.epoch, query.data?.order_id], enabled: !!query.data, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelMiniappTradeOrderRead>(`/trade-orders/${query.data?.order_id}`, { signal }) })
+  const query = useQuery({ queryKey: ['private', 'refund-detail', session.epoch, id], enabled: valid, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerRefundRead>(`/refunds/${id}`, { signal }) })
+  const order = useQuery({ queryKey: ['private', 'order-detail', session.epoch, query.data?.order_id], enabled: !!query.data, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerTradeOrderRead>(`/orders/${query.data?.order_id}`, { signal }) })
   useDidShow(() => { if (valid) void query.refetch() })
   if (!valid) return <QueryState title='售后链接无效' />
   if (query.isPending) return <QueryState title='正在读取售后详情' />

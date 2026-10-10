@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { MiniappSessionRead } from '@pinjie/api-client'
+import type { ConsumerSessionRead } from '@pinjie/api-client'
 import type * as ApiModule from './api'
 import type { Envelope } from './api'
 
@@ -9,7 +9,7 @@ vi.mock('@tarojs/taro', () => ({ default: { login: mocks.login, setStorageSync: 
 vi.mock('./query', () => ({ queryClient: { cancelQueries: mocks.cancel, removeQueries: mocks.remove } }))
 vi.mock('./api', async () => { const actual = await vi.importActual<typeof ApiModule>('./api'); return { ...actual, request: mocks.request } })
 
-function credentials(name = 'a'): MiniappSessionRead {
+function credentials(name = 'a'): ConsumerSessionRead {
   return { user: { id: name, display_name: null, avatar: null }, session_id: name, access_token: `access-${name}`, refresh_token: `refresh-${name}`, access_expires_at: new Date(Date.now() + 600_000).toISOString(), idle_expires_at: '2030-01-01T00:00:00Z', absolute_expires_at: '2030-01-01T00:00:00Z' }
 }
 describe('private session isolation', () => {
@@ -29,7 +29,7 @@ describe('private session isolation', () => {
     const session = await import('./session'); await session.login()
     let resolve!: (value: unknown) => void
     mocks.request.mockImplementationOnce(() => new Promise((done) => { resolve = done }))
-    const pending = session.privateRequest<Envelope>('/me')
+    const pending = session.privateRequest<Envelope>('/users/me')
     mocks.request.mockResolvedValueOnce(null)
     await session.logout(); resolve({ id: 'old' })
     await expect(pending).rejects.toThrow('会话已改变')
@@ -41,8 +41,8 @@ describe('private session isolation', () => {
     const session = await import('./session'); await session.login()
     mocks.request.mockResolvedValueOnce(credentials()).mockResolvedValue({ id: 'accepted' })
     await Promise.all([session.privateRequest<Envelope>('/orders', { method: 'POST' }), session.privateRequest<Envelope>('/cart-items', { method: 'POST' })])
-    expect(mocks.request.mock.calls.filter(([path]) => path === '/miniapp/auth/refresh')).toHaveLength(1)
-    expect(mocks.request.mock.calls.filter(([path]) => path === '/miniapp/orders')).toHaveLength(1)
+    expect(mocks.request.mock.calls.filter(([path]) => path === '/auth/refresh')).toHaveLength(1)
+    expect(mocks.request.mock.calls.filter(([path]) => path === '/orders')).toHaveLength(1)
   })
   it('cancels an old upload and rejects its late response after logout', async () => {
     mocks.request.mockResolvedValueOnce({ login_enabled: true }).mockResolvedValueOnce(credentials())

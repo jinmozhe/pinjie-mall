@@ -15,19 +15,19 @@ from app.core.security import (
     new_opaque_token,
     token_digest,
 )
-from app.db.models import Admin, AdminRefreshToken, AdminSession, User, UserRefreshToken, UserSession
+from app.db.models import Admin, AdminRefreshToken, AdminSession, User
 from app.db.repositories import AdminRepository, AssetRepository, SecurityRepository, SessionRepository, UserRepository
 from app.db.transaction import transaction_scope
 from app.domains.admin.schemas import AdminConfirmIn, AdminConfirmOut, AdminProfileUpdateIn
 from app.domains.assets.schemas import UploaderType, UploadScene
-from app.domains.users.schemas import AccountDeleteIn, PasswordChangeIn, UserAvatarUpdateIn, UserUpdateIn
+from app.domains.users.schemas import PasswordChangeIn, UserAvatarUpdateIn, UserUpdateIn
 from app.services.assets import resolve_admin_avatar
 from app.services.authentication import SessionArtifacts
 from app.services.security_events import login_event
 
 
 class UserProfileService:
-    """Credential-independent profile writes shared by browser and miniapp clients."""
+    """Credential-independent profile writes for the consumer account."""
 
     def __init__(self, *, session: AsyncSession, settings: Settings) -> None:
         self.session = session
@@ -74,152 +74,6 @@ class UserProfileService:
                 raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="无权使用该头像资产")
             user.avatar = asset.url
         return user
-
-
-class UserAccountService(UserProfileService):
-    def __init__(
-        self,
-        *,
-        session: AsyncSession,
-        settings: Settings,
-        password_manager: PasswordManager,
-        metadata: RequestMetadata,
-    ) -> None:
-        super().__init__(session=session, settings=settings)
-        self.password_manager = password_manager
-        self.metadata = metadata
-        self.sessions = SessionRepository(session)
-        web_secret, _, web_hmac, _ = settings.authentication_secrets()
-        self.jwt_secret = web_secret
-        self.hmac_key = web_hmac
-
-    async def change_password(
-        self,
-        *,
-        user: User,
-        login_session: UserSession,
-        payload: PasswordChangeIn,
-    ) -> SessionArtifacts:
-        if user.password_hash is None or not await self.password_manager.verify(
-            payload.current_password, user.password_hash
-        ):
-            raise AppException(
-                status_code=401,
-                code=ErrorCode.AUTH_INVALID_CREDENTIALS,
-                message="当前密码错误",
-            )
-        new_hash = await self.password_manager.hash(payload.new_password)
-        new_refresh = new_opaque_token()
-        new_csrf = new_opaque_token()
-        now = datetime.now(UTC)
-        async with transaction_scope(self.session):
-            locked = await self.users.get(user.id, for_update=True)
-            current_session = await self.sessions.get_web(login_session.id, for_update=True)
-            if locked is None or current_session is None or current_session.revoked_at is not None:
-                raise AppException(
-                    status_code=401,
-                    code=ErrorCode.AUTH_SESSION_REVOKED,
-                    message="身份认证会话已失效",
-                )
-            if locked.password_hash is None or not await self.password_manager.verify(
-                payload.current_password, locked.password_hash
-            ):
-                raise AppException(
-                    status_code=401,
-                    code=ErrorCode.AUTH_INVALID_CREDENTIALS,
-                    message="当前密码错误",
-                )
-            locked.password_hash = new_hash
-            locked.credential_version += 1
-            await self.sessions.revoke_web_for_user(locked.id, reason="password_changed", except_id=current_session.id)
-            await self.sessions.revoke_web_refresh_tokens(current_session.id, reason="password_changed", now=now)
-            idle = min(now + timedelta(days=self.settings.refresh_idle_ttl_days), current_session.absolute_expires_at)
-            current_session.csrf_digest = token_digest(new_csrf, self.hmac_key)
-            current_session.last_seen_at = now
-            current_session.idle_expires_at = idle
-            self.session.add(
-                UserRefreshToken(
-                    id=new_uuid7(),
-                    session_id=current_session.id,
-                    token_digest=token_digest(new_refresh, self.hmac_key),
-                    issued_at=now,
-                    expires_at=idle,
-                    consumed_at=None,
-                    revoked_at=None,
-                    revoke_reason=None,
-                    replaced_by_id=None,
-                )
-            )
-            SecurityRepository(self.session).add_login_event(
-                login_event(
-                    principal_type="user",
-                    principal_id=locked.id,
-                    identifier_digest=None,
-                    event_type="password_change",
-                    succeeded=True,
-                    reason_code="PASSWORD_CHANGED",
-                    metadata=self.metadata,
-                    now=now,
-                )
-            )
-            credential_version = locked.credential_version
-            absolute = current_session.absolute_expires_at
-        access, access_expires = create_access_token(
-            subject_id=user.id,
-            session_id=login_session.id,
-            credential_version=credential_version,
-            audience="pinjie-web",
-            issuer=self.settings.jwt_issuer,
-            secret=self.jwt_secret,
-            ttl_seconds=self.settings.web_access_ttl_seconds,
-        )
-        return SessionArtifacts(
-            session_id=login_session.id,
-            access_token=access,
-            refresh_token=new_refresh,
-            csrf_token=new_csrf,
-            access_expires_at=access_expires,
-            idle_expires_at=idle,
-            absolute_expires_at=absolute,
-        )
-
-    async def revoke_session(self, *, user_id: uuid.UUID, session_id: uuid.UUID) -> bool:
-        async with transaction_scope(self.session):
-            target = await self.sessions.get_web_for_user(session_id, user_id)
-            if target is None:
-                raise AppException(status_code=404, code=ErrorCode.NOT_FOUND, message="会话不存在")
-            return await self.sessions.revoke_web_session(session_id, reason="user_revoked")
-
-    async def list_sessions(self, user_id: uuid.UUID, *, page: int, page_size: int) -> tuple[list[UserSession], int]:
-        return await self.sessions.list_web(user_id, page=page, page_size=page_size)
-
-    async def revoke_other_sessions(self, *, user_id: uuid.UUID, current_session_id: uuid.UUID) -> None:
-        async with transaction_scope(self.session):
-            await self.sessions.revoke_web_for_user(user_id, reason="user_revoked_others", except_id=current_session_id)
-
-    async def delete_account(self, *, user: User, payload: AccountDeleteIn) -> None:
-        if user.password_hash is None or not await self.password_manager.verify(
-            payload.current_password, user.password_hash
-        ):
-            raise AppException(
-                status_code=401,
-                code=ErrorCode.AUTH_INVALID_CREDENTIALS,
-                message="当前密码错误",
-            )
-        replacement_hash = await self.password_manager.hash(new_opaque_token())
-        now = datetime.now(UTC)
-        async with transaction_scope(self.session):
-            locked = await self.users.get(user.id, for_update=True)
-            if locked is None or locked.deleted_at is not None:
-                raise AppException(status_code=404, code=ErrorCode.USER_NOT_FOUND, message="用户不存在")
-            locked.password_hash = replacement_hash
-            locked.is_active = False
-            locked.credential_version += 1
-            locked.deleted_at = now
-            locked.deleted_by_id = locked.id
-            locked.deleted_by_type = "user"
-            locked.deletion_reason = None
-            await self.sessions.revoke_web_for_user(locked.id, reason="account_deleted")
 
 
 class AdminAccountService:
@@ -376,4 +230,4 @@ class AdminAccountService:
         )
 
 
-__all__ = ["AdminAccountService", "UserAccountService", "UserProfileService"]
+__all__ = ["AdminAccountService", "UserProfileService"]

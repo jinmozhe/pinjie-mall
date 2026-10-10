@@ -1,16 +1,16 @@
-import type { ResponseModelMiniappClosurePrecheckRead, ResponseModelMiniappLoginSessionsRead, ResponseModelMiniappSessionRevocationRead, MiniappSessionTargets } from '@pinjie/api-client'
+import type { ResponseModelConsumerClosurePrecheckRead, ResponseModelConsumerLoginSessionsRead, ResponseModelConsumerSessionRevocationRead, ConsumerSessionTargets } from '@pinjie/api-client'
 import { privateRequest } from '@/lib/session'
 import type { RequestSignal } from '@/lib/cancellation'
 
 export function readSessions(page: number, signal?: RequestSignal) {
-  return privateRequest<ResponseModelMiniappLoginSessionsRead>(`/sessions?page=${page}&page_size=10`, { signal })
+  return privateRequest<ResponseModelConsumerLoginSessionsRead>(`/users/me/sessions?page=${page}&page_size=10`, { signal })
 }
-export function revokeSessions(target: MiniappSessionTargets) {
-  return privateRequest<ResponseModelMiniappSessionRevocationRead>('/sessions/revoke', { method: 'POST', data: target })
+export function revokeSessions(target: ConsumerSessionTargets) {
+  return privateRequest<ResponseModelConsumerSessionRevocationRead>('/users/me/sessions/revoke', { method: 'POST', data: target })
 }
-export function readRevocation(target: MiniappSessionTargets) {
-  return privateRequest<ResponseModelMiniappSessionRevocationRead>('/sessions/revocation-status', { method: 'POST', data: target })
+export function readRevocation(target: ConsumerSessionTargets) {
+  return privateRequest<ResponseModelConsumerSessionRevocationRead>('/users/me/sessions/revocation-status', { method: 'POST', data: target })
 }
 export function readClosurePrecheck(signal?: RequestSignal) {
-  return privateRequest<ResponseModelMiniappClosurePrecheckRead>('/account/closure-precheck', { signal })
+  return privateRequest<ResponseModelConsumerClosurePrecheckRead>('/users/me/closure-precheck', { signal })
 }

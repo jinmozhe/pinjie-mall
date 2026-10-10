@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import Taro from '@tarojs/taro'
-import type { MiniappSessionRead, MiniappUserRead, ResponseModelMiniappSessionRead, ResponseModelMiniappCapabilitiesRead, ResponseModelNoneType } from '@pinjie/api-client'
+import type { ConsumerSessionRead, ConsumerUserRead, ResponseModelConsumerSessionRead, ResponseModelConsumerCapabilitiesRead, ResponseModelNoneType } from '@pinjie/api-client'
 import { ApiError, request } from './api'
 import type { Envelope } from './api'
 import { queryClient } from './query'
@@ -8,9 +8,9 @@ import { requestController } from './cancellation'
 import type { RequestSignal } from './cancellation'
 import { uploadAvatar } from './upload'
 
-type Snapshot = { user: MiniappUserRead | null; epoch: number; busy: boolean; error: string }
+type Snapshot = { user: ConsumerUserRead | null; epoch: number; busy: boolean; error: string }
 let snapshot: Snapshot = { user: null, epoch: 0, busy: false, error: '' }
-let credentials: MiniappSessionRead | null = null
+let credentials: ConsumerSessionRead | null = null
 let refreshing: Promise<void> | null = null
 const listeners = new Set<() => void>()
 const pending = new Set<ReturnType<typeof requestController>>()
@@ -34,11 +34,11 @@ export async function login() {
   const epoch = snapshot.epoch
   emit({ busy: true })
   try {
-    const capability = await request<ResponseModelMiniappCapabilitiesRead>('/miniapp/auth/capabilities')
+    const capability = await request<ResponseModelConsumerCapabilitiesRead>('/auth/capabilities')
     if (!capability.login_enabled) throw new Error('微信登录尚未开放，可继续浏览商品')
     const wxResult = await Taro.login({ timeout: 8000 })
     if (!wxResult.code) throw new Error('未取得微信登录凭证，请重新发起')
-    const result = await request<ResponseModelMiniappSessionRead>('/miniapp/auth/login', { method: 'POST', data: { code: wxResult.code } })
+    const result = await request<ResponseModelConsumerSessionRead>('/auth/login', { method: 'POST', data: { code: wxResult.code } })
     if (epoch !== snapshot.epoch) return
     Taro.setStorageSync('pinjie.signed-out', false)
     Taro.setStorageSync('pinjie.privacy-consent', true)
@@ -60,7 +60,7 @@ async function refresh() {
   if (!current) throw new ApiError('请先登录', 'http', 401)
   const flight = (async () => {
     try {
-      const result = await request<ResponseModelMiniappSessionRead>('/miniapp/auth/refresh', { method: 'POST', data: { refresh_token: current.refresh_token } })
+      const result = await request<ResponseModelConsumerSessionRead>('/auth/refresh', { method: 'POST', data: { refresh_token: current.refresh_token } })
       if (epoch !== snapshot.epoch || result.user.id !== current.user.id || result.session_id !== current.session_id) throw new ApiError('会话已改变，请重新操作', 'protocol')
       credentials = result
       emit({ user: result.user })
@@ -92,12 +92,12 @@ async function privateCall<T>(operation: (accessToken: string, signal: RequestSi
   } finally { pending.delete(controller); signal?.removeEventListener('abort', abort) }
 }
 export function privateRequest<R extends Envelope>(path: string, options: { signal?: RequestSignal; method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'; data?: object } = {}): Promise<R['data']> {
-  return privateCall((accessToken, signal) => request<R>(`/miniapp${path}`, { ...options, signal, accessToken }), options.signal)
+  return privateCall((accessToken, signal) => request<R>(path, { ...options, signal, accessToken }), options.signal)
 }
 export function privateAvatarUpload(filePath: string, signal?: RequestSignal) {
   return privateCall((accessToken, uploadSignal) => uploadAvatar(filePath, accessToken, uploadSignal), signal)
 }
-export function updateSessionUser(user: MiniappUserRead, epoch: number) {
+export function updateSessionUser(user: ConsumerUserRead, epoch: number) {
   if (!credentials || epoch !== snapshot.epoch || user.id !== credentials.user.id) throw new ApiError('会话已改变，请重新读取资料', 'protocol')
   credentials = { ...credentials, user }
   emit({ user })

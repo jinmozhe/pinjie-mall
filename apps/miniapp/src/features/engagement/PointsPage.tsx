@@ -2,19 +2,19 @@ import { useState } from 'react'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { useQuery } from '@tanstack/react-query'
-import type { MiniappPointsLedgerRead, ResponseModelMiniappPointsRead, ResponseModelPageResultMiniappPointsLedgerRead } from '@pinjie/api-client'
+import type { ConsumerPointsLedgerRead, ResponseModelConsumerPointsRead, ResponseModelPageResultConsumerPointsLedgerRead } from '@pinjie/api-client'
 import { AuthGate } from '@/components/AuthGate'
 import { Button } from '@/components/Button'
 import { QueryState } from '@/components/QueryState'
 import { privateRequest, useSession } from '@/lib/session'
 
-const entryLabels: Record<MiniappPointsLedgerRead['entry_type'], string> = { grant: '积分授予', spend: '积分支出', freeze: '积分冻结', release: '冻结释放', reverse: '积分冲销', expire: '积分到期' }
-const sourceLabels: Record<MiniappPointsLedgerRead['source_type'], string> = { invite: '邀请相关记录', order: '订单相关记录', refund: '退款相关记录', redemption: '兑换相关记录', manual: '人工调整记录' }
+const entryLabels: Record<ConsumerPointsLedgerRead['entry_type'], string> = { grant: '积分授予', spend: '积分支出', freeze: '积分冻结', release: '冻结释放', reverse: '积分冲销', expire: '积分到期' }
+const sourceLabels: Record<ConsumerPointsLedgerRead['source_type'], string> = { invite: '邀请相关记录', order: '订单相关记录', refund: '退款相关记录', redemption: '兑换相关记录', manual: '人工调整记录' }
 function Content() {
   const session = useSession()
   const [page, setPage] = useState(1)
-  const account = useQuery({ queryKey: ['private', 'points', session.epoch], gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelMiniappPointsRead>('/points', { signal }) })
-  const ledger = useQuery({ queryKey: ['private', 'points-ledgers', session.epoch, page], enabled: account.data?.state === 'opened' && !account.isError, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelPageResultMiniappPointsLedgerRead>(`/points/ledgers?page=${page}&page_size=10`, { signal }) })
+  const account = useQuery({ queryKey: ['private', 'points', session.epoch], gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerPointsRead>('/users/me/points', { signal }) })
+  const ledger = useQuery({ queryKey: ['private', 'points-ledgers', session.epoch, page], enabled: account.data?.state === 'opened' && !account.isError, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelPageResultConsumerPointsLedgerRead>(`/users/me/points/ledgers?page=${page}&page_size=10`, { signal }) })
   useDidShow(() => { void account.refetch(); if (account.data?.state === 'opened') void ledger.refetch() })
   return <View className='page account-page'><View className='title'>我的积分</View>
     <View className='note'>积分独立于人民币钱包。当前提供余额和流水查询，兑换、抵扣与自动到期尚未开放；推荐绑定或分享不承诺积分奖励。</View>

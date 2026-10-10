@@ -27,15 +27,15 @@ API = {
     'order': ['GET /api/v1/orders/{order_id}', 'POST /api/v1/orders/{order_id}/cancel'],
     'payment': ['POST /api/v1/orders/{order_id}/payment-attempts'],
     'fulfillment': ['GET /api/v1/orders/{order_id}/fulfillment', 'POST /api/v1/orders/{order_id}/fulfillment/confirm-receipt'],
-    'refund': ['GET /api/v1/orders/{order_id}/refunds', 'POST /api/v1/orders/{order_id}/refunds'],
+    'refund': ['GET /api/v1/refunds', 'POST /api/v1/orders/{order_id}/refunds'],
     'user': ['GET /api/v1/users/me', 'PATCH /api/v1/users/me', 'PUT /api/v1/users/me/avatar'],
     'auth': ['POST /api/v1/auth/logout', 'POST /api/v1/auth/refresh'],
-    'security': ['GET /api/v1/users/me/sessions', 'DELETE /api/v1/users/me/sessions/{session_id}', 'POST /api/v1/users/me/sessions/revoke-others', 'POST /api/v1/users/me/password', 'DELETE /api/v1/users/me'],
+    'security': ['GET /api/v1/users/me/sessions', 'POST /api/v1/users/me/sessions/revoke', 'POST /api/v1/users/me/sessions/revocation-status', 'GET /api/v1/users/me/closure-precheck'],
     'member': ['GET /api/v1/distribution/me/profile', 'POST /api/v1/distribution/me/profile'],
     'referrer': ['POST /api/v1/distribution/me/referrer', 'GET /api/v1/distribution/me/profile'],
     'commission': ['GET /api/v1/distribution/me/commissions'],
     'wallet': ['GET /api/v1/distribution/me/wallets'],
-    'withdrawal': ['GET /api/v1/distribution/me/withdrawals', 'POST /api/v1/distribution/me/withdrawals'],
+    'withdrawal': ['GET /api/v1/distribution/me/withdrawals'],
     'system': ['GET /api/v1/system/site-profile', 'GET /api/v1/system/status'],
 }
 GROUPS = {
@@ -140,7 +140,7 @@ def configure():
     add(g, 'avatar-actions', '头像操作弹层', 'sheet', 'user', base='profile', choices=['拍摄照片', '从相册选择', '移除当前头像'], note='先上传本人头像资产再更新 avatar；权限按用户动作申请。')
     add(g, 'avatar-submitting', '头像上传保存中', 'result', 'user', title_line='正在保存头像', message='本次修改仍在处理中。\n保存完成前请勿重复上传。', action='保存处理中…', mood='neutral', busy=True)
     add(g, 'settings', '设置', 'menu', 'user', entries=['个人资料', '账号安全', '隐私说明', '服务协议', '帮助与售后', '关于商城'], action='退出登录')
-    add(g, 'security', '账号安全', 'menu', 'security', 'gap', entries=['登录设备', '退出其他设备', '修改密码（已有密码账户）', '注销账户'], note='密码与注销当前需要 current_password；无密码微信账户必须专项适配。')
+    add(g, 'security', '账号安全', 'menu', 'security', 'gap', entries=['登录设备', '退出其他设备', '修改密码（已有密码账户）', '注销账户'], note='统一消费者会话与只读注销前置已接入；旧密码入口退役，实际注销保持关闭。')
     add(g, 'sessions', '登录设备', 'sessions', 'security', 'gap', '当前会话模型只允许 browser_cookie，微信设备会话适配未实现。')
     add(g, 'session-revoke', '退出其他设备确认', 'dialog', 'security', base='sessions', heading='退出其他登录设备？', body='其他设备将需要重新登录。\n当前设备会话将保留。', confirm='确认退出')
     add(g, 'password', '已有密码账户修改密码', 'form', 'security', 'gap', '仅具有密码凭据的既有账户适用；不要求微信无密码账户填不存在的密码。', fields=[('当前密码', '请输入当前密码'), ('新密码', '6 至 64 个字符'), ('确认新密码', '再次输入新密码')], action='确认修改', intro='仅已有密码凭据的账户显示此入口。')

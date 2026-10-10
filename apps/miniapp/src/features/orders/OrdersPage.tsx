@@ -2,16 +2,16 @@ import { useState } from 'react'
 import Taro, { useDidShow, usePullDownRefresh, useRouter } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import type { MiniappTradeOrderRead, ResponseModelOrderRead, ResponseModelMiniappTradeOrderRead, ResponseModelPageResultMiniappTradeOrderRead, ResponseModelFulfillmentRead } from '@pinjie/api-client'
+import type { ConsumerTradeOrderRead, ResponseModelOrderRead, ResponseModelConsumerTradeOrderRead, ResponseModelPageResultConsumerTradeOrderRead, ResponseModelFulfillmentRead } from '@pinjie/api-client'
 import { AuthGate } from '@/components/AuthGate'
 import { Button } from '@/components/Button'
 import { QueryState } from '@/components/QueryState'
 import { privateRequest, sessionScope, useSession } from '@/lib/session'
 import { queryClient } from '@/lib/query'
 
-const statusLabel: Record<MiniappTradeOrderRead['display_status'], string> = { pending_payment: '待付款', cancelled: '已取消', awaiting_fulfillment: '履约待确认', awaiting_shipment: '待发货', awaiting_delivery: '待交付', shipped: '待收货', delivered: '已完成', refund_completed: '售后已完成' }
+const statusLabel: Record<ConsumerTradeOrderRead['display_status'], string> = { pending_payment: '待付款', cancelled: '已取消', awaiting_fulfillment: '履约待确认', awaiting_shipment: '待发货', awaiting_delivery: '待交付', shipped: '待收货', delivered: '已完成', refund_completed: '售后已完成' }
 const filters = [{ value: '', label: '全部' }, { value: 'pending_payment', label: '待付款' }, { value: 'awaiting_shipment', label: '待发货' }, { value: 'awaiting_delivery', label: '待交付' }, { value: 'shipped', label: '待收货' }, { value: 'delivered', label: '已完成' }, { value: 'paid', label: '已付款' }, { value: 'cancelled', label: '已取消' }]
-function Summary({ order }: { order: MiniappTradeOrderRead }) {
+function Summary({ order }: { order: ConsumerTradeOrderRead }) {
   return <><View className='trade-row spread'><Text className='label'>{statusLabel[order.display_status]}</Text><Text className='muted'>{order.created_at.slice(0, 10)}</Text></View>{order.items.map((item) => <View className='order-line' key={item.id}><View>{item.product_name}</View><View className='muted'>{Object.values(item.specifications).join(' / ') || '默认规格'} · {item.quantity} 件</View><View>¥{item.unit_price} / 件</View></View>)}<View className='trade-row spread'><Text>订单金额</Text><Text className='price-small'>¥{order.total_amount}</Text></View></>
 }
 function List() {
@@ -19,7 +19,7 @@ function List() {
   const route = useRouter()
   const [status, setStatus] = useState(filters.some((filter) => filter.value === route.params.status) ? route.params.status ?? '' : '')
   const [page, setPage] = useState(1)
-  const query = useQuery({ queryKey: ['private', 'orders', session.epoch, status, page], gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelPageResultMiniappTradeOrderRead>(`/trade-orders?page=${page}&page_size=10${status ? `&status=${status}` : ''}`, { signal }) })
+  const query = useQuery({ queryKey: ['private', 'orders', session.epoch, status, page], gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelPageResultConsumerTradeOrderRead>(`/orders?page=${page}&page_size=10${status ? `&status=${status}` : ''}`, { signal }) })
   useDidShow(() => { void query.refetch() })
   usePullDownRefresh(() => { void query.refetch().finally(() => Taro.stopPullDownRefresh()) })
   return <View className='page'><View className='title'>我的订单</View><View className='category-strip'>{filters.map((filter) => <Button key={filter.value} type={filter.value === status ? 'primary' : 'default'} fill='outline' onClick={() => { setStatus(filter.value); setPage(1) }}>{filter.label}</Button>)}</View>
@@ -31,7 +31,7 @@ function Detail() {
   const session = useSession()
   const id = useRouter().params.id
   const valid = !!id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
-  const query = useQuery({ queryKey: ['private', 'order-detail', session.epoch, id], enabled: valid, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelMiniappTradeOrderRead>(`/trade-orders/${id}`, { signal }) })
+  const query = useQuery({ queryKey: ['private', 'order-detail', session.epoch, id], enabled: valid, gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerTradeOrderRead>(`/orders/${id}`, { signal }) })
   useDidShow(() => { if (valid) void query.refetch() })
   const cancel = useMutation({ mutationFn: async () => {
     const answer = await Taro.showModal({ title: '取消订单', content: '确认取消这笔待付款订单并释放占用库存？' })
@@ -43,7 +43,7 @@ function Detail() {
     if (!query.data?.can_confirm_receipt || !fulfillment) throw new Error('当前订单不能确认收货，请刷新')
     const answer = await Taro.showModal({ title: '确认收货', content: '请确认已收到全部商品。提交后以服务端履约事实为准。' })
     if (!answer.confirm || session.epoch !== sessionScope()) return
-    await privateRequest<ResponseModelFulfillmentRead>(`/orders/${id}/receipt`, { method: 'POST', data: { revision: fulfillment.revision } })
+    await privateRequest<ResponseModelFulfillmentRead>(`/orders/${id}/fulfillment/confirm-receipt`, { method: 'POST', data: { revision: fulfillment.revision } })
   }, onSettled: async () => { await queryClient.invalidateQueries({ queryKey: ['private', 'orders'] }); await query.refetch() } })
   if (!valid) return <QueryState title='订单链接无效' />
   if (query.isPending) return <QueryState title='正在读取订单' />

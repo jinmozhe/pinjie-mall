@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.api.dependencies import get_web_auth_service
+from app.api.dependencies import get_consumer_auth_service
 from app.core.health import ReadinessResult
 
 
@@ -60,15 +60,14 @@ async def test_unknown_route_has_stable_error(client) -> None:
 async def test_validation_error_uses_chinese_top_level_message(client) -> None:
     from app.main import app
 
-    app.dependency_overrides[get_web_auth_service] = lambda: object()
+    app.dependency_overrides[get_consumer_auth_service] = lambda: object()
     try:
         response = await client.post(
             "/api/v1/auth/login",
-            headers={"Origin": "http://localhost:3000"},
-            json={"username": "browser-user", "password": "a" * 65},
+            json={"code": ""},
         )
     finally:
-        app.dependency_overrides.pop(get_web_auth_service, None)
+        app.dependency_overrides.pop(get_consumer_auth_service, None)
     assert response.status_code == 422
     assert response.json()["code"] == "VALIDATION_ERROR"
     assert response.json()["message"] == "请求参数校验失败"
@@ -124,8 +123,8 @@ def test_openapi_descriptions_are_chinese_and_identifiers_stay_stable() -> None:
     }
     login_operation = schema["paths"]["/api/v1/auth/login"]["post"]
     assert login_operation["operationId"] == "login_api_v1_auth_login_post"
-    assert login_operation["requestBody"]["content"]["application/json"]["schema"]["$ref"].endswith("/UserLoginIn")
-    assert "password" in schema["components"]["schemas"]["UserLoginIn"]["properties"]
+    assert login_operation["requestBody"]["content"]["application/json"]["schema"]["$ref"].endswith("/WechatLoginIn")
+    assert "code" in schema["components"]["schemas"]["WechatLoginIn"]["properties"]
 
 
 def test_admin_confirmation_contract_is_deprecated_during_compatibility_window() -> None:

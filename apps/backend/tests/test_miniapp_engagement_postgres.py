@@ -11,7 +11,7 @@ from app.core.identifiers import new_uuid7
 from app.db.models import User
 from app.db.models.distribution import PointsAccount, PointsLedger
 from app.domains.distribution import DistributionService, ReferralBindIn
-from app.services.miniapp_engagement import MiniappEngagementService
+from app.services.engagement import ConsumerEngagementService
 
 
 @pytest.mark.integration
@@ -34,7 +34,7 @@ async def test_referral_idempotence_and_personal_points_pagination() -> None:
                     users = [User(id=uid, username=f"engagement-{uid}") for uid in [owner, inviter, other]]
                     session.add_all(users)
                     await session.commit()
-                    query = MiniappEngagementService(session)
+                    query = ConsumerEngagementService(session)
                     distribution = DistributionService(session)
                     assert (await query.referral(owner)).state == "not_opened"
                     assert (await query.points(owner)).account is None

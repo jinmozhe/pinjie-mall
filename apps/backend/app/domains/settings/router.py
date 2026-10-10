@@ -11,7 +11,6 @@ from app.api.dependencies import (
 from app.core.context import current_request_id
 from app.core.response import ResponseModel, success_response
 from app.domains.admin.permissions import PermissionCode
-from app.domains.system.schemas import SystemCapabilitiesRead
 
 from .schemas import (
     AdminRegistrationSettingRead,
@@ -39,23 +38,6 @@ async def get_site_profile(
 ) -> ResponseModel[SiteProfileRead]:
     response.headers["Cache-Control"] = "no-store"
     return success_response(data=await service.site_profile(), request_id=current_request_id())
-
-
-@public_router.get(
-    "/capabilities",
-    response_model=ResponseModel[SystemCapabilitiesRead],
-    summary="获取公共系统能力",
-    description="返回允许公开展示的最小功能开关；配置不可用时明确失败并保持注册关闭。",
-)
-async def get_system_capabilities(
-    service: PublicSystemSettingsServiceDependency,
-    response: Response,
-) -> ResponseModel[SystemCapabilitiesRead]:
-    response.headers["Cache-Control"] = "no-store"
-    return success_response(
-        data=SystemCapabilitiesRead(registration_enabled=await service.registration_enabled()),
-        request_id=current_request_id(),
-    )
 
 
 @admin_router.get(

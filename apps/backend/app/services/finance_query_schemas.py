@@ -10,23 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 WalletType = Literal["commission", "consumption"]
 
 
-class MiniappProfileUpdate(BaseModel):
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    display_name: str = Field(min_length=1, max_length=100)
-
-
-class MiniappAvatarAssetRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    id: UUID
-    url: str
-
-
-class MiniappAvatarUpdate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    asset_id: UUID | None
-
-
-class MiniappMemberRead(BaseModel):
+class ConsumerMemberRead(BaseModel):
     state: Literal["not_opened", "no_level", "active", "inactive"]
     level_name: str | None
     level_changed_at: datetime | None
@@ -35,7 +19,7 @@ class MiniappMemberRead(BaseModel):
     bound_at: datetime | None
 
 
-class MiniappWalletRead(BaseModel):
+class ConsumerWalletRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     wallet_type: WalletType
     available_amount: Decimal
@@ -45,13 +29,13 @@ class MiniappWalletRead(BaseModel):
     updated_at: datetime
 
 
-class MiniappWalletBalanceRead(BaseModel):
+class ConsumerWalletBalanceRead(BaseModel):
     available_amount: Decimal = Field(ge=0)
     frozen_amount: Decimal = Field(ge=0)
     debt_amount: Decimal = Field(ge=0)
 
 
-class MiniappWalletLedgerRead(BaseModel):
+class ConsumerWalletLedgerRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     entry_type: Literal[
@@ -61,11 +45,11 @@ class MiniappWalletLedgerRead(BaseModel):
     frozen_delta: Decimal
     debt_delta: Decimal
     wallet_revision: int
-    balance_after: MiniappWalletBalanceRead
+    balance_after: ConsumerWalletBalanceRead
     created_at: datetime
 
 
-class MiniappCommissionRead(BaseModel):
+class ConsumerCommissionRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     level: int
@@ -80,7 +64,7 @@ class MiniappCommissionRead(BaseModel):
     recovered_at: datetime | None
 
 
-class MiniappWithdrawalRead(BaseModel):
+class ConsumerWithdrawalRead(BaseModel):
     id: UUID
     amount: Decimal
     currency: Literal["CNY"]

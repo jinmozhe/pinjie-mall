@@ -14,7 +14,7 @@ from app.db.models import Asset, User
 from app.db.models.distribution import WalletAccount, WalletLedger, WithdrawalRequest
 from app.domains.users.schemas import UserAvatarUpdateIn, UserUpdateIn
 from app.services.accounts import UserProfileService
-from app.services.miniapp_finance import MiniappFinanceService
+from app.services.finance_queries import ConsumerFinanceService
 
 
 @pytest.mark.integration
@@ -39,7 +39,7 @@ async def test_personal_wallet_history_and_avatar_ownership() -> None:
                         [User(id=owner, username=f"finance-{owner}"), User(id=other, username=f"finance-{other}")]
                     )
                     await session.commit()
-                    query = MiniappFinanceService(session)
+                    query = ConsumerFinanceService(session)
                     assert (await query.member(owner)).state == "not_opened"
                     assert (await query.activate(owner)).state == "no_level"
                     assert (await query.activate(owner)).state == "no_level"

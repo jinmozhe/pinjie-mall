@@ -8,12 +8,12 @@
 
 ## 2. 本人资料与头像
 
-| 操作 | MiniappBearer 接口 | 约束 |
+| 操作 | ConsumerBearer 接口 | 约束 |
 | --- | --- | --- |
-| 本人资料 | `GET /api/v1/miniapp/me` | 仅返回本人公开标识、昵称、头像 |
-| 保存昵称 | `PATCH /api/v1/miniapp/me` | display_name 去除首尾空白后 1 至 100 字，不允许 email 等额外字段 |
-| 上传头像 | `POST /api/v1/miniapp/me/avatar-assets` | multipart 的 file，固定 avatar 场景，仅输出资产 ID 和 URL |
-| 绑定或移除头像 | `PUT /api/v1/miniapp/me/avatar` | 必须显式提交 asset_id；null 移除，空对象拒绝；仅允许本人 avatar 资产 |
+| 本人资料 | `GET /api/v1/users/me` | 仅返回本人公开标识、昵称、头像 |
+| 保存昵称 | `PATCH /api/v1/users/me` | display_name 去除首尾空白后 1 至 100 字，不允许 email 等额外字段 |
+| 上传头像 | `POST /api/v1/users/me/avatar-assets` | multipart 的 file，固定 avatar 场景，仅输出资产 ID 和 URL |
+| 绑定或移除头像 | `PUT /api/v1/users/me/avatar` | 必须显式提交 asset_id；null 移除，空对象拒绝；仅允许本人 avatar 资产 |
 
 用户主动选图时才调用相册或相机。客户端限制单图不超过 2 MB，服务端复用既有 JPEG/PNG/WebP 文件头、扩展名、体积、存储与本人资产校验。上传成功只代表资产创建，用户点击保存后才绑定头像。头像使用既有资源来源准入，未准入地址与图片加载失败均给出反馈。
 
@@ -23,13 +23,13 @@ Taro.uploadFile 的响应 data 是字符串，上传传输层独立解析统一�
 
 ## 3. 会员与双轨钱包
 
-| 操作 | MiniappBearer 接口 | 展示边界 |
+| 操作 | ConsumerBearer 接口 | 展示边界 |
 | --- | --- | --- |
-| 会员查询/主动开通 | `GET/POST /api/v1/miniapp/membership` | not_opened、no_level、active、inactive；开通复用既有幂等服务 |
-| 双钱包 | `GET /api/v1/miniapp/wallets` | commission 与 consumption 的可用、冻结、欠款、版本和更新时间 |
-| 钱包流水 | `GET /api/v1/miniapp/wallets/{wallet_type}/ledgers` | 本人指定轨道，展示三类余额变化、历史余额快照和版本 |
-| 佣金记录 | `GET /api/v1/miniapp/commissions` | 本人冻结/结算/追回事实、金额与时间，无全量收益统计 |
-| 历史提现 | `GET /api/v1/miniapp/withdrawals` | 本人审核状态与资金确认事实分别展示，不提供申请方法 |
+| 会员查询/主动开通 | `GET/POST /api/v1/users/membership` | not_opened、no_level、active、inactive；开通复用既有幂等服务 |
+| 双钱包 | `GET /api/v1/distribution/me/wallets` | commission 与 consumption 的可用、冻结、欠款、版本和更新时间 |
+| 钱包流水 | `GET /api/v1/distribution/me/wallets/{wallet_type}/ledgers` | 本人指定轨道，展示三类余额变化、历史余额快照和版本 |
+| 佣金记录 | `GET /api/v1/distribution/me/commissions` | 本人冻结/结算/追回事实、金额与时间，无全量收益统计 |
+| 历史提现 | `GET /api/v1/distribution/me/withdrawals` | 本人审核状态与资金确认事实分别展示，不提供申请方法 |
 
 列表使用 page、page_size，默认每页 10 条，最多 100 条，按记录 ID 倒序；不提供状态筛选。所有资金查询先校验账户有效，SQL 按本人钱包或本人受益人过滤。缺少钱包返回未开通错误，页面不伪造零余额。
 
