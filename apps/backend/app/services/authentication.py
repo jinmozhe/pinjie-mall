@@ -57,7 +57,6 @@ class _AuthBase:
         settings: Settings,
         password_manager: PasswordManager,
         metadata: RequestMetadata,
-        admin: bool,
     ) -> None:
         self.session = session
         self.session_factory = session_factory
@@ -65,19 +64,16 @@ class _AuthBase:
         self.settings = settings
         self.password_manager = password_manager
         self.metadata = metadata
-        self.admin = admin
         self.keys: CacheKeys = cache_keys(settings)
-        web_secret, admin_secret, web_hmac, admin_hmac = settings.authentication_secrets()
-        self.jwt_secret = admin_secret if admin else web_secret
-        self.hmac_key = admin_hmac if admin else web_hmac
+        _, admin_secret, _, admin_hmac = settings.authentication_secrets()
+        self.jwt_secret = admin_secret
+        self.hmac_key = admin_hmac
         self.event_writer = SecurityEventWriter(session_factory)
 
     async def enforce_login_limit(self, identifier: str) -> None:
-        identifier_key = self.keys.login_identifier(token_digest(identifier, self.hmac_key), admin=self.admin)
-        ip_key = self.keys.login_ip(
-            token_digest(self.metadata.ip_address or "unknown", self.hmac_key), admin=self.admin
-        )
-        limit = self.settings.admin_login_limit if self.admin else self.settings.web_login_limit
+        identifier_key = self.keys.login_identifier(token_digest(identifier, self.hmac_key), admin=True)
+        ip_key = self.keys.login_ip(token_digest(self.metadata.ip_address or "unknown", self.hmac_key), admin=True)
+        limit = self.settings.admin_login_limit
         await enforce_rate_limit(
             self.redis,
             key=identifier_key,
@@ -96,19 +92,19 @@ class _AuthBase:
 
         if self.redis is None:
             logger.bind(
-                auth_profile="admin" if self.admin else "web",
+                auth_profile="admin",
                 request_id=self.metadata.request_id,
             ).warning("login rate-limit cleanup skipped because Redis is unavailable")
             return
         keys = (
-            self.keys.login_identifier(token_digest(identifier, self.hmac_key), admin=self.admin),
-            self.keys.login_ip(token_digest(self.metadata.ip_address or "unknown", self.hmac_key), admin=self.admin),
+            self.keys.login_identifier(token_digest(identifier, self.hmac_key), admin=True),
+            self.keys.login_ip(token_digest(self.metadata.ip_address or "unknown", self.hmac_key), admin=True),
         )
         try:
             await self.redis.delete(*keys)
         except RedisError as exc:
             logger.bind(
-                auth_profile="admin" if self.admin else "web",
+                auth_profile="admin",
                 request_id=self.metadata.request_id,
             ).opt(exception=exc).warning("login rate-limit cleanup failed after authentication succeeded")
 
@@ -122,7 +118,7 @@ class _AuthBase:
     ) -> None:
         await self.event_writer.record_login(
             login_event(
-                principal_type="admin" if self.admin else "user",
+                principal_type="admin",
                 principal_id=principal_id,
                 identifier_digest=token_digest(identifier, self.hmac_key),
                 event_type=event_type,
@@ -144,10 +140,10 @@ class _AuthBase:
             subject_id=subject_id,
             session_id=session_id,
             credential_version=credential_version,
-            audience="pinjie-admin" if self.admin else "pinjie-web",
+            audience="pinjie-admin",
             issuer=self.settings.jwt_issuer,
             secret=self.jwt_secret,
-            ttl_seconds=self.settings.admin_access_ttl_seconds if self.admin else self.settings.web_access_ttl_seconds,
+            ttl_seconds=self.settings.admin_access_ttl_seconds,
         )
 
     @staticmethod
@@ -174,7 +170,6 @@ class AdminAuthService(_AuthBase):
             settings=settings,
             password_manager=password_manager,
             metadata=metadata,
-            admin=True,
         )
         self.admins = AdminRepository(session)
         self.sessions = SessionRepository(session)

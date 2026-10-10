@@ -38,7 +38,7 @@
 | 账户设置/会话 | `GET /api/v1/users/me/sessions`、`POST /api/v1/users/me/sessions/revoke`、`POST /api/v1/users/me/sessions/revocation-status` | 本人分页、遮掩网络段、当前/有效/过期/撤销、明确原集合确认与恢复 | 已有源码，不证明物理设备身份；一次最多 100 个，当前会话走退出，新登录会话不加入原目标；并发及平台未验收 |
 | 注销前置/隐私 | `GET /api/v1/users/me/closure-precheck`、公开帮助 | 公开说明、本人八类交易权益只读核对、未开通/零事项/失败区分、联系运营 | 已有源码，self_service_enabled 恒 false，实际注销关闭；不删除账户、解绑身份或放弃权益，旧 Browser 密码/注销入口已退役 |
 | 收货地址 | `GET/POST /api/v1/addresses`、`PUT/DELETE /api/v1/addresses/{address_id}` | 收件人、联系号码、三级区域名称/编码、详细地址、默认值与 revision | 最多 20 条；删除默认地址由后端选替补；区域数据源需工程专项确定 |
-| 分销档案 | `GET/POST /api/v1/users/membership` | 主动开通、等级名称与有效状态、已有推荐关系及绑定时间 | 已有源码；开通不等于获得等级；不输出推荐人 ID/邀请码，不绑定推荐人；无有效邀请统计 |
+| 分销档案 | `GET/POST /api/v1/distribution/me/profile` | 主动开通、等级名称与有效状态、已有推荐关系及绑定时间 | 已有源码；开通不等于获得等级；不输出推荐人 ID/邀请码，不绑定推荐人；无有效邀请统计 |
 | 推荐关系 | `GET/POST /api/v1/distribution/me/referrer` | 本人码、主动确认首次绑定、已绑定事实及指定原码匹配查询 | 已有安全投影与页面源码；服务端拒绝自邀/循环/换绑；平台及数据库动态验证未执行，不输出推荐人身份 |
 | 微信分享 | 本人推荐查询与页面原生分享，无独立发码接口 | 固定落地路径、本人邀请码、登录后主动确认、非法参数反馈 | 已有页面钩子、按钮与固定 5:4 封面源码；AppID 预留、平台未验收；有效邀请政策未定义，不做收益承诺 |
 | 双钱包/流水 | `GET /api/v1/distribution/me/wallets`、`GET /api/v1/distribution/me/wallets/{wallet_type}/ledgers` | 两轨可用/冻结/欠款、本人分页流水、三类变化与历史余额快照 | 已有源码；无充值、互转或抵扣；读取失败不伪造余额；不输出幂等键或关联订单 |

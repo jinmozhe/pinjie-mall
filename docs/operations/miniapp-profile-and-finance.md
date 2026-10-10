@@ -25,7 +25,7 @@ Taro.uploadFile 的响应 data 是字符串，上传传输层独立解析统一�
 
 | 操作 | ConsumerBearer 接口 | 展示边界 |
 | --- | --- | --- |
-| 会员查询/主动开通 | `GET/POST /api/v1/users/membership` | not_opened、no_level、active、inactive；开通复用既有幂等服务 |
+| 会员查询/主动开通 | `GET/POST /api/v1/distribution/me/profile` | not_opened、no_level、active、inactive；开通复用既有幂等服务 |
 | 双钱包 | `GET /api/v1/distribution/me/wallets` | commission 与 consumption 的可用、冻结、欠款、版本和更新时间 |
 | 钱包流水 | `GET /api/v1/distribution/me/wallets/{wallet_type}/ledgers` | 本人指定轨道，展示三类余额变化、历史余额快照和版本 |
 | 佣金记录 | `GET /api/v1/distribution/me/commissions` | 本人冻结/结算/追回事实、金额与时间，无全量收益统计 |
