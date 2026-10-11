@@ -389,6 +389,7 @@ def get_admin_system_settings_service(
         metadata=request_metadata(request),
         actor_id=current.admin.id,
         media=get_settings_media_store(request),
+        actor_session_id=current.login_session.id,
     )
 
 

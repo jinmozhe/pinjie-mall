@@ -39,6 +39,8 @@ Backend 工作流根据工作区状态运行 Ruff、格式、Mypy、导入边界
 
 两种模式均只启动 Backend 和 Admin。测试环境中的 `WEB_ORIGINS` 使用 `https://miniapp.invalid` 占位，不会启动或暴露 3000 端口。成功后分别生成 `pinjie-mall-full-validation-v1` 或 `pinjie-mall-smoke-validation-v1` 证据；smoke 不能代替 strict 模式所需的 full 证据。
 
+两种模式的 Backend 监听、健康探测与 `E2E_BACKEND_URL` 统一使用 `127.0.0.1:18168`，与 Admin 生产预览及 Nginx 的 `backend:18168` 上游保持一致。`pnpm check:validation-mode` 只检查配置与模式夹具，不启动服务或执行真实 E2E。
+
 ## 5. 源码交接与 CNB
 
 `Handoff Source to CNB` 要求完整 40 位 Commit SHA，并在 `strict` 与 `fast` 之间选择：

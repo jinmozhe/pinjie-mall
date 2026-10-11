@@ -156,8 +156,13 @@ async def update_amount_rule(
     dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.COMMISSION_POLICIES_UPDATE))],
     summary="删除佣金来源规则",
 )
-async def delete_amount_rule(policy_id: UUID, rule_id: UUID, service: AdminCommissionPolicies) -> ResponseModel[None]:
-    await service.delete_amount_rule(policy_id, rule_id)
+async def delete_amount_rule(
+    policy_id: UUID,
+    rule_id: UUID,
+    service: AdminCommissionPolicies,
+    policy_revision: Annotated[int, Query(gt=0)],
+) -> ResponseModel[None]:
+    await service.delete_amount_rule(policy_id, rule_id, policy_revision=policy_revision)
     return success_response(data=None, request_id=current_request_id())
 
 
@@ -212,9 +217,12 @@ async def update_distribution_rule(
     summary="删除三级分配矩阵规则",
 )
 async def delete_distribution_rule(
-    policy_id: UUID, rule_id: UUID, service: AdminCommissionPolicies
+    policy_id: UUID,
+    rule_id: UUID,
+    service: AdminCommissionPolicies,
+    policy_revision: Annotated[int, Query(gt=0)],
 ) -> ResponseModel[None]:
-    await service.delete_distribution_rule(policy_id, rule_id)
+    await service.delete_distribution_rule(policy_id, rule_id, policy_revision=policy_revision)
     return success_response(data=None, request_id=current_request_id())
 
 

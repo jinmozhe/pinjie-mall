@@ -32,6 +32,17 @@ assert.deepEqual(validation.needs, ["source", "backend", "frontend"]);
 assert.equal(frontend.needs, "source");
 assert.equal(backend.needs, "source");
 
+// Both modes share the Backend URL, listener and readiness probe. Keep the
+// production preview and its Nginx upstream on the same fixed port.
+assert.equal(validation.env.E2E_BACKEND_URL, "http://127.0.0.1:18168");
+const startBackend = find(validation, "Start Backend").run;
+assert(startBackend.includes("--host 127.0.0.1 --port 18168"));
+assert(startBackend.includes("http://127.0.0.1:18168/health/live"));
+assert(!startBackend.includes(":8000") && !startBackend.includes("--port 8000"));
+assert(read("scripts/e2e/admin-preview.mjs").includes('backend.href !== "http://127.0.0.1:18168/"'));
+const upstreams = [...read("apps/admin/nginx.conf").matchAll(/proxy_pass\s+http:\/\/backend:(\d+)/gu)];
+assert(upstreams.length > 0 && upstreams.every((match) => match[1] === "18168"));
+
 const unit = find(frontend, "Run frontend unit tests");
 assert.equal(unit.if, modeCondition("full"));
 assert(unit.run.includes('pnpm --filter "@pinjie/$APP" test'));

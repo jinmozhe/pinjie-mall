@@ -11,8 +11,8 @@ from app.api.dependencies import (
     get_resources,
 )
 from app.core.request_metadata import request_metadata
-from app.db.repositories.commerce_access import CommerceAccessRepository
 from app.domains.distribution import DistributionService
+from app.services.admin_audit import AdminAuditCoordinator
 from app.services.distribution import AdminDistributionApplicationService, UserDistributionApplicationService
 from app.services.engagement import ConsumerEngagementService
 from app.services.finance_queries import ConsumerFinanceService
@@ -30,12 +30,16 @@ def get_admin_distribution_service(
 ) -> AdminDistributionApplicationService:
     return AdminDistributionApplicationService(
         distribution=DistributionService(session),
-        access=CommerceAccessRepository(session),
-        audit=AuditCoordinator(
+        audit=AdminAuditCoordinator(
+            audit=AuditCoordinator(
+                session=session,
+                session_factory=get_resources(request).session_factory,
+                actor_id=current.admin.id,
+                metadata=request_metadata(request),
+            ),
             session=session,
-            session_factory=get_resources(request).session_factory,
             actor_id=current.admin.id,
-            metadata=request_metadata(request),
+            session_id=current.login_session.id,
         ),
         actor_id=current.admin.id,
     )

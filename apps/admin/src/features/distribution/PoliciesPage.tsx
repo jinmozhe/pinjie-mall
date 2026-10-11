@@ -75,7 +75,12 @@ export default function PoliciesPage() {
   const [distModalOpen, setDistModalOpen] = useState(false);
   const [distForm] = Form.useForm();
   const allocationMode = Form.useWatch("allocation_mode", distForm);
-  const [deleteTarget, setDeleteTarget] = useState<{ policyId: string; ruleId: string; kind: "amount" | "distribution" }>();
+  const [deleteTarget, setDeleteTarget] = useState<{ policyId: string; ruleId: string; revision: number; kind: "amount" | "distribution" }>();
+
+  const advanceDetailRevision = () => {
+    setDetailPolicy((previous) => previous ? { ...previous, revision: previous.revision + 1 } : previous);
+    void queryClient.invalidateQueries({ queryKey: ["commission-policies"] });
+  };
 
   // Queries
   const { data: controlData, isLoading: controlLoading, error: controlError, refetch: reloadControl } = useQuery({
@@ -182,6 +187,7 @@ export default function PoliciesPage() {
       }),
     onSuccess: () => {
       message.success("来源规则添加成功");
+      advanceDetailRevision();
       setAmountModalOpen(false);
       amountForm.resetFields();
       queryClient.invalidateQueries({ queryKey: ["amount-rules", detailPolicy?.id] });
@@ -192,9 +198,10 @@ export default function PoliciesPage() {
   });
 
   const deleteAmountRuleMutation = useLockedMutation({
-    mutationFn: (target: { policyId: string; ruleId: string }) => commerceApi.deleteAmountRule(target.policyId, target.ruleId),
+    mutationFn: (target: { policyId: string; ruleId: string; revision: number }) => commerceApi.deleteAmountRule(target.policyId, target.ruleId, target.revision),
     onSuccess: (_, target) => {
       message.success("来源规则删除成功");
+      advanceDetailRevision();
       queryClient.invalidateQueries({ queryKey: ["amount-rules", target.policyId] });
     },
     onError: (err: Error) => {
@@ -212,6 +219,7 @@ export default function PoliciesPage() {
       }),
     onSuccess: () => {
       message.success("分配矩阵规则添加成功");
+      advanceDetailRevision();
       setDistModalOpen(false);
       distForm.resetFields();
       queryClient.invalidateQueries({ queryKey: ["distribution-rules", detailPolicy?.id] });
@@ -222,9 +230,10 @@ export default function PoliciesPage() {
   });
 
   const deleteDistRuleMutation = useLockedMutation({
-    mutationFn: (target: { policyId: string; ruleId: string }) => commerceApi.deleteDistributionRule(target.policyId, target.ruleId),
+    mutationFn: (target: { policyId: string; ruleId: string; revision: number }) => commerceApi.deleteDistributionRule(target.policyId, target.ruleId, target.revision),
     onSuccess: (_, target) => {
       message.success("分配矩阵规则删除成功");
+      advanceDetailRevision();
       queryClient.invalidateQueries({ queryKey: ["distribution-rules", target.policyId] });
     },
     onError: (err: Error) => {
@@ -478,6 +487,13 @@ export default function PoliciesPage() {
 
       {/* Rules & Matrix Drawer */}
       <Drawer
+        extra={<Button disabled={amountModalOpen || distModalOpen || Boolean(deleteTarget)} onClick={() => {
+          if (!detailPolicy) return;
+          void commerceApi.policy(detailPolicy.id).then(async (latest) => {
+            setDetailPolicy(latest);
+            await Promise.all([reloadAmount(), reloadDist(), reloadPolicies()]);
+          }).catch((error: Error) => message.error(error.message));
+        }}>刷新政策与规则</Button>}
         title={
           <Typography.Text strong>
             政策详情与矩阵：{detailPolicy?.name} ({detailPolicy?.status})
@@ -515,6 +531,7 @@ export default function PoliciesPage() {
                         onClick={() => {
                           amountForm.resetFields();
                           amountForm.setFieldsValue({
+                            policy_revision: detailPolicy?.revision,
                             rule_mode: "percentage",
                             buyer_scope: "any",
                           });
@@ -552,7 +569,7 @@ export default function PoliciesPage() {
                               key: "actions",
                               width: "1%",
                               render: (_: unknown, r: CommissionAmountRuleRead) => (
-                                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => { if (detailPolicy) setDeleteTarget({ policyId: detailPolicy.id, ruleId: r.id, kind: "amount" }); }}>
+                                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => { if (detailPolicy) setDeleteTarget({ policyId: detailPolicy.id, ruleId: r.id, revision: detailPolicy.revision, kind: "amount" }); }}>
                                     删除
                                   </Button>
                               ),
@@ -582,6 +599,7 @@ export default function PoliciesPage() {
                         onClick={() => {
                           distForm.resetFields();
                           distForm.setFieldsValue({
+                            policy_revision: detailPolicy?.revision,
                             ancestor_depth: 1,
                             allocation_mode: "percentage",
                           });
@@ -619,7 +637,7 @@ export default function PoliciesPage() {
                               key: "actions",
                               width: "1%",
                               render: (_: unknown, r: CommissionDistributionRuleRead) => (
-                                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => { if (detailPolicy) setDeleteTarget({ policyId: detailPolicy.id, ruleId: r.id, kind: "distribution" }); }}>
+                                  <Button size="small" danger icon={<DeleteOutlined />} onClick={() => { if (detailPolicy) setDeleteTarget({ policyId: detailPolicy.id, ruleId: r.id, revision: detailPolicy.revision, kind: "distribution" }); }}>
                                     删除
                                   </Button>
                               ),
@@ -651,6 +669,7 @@ export default function PoliciesPage() {
         confirmLoading={addAmountRuleMutation.isPending}
       >
         <Form form={amountForm} layout="vertical" disabled={addAmountRuleMutation.isPending} onFinish={addAmountRuleMutation.mutate}>
+          <Form.Item name="policy_revision" hidden rules={[{ required: true }]}><InputNumber /></Form.Item>
           <Form.Item name="buyer_scope" label="买家范围" rules={[{ required: true }]}>
             <Select
               options={[
@@ -695,6 +714,7 @@ export default function PoliciesPage() {
         confirmLoading={addDistRuleMutation.isPending}
       >
         <Form form={distForm} layout="vertical" disabled={addDistRuleMutation.isPending} onFinish={addDistRuleMutation.mutate}>
+          <Form.Item name="policy_revision" hidden rules={[{ required: true }]}><InputNumber /></Form.Item>
           <Form.Item name="ancestor_depth" label="推荐人代数深度 (1~3)" rules={[{ required: true }]}>
             <InputNumber min={1} max={3} style={{ width: "100%" }} />
           </Form.Item>

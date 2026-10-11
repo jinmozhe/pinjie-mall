@@ -44,5 +44,7 @@ class StorageProvider(Protocol):
 
     async def purge(self, deletion: StagedDeletion) -> None: ...
 
+    async def pending_deletions(self) -> list[StagedDeletion]: ...
+
 
 __all__ = ["StagedDeletion", "StagedFile", "StorageProvider"]

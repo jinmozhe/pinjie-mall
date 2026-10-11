@@ -587,7 +587,7 @@ function ValuesDrawer({
                   {row.is_active ? (
                     <Popconfirm
                       title="确认停用候选值？"
-                      description="停用后新商品建档将无法选用，存量关联商品不受影响。"
+                      description="停用后新商品无法选用，已采用此候选值的关联 SKU 也将不可售；重新启用后仍需满足商品及库存等可售条件。"
                       okText="确认停用"
                       cancelText="取消"
                       onConfirm={() => toggleSingleStatus(row)}

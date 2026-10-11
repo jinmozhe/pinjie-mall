@@ -10,7 +10,7 @@ from starlette.responses import Response
 from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.domains.auth.router import refresh as web_refresh
-from app.services.admin_management import ManagementAuditCoordinator
+from app.services.admin_audit import AdminAuditCoordinator
 from app.services.commerce_reporting import CommerceReportingService, SelectedCommerceIds
 
 
@@ -58,7 +58,7 @@ async def test_management_write_rechecks_revoked_actor_session() -> None:
         return await kwargs["operation"]()
 
     audit = SimpleNamespace(execute=AsyncMock(side_effect=run_audit))
-    coordinator = ManagementAuditCoordinator(
+    coordinator = AdminAuditCoordinator(
         audit=audit,
         session=SimpleNamespace(),
         actor_id=uuid7(),
@@ -125,7 +125,7 @@ async def test_management_write_rechecks_actor_session_validity(actor_session: S
     if actor_session is not None and actor_session.admin_id is None:
         actor_session.admin_id = actor_id
     audit = SimpleNamespace(execute=AsyncMock(side_effect=run_audit))
-    coordinator = ManagementAuditCoordinator(
+    coordinator = AdminAuditCoordinator(
         audit=audit,
         session=SimpleNamespace(),
         actor_id=actor_id,

@@ -13,6 +13,7 @@ from app.api.dependencies import (
 from app.core.request_metadata import request_metadata
 from app.domains.membership.service import MembershipService
 from app.domains.points.service import PointsService
+from app.services.admin_audit import AdminAuditCoordinator
 from app.services.security_events import AuditCoordinator
 
 
@@ -28,11 +29,16 @@ def get_admin_membership_service(
     return MembershipService(
         session=session,
         actor_id=current.admin.id,
-        audit=AuditCoordinator(
+        audit=AdminAuditCoordinator(
+            audit=AuditCoordinator(
+                session=session,
+                session_factory=get_resources(request).session_factory,
+                actor_id=current.admin.id,
+                metadata=request_metadata(request),
+            ),
             session=session,
-            session_factory=get_resources(request).session_factory,
             actor_id=current.admin.id,
-            metadata=request_metadata(request),
+            session_id=current.login_session.id,
         ),
     )
 
@@ -50,11 +56,16 @@ def get_admin_points_service(
     return PointsService(
         session=session,
         actor_id=current.admin.id,
-        audit=AuditCoordinator(
+        audit=AdminAuditCoordinator(
+            audit=AuditCoordinator(
+                session=session,
+                session_factory=get_resources(request).session_factory,
+                actor_id=current.admin.id,
+                metadata=request_metadata(request),
+            ),
             session=session,
-            session_factory=get_resources(request).session_factory,
             actor_id=current.admin.id,
-            metadata=request_metadata(request),
+            session_id=current.login_session.id,
         ),
     )
 

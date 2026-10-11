@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from typing import cast
 from uuid import UUID
 
@@ -18,6 +19,16 @@ from app.db.models.catalog import (
 )
 
 
+@dataclass
+class CatalogSnapshot:
+    adoptions: dict[UUID, list[ProductSpecAttribute]] = field(default_factory=dict)
+    candidates: dict[UUID, list[ProductSpecValue]] = field(default_factory=dict)
+    descriptions: dict[UUID, list[ProductAttributeValue]] = field(default_factory=dict)
+    selections: dict[UUID, list[ProductSkuSpecValue]] = field(default_factory=dict)
+    active_attributes: set[UUID] = field(default_factory=set)
+    active_values: set[UUID] = field(default_factory=set)
+
+
 class CatalogRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -28,6 +39,58 @@ class CatalogRepository:
 
     async def flush(self) -> None:
         await self.session.flush()
+
+    async def catalog_snapshot(self, product_ids: list[UUID]) -> CatalogSnapshot:
+        snapshot = CatalogSnapshot()
+        if not product_ids:
+            return snapshot
+        for adoption in await self.session.scalars(
+            select(ProductSpecAttribute)
+            .where(ProductSpecAttribute.product_id.in_(product_ids))
+            .order_by(ProductSpecAttribute.id)
+            .execution_options(populate_existing=True)
+        ):
+            snapshot.adoptions.setdefault(adoption.product_id, []).append(adoption)
+        for candidate in await self.session.scalars(
+            select(ProductSpecValue)
+            .where(ProductSpecValue.product_id.in_(product_ids))
+            .order_by(ProductSpecValue.id)
+            .execution_options(populate_existing=True)
+        ):
+            snapshot.candidates.setdefault(candidate.product_id, []).append(candidate)
+        for description in await self.session.scalars(
+            select(ProductAttributeValue)
+            .where(ProductAttributeValue.product_id.in_(product_ids))
+            .execution_options(populate_existing=True)
+        ):
+            snapshot.descriptions.setdefault(description.product_id, []).append(description)
+        for selection in await self.session.scalars(
+            select(ProductSkuSpecValue)
+            .where(ProductSkuSpecValue.product_id.in_(product_ids))
+            .order_by(ProductSkuSpecValue.sku_id, ProductSkuSpecValue.adoption_id)
+        ):
+            snapshot.selections.setdefault(selection.product_id, []).append(selection)
+        attribute_ids = {
+            row.attribute_id for rows in snapshot.adoptions.values() for row in rows if row.attribute_id is not None
+        }
+        value_ids = {row.value_id for rows in snapshot.candidates.values() for row in rows if row.value_id is not None}
+        if attribute_ids:
+            snapshot.active_attributes = set(
+                await self.session.scalars(
+                    select(SpecAttribute.id).where(
+                        SpecAttribute.id.in_(attribute_ids), SpecAttribute.is_active.is_(True)
+                    )
+                )
+            )
+        if value_ids:
+            snapshot.active_values = set(
+                await self.session.scalars(
+                    select(SpecAttributeValue.id).where(
+                        SpecAttributeValue.id.in_(value_ids), SpecAttributeValue.is_active.is_(True)
+                    )
+                )
+            )
+        return snapshot
 
     async def brand(self, brand_id: UUID) -> Brand | None:
         return (

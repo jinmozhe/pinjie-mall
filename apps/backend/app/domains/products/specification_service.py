@@ -11,6 +11,7 @@ from app.db.models.catalog import (
 )
 from app.db.models.product import Product, ProductSku
 
+from .catalog_repository import CatalogSnapshot
 from .catalog_schemas import CandidateAppend, DescriptionSet, DescriptionUpdate, SkuFields, SpecificationSet
 from .catalog_service import CatalogService, catalog_conflict, normalized_text, specification_key
 
@@ -320,7 +321,12 @@ class SpecificationService(CatalogService):
         return sorted(retired)
 
     async def sku_is_available(
-        self, sku: ProductSku, adoptions: list[ProductSpecAttribute], selections: list[ProductSkuSpecValue]
+        self,
+        sku: ProductSku,
+        adoptions: list[ProductSpecAttribute],
+        selections: list[ProductSkuSpecValue],
+        *,
+        snapshot: CatalogSnapshot | None = None,
     ) -> bool:
         if sku.archived_at is not None or not sku.is_active:
             return False
@@ -328,10 +334,19 @@ class SpecificationService(CatalogService):
             if not adoption.is_current:
                 continue
             if adoption.attribute_id is not None:
-                attribute = await self.repository.attribute(adoption.attribute_id)
-                if attribute is None or not attribute.is_active:
+                if snapshot is not None:
+                    active = adoption.attribute_id in snapshot.active_attributes
+                else:
+                    attribute = await self.repository.attribute(adoption.attribute_id)
+                    active = attribute is not None and attribute.is_active
+                if not active:
                     return False
-        candidates = {row.id: row for row in await self.repository.candidates(sku.product_id)}
+        candidate_rows = (
+            snapshot.candidates.get(sku.product_id, [])
+            if snapshot is not None
+            else await self.repository.candidates(sku.product_id)
+        )
+        candidates = {row.id: row for row in candidate_rows}
         for selection in selections:
             if selection.sku_id != sku.id:
                 continue
@@ -339,8 +354,12 @@ class SpecificationService(CatalogService):
             if candidate is None or not candidate.is_current:
                 return False
             if candidate.value_id is not None:
-                standard = await self.repository.standard_value(candidate.value_id)
-                if standard is None or not standard.is_active:
+                if snapshot is not None:
+                    active = candidate.value_id in snapshot.active_values
+                else:
+                    standard = await self.repository.standard_value(candidate.value_id)
+                    active = standard is not None and standard.is_active
+                if not active:
                     return False
         return True
 

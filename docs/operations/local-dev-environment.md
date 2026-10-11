@@ -213,6 +213,8 @@ uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 18168
 
 访问地址：`http://localhost:18168`
 
+也可从仓库根目录运行 `pnpm dev:backend`，自动等待 Docker、启动 Redis、执行迁移、检查权限目录并以前台方式启动 Backend。权限有差异时默认停止；明确需要同步本机开发库权限时，运行 `powershell -NoProfile -File scripts/start-local.ps1 -ApplyPermissions`，顺序为迁移、权限 apply、权限 check、启动服务。apply 或 check 失败均停止，不跳过检查。
+
 ### 终端二：Admin
 
 ```powershell

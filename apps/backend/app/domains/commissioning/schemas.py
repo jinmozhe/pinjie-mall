@@ -101,7 +101,7 @@ class CommissionAmountRuleWrite(CommissionInput):
 
 
 class CommissionAmountRuleCreate(CommissionAmountRuleWrite):
-    pass
+    policy_revision: int = Field(gt=0)
 
 
 class CommissionAmountRuleRead(CommissionAmountRuleWrite):
@@ -132,7 +132,7 @@ class CommissionDistributionRuleWrite(CommissionInput):
 
 
 class CommissionDistributionRuleCreate(CommissionDistributionRuleWrite):
-    pass
+    policy_revision: int = Field(gt=0)
 
 
 class CommissionDistributionRuleRead(CommissionDistributionRuleWrite):

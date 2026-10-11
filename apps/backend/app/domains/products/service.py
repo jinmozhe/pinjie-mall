@@ -9,8 +9,9 @@ from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
 from app.core.pagination import PageResult
 from app.core.restricted_html import restricted_html
-from app.db.models.product import Category, Product
+from app.db.models.product import Category, Product, ProductSku
 
+from .catalog_repository import CatalogSnapshot
 from .catalog_schemas import CandidateAppend, DescriptionSet, DescriptionUpdate, SpecificationConversion
 from .catalog_service import catalog_conflict
 from .repository import ProductRepository
@@ -244,17 +245,44 @@ class ProductService(SpecificationService):
 
     async def public_read(self, product_id: UUID) -> PublicProductRead:
         row = await self._get(product_id)
+        visible_categories = await self._public_category_ids()
+        if row.status != "on_sale" or row.category_id not in visible_categories:
+            raise AppException(status_code=404, code=ErrorCode.PRODUCT_NOT_FOUND, message="商品不存在")
+        snapshot = await self.repository.catalog_snapshot([row.id])
+        skus, _, images = await self.repository.details([row.id])
+        return await self._public_read(row, visible_categories, snapshot, skus[row.id], images[row.id])
+
+    async def _public_category_ids(self) -> set[UUID]:
+        # Product visibility needs category status only, not each category's icon URL.
+        rows = await self.repository.categories()
+        by_id = {row.id: row for row in rows}
+        visible = set()
+        for row in rows:
+            current = row
+            while current.is_active and current.parent_id in by_id:
+                current = by_id[current.parent_id]
+            if current.is_active:
+                visible.add(row.id)
+        return visible
+
+    async def _public_read(
+        self,
+        row: Product,
+        visible_categories: set[UUID],
+        snapshot: CatalogSnapshot,
+        skus: list[ProductSku],
+        images: list[str],
+    ) -> PublicProductRead:
         if row.status != "on_sale":
             raise AppException(status_code=404, code=ErrorCode.PRODUCT_NOT_FOUND, message="商品不存在")
-        visible_categories = {category.id for category in await self.categories(public=True)}
         if row.category_id not in visible_categories:
             raise AppException(status_code=404, code=ErrorCode.PRODUCT_NOT_FOUND, message="商品不存在")
-        adoptions = await self.repository.adoptions(row.id)
-        selections = await self.repository.sku_selections(row.id)
+        adoptions = snapshot.adoptions.get(row.id, [])
+        selections = snapshot.selections.get(row.id, [])
         visible_skus = [
             PublicSkuRead.model_validate(sku)
-            for sku in await self.repository.skus(row.id)
-            if await self.sku_is_available(sku, adoptions, selections)
+            for sku in skus
+            if await self.sku_is_available(sku, adoptions, selections, snapshot=snapshot)
         ]
         return PublicProductRead(
             id=row.id,
@@ -264,9 +292,9 @@ class ProductService(SpecificationService):
             product_type=cast(Literal["physical", "virtual"], row.product_type),
             category_id=row.category_id,
             brand_id=row.brand_id,
-            images=await self.repository.image_urls(row.id),
+            images=images,
             skus=visible_skus,
-            attributes=await self.adoption_reads(row.id, current_only=True),
+            attributes=await self.adoption_reads(row.id, current_only=True, snapshot=snapshot),
         )
 
     async def page(
@@ -298,8 +326,14 @@ class ProductService(SpecificationService):
         self, page: int, page_size: int, *, category_id: UUID | None = None
     ) -> PageResult[PublicProductRead]:
         rows, total = await self.repository.page(page, page_size, public=True, category_id=category_id)
+        product_ids = [row.id for row in rows]
+        visible_categories = await self._public_category_ids() if rows else set()
+        snapshot = await self.repository.catalog_snapshot(product_ids)
+        skus, _, images = await self.repository.details(product_ids)
         return PageResult[PublicProductRead].create(
-            items=[await self.public_read(row.id) for row in rows],
+            items=[
+                await self._public_read(row, visible_categories, snapshot, skus[row.id], images[row.id]) for row in rows
+            ],
             page=page,
             page_size=page_size,
             total=total,

@@ -122,6 +122,32 @@ login_tcr() {
       --password-stdin >/dev/null
 }
 
+inspect_tag_digest() {
+  local reference="$1"
+  local output
+  local digest
+
+  if output="$(docker buildx imagetools inspect "$reference" 2>&1)"; then
+    digest="$(printf '%s\n' "$output" | awk '/^Digest:/ && !seen { print $2; seen=1 }')"
+    if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+      printf '%s\n' "$output" >&2
+      echo "Registry inspection returned no valid digest for $reference." >&2
+      return 1
+    fi
+    printf '%s' "$digest"
+    return 0
+  fi
+
+  # Buildx forwards containerd's exact reference-specific 404 error. Never
+  # classify arbitrary 'not found', authentication or transport errors as absence.
+  if [[ "$output" == "ERROR: $reference: not found" ]]; then
+    return 3
+  fi
+  printf '%s\n' "$output" >&2
+  echo "Registry inspection failed for $reference; tag state is unknown." >&2
+  return 1
+}
+
 build_candidate() {
   local actual
   local candidate_ref
@@ -147,9 +173,11 @@ build_candidate() {
   image_index_file="$EVIDENCE_ROOT/$IMAGE_KEY-index.json"
   image_config_file="$EVIDENCE_ROOT/$IMAGE_KEY-image.json"
 
-  if docker buildx imagetools inspect "$candidate_ref" >/dev/null 2>&1; then
+  if actual="$(inspect_tag_digest "$candidate_ref")"; then
     echo "Unique candidate tag $candidate_ref already exists."
     exit 1
+  else
+    [[ "$?" == "3" ]] || fail_validation "Candidate tag absence could not be confirmed."
   fi
 
   [[ -f "$IMAGE_DOCKERFILE" ]] ||
@@ -222,18 +250,17 @@ finalize_tag() {
   digest="$(read_digest)"
   image_ref="$TCR_REGISTRY/$TCR_NAMESPACE/$IMAGE_NAME"
   target="$image_ref:sha-$CNB_COMMIT"
-  actual="$(docker buildx imagetools inspect "$target" 2>/dev/null |
-    awk '$1 == "Digest:" { print $2; exit }' || true)"
-  if [[ -n "$actual" && "$actual" != "$digest" ]]; then
-    echo "Immutable tag $target already points to $actual, expected $digest."
-    exit 1
-  fi
-
-  if [[ -z "$actual" ]]; then
+  if actual="$(inspect_tag_digest "$target")"; then
+    if [[ "$actual" != "$digest" ]]; then
+      echo "Immutable tag $target already points to $actual, expected $digest."
+      exit 1
+    fi
+  else
+    [[ "$?" == "3" ]] || fail_validation "Immutable tag absence could not be confirmed."
     docker buildx imagetools create --tag "$target" "$image_ref@$digest"
   fi
-  actual="$(docker buildx imagetools inspect "$target" |
-    awk '$1 == "Digest:" { print $2; exit }')"
+  actual="$(inspect_tag_digest "$target")" ||
+    fail_validation "Final tag inspection failed for $target."
   [[ "$actual" == "$digest" ]]
 }
 

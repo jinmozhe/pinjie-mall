@@ -2322,6 +2322,12 @@ export type CommissionAmountRuleCreate = {
      * 当前业务字段，具体语义由所属请求或响应模型定义
      */
     percentage_rate?: number | string | null;
+    /**
+     * Policy Revision
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    policy_revision: number;
 };
 
 /**
@@ -2496,6 +2502,12 @@ export type CommissionDistributionRuleCreate = {
      * 当前业务字段，具体语义由所属请求或响应模型定义
      */
     amount_per_unit?: number | string | null;
+    /**
+     * Policy Revision
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    policy_revision: number;
 };
 
 /**
@@ -17102,7 +17114,12 @@ export type DeleteAmountRuleApiV1AdminCommissionPoliciesPolicyIdAmountRulesRuleI
          */
         rule_id: string;
     };
-    query?: never;
+    query: {
+        /**
+         * Policy Revision
+         */
+        policy_revision: number;
+    };
     url: '/api/v1/admin/commission-policies/{policy_id}/amount-rules/{rule_id}';
 };
 
@@ -17230,7 +17247,12 @@ export type DeleteDistributionRuleApiV1AdminCommissionPoliciesPolicyIdDistributi
          */
         rule_id: string;
     };
-    query?: never;
+    query: {
+        /**
+         * Policy Revision
+         */
+        policy_revision: number;
+    };
     url: '/api/v1/admin/commission-policies/{policy_id}/distribution-rules/{rule_id}';
 };
 

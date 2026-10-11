@@ -61,7 +61,7 @@
 | [authentication-authorization.md](architecture/authentication-authorization.md) | Browser Cookie Profile、JWT、Session、CSRF、RBAC、管理操作保护和审计运行机制             |
 | [testing-strategy.md](architecture/testing-strategy.md)                         | 单元、Service、Repository、API、standalone E2E、架构、迁移和契约测试策略                   |
 | [observability-reliability.md](architecture/observability-reliability.md)       | 部署等级、健康探针、安全事件、同事务审计、请求元数据 Stream、SLO、容量和恢复演练基线       |
-| [file-asset-storage.md](architecture/file-asset-storage.md)                     | 统一文件资产的存储端口、上传安全、双域鉴权、去重、删除补偿和生产卷边界                   |
+| [file-asset-storage.md](architecture/file-asset-storage.md) | 统一文件资产的存储端口、上传安全、去重、删除恢复清单、启动恢复及生产卷边界 |
 | [system-settings.md](architecture/system-settings.md)                           | 系统设置的数据模型、强类型接口、注册 Fail Closed、配置媒体恢复及三端消费边界             |
 | [全栈Monorepo架构规划原始方案.md](architecture/全栈Monorepo架构规划原始方案.md) | 从 pinjie-standard 迁移的完整原始规划方案，包含技术选型对比、电商领域设计、1Panel 部署规范 |
 | [database-schema-guide.md](architecture/database-schema-guide.md) | 长期全域目标数据库字典：15 个文档分组、67 张模型表及固定配置分组，含字段约束、预算分佣、事务恢复、剩余差异及源码、迁移和分版本验证证据 |

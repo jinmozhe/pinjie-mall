@@ -4,7 +4,7 @@ from fastapi import Depends, Request
 
 from app.api.dependencies import CurrentAdmin, DatabaseSession, get_current_admin, get_resources
 from app.core.request_metadata import request_metadata
-from app.db.repositories.commerce_access import CommerceAccessRepository
+from app.services.admin_audit import AdminAuditCoordinator
 from app.services.lifecycle import AdminLifecycleApplicationService
 from app.services.payment_lifecycle import LifecycleService
 from app.services.security_events import AuditCoordinator
@@ -21,12 +21,16 @@ def get_admin_lifecycle_service(
 ) -> AdminLifecycleApplicationService:
     return AdminLifecycleApplicationService(
         lifecycle=LifecycleService(session),
-        access=CommerceAccessRepository(session),
-        audit=AuditCoordinator(
+        audit=AdminAuditCoordinator(
+            audit=AuditCoordinator(
+                session=session,
+                session_factory=get_resources(request).session_factory,
+                actor_id=current.admin.id,
+                metadata=request_metadata(request),
+            ),
             session=session,
-            session_factory=get_resources(request).session_factory,
             actor_id=current.admin.id,
-            metadata=request_metadata(request),
+            session_id=current.login_session.id,
         ),
         actor_id=current.admin.id,
     )

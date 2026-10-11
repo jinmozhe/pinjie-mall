@@ -81,6 +81,7 @@ from app.domains.products.schemas import ProductStatusBatch, SkuStatusBatch
 from app.domains.shipping import ShippingService, ShippingTemplateInput
 from app.domains.shipping.repository import ShippingRepository
 from app.domains.shipping.schemas import FreightQuoteInput
+from app.services.admin_audit import AdminAuditCoordinator
 from app.services.cart import CartService
 from app.services.commerce import AddressApplicationService, CommerceService
 from app.services.commerce_reporting import (
@@ -176,6 +177,9 @@ async def shop():
                 actor_session_id=actor_session_id,
             )
             lifecycle = LifecycleService(session)
+            admin_audit = AdminAuditCoordinator(
+                audit=audit, session=session, actor_id=actor, session_id=actor_session_id
+            )
             distribution = DistributionService(session)
             context = SimpleNamespace(
                 session=session,
@@ -191,10 +195,10 @@ async def shop():
                 orders=OrderService(session),
                 cart=CartService(session),
                 admin_lifecycle=AdminLifecycleApplicationService(
-                    lifecycle=lifecycle, access=access, audit=audit, actor_id=actor
+                    lifecycle=lifecycle, audit=admin_audit, actor_id=actor
                 ),
                 admin_distribution=AdminDistributionApplicationService(
-                    distribution=distribution, access=access, audit=audit, actor_id=actor
+                    distribution=distribution, audit=admin_audit, actor_id=actor
                 ),
                 user_distribution=UserDistributionApplicationService(
                     distribution=distribution,
@@ -277,11 +281,17 @@ async def prepare_paid_order(shop, physical=False):
         )
         await policies.add_amount_rule(
             policy.id,
-            CommissionAmountRuleCreate(sku_id=product.skus[0].id, rule_mode="fixed_amount", amount_per_unit="10.00"),
+            CommissionAmountRuleCreate(
+                policy_revision=policy.revision,
+                sku_id=product.skus[0].id,
+                rule_mode="fixed_amount",
+                amount_per_unit="10.00",
+            ),
         )
         await policies.add_distribution_rule(
             policy.id,
             CommissionDistributionRuleCreate(
+                policy_revision=policy.revision + 1,
                 buyer_level_id=level.id,
                 ancestor_depth=1,
                 beneficiary_level_id=level.id,
@@ -289,7 +299,7 @@ async def prepare_paid_order(shop, physical=False):
                 rate="1.000000",
             ),
         )
-        await policies.publish_policy(policy.id, CommissionPolicyPublish(revision=policy.revision))
+        await policies.publish_policy(policy.id, CommissionPolicyPublish(revision=policy.revision + 2))
         control = await policies.commission_control()
         await policies.update_commission_control(
             CommissionControlUpdate(revision=control.revision, commissions_enabled=True)

@@ -158,7 +158,7 @@ jobs:
       INITIAL_ADMIN_PASSWORD: stage-c-admin-password-2026
       E2E_ADMIN_USERNAME: stage-admin
       E2E_ADMIN_PASSWORD: stage-c-admin-password-2026
-      E2E_BACKEND_URL: http://127.0.0.1:8000
+      E2E_BACKEND_URL: http://127.0.0.1:18168
     steps:
       - name: Validate immutable input
         id: input
@@ -258,10 +258,10 @@ jobs:
         working-directory: apps/backend
         shell: bash
         run: |
-          uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 > "$RUNNER_TEMP/backend.log" 2>&1 &
+          uv run uvicorn app.main:app --host 127.0.0.1 --port 18168 > "$RUNNER_TEMP/backend.log" 2>&1 &
           ready=0
           for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:8000/health/live; then ready=1; break; fi
+            if curl --fail --silent http://127.0.0.1:18168/health/live; then ready=1; break; fi
             sleep 1
           done
           if [[ "$ready" != "1" ]]; then

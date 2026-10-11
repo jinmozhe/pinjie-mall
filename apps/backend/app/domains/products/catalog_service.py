@@ -15,6 +15,7 @@ from app.db.models.catalog import (
     SpecAttributeValue,
 )
 
+from .catalog_repository import CatalogSnapshot
 from .catalog_schemas import (
     AdoptionInput,
     AdoptionRead,
@@ -246,11 +247,27 @@ class CatalogService:
         await self.repository.save(category)
         return await self.read_template(category_id)
 
-    async def adoption_reads(self, product_id: UUID, *, current_only: bool = False) -> list[AdoptionRead]:
-        candidates = await self.repository.candidates(product_id)
-        descriptions = {row.adoption_id: row for row in await self.repository.descriptions(product_id)}
+    async def adoption_reads(
+        self, product_id: UUID, *, current_only: bool = False, snapshot: CatalogSnapshot | None = None
+    ) -> list[AdoptionRead]:
+        candidates = (
+            snapshot.candidates.get(product_id, [])
+            if snapshot is not None
+            else await self.repository.candidates(product_id)
+        )
+        description_rows = (
+            snapshot.descriptions.get(product_id, [])
+            if snapshot is not None
+            else await self.repository.descriptions(product_id)
+        )
+        adoptions = (
+            snapshot.adoptions.get(product_id, [])
+            if snapshot is not None
+            else await self.repository.adoptions(product_id)
+        )
+        descriptions = {row.adoption_id: row for row in description_rows}
         result: list[AdoptionRead] = []
-        for row in await self.repository.adoptions(product_id):
+        for row in adoptions:
             if current_only and not row.is_current:
                 continue
             item = AdoptionRead.model_validate(row)

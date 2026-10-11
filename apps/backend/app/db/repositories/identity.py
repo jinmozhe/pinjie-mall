@@ -23,6 +23,7 @@ from app.db.models import (
 )
 
 _SUPERUSER_GUARD_LOCK_KEY = 0x50494E4A49455355
+_MANAGEMENT_GUARD_LOCK_KEY = 0x50494E4A49454D47
 
 
 class UserRepository:
@@ -114,7 +115,7 @@ class AdminRepository:
             return []
         statement = select(Admin).where(Admin.id.in_(admin_ids)).options(self._with_permissions()).order_by(Admin.id)
         if for_update:
-            statement = statement.with_for_update()
+            statement = statement.with_for_update().execution_options(populate_existing=True)
         return list((await self.session.scalars(statement)).unique().all())
 
     def add(self, admin: Admin) -> None:
@@ -140,6 +141,22 @@ class AdminRepository:
     async def lock_active_superuser_guard(self) -> None:
         await self.session.execute(select(func.pg_advisory_xact_lock(_SUPERUSER_GUARD_LOCK_KEY)))
 
+    async def lock_management_guard(self) -> None:
+        await self.session.execute(select(func.pg_advisory_xact_lock(_MANAGEMENT_GUARD_LOCK_KEY)))
+
+    async def admin_ids_for_roles(self, role_ids: list[uuid.UUID]) -> list[uuid.UUID]:
+        if not role_ids:
+            return []
+        from app.db.models import admin_roles
+
+        statement = (
+            select(admin_roles.c.admin_id)
+            .where(admin_roles.c.role_id.in_(role_ids))
+            .distinct()
+            .order_by(admin_roles.c.admin_id)
+        )
+        return list((await self.session.scalars(statement)).all())
+
     async def get_roles(self, role_ids: list[uuid.UUID]) -> list[Role]:
         if not role_ids:
             return []
@@ -155,6 +172,7 @@ class AdminRepository:
             .join(admin_roles, Admin.id == admin_roles.c.admin_id)
             .where(admin_roles.c.role_id == role_id)
             .options(self._with_permissions())
+            .order_by(Admin.id)
             .with_for_update()
         )
         return list((await self.session.scalars(statement)).unique().all())

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
 import os
 import tempfile
 import uuid
@@ -162,33 +163,203 @@ class LocalStorageProvider:
 
     async def stage_delete(self, file_key: str) -> StagedDeletion:
         async with self._semaphore:
-            return await asyncio.to_thread(self._stage_delete_sync, file_key)
+            task = asyncio.create_task(asyncio.to_thread(self._stage_delete_sync, file_key))
+            try:
+                return await asyncio.shield(task)
+            except asyncio.CancelledError:
+                # Do not release the IO slot or lose the mapping while rename is still running.
+                deletion = await self._settle(task)
+                restore = asyncio.create_task(asyncio.to_thread(self._restore_sync, deletion))
+                await self._settle(restore)
+                raise
+
+    @staticmethod
+    async def _settle[T](task: asyncio.Task[T]) -> T:
+        while not task.done():
+            try:
+                await asyncio.shield(task)
+            except asyncio.CancelledError:
+                continue
+        return task.result()
+
+    def _trash_root(self) -> Path:
+        root = self._root.parent / f".{self._root.name}-trash"
+        if root.resolve() != root:
+            raise ValueError("trash directory must not be a link")
+        return root
+
+    @staticmethod
+    def _sync_directory(path: Path) -> None:
+        if os.name != "nt":
+            descriptor = os.open(path, os.O_RDONLY)
+            try:
+                os.fsync(descriptor)
+            finally:
+                os.close(descriptor)
+
+    def _deletion_paths(self, deletion: StagedDeletion) -> tuple[Path, Path]:
+        token = Path(deletion.token)
+        if (
+            token.parent != self._trash_root()
+            or token.resolve() != token
+            or uuid.UUID(hex=token.name).hex != token.name
+        ):
+            raise ValueError("invalid deletion token")
+        journal = token.with_suffix(".json")
+        if journal.resolve() != journal:
+            raise ValueError("deletion journal must not be a link")
+        return token, journal
 
     def _stage_delete_sync(self, file_key: str) -> StagedDeletion:
         source = self._safe_path(file_key)
         if not source.is_file():
             raise FileNotFoundError(file_key)
-        trash_root = self._root.parent / f".{self._root.name}-trash"
+        trash_root = self._trash_root()
         trash_root.mkdir(parents=True, exist_ok=True)
+        self._sync_directory(trash_root.parent)
         target = trash_root / uuid.uuid4().hex
-        os.replace(source, target)
-        return StagedDeletion(token=str(target), file_key=file_key)
+        # Publish and fsync the recovery mapping BEFORE moving the original file.
+        journal = target.with_suffix(".json")
+        with source.open("rb") as original:
+            digest = hashlib.file_digest(original, "sha256").hexdigest()
+        temporary = target.with_suffix(".tmp")
+        with temporary.open("x", encoding="utf-8") as stream:
+            json.dump({"schema_version": 1, "file_key": file_key, "sha256": digest}, stream)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, journal)
+        self._sync_directory(trash_root)
+        deletion = StagedDeletion(token=str(target), file_key=file_key)
+        try:
+            os.replace(source, target)
+            self._sync_directory(source.parent)
+            self._sync_directory(trash_root)
+        except BaseException:
+            self._restore_sync(deletion)
+            raise
+        return deletion
 
     async def restore(self, deletion: StagedDeletion) -> None:
         async with self._semaphore:
-            await asyncio.to_thread(self._restore_sync, deletion)
+            task = asyncio.create_task(asyncio.to_thread(self._restore_sync, deletion))
+            try:
+                await asyncio.shield(task)
+            except asyncio.CancelledError:
+                await self._settle(task)
+                raise
 
     def _restore_sync(self, deletion: StagedDeletion) -> None:
-        source = Path(deletion.token)
-        if not source.exists():
-            return
+        source, journal = self._deletion_paths(deletion)
         target = self._safe_path(deletion.file_key)
+        if not journal.exists():
+            if source.exists() or not target.is_file():
+                raise ValueError("deletion recovery mapping is missing")
+            return
+        try:
+            record = self._read_journal(journal)
+        except FileNotFoundError:
+            if source.exists() or not target.is_file():
+                raise
+            return
+        if record["file_key"] != deletion.file_key:
+            raise ValueError("deletion recovery mapping does not match")
         target.parent.mkdir(parents=True, exist_ok=True)
-        os.replace(source, target)
+        if target.exists():
+            # A completed restore or a crash before rename is safe only for the recorded bytes.
+            with target.open("rb") as stream:
+                if hashlib.file_digest(stream, "sha256").hexdigest() != record["sha256"]:
+                    raise OSError("recovery destination contains different content")
+            if source.exists() and not source.samefile(target):
+                raise OSError("both deletion source and destination exist; manual review required")
+        else:
+            try:
+                with source.open("rb") as stream:
+                    if hashlib.file_digest(stream, "sha256").hexdigest() != record["sha256"]:
+                        raise OSError("recovery content does not match")
+                # Linking is atomic and refuses to overwrite a concurrently created destination.
+                try:
+                    os.link(source, target)
+                except FileExistsError:
+                    if not source.samefile(target):
+                        raise OSError("recovery destination was replaced") from None
+            except FileNotFoundError:
+                # Another recovery may have completed the same restore after our existence check.
+                with target.open("rb") as stream:
+                    if hashlib.file_digest(stream, "sha256").hexdigest() != record["sha256"]:
+                        raise OSError("recovery destination contains different content") from None
+            self._sync_directory(target.parent)
+        source.unlink(missing_ok=True)
+        self._sync_directory(source.parent)
+        journal.unlink(missing_ok=True)
+        self._sync_directory(journal.parent)
 
     async def purge(self, deletion: StagedDeletion) -> None:
         async with self._semaphore:
-            await asyncio.to_thread(Path(deletion.token).unlink, missing_ok=True)
+            task = asyncio.create_task(asyncio.to_thread(self._purge_sync, deletion))
+            try:
+                await asyncio.shield(task)
+            except asyncio.CancelledError:
+                await self._settle(task)
+                raise
+
+    def _purge_sync(self, deletion: StagedDeletion) -> None:
+        target, journal = self._deletion_paths(deletion)
+        if not journal.exists():
+            if target.exists():
+                raise ValueError("deletion recovery mapping is missing")
+            return
+        try:
+            record = self._read_journal(journal)
+        except FileNotFoundError:
+            if target.exists():
+                raise
+            return
+        if record["file_key"] != deletion.file_key:
+            raise ValueError("deletion recovery mapping does not match")
+        try:
+            with target.open("rb") as stream:
+                if hashlib.file_digest(stream, "sha256").hexdigest() != record["sha256"]:
+                    raise OSError("deletion content does not match")
+        except FileNotFoundError:
+            pass  # A previous purge may have removed the bytes before clearing the journal.
+        target.unlink(missing_ok=True)
+        self._sync_directory(target.parent)
+        journal.unlink(missing_ok=True)
+        self._sync_directory(journal.parent)
+
+    def _read_journal(self, path: Path) -> dict[str, str]:
+        value = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(value, dict) or value.get("schema_version") != 1:
+            raise ValueError("invalid deletion recovery mapping")
+        key, digest = value.get("file_key"), value.get("sha256")
+        if (
+            not isinstance(key, str)
+            or not isinstance(digest, str)
+            or len(digest) != 64
+            or any(c not in "0123456789abcdef" for c in digest)
+        ):
+            raise ValueError("invalid deletion recovery fields")
+        self._safe_path(key)
+        return {"file_key": key, "sha256": digest}
+
+    async def pending_deletions(self) -> list[StagedDeletion]:
+        async with self._semaphore:
+            return await asyncio.to_thread(self._pending_deletions_sync)
+
+    def _pending_deletions_sync(self) -> list[StagedDeletion]:
+        result = []
+        for journal in sorted(self._trash_root().glob("*.json")):
+            token = journal.with_suffix("")
+            deletion = StagedDeletion(token=str(token), file_key="")
+            self._deletion_paths(deletion)
+            try:
+                record = self._read_journal(journal)
+            except FileNotFoundError:
+                if token.exists():
+                    raise
+                continue
+            result.append(StagedDeletion(token=str(token), file_key=record["file_key"]))
+        return result
 
     def _safe_path(self, file_key: str) -> Path:
         candidate = (self._root / file_key).resolve()

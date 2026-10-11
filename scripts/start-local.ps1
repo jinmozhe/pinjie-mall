@@ -63,17 +63,17 @@ $backendDirectory = Join-Path $repositoryRoot "apps\backend"
 Push-Location $backendDirectory
 try {
     Invoke-NativeCommand -FilePath "uv" -Arguments @("run", "alembic", "upgrade", "head")
-    Invoke-NativeCommand -FilePath "uv" -Arguments @(
-        "run", "python", "-m", "scripts.sync_permissions", "--check",
-        "--confirm-database", "pinjie_mall_dev"
-    )
-
     if ($ApplyPermissions) {
         Invoke-NativeCommand -FilePath "uv" -Arguments @(
             "run", "python", "-m", "scripts.sync_permissions", "--apply",
             "--confirm-database", "pinjie_mall_dev"
         )
     }
+
+    Invoke-NativeCommand -FilePath "uv" -Arguments @(
+        "run", "python", "-m", "scripts.sync_permissions", "--check",
+        "--confirm-database", "pinjie_mall_dev"
+    )
 
     Invoke-NativeCommand -FilePath "uv" -Arguments @(
         "run", "uvicorn", "app.main:app", "--reload",

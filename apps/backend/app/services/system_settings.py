@@ -32,6 +32,7 @@ from app.domains.settings.schemas import (
     SiteSettingPatchIn,
     SiteSettingValue,
 )
+from app.services.admin_audit import AdminAuditCoordinator
 from app.services.security_events import AuditCoordinator
 from app.services.settings_media import PreparedMediaOperation, SettingsMediaStore, StagedSiteLogo
 
@@ -48,6 +49,7 @@ class SystemSettingsService:
         settings: Settings,
         metadata: RequestMetadata,
         actor_id: uuid.UUID | None = None,
+        actor_session_id: uuid.UUID | None = None,
         media: SettingsMediaStore | None = None,
     ) -> None:
         self._session = session
@@ -55,6 +57,7 @@ class SystemSettingsService:
         self._settings = settings
         self._metadata = metadata
         self._actor_id = actor_id
+        self._actor_session_id = actor_session_id
         self._repository = SystemSettingRepository(session)
         self._media = media or SettingsMediaStore(settings.settings_media_root)
 
@@ -308,11 +311,16 @@ class SystemSettingsService:
         changed_fields: dict[str, object],
         operation: Callable[[], Awaitable[ResultSchema]],
     ) -> ResultSchema:
-        return await AuditCoordinator(
+        return await AdminAuditCoordinator(
+            audit=AuditCoordinator(
+                session=self._session,
+                session_factory=self._session_factory,
+                actor_id=self._require_actor(),
+                metadata=self._metadata,
+            ),
             session=self._session,
-            session_factory=self._session_factory,
             actor_id=self._require_actor(),
-            metadata=self._metadata,
+            session_id=self._actor_session_id,
         ).execute(
             action=action,
             target_type=target_type,
