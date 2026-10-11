@@ -44,7 +44,7 @@
       "cleanup": "主分支包含新契约后删除本条和计划标记，最迟 2026-10-18 UTC 前删除，不自动延期，不增加旧协议兼容。",
       "method": "DELETE",
       "path": "/api/v1/admin/commission-policies/{policy_id}/amount-rules/{rule_id}",
-      "message": "added the new required query request parameter `policy_revision`"
+      "message": "added the new required `query` request parameter `policy_revision`"
     },
     {
       "id": "static-review-f03-distribution-post",
@@ -89,7 +89,7 @@
       "cleanup": "主分支包含新契约后删除本条和计划标记，最迟 2026-10-18 UTC 前删除，不自动延期，不增加旧协议兼容。",
       "method": "DELETE",
       "path": "/api/v1/admin/commission-policies/{policy_id}/distribution-rules/{rule_id}",
-      "message": "added the new required query request parameter `policy_revision`"
+      "message": "added the new required `query` request parameter `policy_revision`"
     },
     {
       "id": "consumer-unification-001",
