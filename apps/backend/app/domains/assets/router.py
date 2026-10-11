@@ -79,7 +79,9 @@ async def delete_assets_bulk(
     service: AssetServiceDependency,
     current: Annotated[CurrentAdmin, Depends(require_admin_csrf)],
 ) -> ResponseModel[AssetBulkDeleteResult]:
-    result = await service.delete_bulk(asset_ids=payload.asset_ids, actor_id=current.admin.id)
+    result = await service.delete_bulk(
+        asset_ids=payload.asset_ids, actor_id=current.admin.id, actor_session_id=current.login_session.id
+    )
     return success_response(data=result, request_id=current_request_id(), message="文件资产批量删除成功")
 
 
@@ -95,7 +97,7 @@ async def delete_asset(
     service: AssetServiceDependency,
     current: Annotated[CurrentAdmin, Depends(require_admin_csrf)],
 ) -> ResponseModel[bool]:
-    await service.delete(asset_id=asset_id, actor_id=current.admin.id)
+    await service.delete(asset_id=asset_id, actor_id=current.admin.id, actor_session_id=current.login_session.id)
     return success_response(data=True, request_id=current_request_id(), message="文件资产删除成功")
 
 

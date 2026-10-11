@@ -2,11 +2,10 @@ import asyncio
 import json
 import time
 import uuid
-from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from importlib.metadata import version
 from platform import python_version
-from typing import Literal, TypeVar
+from typing import Literal
 
 from loguru import logger
 from pydantic import ValidationError
@@ -34,8 +33,7 @@ from app.db.repositories import (
     SessionRepository,
     UserRepository,
 )
-from app.db.repositories.commerce_access import CommerceAccessRepository
-from app.domains.admin.permissions import PERMISSION_CODES, ROLE_ASSIGNABLE_PERMISSION_CODES, PermissionCode
+from app.domains.admin.permissions import PERMISSION_CODES, ROLE_ASSIGNABLE_PERMISSION_CODES
 from app.domains.admin.presenters import admin_read, role_read
 from app.domains.admin.schemas import (
     AdminBulkStatusUpdateIn,
@@ -75,106 +73,16 @@ from app.domains.admin.schemas import (
     UserRestoreBatchIn,
 )
 from app.domains.users.schemas import UserUpdateIn
+from app.services.admin_audit import AdminAuditCoordinator
 from app.services.assets import resolve_admin_avatar
 from app.services.security_events import AuditCoordinator
 
 _FASTAPI_VERSION = version("fastapi")
 _PYTHON_VERSION = python_version()
 _SYSTEM_TELEMETRY_TTL_SECONDS = 120
-T = TypeVar("T")
 
 # 当前默认部署为单 Backend 实例；该锁避免同一实例内缓存失效时重复执行精确统计。
 _SYSTEM_TELEMETRY_REFRESH_LOCK = asyncio.Lock()
-
-_MANAGEMENT_ACTION_PERMISSIONS: dict[str, PermissionCode] = {
-    "users:create": PermissionCode.USERS_CREATE,
-    "users:update": PermissionCode.USERS_UPDATE,
-    "users:status:update": PermissionCode.USERS_UPDATE,
-    "users:status:update-bulk": PermissionCode.USERS_UPDATE,
-    "users:delete-bulk": PermissionCode.USERS_DELETE,
-    "users:restore": PermissionCode.USERS_RESTORE,
-    "users:restore-bulk": PermissionCode.USERS_RESTORE,
-    "users:credentials:reset": PermissionCode.USERS_CREDENTIALS_RESET,
-    "users:sessions:revoke": PermissionCode.USERS_SESSIONS_REVOKE,
-    "users:sessions:revoke-all": PermissionCode.USERS_SESSIONS_REVOKE,
-    "admins:create": PermissionCode.ADMINS_CREATE,
-    "admins:update": PermissionCode.ADMINS_UPDATE,
-    "admins:superuser:update": PermissionCode.ADMINS_SUPERUSER_CHANGE,
-    "admins:status:update": PermissionCode.ADMINS_UPDATE,
-    "admins:status:update-bulk": PermissionCode.ADMINS_UPDATE,
-    "admins:credentials:reset": PermissionCode.ADMINS_CREDENTIALS_RESET,
-    "admins:roles:assign": PermissionCode.ADMINS_ROLES_ASSIGN,
-    "admins:sessions:revoke-all": PermissionCode.ADMINS_SESSIONS_REVOKE,
-    "roles:create": PermissionCode.ROLES_CREATE,
-    "roles:update": PermissionCode.ROLES_UPDATE,
-    "roles:status:update-bulk": PermissionCode.ROLES_UPDATE,
-    "roles:delete": PermissionCode.ROLES_DELETE,
-    "roles:delete-bulk": PermissionCode.ROLES_DELETE,
-    "roles:permissions:assign": PermissionCode.ROLES_PERMISSIONS_ASSIGN,
-}
-
-
-class ManagementAuditCoordinator:
-    def __init__(
-        self, *, audit: AuditCoordinator, session: AsyncSession, actor_id: uuid.UUID, session_id: uuid.UUID | None
-    ) -> None:
-        self._audit = audit
-        self._access = CommerceAccessRepository(session)
-        self._sessions = SessionRepository(session)
-        self._actor_id = actor_id
-        self._session_id = session_id
-
-    async def execute(
-        self,
-        *,
-        action: str,
-        target_type: str,
-        target_id: uuid.UUID | None,
-        changed_fields: dict[str, object],
-        operation: Callable[[], Awaitable[T]],
-    ) -> T:
-        permission = _MANAGEMENT_ACTION_PERMISSIONS.get(action)
-        if permission is None:
-            raise ValueError(f"management action is missing a permission mapping: {action}")
-
-        async def authorized() -> T:
-            admin = await self._access.get_admin_for_update(self._actor_id)
-            now = datetime.now(UTC)
-            actor_session = (
-                await self._sessions.get_admin(self._session_id, for_update=True)
-                if self._session_id is not None
-                else None
-            )
-            if (
-                admin is None
-                or not admin.is_active
-                or (
-                    self._session_id is not None
-                    and (
-                        actor_session is None
-                        or actor_session.admin_id != self._actor_id
-                        or actor_session.revoked_at is not None
-                        or actor_session.idle_expires_at <= now
-                        or actor_session.absolute_expires_at <= now
-                    )
-                )
-            ):
-                raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="当前管理员权限已失效")
-            granted = admin.is_superuser or any(
-                role.is_active and any(item.is_active and item.code == permission.value for item in role.permissions)
-                for role in admin.roles
-            )
-            if not granted:
-                raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="当前管理员权限已失效")
-            return await operation()
-
-        return await self._audit.execute(
-            action=action,
-            target_type=target_type,
-            target_id=target_id,
-            changed_fields=changed_fields,
-            operation=authorized,
-        )
 
 
 class AdminManagementService:
@@ -202,7 +110,7 @@ class AdminManagementService:
         self.sessions = SessionRepository(session)
         self.security = SecurityRepository(session)
         self.request_logs = RequestLogRepository(session)
-        self.audit = ManagementAuditCoordinator(
+        self.audit = AdminAuditCoordinator(
             audit=AuditCoordinator(
                 session=session,
                 session_factory=session_factory,
@@ -673,6 +581,7 @@ class AdminManagementService:
         return await self.audit.execute(
             action="admins:status:update-bulk",
             target_type="admin_batch",
+            admin_ids=payload.admin_ids,
             target_id=None,
             changed_fields={
                 "admin_ids": [str(admin_id) for admin_id in payload.admin_ids],
@@ -838,6 +747,7 @@ class AdminManagementService:
         return await self.audit.execute(
             action="roles:status:update-bulk",
             target_type="role_batch",
+            role_ids=payload.role_ids,
             target_id=None,
             changed_fields={
                 "role_ids": [str(role_id) for role_id in payload.role_ids],
@@ -885,6 +795,7 @@ class AdminManagementService:
         return await self.audit.execute(
             action="roles:delete-bulk",
             target_type="role_batch",
+            role_ids=payload.role_ids,
             target_id=None,
             changed_fields={
                 "role_ids": [str(role_id) for role_id in payload.role_ids],

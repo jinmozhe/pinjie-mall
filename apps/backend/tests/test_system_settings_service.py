@@ -21,7 +21,7 @@ from app.domains.settings.schemas import (
     SiteSettingPatchIn,
     SiteSettingValue,
 )
-from app.services.security_events import AuditCoordinator
+from app.services.admin_audit import AdminAuditCoordinator
 from app.services.settings_media import PreparedMediaOperation, SettingsMediaStore, StagedSiteLogo
 from app.services.system_settings import SystemSettingsService, recover_settings_media
 from tests.conftest import TEST_SECRETS
@@ -90,7 +90,7 @@ def _service(
     return service
 
 
-async def _execute_audit_operation(_coordinator: AuditCoordinator, **kwargs):
+async def _execute_audit_operation(_coordinator: AdminAuditCoordinator, **kwargs):
     return await kwargs["operation"]()
 
 
@@ -205,7 +205,7 @@ async def test_system_settings_updates_values_and_enforces_revision(tmp_path: Pa
         get_admin_summary=AsyncMock(return_value=None),
     )
     service = _service(tmp_path, repository=repository, actor_id=actor_id)
-    monkeypatch.setattr(AuditCoordinator, "execute", _execute_audit_operation)
+    monkeypatch.setattr(AdminAuditCoordinator, "execute", _execute_audit_operation)
 
     updated_site = await service.update_site(SiteSettingPatchIn(revision=3, name="Updated Pinjie"))
     updated_registration = await service.update_registration(RegistrationSettingPatchIn(revision=8, enabled=True))
@@ -271,7 +271,7 @@ async def test_system_settings_uploads_and_deletes_logo(tmp_path: Path, monkeypa
     media.prepare_delete.return_value = deletion
     media.validate_logo.return_value = False
     service = _service(tmp_path, repository=repository, actor_id=actor_id, media=media)
-    monkeypatch.setattr(AuditCoordinator, "execute", _execute_audit_operation)
+    monkeypatch.setattr(AdminAuditCoordinator, "execute", _execute_audit_operation)
 
     uploaded = await service.upload_site_logo(BytesIO(b"logo"), revision=3)
     assert uploaded.logo is not None
@@ -295,7 +295,7 @@ async def test_system_settings_discards_staged_logo_on_revision_conflict(tmp_pat
     staged = _staged_logo()
     media.stage_site_logo.return_value = staged
     service = _service(tmp_path, repository=repository, actor_id=uuid.uuid7(), media=media)
-    monkeypatch.setattr(AuditCoordinator, "execute", _execute_audit_operation)
+    monkeypatch.setattr(AdminAuditCoordinator, "execute", _execute_audit_operation)
 
     with pytest.raises(AppException) as exc_info:
         await service.upload_site_logo(BytesIO(b"logo"), revision=2)
@@ -316,11 +316,11 @@ async def test_system_settings_rolls_back_prepared_logo_on_commit_failure(tmp_pa
     media.prepare_replace.return_value = prepared
     service = _service(tmp_path, repository=repository, actor_id=uuid.uuid7(), media=media)
 
-    async def fail_after_operation(_coordinator: AuditCoordinator, **kwargs):
+    async def fail_after_operation(_coordinator: AdminAuditCoordinator, **kwargs):
         await kwargs["operation"]()
         raise RuntimeError("database commit failed")
 
-    monkeypatch.setattr(AuditCoordinator, "execute", fail_after_operation)
+    monkeypatch.setattr(AdminAuditCoordinator, "execute", fail_after_operation)
 
     with pytest.raises(RuntimeError, match="database commit failed"):
         await service.upload_site_logo(BytesIO(b"logo"), revision=3)
@@ -344,11 +344,11 @@ async def test_system_settings_rolls_back_prepared_deletion_on_commit_failure(tm
     media.validate_logo.return_value = True
     service = _service(tmp_path, repository=repository, actor_id=uuid.uuid7(), media=media)
 
-    async def fail_after_operation(_coordinator: AuditCoordinator, **kwargs):
+    async def fail_after_operation(_coordinator: AdminAuditCoordinator, **kwargs):
         await kwargs["operation"]()
         raise RuntimeError("database commit failed")
 
-    monkeypatch.setattr(AuditCoordinator, "execute", fail_after_operation)
+    monkeypatch.setattr(AdminAuditCoordinator, "execute", fail_after_operation)
 
     with pytest.raises(RuntimeError, match="database commit failed"):
         await service.delete_site_logo(revision=3)

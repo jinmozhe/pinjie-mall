@@ -29,8 +29,21 @@ from app.domains.assets.schemas import (
     UploaderType,
     UploadScene,
 )
+from app.services.admin_audit import AdminAuditCoordinator
 from app.services.security_events import AuditCoordinator
-from app.services.storage import StagedDeletion, StagedFile, StorageProvider
+from app.services.storage import StagedDeletion, StagedFile, StorageProvider, create_storage_provider
+
+
+async def recover_asset_deletions(*, session_factory: async_sessionmaker[AsyncSession], settings: Settings) -> None:
+    storage = create_storage_provider(settings)
+    for deletion in await storage.pending_deletions():
+        async with session_factory() as session, transaction_scope(session):
+            # Wait for a live deletion's asset lock and use its committed database outcome.
+            asset = await AssetRepository(session).get_by_file_key(deletion.file_key, for_update=True)
+            if asset is not None:
+                await storage.restore(deletion)
+            else:
+                await storage.purge(deletion)
 
 
 @dataclass(frozen=True, slots=True)
@@ -223,20 +236,26 @@ class AssetService:
             total=total,
         )
 
-    async def delete(self, *, asset_id: uuid.UUID, actor_id: uuid.UUID) -> None:
+    async def delete(
+        self, *, asset_id: uuid.UUID, actor_id: uuid.UUID, actor_session_id: uuid.UUID | None = None
+    ) -> None:
         await self._delete_many(
             asset_ids=[asset_id],
             actor_id=actor_id,
+            actor_session_id=actor_session_id,
             action="asset.delete",
             target_type="asset",
             target_id=asset_id,
             missing_message="文件资产不存在",
         )
 
-    async def delete_bulk(self, *, asset_ids: builtins.list[uuid.UUID], actor_id: uuid.UUID) -> AssetBulkDeleteResult:
+    async def delete_bulk(
+        self, *, asset_ids: builtins.list[uuid.UUID], actor_id: uuid.UUID, actor_session_id: uuid.UUID | None = None
+    ) -> AssetBulkDeleteResult:
         return await self._delete_many(
             asset_ids=asset_ids,
             actor_id=actor_id,
+            actor_session_id=actor_session_id,
             action="assets:delete-bulk",
             target_type="asset_batch",
             target_id=None,
@@ -248,26 +267,38 @@ class AssetService:
         *,
         asset_ids: builtins.list[uuid.UUID],
         actor_id: uuid.UUID,
+        actor_session_id: uuid.UUID | None,
         action: str,
         target_type: str,
         target_id: uuid.UUID | None,
         missing_message: str,
     ) -> AssetBulkDeleteResult:
         deletions: builtins.list[tuple[uuid.UUID, StagedDeletion]] = []
-        audit = AuditCoordinator(
+        operation_completed = False
+        audit = AdminAuditCoordinator(
+            audit=AuditCoordinator(
+                session=self._session,
+                session_factory=self._session_factory,
+                actor_id=actor_id,
+                metadata=self._metadata,
+            ),
             session=self._session,
-            session_factory=self._session_factory,
             actor_id=actor_id,
-            metadata=self._metadata,
+            session_id=actor_session_id,
         )
 
         async def operation() -> AssetBulkDeleteResult:
+            nonlocal operation_completed
             assets = await self._assets.get_many(asset_ids, for_update=True)
             if len(assets) != len(asset_ids):
                 raise AppException(status_code=404, code=ErrorCode.ASSET_NOT_FOUND, message=missing_message)
             # 在循环外实例化 Repository，避免每次迭代重复创建对象
             commerce_access = CommerceAccessRepository(self._session)
             for asset in assets:
+                if await commerce_access.asset_is_category_icon(asset.id):
+                    raise AppException(
+                        status_code=409, code=ErrorCode.STATE_CONFLICT, message="分类图标正在被使用，无法删除"
+                    )
                 if await commerce_access.asset_is_product_image(asset.id) or await commerce_access.asset_is_brand_logo(
                     asset.id
                 ):
@@ -281,7 +312,7 @@ class AssetService:
             for asset in assets:
                 try:
                     deletion = await self._storage.stage_delete(asset.file_key)
-                except OSError as exc:
+                except (OSError, ValueError) as exc:
                     raise AppException(
                         status_code=503,
                         code=ErrorCode.ASSET_STORAGE_FAILED,
@@ -290,6 +321,7 @@ class AssetService:
                 deletions.append((asset.id, deletion))
             for asset in assets:
                 await self._assets.delete(asset)
+            operation_completed = True
             return AssetBulkDeleteResult(
                 completed_count=len(assets),
                 target_ids=[asset.id for asset in assets],
@@ -308,19 +340,37 @@ class AssetService:
             )
         except BaseException as original_exc:
             try:
-                await self._restore_deletions(deletions)
+                if operation_completed:
+                    # Commit may have succeeded even if its acknowledgement was lost.
+                    # A new transaction waits for the database outcome before touching bytes.
+                    for _, deletion in reversed(deletions):
+                        async with self._session_factory() as session, transaction_scope(session):
+                            asset = await AssetRepository(session).get_by_file_key(deletion.file_key, for_update=True)
+                            if asset is None:
+                                await self._storage.purge(deletion)
+                            else:
+                                await self._storage.restore(deletion)
+                else:
+                    await self._restore_deletions(deletions)
             except AppException as restore_exc:
                 raise restore_exc from original_exc
+            except (OSError, ValueError, SQLAlchemyError) as recovery_exc:
+                logger.opt(exception=recovery_exc).critical("asset deletion outcome recovery failed; journal retained")
+                raise AppException(
+                    status_code=503,
+                    code=ErrorCode.ASSET_STORAGE_FAILED,
+                    message="文件删除结果需要人工核查",
+                ) from original_exc
             raise
         await self._purge_deletions(deletions)
         return result
 
     async def _restore_deletions(self, deletions: builtins.list[tuple[uuid.UUID, StagedDeletion]]) -> None:
-        first_error: OSError | None = None
+        first_error: OSError | ValueError | None = None
         for asset_id, deletion in reversed(deletions):
             try:
                 await self._storage.restore(deletion)
-            except OSError as exc:
+            except (OSError, ValueError) as exc:
                 first_error = first_error or exc
                 logger.bind(asset_id=str(asset_id)).opt(exception=exc).critical(
                     "failed to restore asset after database rollback"
@@ -336,7 +386,7 @@ class AssetService:
         for asset_id, deletion in deletions:
             try:
                 await self._storage.purge(deletion)
-            except OSError as exc:
+            except (OSError, ValueError) as exc:
                 logger.bind(asset_id=str(asset_id)).opt(exception=exc).critical("failed to purge deleted asset trash")
 
     def _policy(self, scene: UploadScene) -> ScenePolicy:

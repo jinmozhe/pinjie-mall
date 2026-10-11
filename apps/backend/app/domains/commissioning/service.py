@@ -171,8 +171,11 @@ class CommissionPolicyService:
         async def operation() -> CommissionAmountRuleRead:
             policy = await self._require_policy(policy_id, lock=True)
             self._require_draft(policy)
+            self._advance_policy(policy, data.policy_revision)
             await self._validate_amount_rule(data)
-            row = CommissionAmountRule(id=new_uuid7(), policy_id=policy.id, **data.model_dump())
+            row = CommissionAmountRule(
+                id=new_uuid7(), policy_id=policy.id, **data.model_dump(exclude={"policy_revision"})
+            )
             self._session.add(row)
             await self._repository.flush()
             return CommissionAmountRuleRead.model_validate(row)
@@ -187,11 +190,12 @@ class CommissionPolicyService:
         async def operation() -> CommissionAmountRuleRead:
             policy = await self._require_policy(policy_id, lock=True)
             self._require_draft(policy)
+            self._advance_policy(policy, data.policy_revision)
             row = await self._repository.amount_rule(rule_id, lock=True)
             if row is None or row.policy_id != policy_id:
                 raise AppException(status_code=404, code=ErrorCode.NOT_FOUND, message="佣金来源规则不存在")
             await self._validate_amount_rule(data)
-            for field, value in data.model_dump().items():
+            for field, value in data.model_dump(exclude={"policy_revision"}).items():
                 setattr(row, field, value)
             row.updated_at = datetime.now(UTC)
             await self._repository.flush()
@@ -205,10 +209,11 @@ class CommissionPolicyService:
             operation,
         )
 
-    async def delete_amount_rule(self, policy_id: UUID, rule_id: UUID) -> None:
+    async def delete_amount_rule(self, policy_id: UUID, rule_id: UUID, *, policy_revision: int) -> None:
         async def operation() -> None:
             policy = await self._require_policy(policy_id, lock=True)
             self._require_draft(policy)
+            self._advance_policy(policy, policy_revision)
             row = await self._repository.amount_rule(rule_id, lock=True)
             if row is None or row.policy_id != policy_id:
                 raise AppException(status_code=404, code=ErrorCode.NOT_FOUND, message="佣金来源规则不存在")
@@ -229,6 +234,7 @@ class CommissionPolicyService:
         async def operation() -> CommissionDistributionRuleRead:
             policy = await self._require_policy(policy_id, lock=True)
             self._require_draft(policy)
+            self._advance_policy(policy, data.policy_revision)
             if data.ancestor_depth > policy.max_depth:
                 raise AppException(
                     status_code=422, code=ErrorCode.VALIDATION_ERROR, message="分配层级不能超过政策最大层级"
@@ -237,7 +243,9 @@ class CommissionPolicyService:
                 data.beneficiary_level_id
             ):
                 raise AppException(status_code=404, code=ErrorCode.NOT_FOUND, message="会员等级不存在")
-            row = CommissionDistributionRule(id=new_uuid7(), policy_id=policy.id, **data.model_dump())
+            row = CommissionDistributionRule(
+                id=new_uuid7(), policy_id=policy.id, **data.model_dump(exclude={"policy_revision"})
+            )
             self._session.add(row)
             await self._repository.flush()
             return CommissionDistributionRuleRead.model_validate(row)
@@ -256,6 +264,7 @@ class CommissionPolicyService:
         async def operation() -> CommissionDistributionRuleRead:
             policy = await self._require_policy(policy_id, lock=True)
             self._require_draft(policy)
+            self._advance_policy(policy, data.policy_revision)
             if data.ancestor_depth > policy.max_depth:
                 raise AppException(
                     status_code=422, code=ErrorCode.VALIDATION_ERROR, message="分配层级不能超过政策最大层级"
@@ -267,7 +276,7 @@ class CommissionPolicyService:
                 data.beneficiary_level_id
             ):
                 raise AppException(status_code=404, code=ErrorCode.NOT_FOUND, message="会员等级不存在")
-            for field, value in data.model_dump().items():
+            for field, value in data.model_dump(exclude={"policy_revision"}).items():
                 setattr(row, field, value)
             row.updated_at = datetime.now(UTC)
             await self._repository.flush()
@@ -281,10 +290,11 @@ class CommissionPolicyService:
             operation,
         )
 
-    async def delete_distribution_rule(self, policy_id: UUID, rule_id: UUID) -> None:
+    async def delete_distribution_rule(self, policy_id: UUID, rule_id: UUID, *, policy_revision: int) -> None:
         async def operation() -> None:
             policy = await self._require_policy(policy_id, lock=True)
             self._require_draft(policy)
+            self._advance_policy(policy, policy_revision)
             row = await self._repository.distribution_rule(rule_id, lock=True)
             if row is None or row.policy_id != policy_id:
                 raise AppException(status_code=404, code=ErrorCode.NOT_FOUND, message="三级分配矩阵规则不存在")
@@ -298,6 +308,13 @@ class CommissionPolicyService:
             {"operation": "delete_distribution_rule"},
             operation,
         )
+
+    def _advance_policy(self, policy: CommissionPolicy, revision: int) -> None:
+        if policy.revision != revision:
+            raise self._conflict("分佣政策已被其他管理员修改，请重新加载")
+        policy.revision += 1
+        policy.updated_at = datetime.now(UTC)
+        policy.updated_by_id = self._require_actor()
 
     async def publish_policy(self, policy_id: UUID, data: CommissionPolicyPublish) -> CommissionPolicyRead:
         async def operation() -> CommissionPolicyRead:

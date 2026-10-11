@@ -2,10 +2,7 @@ from collections.abc import Awaitable, Callable
 from typing import TypeVar
 from uuid import UUID
 
-from app.core.error_codes import ErrorCode
-from app.core.exceptions import AppException
-from app.db.repositories.commerce_access import CommerceAccessRepository
-from app.domains.admin.permissions import PERMISSION_CODES, PermissionCode
+from app.domains.admin.permissions import PermissionCode
 from app.domains.lifecycle import (
     FulfillmentRead,
     ReconciliationRecordCreate,
@@ -17,8 +14,8 @@ from app.domains.lifecycle import (
     VirtualDeliveryCreate,
 )
 from app.domains.orders import OrderAcceptance, OrderRead
+from app.services.admin_audit import AdminAuditCoordinator
 from app.services.payment_lifecycle import LifecycleService
-from app.services.security_events import AuditCoordinator
 
 T = TypeVar("T")
 
@@ -28,12 +25,10 @@ class AdminLifecycleApplicationService:
         self,
         *,
         lifecycle: LifecycleService,
-        access: CommerceAccessRepository,
-        audit: AuditCoordinator,
+        audit: AdminAuditCoordinator,
         actor_id: UUID,
     ) -> None:
         self.lifecycle = lifecycle
-        self.access = access
         self.audit = audit
         self.actor_id = actor_id
 
@@ -43,24 +38,13 @@ class AdminLifecycleApplicationService:
         target_id: UUID | None,
         operation: Callable[[], Awaitable[T]],
     ) -> T:
-        async def authorized() -> T:
-            admin = await self.access.get_admin_for_update(self.actor_id)
-            if admin is None or not admin.is_active or permission.value not in PERMISSION_CODES:
-                raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="当前管理员权限已失效")
-            granted = admin.is_superuser or any(
-                role.is_active and any(item.is_active and item.code == permission.value for item in role.permissions)
-                for role in admin.roles
-            )
-            if not granted:
-                raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="当前管理员权限已失效")
-            return await operation()
-
         return await self.audit.execute(
             action=permission.value,
             target_type=permission.value.split(":")[0],
             target_id=target_id,
             changed_fields={"operation": permission.value},
-            operation=authorized,
+            operation=operation,
+            permission=permission,
         )
 
     async def ship(self, order_id: UUID, data: ShipmentCreate) -> FulfillmentRead:
@@ -106,27 +90,11 @@ class AdminLifecycleApplicationService:
         )
 
     async def resolve_reconciliation(self, record_id: UUID, data: ReconciliationResolve) -> ReconciliationRecordRead:
-        async def authorized() -> ReconciliationRecordRead:
-            admin = await self.access.get_admin_for_update(self.actor_id)
-            if admin is None or not admin.is_active:
-                raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="当前管理员权限已失效")
-            granted = admin.is_superuser or any(
-                role.is_active
-                and any(
-                    item.is_active and item.code == PermissionCode.RECONCILIATION_RESOLVE.value
-                    for item in role.permissions
-                )
-                for role in admin.roles
-            )
-            if not granted:
-                raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="当前管理员权限已失效")
-            return await self.lifecycle.resolve_reconciliation_in_open_transaction(record_id, data, self.actor_id)
-
         return await self.audit.execute(
             action=PermissionCode.RECONCILIATION_RESOLVE.value,
             target_type="reconciliation_record",
             target_id=record_id,
             target_revision=data.revision + 1,
             changed_fields={"operation": PermissionCode.RECONCILIATION_RESOLVE.value, "resolution_status": "resolved"},
-            operation=authorized,
+            operation=lambda: self.lifecycle.resolve_reconciliation_in_open_transaction(record_id, data, self.actor_id),
         )

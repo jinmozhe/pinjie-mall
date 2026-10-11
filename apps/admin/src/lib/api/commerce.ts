@@ -143,11 +143,11 @@ export const commerceApi = {
   amountRules: (policyId: string) => apiRequest<CommissionAmountRuleRead[]>(`/api/v1/admin/commission-policies/${policyId}/amount-rules`),
   addAmountRule: (policyId: string, input: CommissionAmountRuleCreate) => apiRequest<CommissionAmountRuleRead>(`/api/v1/admin/commission-policies/${policyId}/amount-rules`, { method: "POST", body: jsonBody(input) }),
   updateAmountRule: (policyId: string, ruleId: string, input: CommissionAmountRuleCreate) => apiRequest<CommissionAmountRuleRead>(`/api/v1/admin/commission-policies/${policyId}/amount-rules/${ruleId}`, { method: "PUT", body: jsonBody(input) }),
-  deleteAmountRule: (policyId: string, ruleId: string) => apiRequest<void>(`/api/v1/admin/commission-policies/${policyId}/amount-rules/${ruleId}`, { method: "DELETE" }),
+  deleteAmountRule: (policyId: string, ruleId: string, policyRevision: number) => apiRequest<void>(`/api/v1/admin/commission-policies/${policyId}/amount-rules/${ruleId}?policy_revision=${policyRevision}`, { method: "DELETE" }),
   distributionRules: (policyId: string) => apiRequest<CommissionDistributionRuleRead[]>(`/api/v1/admin/commission-policies/${policyId}/distribution-rules`),
   addDistributionRule: (policyId: string, input: CommissionDistributionRuleCreate) => apiRequest<CommissionDistributionRuleRead>(`/api/v1/admin/commission-policies/${policyId}/distribution-rules`, { method: "POST", body: jsonBody(input) }),
   updateDistributionRule: (policyId: string, ruleId: string, input: CommissionDistributionRuleCreate) => apiRequest<CommissionDistributionRuleRead>(`/api/v1/admin/commission-policies/${policyId}/distribution-rules/${ruleId}`, { method: "PUT", body: jsonBody(input) }),
-  deleteDistributionRule: (policyId: string, ruleId: string) => apiRequest<void>(`/api/v1/admin/commission-policies/${policyId}/distribution-rules/${ruleId}`, { method: "DELETE" }),
+  deleteDistributionRule: (policyId: string, ruleId: string, policyRevision: number) => apiRequest<void>(`/api/v1/admin/commission-policies/${policyId}/distribution-rules/${ruleId}?policy_revision=${policyRevision}`, { method: "DELETE" }),
   durableTasks: (filters: CommerceFilters) =>
     apiRequest<PageResultDurableTaskRead>(`/api/v1/admin/durable-tasks?${queryString(filters)}`),
 };

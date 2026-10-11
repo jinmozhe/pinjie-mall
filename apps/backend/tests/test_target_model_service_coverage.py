@@ -19,6 +19,7 @@ from app.api import (
     membership_router,
     transaction_router,
 )
+from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.db.models.catalog import CategorySpecAttribute, ProductAttributeValue, ProductSpecAttribute, ProductSpecValue
 from app.domains.commissioning.schemas import (
@@ -649,18 +650,23 @@ async def test_commission_policy_lifecycle_and_control_are_versioned() -> None:
     assert changed.revision == 2
     amount = await service.add_amount_rule(
         created.id,
-        CommissionAmountRuleCreate(product_id=uuid7(), rule_mode="fixed_amount", amount_per_unit=Decimal("1.20")),
+        CommissionAmountRuleCreate(
+            policy_revision=2, product_id=uuid7(), rule_mode="fixed_amount", amount_per_unit=Decimal("1.20")
+        ),
     )
     store.amounts[amount.id] = session.added[-1]
     changed_amount = await service.update_amount_rule(
         created.id,
         amount.id,
-        CommissionAmountRuleCreate(sku_id=uuid7(), rule_mode="percentage", percentage_rate=Decimal("0.120000")),
+        CommissionAmountRuleCreate(
+            policy_revision=3, sku_id=uuid7(), rule_mode="percentage", percentage_rate=Decimal("0.120000")
+        ),
     )
     assert changed_amount.sku_id is not None and len(await service.amount_rules(created.id)) == 1
     distribution = await service.add_distribution_rule(
         created.id,
         CommissionDistributionRuleCreate(
+            policy_revision=4,
             buyer_level_id=uuid7(),
             beneficiary_level_id=uuid7(),
             ancestor_depth=1,
@@ -673,6 +679,7 @@ async def test_commission_policy_lifecycle_and_control_are_versioned() -> None:
         created.id,
         distribution.id,
         CommissionDistributionRuleCreate(
+            policy_revision=5,
             buyer_level_id=distribution.buyer_level_id,
             beneficiary_level_id=distribution.beneficiary_level_id,
             ancestor_depth=2,
@@ -681,13 +688,17 @@ async def test_commission_policy_lifecycle_and_control_are_versioned() -> None:
         ),
     )
     assert changed_distribution.ancestor_depth == 2 and len(await service.distribution_rules(created.id)) == 1
-    await service.delete_amount_rule(created.id, amount.id)
-    await service.delete_distribution_rule(created.id, distribution.id)
+    await service.delete_amount_rule(created.id, amount.id, policy_revision=6)
+    await service.delete_distribution_rule(created.id, distribution.id, policy_revision=7)
     store.deleted.update({amount.id, distribution.id})
     assert len([item for item in session.added if isinstance(item, tuple) and item[0] == "deleted"]) == 2
     context = await service.active_decision_context_in_open_transaction()
     assert context.policy is None and context.control.commissions_enabled
-    published = await service.publish_policy(created.id, CommissionPolicyPublish(revision=changed.revision))
+    with pytest.raises(AppException) as stale:
+        await service.publish_policy(created.id, CommissionPolicyPublish(revision=changed.revision))
+    assert stale.value.code == ErrorCode.COMMISSION_POLICY_CONFLICT
+    assert (await service.policy(created.id)).revision == 8
+    published = await service.publish_policy(created.id, CommissionPolicyPublish(revision=8))
     assert published.status == "active"
     context = await service.active_decision_context_in_open_transaction()
     assert context.policy is not None and not context.amount_rules and not context.distribution_rules
@@ -1068,11 +1079,11 @@ async def test_target_model_routers_delegate_every_operation_to_scoped_services(
     await commissioning_router.amount_rules(policy_id, service)
     await commissioning_router.add_amount_rule(policy_id, payload, service)  # type: ignore[arg-type]
     await commissioning_router.update_amount_rule(policy_id, amount_id, payload, service)  # type: ignore[arg-type]
-    await commissioning_router.delete_amount_rule(policy_id, amount_id, service)
+    await commissioning_router.delete_amount_rule(policy_id, amount_id, service, policy_revision=1)
     await commissioning_router.distribution_rules(policy_id, service)
     await commissioning_router.add_distribution_rule(policy_id, payload, service)  # type: ignore[arg-type]
     await commissioning_router.update_distribution_rule(policy_id, distribution_id, payload, service)  # type: ignore[arg-type]
-    await commissioning_router.delete_distribution_rule(policy_id, distribution_id, service)
+    await commissioning_router.delete_distribution_rule(policy_id, distribution_id, service, policy_revision=1)
     await commissioning_router.publish_policy(policy_id, payload, service)  # type: ignore[arg-type]
     assert len(service.calls) >= 40 and points.calls
 

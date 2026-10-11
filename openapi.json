@@ -7375,6 +7375,16 @@
             }
           },
           {
+            "name": "policy_revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "title": "Policy Revision"
+            }
+          },
+          {
             "name": "pinjie_admin_access",
             "in": "cookie",
             "required": false,
@@ -7644,6 +7654,16 @@
               "type": "string",
               "format": "uuid",
               "title": "Rule Id"
+            }
+          },
+          {
+            "name": "policy_revision",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "title": "Policy Revision"
             }
           },
           {
@@ -18678,12 +18698,19 @@
             ],
             "title": "Percentage Rate",
             "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "policy_revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Policy Revision",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "rule_mode"
+          "rule_mode",
+          "policy_revision"
         ],
         "title": "CommissionAmountRuleCreate"
       },
@@ -18952,6 +18979,12 @@
             ],
             "title": "Amount Per Unit",
             "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "policy_revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Policy Revision",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
           }
         },
         "additionalProperties": false,
@@ -18960,7 +18993,8 @@
           "buyer_level_id",
           "ancestor_depth",
           "beneficiary_level_id",
-          "allocation_mode"
+          "allocation_mode",
+          "policy_revision"
         ],
         "title": "CommissionDistributionRuleCreate"
       },

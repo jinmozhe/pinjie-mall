@@ -5,7 +5,7 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from pydantic import ValidationError
@@ -19,13 +19,14 @@ from app.core.exceptions import AppException
 from app.core.request_metadata import RequestMetadata
 from app.core.resources import create_resources
 from app.core.security import token_digest
-from app.db.models import Asset, AuditEvent
+from app.db.models import Admin, AdminSession, Asset, AuditEvent
 from app.db.transaction import transaction_scope
 from app.domains.assets.schemas import AssetBulkDeleteIn, AssetRead, UploaderType, UploadScene
 from app.main import app
+from app.services.admin_audit import AdminAuditCoordinator
 from app.services.assets import AssetService, AssetUploader
-from app.services.security_events import AuditCoordinator
 from app.services.storage import LocalStorageProvider, StagedDeletion
+from tests.admin_identity import admin_session
 from tests.conftest import TEST_SECRETS
 
 _PNG = b"\x89PNG\r\n\x1a\n" + b"asset-test-content"
@@ -125,6 +126,11 @@ def _asset_delete_service(*, storage: AsyncMock, assets: list[SimpleNamespace]) 
         metadata=_metadata(),
     )
     service._session.scalar.return_value = None
+    recovery_session = AsyncMock()
+    recovery_session.execute.return_value = MagicMock()
+    recovery_session.execute.return_value.scalar_one_or_none.return_value = assets[0] if assets else None
+    service._session_factory = MagicMock(return_value=recovery_session)
+    recovery_session.__aenter__.return_value = recovery_session
     service._assets = SimpleNamespace(  # type: ignore[assignment]
         get_many=AsyncMock(return_value=assets),
         delete=AsyncMock(),
@@ -133,7 +139,7 @@ def _asset_delete_service(*, storage: AsyncMock, assets: list[SimpleNamespace]) 
     return service
 
 
-async def _execute_audit_operation(_coordinator: AuditCoordinator, **kwargs):
+async def _execute_audit_operation(_coordinator: AdminAuditCoordinator, **kwargs):
     return await kwargs["operation"]()
 
 
@@ -151,7 +157,7 @@ async def test_asset_bulk_delete_restores_staged_files_when_later_staging_fails(
             SimpleNamespace(id=second_id, file_key="product/two.png", url="/static/uploads/product/two.png"),
         ],
     )
-    monkeypatch.setattr(AuditCoordinator, "execute", _execute_audit_operation)
+    monkeypatch.setattr(AdminAuditCoordinator, "execute", _execute_audit_operation)
 
     with pytest.raises(AppException) as exc_info:
         await service.delete_bulk(asset_ids=[first_id, second_id], actor_id=uuid.uuid7())
@@ -170,7 +176,7 @@ async def test_asset_delete_rejects_assets_referenced_by_avatar(monkeypatch) -> 
         assets=[SimpleNamespace(id=asset_id, file_key="avatar/used.png", url="/static/uploads/avatar/used.png")],
     )
     service._assets.is_referenced_by_avatar.return_value = True
-    monkeypatch.setattr(AuditCoordinator, "execute", _execute_audit_operation)
+    monkeypatch.setattr(AdminAuditCoordinator, "execute", _execute_audit_operation)
 
     with pytest.raises(AppException) as exc_info:
         await service.delete(asset_id=asset_id, actor_id=uuid.uuid7())
@@ -189,8 +195,8 @@ async def test_asset_delete_rejects_product_image_before_staging(monkeypatch) ->
         storage=storage,
         assets=[SimpleNamespace(id=asset_id, file_key="product/used.png", url="/static/uploads/product/used.png")],
     )
-    service._session.scalar.return_value = uuid.uuid7()
-    monkeypatch.setattr(AuditCoordinator, "execute", _execute_audit_operation)
+    service._session.scalar.side_effect = [None, uuid.uuid7()]
+    monkeypatch.setattr(AdminAuditCoordinator, "execute", _execute_audit_operation)
 
     with pytest.raises(AppException) as conflict:
         await service.delete(asset_id=asset_id, actor_id=uuid.uuid7())
@@ -202,7 +208,29 @@ async def test_asset_delete_rejects_product_image_before_staging(monkeypatch) ->
 
 
 @pytest.mark.asyncio
-async def test_asset_bulk_delete_restores_in_reverse_order_when_database_commit_fails(monkeypatch) -> None:
+@pytest.mark.parametrize("bulk", [False, True])
+async def test_category_icon_reference_rejects_single_and_bulk_deletion(monkeypatch, bulk) -> None:
+    asset_id = uuid.uuid7()
+    storage = AsyncMock()
+    service = _asset_delete_service(
+        storage=storage,
+        assets=[SimpleNamespace(id=asset_id, file_key="category/icon.png", url="/static/uploads/category/icon.png")],
+    )
+    service._session.scalar.return_value = uuid.uuid7()
+    monkeypatch.setattr(AdminAuditCoordinator, "execute", _execute_audit_operation)
+    with pytest.raises(AppException, match="分类图标正在被使用") as conflict:
+        if bulk:
+            await service.delete_bulk(asset_ids=[asset_id], actor_id=uuid.uuid7())
+        else:
+            await service.delete(asset_id=asset_id, actor_id=uuid.uuid7())
+    assert conflict.value.status_code == 409
+    storage.stage_delete.assert_not_awaited()
+    service._assets.delete.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("committed", [False, True])
+async def test_asset_bulk_delete_reconciles_unknown_commit_result(monkeypatch, committed) -> None:
     first_id = uuid.uuid7()
     second_id = uuid.uuid7()
     first_deletion = StagedDeletion(token="trash-one", file_key="product/one.png")
@@ -217,16 +245,23 @@ async def test_asset_bulk_delete_restores_in_reverse_order_when_database_commit_
         ],
     )
 
-    async def fail_after_operation(_coordinator: AuditCoordinator, **kwargs):
+    async def fail_after_operation(_coordinator: AdminAuditCoordinator, **kwargs):
         await kwargs["operation"]()
         raise RuntimeError("database commit failed")
 
-    monkeypatch.setattr(AuditCoordinator, "execute", fail_after_operation)
+    monkeypatch.setattr(AdminAuditCoordinator, "execute", fail_after_operation)
+    if committed:
+        service._session_factory.return_value.execute.return_value.scalar_one_or_none.return_value = None
 
     with pytest.raises(RuntimeError, match="database commit failed"):
         await service.delete_bulk(asset_ids=[first_id, second_id], actor_id=uuid.uuid7())
 
-    assert [call.args[0] for call in storage.restore.await_args_list] == [second_deletion, first_deletion]
+    if committed:
+        storage.restore.assert_not_awaited()
+        assert [call.args[0] for call in storage.purge.await_args_list] == [second_deletion, first_deletion]
+    else:
+        storage.purge.assert_not_awaited()
+        assert [call.args[0] for call in storage.restore.await_args_list] == [second_deletion, first_deletion]
 
 
 @pytest.mark.asyncio
@@ -243,7 +278,7 @@ async def test_asset_bulk_delete_reports_manual_review_when_restore_fails(monkey
             SimpleNamespace(id=uuid.uuid7(), file_key="product/two.png", url="/static/uploads/product/two.png"),
         ],
     )
-    monkeypatch.setattr(AuditCoordinator, "execute", _execute_audit_operation)
+    monkeypatch.setattr(AdminAuditCoordinator, "execute", _execute_audit_operation)
 
     with pytest.raises(AppException, match="文件删除结果需要人工核查") as exc_info:
         await service.delete_bulk(
@@ -265,7 +300,7 @@ async def test_asset_bulk_delete_keeps_committed_result_when_trash_purge_fails(m
         storage=storage,
         assets=[SimpleNamespace(id=asset_id, file_key=deletion.file_key, url="/static/uploads/product/one.png")],
     )
-    monkeypatch.setattr(AuditCoordinator, "execute", _execute_audit_operation)
+    monkeypatch.setattr(AdminAuditCoordinator, "execute", _execute_audit_operation)
 
     result = await service.delete_bulk(asset_ids=[asset_id], actor_id=uuid.uuid7())
 
@@ -532,7 +567,19 @@ async def test_asset_upload_deduplicates_and_audited_delete_uses_real_postgres(t
     uploader = AssetUploader(type=UploaderType.USER, id=uuid.uuid7())
     actor_id = uuid.uuid7()
     asset_id: uuid.UUID | None = None
+    login_session = admin_session(actor_id)
     try:
+        async with resources.session_factory() as session, transaction_scope(session):
+            session.add(
+                Admin(
+                    id=actor_id,
+                    username=f"assets-{actor_id.hex}",
+                    password_hash="unused",
+                    is_active=True,
+                    is_superuser=True,
+                )
+            )
+            session.add(login_session)
         async with resources.session_factory() as session:
             service = AssetService(
                 session=session,
@@ -578,7 +625,7 @@ async def test_asset_upload_deduplicates_and_audited_delete_uses_real_postgres(t
             assert stored is not None
             assert stored.file_hash == created.file_hash
 
-            await service.delete(asset_id=created.id, actor_id=actor_id)
+            await service.delete(asset_id=created.id, actor_id=actor_id, actor_session_id=login_session.id)
             assert not (settings.upload_local_root / created.file_key).exists()
 
         async with resources.session_factory() as session:
@@ -593,6 +640,8 @@ async def test_asset_upload_deduplicates_and_audited_delete_uses_real_postgres(t
             if asset_id is not None:
                 await session.execute(delete(Asset).where(Asset.id == asset_id))
                 await session.execute(delete(AuditEvent).where(AuditEvent.target_id == asset_id))
+            await session.execute(delete(AdminSession).where(AdminSession.admin_id == actor_id))
+            await session.execute(delete(Admin).where(Admin.id == actor_id))
         await resources.close()
 
 
@@ -606,7 +655,19 @@ async def test_asset_bulk_delete_filters_and_rejects_partial_targets(tmp_path: P
     actor_id = uuid.uuid7()
     asset_ids: list[uuid.UUID] = []
     file_keys: list[str] = []
+    login_session = admin_session(actor_id)
     try:
+        async with resources.session_factory() as session, transaction_scope(session):
+            session.add(
+                Admin(
+                    id=actor_id,
+                    username=f"assets-{actor_id.hex}",
+                    password_hash="unused",
+                    is_active=True,
+                    is_superuser=True,
+                )
+            )
+            session.add(login_session)
         async with resources.session_factory() as session:
             service = AssetService(
                 session=session,
@@ -641,11 +702,15 @@ async def test_asset_bulk_delete_filters_and_rejects_partial_targets(tmp_path: P
 
             missing_id = uuid.uuid7()
             with pytest.raises(AppException) as missing_exc:
-                await service.delete_bulk(asset_ids=[first.id, missing_id], actor_id=actor_id)
+                await service.delete_bulk(
+                    asset_ids=[first.id, missing_id], actor_id=actor_id, actor_session_id=login_session.id
+                )
             assert missing_exc.value.code == ErrorCode.ASSET_NOT_FOUND
             assert all((settings.upload_local_root / file_key).is_file() for file_key in file_keys)
 
-            result = await service.delete_bulk(asset_ids=list(reversed(asset_ids)), actor_id=actor_id)
+            result = await service.delete_bulk(
+                asset_ids=list(reversed(asset_ids)), actor_id=actor_id, actor_session_id=login_session.id
+            )
             assert result.completed_count == 2
             assert result.target_ids == sorted(asset_ids)
             assert all(not (settings.upload_local_root / file_key).exists() for file_key in file_keys)
@@ -669,6 +734,8 @@ async def test_asset_bulk_delete_filters_and_rejects_partial_targets(tmp_path: P
             if asset_ids:
                 await session.execute(delete(Asset).where(Asset.id.in_(asset_ids)))
             await session.execute(delete(AuditEvent).where(AuditEvent.actor_id == actor_id))
+            await session.execute(delete(AdminSession).where(AdminSession.admin_id == actor_id))
+            await session.execute(delete(Admin).where(Admin.id == actor_id))
         for file_key in file_keys:
             (settings.upload_local_root / file_key).unlink(missing_ok=True)
         await resources.close()

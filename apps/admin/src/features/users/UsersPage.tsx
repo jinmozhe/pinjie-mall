@@ -21,6 +21,7 @@ import { StatusToggleTag } from "@/components/StatusToggleTag";
 import { canAccess, useCurrentAdmin } from "@/features/auth";
 import { adminApi } from "@/lib/api/admin";
 import { errorMessage } from "@/lib/api/http";
+import { useLockedMutation } from "@/lib/useLockedMutation";
 
 type UserLifecycle = "all" | "active" | "inactive" | "deleted";
 type CreateUserFormValues = AdminUserCreateIn & { confirm_password: string };
@@ -143,11 +144,15 @@ export function UsersPage() {
       passwordForm.resetFields();
     },
   });
-  const revokeSessionsMutation = useMutation({
+  const revokeSessionsMutation = useLockedMutation({
     mutationFn: (userId: string) => adminApi.revokeUserSessions(userId),
-    onSuccess: async () => {
+    onSuccess: async (_, userId) => {
       message.success("会话已撤销");
-      await sessions.refetch();
+      await queryClient.invalidateQueries({ queryKey: ["admin-user-sessions", userId] });
+    },
+    onError: async (error, userId) => {
+      message.error(`会话撤销未确认：${errorMessage(error)}。请核对刷新后的会话状态，再决定是否重试。`);
+      await queryClient.invalidateQueries({ queryKey: ["admin-user-sessions", userId] });
     },
   });
   const submitSearch = () => {
@@ -369,7 +374,7 @@ export function UsersPage() {
               <Space className="table-actions" size={[4, 0]} wrap={false}>
                 {canUpdate && <Button type="link" size="small" icon={<EditOutlined />} onClick={() => { setEditing(row); editForm.setFieldsValue({ display_name: row.display_name ?? undefined, email: row.email ?? undefined }); }}>编辑</Button>}
                  {canUpdate && <Button type="link" size="small" icon={<PoweroffOutlined />} danger={row.is_active} loading={statusMutation.isPending && statusMutation.variables?.userId === row.id} disabled={statusMutation.isPending && statusMutation.variables?.userId === row.id} onClick={() => statusMutation.mutate({ userId: row.id, isActive: !row.is_active })}>{row.is_active ? "停用" : "启用"}</Button>}
-                {canAccess(current, "users:sessions:read") && <Button type="link" size="small" icon={<LaptopOutlined />} onClick={() => { setSessionPage(1); setSelected(row); }}>会话</Button>}
+                {canAccess(current, "users:sessions:read") && <Button type="link" size="small" disabled={revokeSessionsMutation.isPending} icon={<LaptopOutlined />} onClick={() => { setSessionPage(1); setSelected(row); }}>会话</Button>}
                 {canAccess(current, "users:credentials:reset") && <Button type="link" size="small" icon={<KeyOutlined />} onClick={() => { setPasswordTarget(row); passwordForm.resetFields(); }}>重置密码</Button>}
                 {canDelete && <Button type="link" size="small" danger icon={<DeleteOutlined />} loading={batchDeleteMutation.isPending && batchDeleteMutation.variables?.userIds.length === 1 && batchDeleteMutation.variables.userIds[0] === row.id} onClick={() => { setDeleteTargets([row.id]); deleteReasonForm.resetFields(); }}>删除</Button>}
               </Space>
@@ -489,10 +494,10 @@ export function UsersPage() {
         </Form>
       </StandardConfirmModal>
 
-      <Drawer open={Boolean(selected)} styles={{ wrapper: { width: 560 } }} title={selected ? `${selected.username} 的会话` : "用户会话"} onClose={() => { setSelected(null); setSessionPage(1); }} extra={selected && canAccess(current, "users:sessions:revoke") ? <Button danger loading={revokeSessionsMutation.isPending} onClick={() => revokeSessionsMutation.mutate(selected.id)}>撤销全部</Button> : null}>
+      <Drawer open={Boolean(selected)} closable={!revokeSessionsMutation.isPending} keyboard={!revokeSessionsMutation.isPending} mask={{ closable: !revokeSessionsMutation.isPending }} styles={{ wrapper: { width: 560 } }} title={selected ? `${selected.username} 的会话` : "用户会话"} onClose={() => { if (revokeSessionsMutation.isPending) return; setSelected(null); setSessionPage(1); }} extra={selected && canAccess(current, "users:sessions:revoke") ? <Button danger disabled={sessions.isFetching || sessions.isError || !sessions.data} loading={revokeSessionsMutation.isPending} onClick={() => revokeSessionsMutation.mutate(selected.id)}>撤销全部</Button> : null}>
         <QueryState loading={sessions.isLoading} error={sessions.isError ? errorMessage(sessions.error) : undefined} empty={sessions.data?.items.length === 0} onRetry={() => void sessions.refetch()} />
-        {sessions.data?.items.map((session) => <div className="session-row" key={session.id}><Flex justify="space-between"><Typography.Text strong>{session.device_name || "未知设备"}</Typography.Text>{session.revoked_at ? <Tag>已撤销</Tag> : <Tag color="success">有效</Tag>}</Flex><Typography.Text type="secondary">{session.ip_masked || "未知地址"} · 最近活动 {formatTime(session.last_seen_at)}</Typography.Text></div>)}
-        {sessions.data && sessions.data.total_pages > 1 && <Pagination current={sessionPage} pageSize={sessions.data.page_size} total={sessions.data.total} showSizeChanger={false} onChange={setSessionPage} />}
+        {!sessions.isError && sessions.data?.items.map((session) => <div className="session-row" key={session.id}><Flex justify="space-between"><Typography.Text strong>{session.device_name || "未知设备"}</Typography.Text>{session.revoked_at ? <Tag>已撤销</Tag> : <Tag color="success">有效</Tag>}</Flex><Typography.Text type="secondary">{session.ip_masked || "未知地址"} · 最近活动 {formatTime(session.last_seen_at)}</Typography.Text></div>)}
+        {!sessions.isError && sessions.data && sessions.data.total_pages > 1 && <Pagination disabled={revokeSessionsMutation.isPending} current={sessionPage} pageSize={sessions.data.page_size} total={sessions.data.total} showSizeChanger={false} onChange={setSessionPage} />}
       </Drawer>
 
     </PageFrame>

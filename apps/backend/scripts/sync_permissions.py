@@ -30,7 +30,11 @@ async def _run(args: argparse.Namespace) -> int:
             current = {item.code: item for item in await repository.list_permissions()}
             expected = {item.code: item for item in PERMISSION_CATALOG}
             missing = sorted(expected.keys() - current.keys())
-            obsolete = sorted(current.keys() - expected.keys())
+            obsolete = sorted(
+                code
+                for code in current.keys() - expected.keys()
+                if current[code].is_active or current[code].catalog_version != CATALOG_VERSION
+            )
             changed = sorted(
                 code
                 for code in expected.keys() & current.keys()

@@ -2,7 +2,6 @@ import type {
   AdoptionRead,
   CandidateRead,
   ProductRead,
-  SkuUpdate,
 } from "@pinjie/api-client";
 import {
   ApartmentOutlined,
@@ -31,10 +30,12 @@ import {
   Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { commerceApi } from "@/lib/api/commerce";
+import { canAccess, useCurrentAdmin } from "@/features/auth";
+import { StandardConfirmModal } from "@/components/StandardConfirmModal";
 import { errorMessage } from "@/lib/api/http";
+import { boundedCombinationCount, readSkuJob, runSkuJob, type SkuJob } from "./batch-sku-job";
 
 type VariantDimension = {
   adoption: AdoptionRead;
@@ -103,17 +104,6 @@ function generateSkuCode(index: number, timestampPrefix?: string): string {
   return `${prefix}${seq}`;
 }
 
-function safeUUID(): string {
-  if (typeof globalThis.crypto?.randomUUID === "function") {
-    return globalThis.crypto.randomUUID();
-  }
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
-
 const noWrapCell = () => ({ style: { whiteSpace: "nowrap" } });
 
 type Props = {
@@ -125,7 +115,12 @@ type Props = {
   product: ProductRead;
 };
 
-export function BatchDeriveSkuModal({
+export function BatchDeriveSkuModal(props: Props) {
+  const admin = useCurrentAdmin();
+  return <BatchDeriveSkuForm key={`${admin.id}:${props.product.id}`} {...props} />;
+}
+
+function BatchDeriveSkuForm({
   close,
   dimensions,
   onBusyChange,
@@ -134,6 +129,22 @@ export function BatchDeriveSkuModal({
   product,
 }: Props) {
   const { message } = App.useApp();
+  const admin = useCurrentAdmin();
+  const canInitializeInventory = canAccess(admin, "inventory:read") && canAccess(admin, "inventory:adjust");
+  const jobKey = `pinjie:sku-derivation:v1:${admin?.id}:${product.id}`;
+  const [restored] = useState(() => {
+    try { return { job: readSkuJob(jobKey), error: "", key: jobKey }; }
+    catch (error) { return { job: null, error: errorMessage(error), key: jobKey }; }
+  });
+  const [job, setJob] = useState<SkuJob | null>(restored.job);
+  const [jobError, setJobError] = useState(restored.error);
+  const submitLock = useRef(false);
+  const lifecycle = useRef(0);
+  useEffect(() => () => { lifecycle.current += 1; }, []);
+  const initialized = useRef(false);
+  const [combinationOverflow, setCombinationOverflow] = useState(false);
+  const [endingJob, setEndingJob] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<string | null>(null);
 
   // 每个销售维度当前选中的候选值 ID 列表
   const [selectedCandidateIds, setSelectedCandidateIds] = useState<Record<string, string[]>>({});
@@ -176,7 +187,9 @@ export function BatchDeriveSkuModal({
 
   // 打开弹窗时初始化：默认勾选所有维度的所有当前有效候选值
   useEffect(() => {
-    if (!open) return;
+    if (!open) { initialized.current = false; return; }
+    if (initialized.current) return;
+    initialized.current = true;
     const initialSelections: Record<string, string[]> = {};
     for (const dimension of dimensions) {
       initialSelections[dimension.adoption.id] = dimension.candidates.map((candidate) => candidate.id);
@@ -213,7 +226,15 @@ export function BatchDeriveSkuModal({
 
   // 当勾选候选值变化时，重新做笛卡尔积计算，并排除已存在的 SKU 组合
   useEffect(() => {
-    if (!open) return;
+    if (!open || job) return;
+
+    // Bound the product BEFORE expanding or allocating combinations.
+    const count = boundedCombinationCount(dimensions.map((dimension) => selectedCandidateIds[dimension.adoption.id]?.length ?? 0));
+    setCombinationOverflow(count > 100);
+    if (count > 100) {
+      setDraftSkus([]);
+      return;
+    }
 
     // 检查是否有任何维度一个候选值都没勾选
     const hasEmptyDimension = dimensions.some(
@@ -292,7 +313,7 @@ export function BatchDeriveSkuModal({
     }
 
     setDraftSkus(nextDrafts);
-  }, [selectedCandidateIds, dimensions, existingSignatures, open]);
+  }, [selectedCandidateIds, dimensions, existingSignatures, open, job]);
 
   // 切换某个维度中候选值的勾选
   const handleToggleCandidate = (adoptionId: string, candidateId: string, checked: boolean) => {
@@ -323,10 +344,15 @@ export function BatchDeriveSkuModal({
 
   // 批量应用工具栏数值
   const handleBatchApply = () => {
+    if (job || submitting) return;
     const hasPrice = batchPrice !== null && batchPrice !== undefined && batchPrice !== "";
     const hasMarketPrice = batchMarketPrice !== null && batchMarketPrice !== undefined && batchMarketPrice !== "";
     const hasCostPrice = batchCostPrice !== null && batchCostPrice !== undefined && batchCostPrice !== "";
     const hasQuantity = batchQuantity !== null && batchQuantity !== undefined;
+    if (hasQuantity && !canInitializeInventory) {
+      message.error("初始化库存需要库存查看和调整权限");
+      return;
+    }
 
     if (!hasPrice && !hasMarketPrice && !hasCostPrice && !hasQuantity) {
       message.warning("请至少输入一项要批量填充的数据（售价、划线价、成本价或初始库存）");
@@ -390,7 +416,50 @@ export function BatchDeriveSkuModal({
   };
 
   // 提交并批量创建 SKU
+  const continueJob = async (activeJob: SkuJob) => {
+    if (submitLock.current) return;
+    if (jobKey !== restored.key) {
+      message.error("管理员身份或商品已变化，请重新打开商品，原账号恢复草稿保持保留。");
+      return;
+    }
+    if (activeJob.rows.some((row) => !row.completed && row.quantity > 0) && !canInitializeInventory) {
+      message.error("初始化库存需要库存查看和调整权限；恢复草稿已保留。");
+      return;
+    }
+    submitLock.current = true;
+    const startedLifecycle = lifecycle.current;
+    setSubmitting(true);
+    setJobError("");
+    setJob(activeJob);
+    const persist = () => {
+      window.sessionStorage.setItem(jobKey, JSON.stringify(activeJob));
+      setJob({ ...activeJob });
+    };
+    try {
+      persist();
+      await runSkuJob(product.id, activeJob, persist, onSaved, (completed, total, code) => {
+        setProgressText(`正在处理 ${completed + 1} / ${total}：${code}`);
+        setProgressPercent(Math.floor(completed / total * 100));
+      }, () => {
+        if (lifecycle.current !== startedLifecycle) throw new Error("已离开本批次，恢复记录保留，请原账号重新打开商品继续");
+      });
+      window.sessionStorage.removeItem(jobKey);
+      setJob(null);
+      message.success(`已完成 ${activeJob.rows.length} 个 SKU 及其初始库存`);
+      close();
+    } catch (error) {
+      const detail = errorMessage(error);
+      setJobError(detail);
+      message.error(`批次已暂停：${detail}。已保存结果会保留，继续时仅处理未完成步骤。`);
+    } finally {
+      submitLock.current = false;
+      setSubmitting(false);
+    }
+  };
+
   const handleSubmit = async () => {
+    if (submitLock.current || restored.error) return;
+    if (job) { await continueJob(job); return; }
     const selectedRows = draftSkus.filter((sku) => sku.selected);
     if (!selectedRows.length) {
       message.warning("请至少勾选一个要派生并创建的 SKU 组合");
@@ -431,65 +500,16 @@ export function BatchDeriveSkuModal({
       }
     }
 
-    setSubmitting(true);
-    let currentProduct = product;
-    let successCount = 0;
-
-    try {
-      for (const [idx, row] of selectedRows.entries()) {
-        const currentStep = idx + 1;
-        const total = selectedRows.length;
-        setProgressText(`正在保存第 ${currentStep} / ${total} 个 SKU：${row.code}...`);
-        setProgressPercent(Math.floor(((idx) / total) * 100));
-
-        // 1. 调用 writeSku 创建单个 SKU，严格携带最新的 currentProduct.revision
-        const skuInput: SkuUpdate = {
-          code: row.code.trim(),
-          price: String(row.price),
-          cost_price: row.cost_price ? String(row.cost_price) : null,
-          market_price: row.market_price ? String(row.market_price) : null,
-          weight_grams: row.weight_grams ?? null,
-          is_active: row.is_active,
-          spec_value_ids: row.spec_value_ids,
-          revision: currentProduct.revision,
-        };
-
-        currentProduct = await commerceApi.writeSku(product.id, skuInput);
-
-        // 2. 如果填写了初始库存且大于 0，调用库存调整接口初始化流水
-        if (row.initial_quantity && row.initial_quantity > 0) {
-          const createdSku = currentProduct.skus.find((s) => s.code === row.code.trim());
-          if (createdSku) {
-            setProgressText(`正在初始化第 ${currentStep} / ${total} 个 SKU 库存流水...`);
-            const inv = await commerceApi.inventory(createdSku.id);
-            await commerceApi.adjustInventory(createdSku.id, {
-              request_id: safeUUID(),
-              revision: inv.revision,
-              quantity_delta: row.initial_quantity,
-              reason: "批量派生初始可售库存",
-            });
-          }
-        }
-
-        successCount += 1;
-      }
-
-      setProgressPercent(100);
-      setProgressText(`成功创建全部 ${successCount} 个 SKU！`);
-      await onSaved(currentProduct);
-      message.success(`已成功批量派生并创建 ${successCount} 个 SKU 组合！`);
-      close();
-    } catch (error) {
-      if (successCount > 0) {
-        // 部分保存成功时，同步更新最新商品状态
-        await onSaved(currentProduct);
-        message.warning(`已保存前 ${successCount} 个 SKU，后续处理中断：${errorMessage(error)}`);
-      } else {
-        message.error(`批量派生失败：${errorMessage(error)}`);
-      }
-    } finally {
-      setSubmitting(false);
-    }
+    await continueJob({ version: 1, rows: selectedRows.map((row) => ({
+      input: {
+        code: row.code.trim(), price: String(row.price),
+        cost_price: row.cost_price ? String(row.cost_price) : null,
+        market_price: row.market_price ? String(row.market_price) : null,
+        weight_grams: row.weight_grams ?? null, is_active: row.is_active,
+        spec_value_ids: row.spec_value_ids, revision: product.revision,
+      },
+      quantity: row.initial_quantity, attempted: false, completed: false,
+    })) });
   };
 
   const columns: ColumnsType<BatchSkuDraft> = [
@@ -635,7 +655,7 @@ export function BatchDeriveSkuModal({
           max={1000000000}
           precision={0}
           value={qty}
-          disabled={submitting}
+          disabled={submitting || !canInitializeInventory}
           onChange={(val) => updateDraftRow(row.key, { initial_quantity: Number(val ?? 0) })}
           style={{ width: "100%" }}
         />
@@ -673,7 +693,7 @@ export function BatchDeriveSkuModal({
           icon={<DeleteOutlined />}
           disabled={submitting}
           title="移除此待派生组合"
-          onClick={() => removeDraftRow(row.key)}
+          onClick={() => setRemoveTarget(row.key)}
         />
       ),
     },
@@ -694,6 +714,9 @@ export function BatchDeriveSkuModal({
       mask={{ closable: !submitting }}
       onCancel={() => { if (!submitting) close(); }}
       footer={[
+        <Button key="end" danger hidden={!job} disabled={submitting || !job?.rows.every((row) => row.completed || !row.attempted || (row.skuId && !row.adjustment))} onClick={() => setEndingJob(true)}>
+          结束批次，保留已保存结果
+        </Button>,
         <Button key="cancel" disabled={submitting} onClick={close}>
           取消
         </Button>,
@@ -701,13 +724,36 @@ export function BatchDeriveSkuModal({
           key="submit"
           type="primary"
           loading={submitting}
-          disabled={!draftSkus.length || selectedDraftCount === 0}
+          disabled={Boolean(restored.error) || (!job && (!draftSkus.length || selectedDraftCount === 0))}
           onClick={() => void handleSubmit()}
         >
-          {submitting ? "正在批量创建..." : `确认派生并创建（${selectedDraftCount} 个 SKU）`}
+          {submitting ? "正在处理..." : job ? "继续未完成步骤" : `确认派生并创建（${selectedDraftCount} 个 SKU）`}
         </Button>,
       ]}
     >
+      {jobError && <Alert showIcon type="error" title={jobError} style={{ marginBottom: 16 }} />}
+      <StandardConfirmModal open={endingJob} title="结束剩余派生操作" loading={submitting}
+        description="已创建 SKU 和已完成库存保持保留；放弃尚未提交的步骤。存在结果未知的创建或库存请求时不允许结束，须先点击继续核对。结束后如需补充库存，请在库存管理中单独操作。"
+        onCancel={() => setEndingJob(false)} onConfirm={async () => {
+          if (submitLock.current || jobKey !== restored.key || !job?.rows.every((row) => row.completed || !row.attempted || (row.skuId && !row.adjustment))) throw new Error("仍有结果未知的请求，不能结束批次");
+          window.sessionStorage.removeItem(jobKey);
+          setJob(null);
+          setEndingJob(false);
+          close();
+        }} />
+      <StandardConfirmModal open={Boolean(removeTarget)} title="移除待派生组合" loading={submitting}
+        description="只移除本次尚未提交的草稿，不删除已经保存的 SKU。" onCancel={() => setRemoveTarget(null)}
+        onConfirm={async () => { if (removeTarget && !job && !submitLock.current) removeDraftRow(removeTarget); setRemoveTarget(null); }} />
+      {job && <Alert showIcon type="warning" title="批次恢复记录已保留" style={{ marginBottom: 16 }}
+        description={<div>
+          <p>已创建 {job.rows.filter((row) => row.skuId).length} 个 SKU，已完成 {job.rows.filter((row) => row.completed).length} / {job.rows.length} 项。请使用“继续未完成步骤”，不要手工重复增加初始库存。可关闭弹窗，使用当前账号在同一浏览器标签页重新打开本商品继续；请勿关闭标签页或清除站点数据。</p>
+          {job.rows.filter((row) => !row.completed).map((row) => <div key={row.input.code}>
+            {row.input.code}：{row.skuId ? "SKU 已创建，库存待完成" : row.attempted ? "创建结果待读取确认" : "尚未创建"}
+            {row.adjustment && `，库存请求号 ${row.adjustment.request_id}`}
+          </div>)}
+        </div>} />}
+      {combinationOverflow && <Alert showIcon type="warning" title="所选候选值组合超过 100 个，请减少候选值后再生成。" style={{ marginBottom: 16 }} />}
+      <div inert={Boolean(job) || Boolean(restored.error)}>
       <Alert
         showIcon
         type="info"
@@ -831,7 +877,7 @@ export function BatchDeriveSkuModal({
               min={0}
               max={1000000000}
               precision={0}
-              disabled={submitting}
+              disabled={submitting || !canInitializeInventory}
               value={batchQuantity ?? undefined}
               onChange={(val) => setBatchQuantity(val ?? null)}
             />
@@ -893,6 +939,7 @@ export function BatchDeriveSkuModal({
           columns={columns}
         />
       )}
+      </div>
     </Modal>
   );
 }

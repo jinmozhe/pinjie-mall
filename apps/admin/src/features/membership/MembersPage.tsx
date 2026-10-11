@@ -9,7 +9,8 @@ import type {
   MemberLevelEventRead,
 } from "@pinjie/api-client";
 import { CommerceList } from "@/components/CommerceList";
-import { PageFrame } from "@/components/PageFrame";
+import { PageFrame, QueryState } from "@/components/PageFrame";
+import { errorMessage } from "@/lib/api/http";
 import { commerceApi } from "@/lib/api/commerce";
 
 export default function MembersPage() {
@@ -18,13 +19,13 @@ export default function MembersPage() {
   const [qualPage, setQualPage] = useState(1);
   const [levelPage, setLevelPage] = useState(1);
 
-  const { data: qualData, isLoading: qualLoading } = useQuery({
+  const { data: qualData, isLoading: qualLoading, error: qualError, refetch: reloadQual } = useQuery({
     queryKey: ["qualification-events", selectedUserForQualification, qualPage],
     queryFn: () => commerceApi.qualificationEvents(selectedUserForQualification!, qualPage),
     enabled: Boolean(selectedUserForQualification),
   });
 
-  const { data: levelData, isLoading: levelLoading } = useQuery({
+  const { data: levelData, isLoading: levelLoading, error: levelError, refetch: reloadLevels } = useQuery({
     queryKey: ["level-events", selectedUserForLevels, levelPage],
     queryFn: () => commerceApi.levelEvents(selectedUserForLevels!, levelPage),
     enabled: Boolean(selectedUserForLevels),
@@ -142,7 +143,8 @@ export default function MembersPage() {
         onClose={() => setSelectedUserForQualification(null)}
         size={720}
       >
-        <Table<MembershipQualificationEventRead>
+        <QueryState loading={qualLoading} error={qualError ? errorMessage(qualError) : undefined} onRetry={() => void reloadQual()} />
+        {!qualLoading && !qualError && <Table<MembershipQualificationEventRead>
           rowKey="id"
           loading={qualLoading}
           dataSource={qualData?.items ?? []}
@@ -159,7 +161,7 @@ export default function MembersPage() {
             onChange: (p) => setQualPage(p),
             showTotal: (total) => `共 ${total} 条资格贡献`,
           }}
-        />
+        />}
       </Drawer>
 
       <Drawer
@@ -168,7 +170,8 @@ export default function MembersPage() {
         onClose={() => setSelectedUserForLevels(null)}
         size={720}
       >
-        <Table<MemberLevelEventRead>
+        <QueryState loading={levelLoading} error={levelError ? errorMessage(levelError) : undefined} onRetry={() => void reloadLevels()} />
+        {!levelLoading && !levelError && <Table<MemberLevelEventRead>
           rowKey="id"
           loading={levelLoading}
           dataSource={levelData?.items ?? []}
@@ -185,7 +188,7 @@ export default function MembersPage() {
             onChange: (p) => setLevelPage(p),
             showTotal: (total) => `共 ${total} 条等级变更`,
           }}
-        />
+        />}
       </Drawer>
     </PageFrame>
   );

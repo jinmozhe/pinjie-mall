@@ -867,10 +867,23 @@ class LifecycleService:
             raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="订单不存在")
         return [self._refund_read(refund) for refund in await self.repository.refunds_for_order(order.id)]
 
+    async def _lock_refund_after_order(self, refund_id: UUID) -> RefundRequest | None:
+        observed = await self.repository.refund(refund_id)
+        if observed is None:
+            return None
+        order_id = observed.order_id
+        order = await self.orders.order(order_id, lock=True)
+        if order is None:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款订单不存在")
+        refund = await self.repository.refund(refund_id, lock=True)
+        if refund is not None and refund.order_id != order_id:
+            raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款所属订单已变化")
+        return refund
+
     async def approve_refund_in_open_transaction(
         self, refund_id: UUID, data: RefundReview, actor_id: UUID
     ) -> RefundRequestRead:
-        refund = await self.repository.refund(refund_id, lock=True)
+        refund = await self._lock_refund_after_order(refund_id)
         if refund is None:
             raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="退款申请不存在")
         if refund.status != "requested" or refund.revision != data.revision:
@@ -883,7 +896,7 @@ class LifecycleService:
     async def reject_refund_in_open_transaction(
         self, refund_id: UUID, data: RefundReview, actor_id: UUID
     ) -> RefundRequestRead:
-        refund = await self.repository.refund(refund_id, lock=True)
+        refund = await self._lock_refund_after_order(refund_id)
         if refund is None:
             raise AppException(status_code=404, code=ErrorCode.ORDER_NOT_FOUND, message="退款申请不存在")
         if refund.status != "requested" or refund.revision != data.revision:

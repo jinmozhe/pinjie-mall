@@ -2,10 +2,7 @@ from collections.abc import Awaitable, Callable
 from typing import TypeVar
 from uuid import UUID
 
-from app.core.error_codes import ErrorCode
-from app.core.exceptions import AppException
 from app.core.identifiers import new_uuid7
-from app.db.repositories.commerce_access import CommerceAccessRepository
 from app.domains.admin.permissions import PermissionCode
 from app.domains.distribution import (
     DistributionService,
@@ -14,6 +11,7 @@ from app.domains.distribution import (
     WithdrawalRead,
     WithdrawalReview,
 )
+from app.services.admin_audit import AdminAuditCoordinator
 from app.services.security_events import AuditCoordinator, AuditSuccess
 
 T = TypeVar("T")
@@ -65,12 +63,10 @@ class AdminDistributionApplicationService:
         self,
         *,
         distribution: DistributionService,
-        access: CommerceAccessRepository,
-        audit: AuditCoordinator,
+        audit: AdminAuditCoordinator,
         actor_id: UUID,
     ) -> None:
         self.distribution = distribution
-        self.access = access
         self.audit = audit
         self.actor_id = actor_id
 
@@ -84,18 +80,6 @@ class AdminDistributionApplicationService:
         reason: str,
         operation: Callable[[], Awaitable[T]],
     ) -> T:
-        async def authorized() -> T:
-            admin = await self.access.get_admin_for_update(self.actor_id)
-            if admin is None or not admin.is_active:
-                raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="当前管理员权限已失效")
-            granted = admin.is_superuser or any(
-                role.is_active and any(item.is_active and item.code == permission.value for item in role.permissions)
-                for role in admin.roles
-            )
-            if not granted:
-                raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="当前管理员权限已失效")
-            return await operation()
-
         return await self.audit.execute(
             action="withdrawal.state_changed",
             target_type="withdrawal_request",
@@ -109,7 +93,8 @@ class AdminDistributionApplicationService:
                 "reason": reason,
                 "payload_hash": None,
             },
-            operation=authorized,
+            operation=operation,
+            permission=permission,
         )
 
     async def approve_withdrawal(self, withdrawal_id: UUID, data: WithdrawalReview) -> WithdrawalRead:

@@ -48,6 +48,7 @@ from app.domains.admin.schemas import (
 from app.services.admin_management import AdminManagementService
 from scripts.cleanup_security_logs import _run as run_retention_cleanup
 from scripts.consume_request_logs import GROUP_NAME, _reclaim_pending
+from tests.admin_identity import admin_session
 from tests.conftest import TEST_SECRETS
 
 
@@ -120,6 +121,7 @@ async def test_role_permission_change_revokes_admin_sessions_and_succeeds_audit(
     metadata = _request_metadata()
     denied_metadata = _request_metadata()
     actor_id = new_uuid7()
+    login_session = admin_session(actor_id)
     target_id = new_uuid7()
     role_id = new_uuid7()
     permission_id: uuid.UUID | None = None
@@ -128,6 +130,7 @@ async def test_role_permission_change_revokes_admin_sessions_and_succeeds_audit(
     now = datetime.now(UTC)
     try:
         async with resources.session_factory() as session, transaction_scope(session):
+            session.add(login_session)
             actor = Admin(
                 id=actor_id,
                 username=f"audit-actor-{actor_id.hex[:12]}",
@@ -194,6 +197,7 @@ async def test_role_permission_change_revokes_admin_sessions_and_succeeds_audit(
                 password_manager=resources.password_manager,
                 metadata=metadata,
                 actor_id=actor_id,
+                actor_session_id=login_session.id,
             )
             await service.assign_role_permissions(
                 role_id,
@@ -208,6 +212,7 @@ async def test_role_permission_change_revokes_admin_sessions_and_succeeds_audit(
                 password_manager=resources.password_manager,
                 metadata=denied_metadata,
                 actor_id=actor_id,
+                actor_session_id=login_session.id,
             )
             with pytest.raises(AppException) as exc_info:
                 await denied_service.assign_role_permissions(
@@ -242,6 +247,7 @@ async def test_role_permission_change_revokes_admin_sessions_and_succeeds_audit(
             assert denied_audit.completed_at is not None
     finally:
         async with resources.session_factory() as session, transaction_scope(session):
+            await session.execute(delete(AdminSession).where(AdminSession.id == login_session.id))
             await session.execute(delete(AdminSession).where(AdminSession.id == session_id))
             await session.execute(delete(AuditEvent).where(AuditEvent.actor_id == actor_id))
             await session.execute(delete(Admin).where(Admin.id.in_([actor_id, target_id])))
@@ -258,8 +264,10 @@ async def test_denied_self_superuser_change_preserves_state_and_finishes_audit()
     resources = create_resources(settings)
     metadata = _request_metadata()
     actor_id = new_uuid7()
+    login_session = admin_session(actor_id)
     try:
         async with resources.session_factory() as session, transaction_scope(session):
+            session.add(login_session)
             session.add(
                 Admin(
                     id=actor_id,
@@ -280,6 +288,7 @@ async def test_denied_self_superuser_change_preserves_state_and_finishes_audit()
                 password_manager=resources.password_manager,
                 metadata=metadata,
                 actor_id=actor_id,
+                actor_session_id=login_session.id,
             )
             with pytest.raises(AppException) as exc_info:
                 await service.set_admin_superuser(
@@ -300,6 +309,7 @@ async def test_denied_self_superuser_change_preserves_state_and_finishes_audit()
             assert audit.completed_at is not None
     finally:
         async with resources.session_factory() as session, transaction_scope(session):
+            await session.execute(delete(AdminSession).where(AdminSession.id == login_session.id))
             await session.execute(delete(AuditEvent).where(AuditEvent.request_id == metadata.request_id))
             await session.execute(delete(Admin).where(Admin.id == actor_id))
         await resources.close()
@@ -320,6 +330,7 @@ async def test_admin_avatar_and_bulk_status_are_atomic_and_audited() -> None:
     )
     resources = create_resources(settings)
     actor_id = new_uuid7()
+    login_session = admin_session(actor_id)
     target_ids = [new_uuid7(), new_uuid7()]
     protected_ids = [new_uuid7(), new_uuid7()]
     session_ids = [new_uuid7(), new_uuid7()]
@@ -341,10 +352,12 @@ async def test_admin_avatar_and_bulk_status_are_atomic_and_audited() -> None:
             password_manager=resources.password_manager,
             metadata=metadata,
             actor_id=actor_id,
+            actor_session_id=login_session.id,
         )
 
     try:
         async with resources.session_factory() as session, transaction_scope(session):
+            session.add(login_session)
             existing_superusers = list(
                 (
                     await session.execute(
@@ -510,6 +523,7 @@ async def test_admin_avatar_and_bulk_status_are_atomic_and_audited() -> None:
             assert {event.result for event in recent_audits} == {"denied", "succeeded"}
     finally:
         async with resources.session_factory() as session, transaction_scope(session):
+            await session.execute(delete(AdminSession).where(AdminSession.id == login_session.id))
             await session.execute(delete(AdminSession).where(AdminSession.id.in_(session_ids)))
             await session.execute(delete(AuditEvent).where(AuditEvent.actor_id == actor_id))
             await session.execute(delete(Asset).where(Asset.id == avatar_id))
@@ -798,11 +812,13 @@ async def test_non_superuser_cannot_demote_superusers_concurrently() -> None:
     settings = _integration_settings()
     resources = create_resources(settings)
     actor_id = new_uuid7()
+    login_session = admin_session(actor_id)
     target_ids = [new_uuid7(), new_uuid7()]
     request_ids: list[str] = []
     existing_superusers: list[tuple[uuid.UUID, int, datetime]] = []
     try:
         async with resources.session_factory() as session, transaction_scope(session):
+            session.add(login_session)
             existing_superusers = list(
                 (
                     await session.execute(
@@ -853,6 +869,7 @@ async def test_non_superuser_cannot_demote_superusers_concurrently() -> None:
                     password_manager=resources.password_manager,
                     metadata=metadata,
                     actor_id=actor_id,
+                    actor_session_id=login_session.id,
                 )
                 try:
                     return await service.set_admin_superuser(
@@ -882,6 +899,7 @@ async def test_non_superuser_cannot_demote_superusers_concurrently() -> None:
             assert active_superusers == 2
     finally:
         async with resources.session_factory() as session, transaction_scope(session):
+            await session.execute(delete(AdminSession).where(AdminSession.id == login_session.id))
             await session.execute(delete(AuditEvent).where(AuditEvent.request_id.in_(request_ids)))
             await session.execute(delete(Admin).where(Admin.id.in_([actor_id, *target_ids])))
             for admin_id, credential_version, updated_at in existing_superusers:
