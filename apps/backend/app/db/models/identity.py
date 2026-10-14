@@ -43,7 +43,15 @@ role_permissions = Table(
 class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "users"
     __table_args__ = (
+        CheckConstraint(
+            "(phone_e164 IS NULL AND phone_verified_at IS NULL AND phone_verification_source IS NULL) OR "
+            "(phone_e164 IS NOT NULL AND phone_verified_at IS NOT NULL AND "
+            "phone_verification_source IS NOT NULL AND phone_verification_source = 'wechat_phone_quick' "
+            "AND phone_e164 ~ '^\\+[1-9][0-9]{1,14}$')",
+            name="ck_users_verified_phone",
+        ),
         CheckConstraint("credential_version >= 1", name="ck_users_credential_version_positive"),
+        UniqueConstraint("phone_e164", name="uq_users_phone_e164"),
         CheckConstraint(
             "(deleted_at IS NULL AND deleted_by_id IS NULL AND deleted_by_type IS NULL) "
             "OR (deleted_at IS NOT NULL AND deleted_by_id IS NOT NULL AND deleted_by_type IS NOT NULL)",
@@ -58,6 +66,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     )
 
     username: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, comment="规范化用户名")
+    phone_e164: Mapped[str | None] = mapped_column(String(16), comment="独立已验证手机号，E.164")
+    phone_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), comment="手机号平台验证时间")
+    phone_verification_source: Mapped[str | None] = mapped_column(String(32), comment="手机号可信验证来源")
     email: Mapped[str | None] = mapped_column(String(320), nullable=True, unique=True, comment="未验证可选邮箱")
     display_name: Mapped[str | None] = mapped_column(String(100), nullable=True, comment="展示名称")
     avatar: Mapped[str | None] = mapped_column(String(500), nullable=True, comment="用户头像站内资源路径")
@@ -67,6 +78,16 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, comment="是否允许登录")
     credential_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, comment="凭据版本")
     sessions: Mapped[list["UserSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+
+    @property
+    def phone_bound(self) -> bool:
+        return bool(self.phone_e164 and self.phone_verified_at and self.phone_verification_source)
+
+    @property
+    def phone_masked(self) -> str | None:
+        if not self.phone_bound or self.phone_e164 is None:
+            return None
+        return "*" * max(4, len(self.phone_e164) - 2) + self.phone_e164[-2:]
 
 
 class UserSession(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -131,6 +152,7 @@ class UserExternalIdentity(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         UniqueConstraint("provider", "app_id", "subject_id", name="uq_user_external_identity_subject"),
         UniqueConstraint("user_id", "provider", "app_id", name="uq_user_external_identity_user_provider"),
         Index("ix_user_external_identity_user", "user_id"),
+        Index("ix_user_external_identity_union", "provider", "union_scope_id", "union_id"),
         CheckConstraint("provider = 'wechat'", name="ck_user_external_identity_provider"),
         {"comment": "可信外部身份与商城用户的不可变绑定"},
     )
@@ -142,6 +164,7 @@ class UserExternalIdentity(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     app_id: Mapped[str] = mapped_column(String(64), nullable=False, comment="服务端登记的平台应用标识")
     subject_id: Mapped[str] = mapped_column(String(128), nullable=False, comment="可信 OpenID")
     union_id: Mapped[str | None] = mapped_column(String(128), nullable=True, comment="可信返回的 UnionID，仅记录不合并")
+    union_scope_id: Mapped[str | None] = mapped_column(String(64), comment="服务端登记的微信开放平台账号命名空间")
 
 
 class Admin(UUIDPrimaryKeyMixin, TimestampMixin, Base):

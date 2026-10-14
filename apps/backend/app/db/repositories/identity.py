@@ -1,3 +1,4 @@
+import hashlib
 import uuid
 from datetime import UTC, datetime
 from typing import Literal
@@ -29,6 +30,13 @@ _MANAGEMENT_GUARD_LOCK_KEY = 0x50494E4A49454D47
 class UserRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
+
+    async def lock_phone(self, phone: str) -> None:
+        key = int.from_bytes(hashlib.sha256(f"verified-phone:{phone}".encode()).digest()[:8], signed=True)
+        await self.session.execute(select(func.pg_advisory_xact_lock(key)))
+
+    async def get_by_phone(self, phone: str) -> User | None:
+        return (await self.session.scalars(select(User).where(User.phone_e164 == phone))).one_or_none()
 
     async def get_by_username(self, username: str, *, for_update: bool = False) -> User | None:
         statement = select(User).where(User.username == username)

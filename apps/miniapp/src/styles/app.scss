@@ -74,3 +74,5 @@ page {
 .security-page .nut-button { margin-top: 16px; }
 .security-page .trade-row { flex-wrap: wrap; overflow-wrap: anywhere; }
 .security-page .trade-row > text, .security-page .trade-row > view { min-width: 0; max-width: 100%; }
+.native-account-button { min-height: 88px; margin: 24px 0; padding: 16px 24px; font-size: 28px; line-height: 1.5; border-radius: 12px; background: $primary; color: $surface; }
+.native-account-button[disabled] { background: $background; color: $secondary; }

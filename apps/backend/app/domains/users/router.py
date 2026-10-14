@@ -2,12 +2,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, File, Query, UploadFile
 
-from app.api.account_dependencies import ConsumerAccount, ConsumerAvatarUploader, ConsumerProfile
+from app.api.account_dependencies import ConsumerAccount, ConsumerAvatarUploader, ConsumerPhone, ConsumerProfile
 from app.api.dependencies import AssetServiceDependency, UserPrincipal
 from app.core.context import current_request_id
 from app.core.response import ResponseModel, success_response
 from app.domains.assets.schemas import UploadScene
 from app.domains.auth.schemas import (
+    ConsumerPhoneBindIn,
     ConsumerUserRead,
 )
 from app.domains.users.schemas import (
@@ -25,6 +26,26 @@ from app.domains.users.security_schemas import (
 )
 
 router = APIRouter(prefix="/users/me", tags=["用户账户"])
+
+
+@router.post(
+    "/phone",
+    response_model=ResponseModel[ConsumerUserRead],
+    summary="授权手机号并绑定当前账户",
+    description="一次性微信手机号 code；不接受客户端手机号，不建号、不换号、不切换或合并账户。",
+)
+async def phone_bind(
+    payload: ConsumerPhoneBindIn, service: ConsumerPhone, current: UserPrincipal
+) -> ResponseModel[ConsumerUserRead]:
+    return success_response(
+        data=await service.bind(
+            user_id=current.user.id,
+            session_id=current.login_session.id,
+            credential_version=current.user.credential_version,
+            code=payload.code,
+        ),
+        request_id=current_request_id(),
+    )
 
 
 @router.get("/sessions", response_model=ResponseModel[ConsumerLoginSessionsRead], summary="分页查询本人小程序登录会话")

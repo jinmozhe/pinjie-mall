@@ -1,12 +1,13 @@
 import { useSyncExternalStore } from 'react'
 import Taro from '@tarojs/taro'
-import type { ConsumerSessionRead, ConsumerUserRead, ResponseModelConsumerSessionRead, ResponseModelConsumerCapabilitiesRead, ResponseModelNoneType } from '@pinjie/api-client'
+import type { ConsumerSessionRead, ConsumerUserRead, ResponseModelConsumerSessionRead, ResponseModelConsumerCapabilitiesRead, ResponseModelConsumerUserRead, ResponseModelNoneType } from '@pinjie/api-client'
 import { ApiError, request } from './api'
 import type { Envelope } from './api'
 import { queryClient } from './query'
 import { requestController } from './cancellation'
 import type { RequestSignal } from './cancellation'
 import { uploadAvatar } from './upload'
+import { clearAuthIntent } from './auth-navigation'
 
 type Snapshot = { user: ConsumerUserRead | null; epoch: number; busy: boolean; error: string }
 let snapshot: Snapshot = { user: null, epoch: 0, busy: false, error: '' }
@@ -27,6 +28,14 @@ function clear(error = '') {
 export function useSession() { return useSyncExternalStore((listener) => { listeners.add(listener); return () => listeners.delete(listener) }, () => snapshot) }
 export function sessionScope() { return snapshot.epoch }
 export function signedIn() { return !!credentials }
+export function phoneReady() { return !!credentials?.user.phone_bound }
+
+export async function bindPhone(code: string) {
+  const epoch = snapshot.epoch
+  const user = await privateRequest<ResponseModelConsumerUserRead>('/users/me/phone', { method: 'POST', data: { code } })
+  updateSessionUser(user, epoch)
+  await queryClient.invalidateQueries({ queryKey: ['private', 'me', epoch] })
+}
 
 export async function login() {
   if (snapshot.busy) return
@@ -34,6 +43,8 @@ export async function login() {
   const epoch = snapshot.epoch
   emit({ busy: true })
   try {
+    if (typeof Taro.requirePrivacyAuthorize !== 'function' || typeof Taro.getPrivacySetting !== 'function') throw new Error('当前微信版本不支持所需授权能力，请更新微信后重试；商品仍可浏览')
+    await new Promise<void>((resolve, reject) => Taro.requirePrivacyAuthorize({ success: () => resolve(), fail: () => reject(new Error('请先同意平台隐私授权，可取消并继续浏览')) }))
     const capability = await request<ResponseModelConsumerCapabilitiesRead>('/auth/capabilities')
     if (!capability.login_enabled) throw new Error('微信登录尚未开放，可继续浏览商品')
     const wxResult = await Taro.login({ timeout: 8000 })
@@ -50,8 +61,11 @@ export async function login() {
 }
 export async function restoreSession() {
   try {
-    if (Taro.getStorageSync('pinjie.privacy-consent') === true && Taro.getStorageSync('pinjie.signed-out') !== true) await login()
-  } catch { emit({ error: '无法读取本地登录偏好，请主动登录' }) }
+    if (Taro.getStorageSync('pinjie.privacy-consent') === true && Taro.getStorageSync('pinjie.signed-out') !== true) {
+      const privacy = await new Promise<Taro.getPrivacySetting.SuccessCallbackResult>((resolve, reject) => Taro.getPrivacySetting({ success: resolve, fail: reject }))
+      if (!privacy.needAuthorization) await login()
+    }
+  } catch { emit({ error: '无法确认登录偏好或平台隐私状态，请主动登录；公开浏览不受影响' }) }
 }
 async function refresh() {
   if (refreshing) return refreshing
@@ -103,6 +117,7 @@ export function updateSessionUser(user: ConsumerUserRead, epoch: number) {
   emit({ user })
 }
 export async function logout() {
+  clearAuthIntent()
   const epoch = snapshot.epoch
   let failure = ''
   try { Taro.setStorageSync('pinjie.signed-out', true) }

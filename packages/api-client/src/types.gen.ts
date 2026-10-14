@@ -3340,6 +3340,18 @@ export type ConsumerMemberRead = {
 };
 
 /**
+ * ConsumerPhoneBindIn
+ */
+export type ConsumerPhoneBindIn = {
+    /**
+     * Code
+     *
+     * 用户主动授权得到的一次性手机号 code
+     */
+    code: string;
+};
+
+/**
  * ConsumerPointsAccountRead
  */
 export type ConsumerPointsAccountRead = {
@@ -3869,6 +3881,18 @@ export type ConsumerUserRead = {
      * 管理员头像 URL 或站内资源路径
      */
     avatar: string | null;
+    /**
+     * Phone Bound
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    phone_bound: boolean;
+    /**
+     * Phone Masked
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    phone_masked: string | null;
 };
 
 /**
@@ -19253,6 +19277,31 @@ export type DeleteAssetApiV1AssetsAssetIdDeleteResponses = {
 };
 
 export type DeleteAssetApiV1AssetsAssetIdDeleteResponse = DeleteAssetApiV1AssetsAssetIdDeleteResponses[keyof DeleteAssetApiV1AssetsAssetIdDeleteResponses];
+
+export type PhoneBindApiV1UsersMePhonePostData = {
+    body: ConsumerPhoneBindIn;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/phone';
+};
+
+export type PhoneBindApiV1UsersMePhonePostErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PhoneBindApiV1UsersMePhonePostError = PhoneBindApiV1UsersMePhonePostErrors[keyof PhoneBindApiV1UsersMePhonePostErrors];
+
+export type PhoneBindApiV1UsersMePhonePostResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelConsumerUserRead;
+};
+
+export type PhoneBindApiV1UsersMePhonePostResponse = PhoneBindApiV1UsersMePhonePostResponses[keyof PhoneBindApiV1UsersMePhonePostResponses];
 
 export type LoginSessionsApiV1UsersMeSessionsGetData = {
     body?: never;

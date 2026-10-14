@@ -5,12 +5,12 @@ import type { Envelope } from './api'
 
 const mocks = vi.hoisted(() => ({ request: vi.fn(), upload: vi.fn(), storage: new Map<string, unknown>(), login: vi.fn(), cancel: vi.fn(), remove: vi.fn() }))
 vi.mock('./upload', () => ({ uploadAvatar: mocks.upload }))
-vi.mock('@tarojs/taro', () => ({ default: { login: mocks.login, setStorageSync: (key: string, value: unknown) => mocks.storage.set(key, value), getStorageSync: (key: string) => mocks.storage.get(key), removeTabBarBadge: () => Promise.resolve() } }))
+vi.mock('@tarojs/taro', () => ({ default: { login: mocks.login, requirePrivacyAuthorize: ({ success }: { success: () => void }) => success(), getPrivacySetting: ({ success }: { success: (value: { needAuthorization: boolean }) => void }) => success({ needAuthorization: false }), setStorageSync: (key: string, value: unknown) => mocks.storage.set(key, value), getStorageSync: (key: string) => mocks.storage.get(key), removeTabBarBadge: () => Promise.resolve() } }))
 vi.mock('./query', () => ({ queryClient: { cancelQueries: mocks.cancel, removeQueries: mocks.remove } }))
 vi.mock('./api', async () => { const actual = await vi.importActual<typeof ApiModule>('./api'); return { ...actual, request: mocks.request } })
 
 function credentials(name = 'a'): ConsumerSessionRead {
-  return { user: { id: name, display_name: null, avatar: null }, session_id: name, access_token: `access-${name}`, refresh_token: `refresh-${name}`, access_expires_at: new Date(Date.now() + 600_000).toISOString(), idle_expires_at: '2030-01-01T00:00:00Z', absolute_expires_at: '2030-01-01T00:00:00Z' }
+  return { user: { id: name, display_name: null, avatar: null, phone_bound: false, phone_masked: null }, session_id: name, access_token: `access-${name}`, refresh_token: `refresh-${name}`, access_expires_at: new Date(Date.now() + 600_000).toISOString(), idle_expires_at: '2030-01-01T00:00:00Z', absolute_expires_at: '2030-01-01T00:00:00Z' }
 }
 describe('private session isolation', () => {
   beforeEach(() => { vi.resetModules(); mocks.request.mockReset(); mocks.upload.mockReset(); mocks.storage.clear(); mocks.login.mockResolvedValue({ code: 'one-use' }); mocks.cancel.mockResolvedValue(undefined) })

@@ -10,12 +10,12 @@
 
 | 操作 | ConsumerBearer 接口 | 约束 |
 | --- | --- | --- |
-| 本人资料 | `GET /api/v1/users/me` | 仅返回本人公开标识、昵称、头像 |
+| 本人资料 | `GET /api/v1/users/me` | 返回本人标识、昵称、头像、phone_bound 与 phone_masked，不输出完整号码 |
 | 保存昵称 | `PATCH /api/v1/users/me` | display_name 去除首尾空白后 1 至 100 字，不允许 email 等额外字段 |
 | 上传头像 | `POST /api/v1/users/me/avatar-assets` | multipart 的 file，固定 avatar 场景，仅输出资产 ID 和 URL |
 | 绑定或移除头像 | `PUT /api/v1/users/me/avatar` | 必须显式提交 asset_id；null 移除，空对象拒绝；仅允许本人 avatar 资产 |
 
-用户主动选图时才调用相册或相机。客户端限制单图不超过 2 MB，服务端复用既有 JPEG/PNG/WebP 文件头、扩展名、体积、存储与本人资产校验。上传成功只代表资产创建，用户点击保存后才绑定头像。头像使用既有资源来源准入，未准入地址与图片加载失败均给出反馈。
+头像使用官方 chooseAvatar，昵称使用 type=nickname 并读取 Form 最终提交值。客户端限制单图不超过 2 MB，服务端复用既有 JPEG/PNG/WebP 文件头、扩展名、体积、存储与本人资产校验。上传成功只代表资产创建，用户点击保存后才绑定头像。头像使用既有资源来源准入，未准入地址与图片加载失败均给出反馈。认证后的资料引导允许跳过，按账户保存引导偏好，保留已建立身份和手机号状态；本人资料编辑不强制手机号，会员资金入口要求已验证手机号。
 
 Taro.uploadFile 的响应 data 是字符串，上传传输层独立解析统一响应信封；不设置 JSON Content-Type，不把凭据写入 URL、日志或持久存储。退出、账户切换或失效会取消原生上传任务，旧响应不能回填新会话。失败结果未知时不自动重传。
 

@@ -318,6 +318,12 @@ Push、PR 只接入适用轻量门禁和生成漂移检查。Taro production bui
 5. 完成真实支付、退款、异常恢复、任务运行及既有分销资金联动，再按实际开放范围完成会员与提现体验。
 6. 在授权范围内验证架构门禁、微信环境、真机及发布产物，记录实际通过、失败和未执行项。
 
+### 9.4 微信识别与手机号补全实现
+
+authentication Feature 提供统一认证页，session 维护基础微信会话及服务端 phone_bound 投影；AuthGate 默认要求手机号，资料与账户安全显式使用基础身份。AccountPage 公开外壳不挂载私有数据查询，CartBadge 在已绑定手机号时才查询。已有同意且未退出时静默恢复，首次公开访问不强制授权。
+
+lib/auth-target.ts 校验返回路由和参数，lib/auth-navigation.ts 保存 15 分钟内存意图与原商品 SKU/数量。认证页成功可进入可跳过的资料引导，再回原页面；普通页优先返回已有页面栈，TabBar 使用 switchTab，无目标回个人中心。商品回到规格确认，不自动执行加购或交易。后台静默恢复不跳页；退出清理本次认证返回意图。
+
 ## 10. 官方核验入口
 
 - [Taro React 生命周期 Hooks](https://docs.taro.zone/docs/hooks/)

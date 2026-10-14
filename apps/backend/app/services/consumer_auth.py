@@ -199,7 +199,9 @@ class ConsumerAuthService:
                 )
                 self.users.add(user)
                 await self.session.flush()
-                self.identities.add(user.id, app_id, identity.openid, identity.unionid)
+                self.identities.add(
+                    user.id, app_id, identity.openid, identity.unionid, self.settings.wechat_union_scope_id
+                )
             else:
                 found = await self.users.get(binding.user_id, for_update=True)
                 if found is None:

@@ -28,6 +28,7 @@ class Category(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("revision > 0", name="ck_product_category_revision"),
         CheckConstraint("sort_order >= 0", name="ck_product_category_sort"),
         Index("ix_product_category_parent_sort", "parent_id", "sort_order", "id"),
+        Index("ix_product_categories_icon", "icon_asset_id", postgresql_where=text("icon_asset_id IS NOT NULL")),
         {"comment": "商品三级分类"},
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False, comment="分类名称")
@@ -35,7 +36,7 @@ class Category(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         ForeignKey("product_categories.id", ondelete="RESTRICT"), nullable=True, index=True, comment="父分类 ID"
     )
     icon_asset_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("assets.id", ondelete="RESTRICT"), nullable=True, index=True, comment="分类图标资产 ID"
+        ForeignKey("assets.id", ondelete="RESTRICT"), nullable=True, comment="分类图标资产 ID"
     )
     description: Mapped[str] = mapped_column(Text, nullable=False, default="", comment="分类简述，HTML 字符串")
     sort_order: Mapped[int | None] = mapped_column(

@@ -141,7 +141,7 @@ erDiagram
 
 | 模块序号 | 业务模块 | 表数量 | 包含数据表 | 状态性质 |
 | --- | --- | --- | --- | --- |
-| 01 | 用户身份与前台认证 | 4 | `users`, `user_sessions`, `user_refresh_tokens`, `user_external_identities` | 4 表已有模型及迁移；小程序换码与 Bearer 会话未接入 |
+| 01 | 用户身份与前台认证 | 4 | `users`, `user_sessions`, `user_refresh_tokens`, `user_external_identities` | 微信换码、Bearer、独立手机号绑定已有源码；手机号增量迁移已在本机开发库执行，其他环境未核验 |
 | 02 | 管理员与后台 RBAC 权限 | 7 | `admins`, `roles`, `permissions`, `admin_roles`, `role_permissions`, `admin_sessions`, `admin_refresh_tokens` | 运行基座 |
 | 03 | 审计事件与链路日志 | 3 | `security_login_events`, `audit_events`, `request_logs` | 运行基座 |
 | 04 | 统一文件与媒体资产 | 3 | `assets`, `product_images`, `product_detail_images` | 运行基座 |
@@ -172,7 +172,10 @@ erDiagram
 | 字段名 | 数据类型 | 可空 | 默认值/生成方式 | 业务含义与约束规则 |
 | --- | --- | --- | --- | --- |
 | `id` | UUID | 否 | 应用生成 UUID v7 | 用户主键 |
-| `username` | VARCHAR(50) | 否 | 用户注册录入 | 规范化用户名，全局唯一 |
+| `username` | VARCHAR(50) | 否 | 运营创建或微信建号系统生成 | 规范化独立用户名，全局唯一，与手机号分离 |
+| `phone_e164` | VARCHAR(16) | 是 | 微信可信手机号 code 验证 | 独立 E.164 手机号，全局唯一，软删除不释放占用 |
+| `phone_verified_at` | TIMESTAMPTZ | 是 | 服务端当前 UTC 时间 | 平台快速验证时间，不等同实时持号核验 |
+| `phone_verification_source` | VARCHAR(32) | 是 | wechat_phone_quick | 与号码、时间全部为空或全部有效 |
 | `email` | VARCHAR(320) | 是 | NULL | 可选用户邮箱，全局唯一 |
 | `display_name` | VARCHAR(100) | 是 | NULL | 用户公开昵称 |
 | `avatar` | VARCHAR(500) | 是 | NULL | 头像资源访问 URL 或站内路径 |
@@ -186,7 +189,7 @@ erDiagram
 | `deleted_by_type` | VARCHAR(16) | 是 | NULL | 删除主体类型：`admin`、`user`、`system` |
 | `deletion_reason` | VARCHAR(100) | 是 | NULL | 现有软删除原因，保留审计语义 |
 
-- 约束：检查约束保证软删除的三项字段要么全部为 NULL，要么全部非空。
+- 约束：检查约束保证软删除的三项字段要么全部为 NULL，要么全部非空。手机号由 ck_users_verified_phone 和 uq_users_phone_e164 保证格式、来源、完整性和唯一性；不与 username 同值绑定。新增字段及外部身份范围由 20261013_01 迁移提供，本机开发库已在 2026-10-13 升级，其他环境未核验。
 
 #### 4.01.2 C 端用户登录会话表 `user_sessions`
 
@@ -199,7 +202,7 @@ erDiagram
 | `id` | UUID | 否 | 应用生成 UUID v7 | 会话主键 |
 | `user_id` | UUID | 否 | 登录写入 | 外键，关联 `users.id`，RESTRICT |
 | `family_id` | UUID | 否 | 会话初始化生成 | Refresh Token 令牌族标识，用于检测令牌重放攻击 |
-| `credential_profile` | VARCHAR(32) | 否 | 服务端明确写入 | 20261009_01 源码允许 miniapp_bearer 与存量 browser_cookie，分别按准确入口认证；实际迁移未执行 |
+| `credential_profile` | VARCHAR(32) | 否 | 服务端明确写入 | 20261009_01 源码允许 miniapp_bearer 与存量 browser_cookie，分别按准确入口认证；本机开发库已升级 |
 | `client_id` | VARCHAR(64) | 否 | 服务端明确写入 | 小程序固定 pinjie-miniapp，Browser 固定 pinjie-web，Profile/client/CSRF 成组约束 |
 | `csrf_digest` | VARCHAR(64) | 是 | 按凭据模式 | 小程序 Bearer 为 NULL；存量 Cookie 必须有摘要，不自动转换会话 |
 | `ip_address` | INET | 是 | NULL | 登录客户端 IP 地址 |
@@ -237,9 +240,9 @@ erDiagram
 
 #### 4.01.4 小程序外部身份映射表 `user_external_identities`
 
-实现标记：阶段 2 已定义 Model 与 Alembic revision `20260922_02`，已完成本机开发与隔离测试库升级；小程序渠道接入尚未实施。
+实现标记：阶段 2 已定义 Model 与 Alembic revision `20260922_02`，微信独立建号及会话已有源码；20261013_01 新增 union_scope_id，本机开发库已升级，微信平台验收未执行。
 
-用途：将微信可信返回的 OpenID 绑定到既有 `users.id`，补齐 MP-AUTH-001 的物理身份入口。此表目标新增，不表示小程序登录已实现。
+用途：将微信可信返回的 OpenID 绑定到 `users.id`，首次未知身份允许自动建号；手机号补全更新同一个用户，不改变此绑定。
 
 | 字段名 | 数据类型 | 可空 | 默认值/生成方式 | 业务含义与约束规则 |
 | --- | --- | --- | --- | --- |
@@ -249,13 +252,14 @@ erDiagram
 | `app_id` | VARCHAR(64) | 否 | 服务端配置 | 平台应用标识，不能由客户端任意指定 |
 | `subject_id` | VARCHAR(128) | 否 | 服务端交换一次性 code | 对应该 AppID 的 OpenID，禁止从昵称/手机号推断身份 |
 | `union_id` | VARCHAR(128) | 是 | 可信响应或 NULL | 仅记录可验证返回，不作为缺失时的猜测合并键 |
+| `union_scope_id` | VARCHAR(64) | 是 | 服务端 WECHAT_UNION_SCOPE_ID | 已核实的开放平台账号命名空间；旧值不猜测回填 |
 | `created_at` | TIMESTAMPTZ | 否 | 应用当前 UTC 时间 | 首次绑定时间 |
 | `updated_at` | TIMESTAMPTZ | 否 | 应用当前 UTC 时间 | 最近可信资料更新时间 |
 
 - 约束：`UNIQUE(provider, app_id, subject_id)`、`UNIQUE(user_id, provider, app_id)`；同一微信身份只归属一个商城用户。绑定关系不可由普通资料编辑更换。
 - 首次身份创建与用户创建同事务，竞争由唯一键仲裁；已有密码账户必须先验证原账户再绑定，不能凭相同邮箱、头像、昵称或客户端 OpenID 自动合并。
 - `users.username` 保留非空唯一要求，小程序账户由服务端生成不可冒领的内部账号名；密码为 NULL 时密码认证明确不可用。不存在可用密码且没有已验证外部身份的账户不得进入可登录状态。
-- 不存一次性 code、AppSecret、微信 session_key 或 Refresh 明文；内部 Token 继续复用 `user_sessions` 和 `user_refresh_tokens` 的轮换、撤销及重放保护。小程序凭据模式实施时另行完成安全契约及真实平台验收。
+- 不存一次性 code、AppSecret、微信 session_key 或 Refresh 明文；内部 Token 继续复用 `user_sessions` 和 `user_refresh_tokens` 的轮换、撤销及重放保护。provider/union_scope_id/union_id 是非唯一查询索引，不自动跨应用归并；未来启用联合身份识别前需要独立唯一归属机制。真实平台验收另行执行。
 
 ### 4.02 管理员与后台 RBAC 权限模块
 
@@ -527,7 +531,7 @@ erDiagram
 | `id` | UUID | 否 | 应用生成 UUID v7 | 分类主键 |
 | `name` | VARCHAR(100) | 否 | 运营录入 | 分类名称，去除首尾空白后非空 |
 | `parent_id` | UUID | 是 | NULL | 父分类外键，指向自身 id。顶级为 NULL，禁止自身引用成环 |
-| `icon_asset_id` | UUID | 是 | NULL | 分类图标资产 ID，关联 `assets.id`，受引用删除保护（RESTRICT） |
+| `icon_asset_id` | UUID | 是 | NULL | 分类图标资产 ID，关联 `assets.id`，受引用删除保护（RESTRICT）；非空部分索引 ix_product_categories_icon，模型与迁移同名同条件 |
 | `description` | TEXT | 否 | 空字符串 | 分类简述，Admin Tiptap 富文本编辑器生成，HTML 字符串存储，小程序端用 `mp-html` 渲染 |
 | `sort_order` | INTEGER | 是 | NULL | 同级排序号，数字越小越靠前 |
 | `is_active` | BOOLEAN | 否 | true | 启用状态。停用分类会直接导致其下商品不可售 |
@@ -564,7 +568,7 @@ erDiagram
 | `id` | UUID | 否 | 应用生成 UUID v7 | 商品主键 |
 | `name` | VARCHAR(200) | 否 | 运营录入 | 商品名称，非空，最多 200 字符 |
 | `description` | TEXT | 否 | 空字符串 | 新写严格规范化的受限 HTML，与详情图集独立；旧说明不公开渲染，策略见[工程标准](miniapp-engineering-standard.md#6-商品富文本与图片) |
-| `description_version` | INTEGER | 否 | 应用默认 1；迁移旧记录为 0 | CHECK IN (0,1)；0 为未审计 legacy，1 为受限 HTML v1，限时迁移见 ADR 0018；实际升级未执行 |
+| `description_version` | INTEGER | 否 | 应用默认 1；迁移旧记录为 0 | CHECK IN (0,1)；0 为未审计 legacy，1 为受限 HTML v1，限时迁移见 ADR 0018；本机结构已升级，历史两条记录为 0，内容转换未执行 |
 | `product_type` | VARCHAR(16) | 否 | 运营选择 | 商品类型：`physical`（实物商品）、`virtual`（虚拟商品） |
 | `category_id` | UUID | 否 | 运营选择 | 主分类外键，关联 `product_categories.id`，RESTRICT 保护 |
 | `brand_id` | UUID | 是 | NULL | 品牌外键，关联 `brands.id`，允许为空 |
@@ -2399,8 +2403,9 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 
 | 证据范围 | 已确认事实 | 不能据此推断 |
 | --- | --- | --- |
-| 当前源码与迁移图 | 68 张表均有模型；源码 head 为 20261009_01，新增小程序会话成组约束与 products.description_version；20260929_01 分类扩展也在迁移图内。本机开发库最近已记录版本为 20260926_01，2 条图片元数据历史回填已核验 | 新 revision 已实际升级，所有字段、并发及业务验收通过 |
+| 当前源码与迁移图 | 68 张业务表均有模型，源码 head 为 20261013_01。2026-10-13 本机开发库从 20260929_01 升至 head；69 张表（含版本表）行数不变，用户、外部身份、会话、商品原字段摘要不变，新增手机号字段/约束及 UnionID 索引已核实 | 测试库或其他环境已升级，所有字段、并发及业务验收通过 |
 | 2026-09-22 历史动态验证 | [迁移与动态验证记录](../../plans/2026-09-22_后端目标模型开发库迁移与动态验证计划.md)确认本机开发库和隔离 `_test` 库升至 `20260922_07`，空库、重复升级、恢复演练、`alembic check` 和 398 项 Backend pytest 通过，覆盖率为 90.00% | 后续修改已通过相同测试，或生产、真实渠道已验证 |
+| 2026-10-13 全库漂移检查 | 首次检查发现分类图标索引模型漂移；模型对齐既有 ix_product_categories_icon 非空部分索引后，`alembic check` 复验通过，名称/列/条件/有效状态另行只读核实；数据库仍为 20261013_01，详见[手机号专项计划](../../plans/2026-10-13_小程序手机号统一登录与第三方身份接入计划.md) | 其他环境结构一致，或手机号业务已完成动态验证 |
 | 2026-09-23 符合性修复 | [阶段 A 至 F 修复记录](../../plans/2026-09-23_后端数据规划符合性分阶段修复计划.md)确认当时本地实现及适用轻量门禁完成，新增两项迁移；当时未运行重型验证，后续执行结果由下列专项记录 | 仅凭当时轻量门禁推断迁移和动态测试通过 |
 | 2026-09-23 本机迁移 | [最新修复迁移与动态验收记录](../../plans/2026-09-23_后端最新修复迁移与动态验收计划.md)确认开发库和隔离测试库升至 `20260923_02`，已有库、空库、重复升级、恢复及无漂移检查通过；67 张业务表，1075 个约束且均已验证，迁移前后行数与未改造表摘要一致 | 其他环境已升级，或迁移能自动解释未知历史财务事实 |
 | 当前数据库与运行环境 | 本次实测为本机 PostgreSQL 18.1、Python 3.14.6 和 Redis；测试连接隔离 `_test` 库与 Redis 15，实际测试结果见专项计划 | 常驻任务、真实渠道、小程序和生产部署已验证 |
@@ -2422,7 +2427,7 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 | [shipping.py](../../apps/backend/app/db/models/shipping.py) | 1 | `shipping_templates` |
 | [system_setting.py](../../apps/backend/app/db/models/system_setting.py) | 1 | `system_settings` |
 
-目标新增运行表现为 23 张，均已有源码和迁移：此前 18 张，以及 `member_level_conditions`、`membership_qualification_events`、`member_level_events`、`points_accounts`、`points_ledgers`。2026-09-26 新增详情图片关系后共 68 张；`shipping_templates` 单独列为存量，故目标运行范围为 67 张，总登记为 68 张。历史动态验证仍只覆盖当时 67 张，新增表、元数据和回填尚无运行验证证据。
+目标新增运行表现为 23 张，均已有源码和迁移：此前 18 张，以及 `member_level_conditions`、`membership_qualification_events`、`member_level_events`、`points_accounts`、`points_ledgers`。2026-09-26 新增详情图片关系后共 68 张；`shipping_templates` 单独列为存量，故目标运行范围为 67 张，总登记为 68 张。历史完整动态验证仍只覆盖当时 67 张；2026-10-13 的迁移和只读核实覆盖当前 68 张业务表及版本表，不代表新增业务动态验收完成。
 
 ### 13.2 现行字段的保留、迁移与退役映射
 
@@ -2436,7 +2441,7 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 | orders.shipping_snapshot | 当前 ORM 与 `20260922_04` 约束为 JSONB object，新单保存版本化平台运费决策快照 | 已有数组快照的环境必须先核验旧数据并采用经确认的迁移方案，不能直接覆写历史金额 |
 | refunds 资金字段 | `20260922_05` 将退款渠道、渠道退款号及可信确认从申请迁至 `refund_attempts` | 申请只表达审核及整单完成；迁移检测到旧退款或对账事实时明确失败，要求经授权的历史方案或本地开发库重置 |
 | refund_requests.status/amount | `20260922_05` 使用 requested/approved/rejected/completed、商品金额、运费和整单金额 | 零额整单售后内部完成，正额渠道状态仅由执行表表达 |
-| users.password_hash 与 C 端会话 | 20260922_02 允许密码为空与外部身份表；20261009_01 新增独立 Bearer/Browser 成组约束，微信可信换码和会话源码已接入 | 实际迁移和微信验收未执行，存量 Cookie 与小程序端点保持隔离 |
+| users.password_hash 与 C 端会话 | 20260922_02 允许密码为空与外部身份表；20261009_01 新增独立 Bearer/Browser 成组约束，微信可信换码和会话源码已接入 | 本机开发库已迁移，微信验收未执行；存量 Cookie 与小程序端点保持隔离 |
 | commission_records 粒度 | `20260922_03` 已改为 U(order_item_id,level)、1 至 3 级、policy_id/rule_snapshot 与可空 NUMERIC(7,6) rate；阶段 C 将 base_amount 写为行来源预算 S | 下单冻结政策及来源，成交固定受益资格；动态证据见第 13.1 节，旧财务事实不可无依据拆分迁移 |
 | order_items.product_id/sku_id | UUID 快照引用，阶段 E ORM 与前向迁移源码已补 SKU 到商品的复合归属 FK | 本机两库已核验存量并迁移生效；其他环境升级前仍须先核验存量可关联性 |
 | refund_items、member_profiles、inventory_accounts | 现有均有 UUID id 与时间列 | 继续保留主键，业务唯一键补强，避免原稿把实体 ID 静默删除 |

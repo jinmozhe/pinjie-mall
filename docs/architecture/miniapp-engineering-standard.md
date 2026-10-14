@@ -14,6 +14,8 @@
 
 ## 2. 初始化技术栈与版本
 
+2026-10-13 追加迁移：本机开发库已到 20261013_01，新增手机号及外部身份范围结构已核实。分类图标索引模型已对齐，开发库全库漂移检查通过，测试库及微信平台验收未执行；实际结果见[微信识别与手机号绑定计划](../../plans/2026-10-13_小程序手机号统一登录与第三方身份接入计划.md)。本次迁移不改变下述版本基线。
+
 | 能力 | 确定基线 | 执行要求 |
 | --- | --- | --- |
 | 应用 | `apps/miniapp`、`@pinjie/miniapp` | 独立 pnpm workspace 包，只交付微信 weapp |
@@ -47,6 +49,8 @@ Taro 传递 normalize-url 2.0.1 的 query-string 使用限定为 parse/stringify
 安装脚本已逐项读取：Taro CLI 的联网统计插件安装、NutUI/usage-stats 的统计执行禁止；binding、SWC 和 Parcel 的源码构建或联网回退禁止，采用锁定的本机原生预编译包。Taro runner 的 detect-port 选用其声明范围内带 provenance 的 1.6.0。Rollup 3.30.0 为 Taro 的 3.x 维护线安全修复，官方 tag、gitHead 和 npm 签名已核对，精确 trustPolicyExclude 仅适用于该版本；不关闭全仓信任策略。既有 Admin/Web 传递 peer 告警不代表小程序 React 冲突，当前范围不升级这些应用。Security 继续仅在线上执行。
 
 ## 3. 初始化与配置
+
+2026-10-13 核验 Taro 核心声明、锁定和安装为稳定版 4.3.0，未引入额外第三方微信 SDK。微信能力通过 Taro 的官方组件/API 适配和后端官方 HTTPS 接口接入；project.config.json 固定核验时最新稳定基础库 3.17.4，实际用户运行版本仍需真机验证。隐私查询及授权要求基础库至少 2.32.3，低版本不能继续认证，公开浏览保留；头像昵称采用 chooseAvatar/nickname。
 
 1. 建立单一全栈实施计划，关联 `BASE-*` 与 `MP-*`，记录接口、身份与验证影响。
 2. 从匹配版本的官方 React/TypeScript/Webpack 5 模板提取必要配置，移除演示、H5 目标与无业务用途依赖；保留全部已确认产品能力。

@@ -3,7 +3,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.dependencies import UserPrincipal, require_admin_csrf, require_permission
+from app.api.dependencies import PhoneUserPrincipal as UserPrincipal
+from app.api.dependencies import require_admin_csrf, require_permission
 from app.api.lifecycle_dependencies import AdminLifecycle, Lifecycle
 from app.api.transaction_dependencies import ConsumerTrade
 from app.core.context import current_request_id
