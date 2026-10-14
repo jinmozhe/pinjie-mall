@@ -13,7 +13,7 @@ import { startCheckout } from '@/features/checkout'
 
 function useCart() {
   const session = useSession()
-  return useQuery({ queryKey: ['private', 'cart', session.epoch], enabled: !!session.user, gcTime: 0,
+  return useQuery({ queryKey: ['private', 'cart', session.epoch], enabled: !!session.user?.phone_bound, gcTime: 0,
     queryFn: ({ signal }) => privateRequest<ResponseModelListConsumerCartItemRead>('/cart-items', { signal }) })
 }
 export function CartBadge() {
@@ -24,7 +24,7 @@ export function CartBadge() {
     const operation = session.user && !query.isError && quantity > 0 ? Taro.setTabBarBadge({ index: 2, text: quantity > 99 ? '99+' : String(quantity) }) : Taro.removeTabBarBadge({ index: 2 })
     void operation.catch(() => { /* App startup can precede the native tab bar. */ })
   }, [query.data, query.isError, session.user])
-  useDidShow(() => { if (session.user) void query.refetch() })
+  useDidShow(() => { if (session.user?.phone_bound) void query.refetch() })
   return null
 }
 function Content() {

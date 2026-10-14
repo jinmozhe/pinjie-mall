@@ -2,7 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.dependencies import UserPrincipal, require_permission
+from app.api.dependencies import PhoneUserPrincipal as UserPrincipal
+from app.api.dependencies import require_permission
 from app.api.transaction_dependencies import Cart, ConsumerTrade, Orders
 from app.core.context import current_request_id
 from app.core.identifiers import new_uuid7

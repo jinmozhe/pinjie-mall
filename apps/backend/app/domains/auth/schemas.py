@@ -52,6 +52,13 @@ class ConsumerUserRead(BaseModel):
     id: UUID
     display_name: str | None
     avatar: str | None
+    phone_bound: bool
+    phone_masked: str | None
+
+
+class ConsumerPhoneBindIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    code: str = Field(min_length=1, max_length=256, repr=False, description="用户主动授权得到的一次性手机号 code")
 
 
 class ConsumerSessionRead(BaseModel):

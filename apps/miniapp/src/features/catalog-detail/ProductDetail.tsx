@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Taro, { useDidHide, useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { Input, ScrollView, Swiper, SwiperItem, Text, View } from '@tarojs/components'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -12,7 +12,8 @@ import { priceLabel } from '@/lib/money'
 import { previewImages } from '@/platform/media'
 import { ProductImage } from '@/components/ProductImage'
 import { QueryState } from '@/components/QueryState'
-import { signedIn, sessionScope } from '@/lib/session'
+import { phoneReady, sessionScope } from '@/lib/session'
+import { beginAuthentication, consumeProductIntent } from '@/lib/auth-navigation'
 import { addToCart } from '@/features/cart'
 import { startCheckout } from '@/features/checkout'
 import { canSelect, matchingSkus, resolvedSku, specGroups } from './domain/sku'
@@ -59,11 +60,28 @@ function DetailContent({ product, visible }: { product: PublicProductDetailRead;
   const [intent, setIntent] = useState<'cart' | 'buy' | 'select'>('select')
   const [actionNotice, setActionNotice] = useState('')
   const [unknownCart, setUnknownCart] = useState(false)
+  const restorePurchase = useCallback(() => {
+    if (!phoneReady()) return
+    const pending = consumeProductIntent(product.id)
+    if (!pending) return
+    const sku = product.skus.find((item) => item.id === pending.skuId && item.is_active)
+    if (!sku) { setActionNotice('原规格已不可用，请重新选择'); return }
+    setSelection({ ...sku.specifications }); setQuantity(String(pending.quantity)); setIntent(pending.action)
+    setConfirmed({ selection: { ...sku.specifications }, quantity: String(pending.quantity) }); setOpen(true)
+    setActionNotice('账户已就绪，请核对规格和数量后确认操作')
+  }, [product])
+  useDidShow(restorePurchase)
+  useEffect(restorePurchase, [restorePurchase])
   const action = useMutation({ mutationFn: async () => {
     if (!selectedSku || !validQuantity) throw new Error('请完整选择规格和数量')
     if (intent === 'select') { setConfirmed({ selection: { ...selection }, quantity }); setOpen(false); return }
     const epoch = sessionScope()
-    if (!signedIn()) { setConfirmed({ selection: { ...selection }, quantity }); setOpen(false); setActionNotice('请到“我的”完成登录后返回，再次确认购买操作'); await Taro.switchTab({ url: '/pages/account/index' }); return }
+    if (!phoneReady()) {
+      setConfirmed({ selection: { ...selection }, quantity }); setOpen(false)
+      await beginAuthentication(`/subpackages/catalog/detail/index?id=${product.id}`, true,
+        { productId: product.id, skuId: selectedSku.id, quantity: Number(quantity), action: intent })
+      return
+    }
     if (intent === 'cart') {
       if (unknownCart) throw new Error('请先查询购物车，确认上一次添加结果')
       try { await addToCart({ sku_id: selectedSku.id, quantity: Number(quantity) }) }

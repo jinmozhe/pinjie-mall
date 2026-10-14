@@ -11558,6 +11558,53 @@
         }
       }
     },
+    "/api/v1/users/me/phone": {
+      "post": {
+        "tags": [
+          "用户账户"
+        ],
+        "summary": "授权手机号并绑定当前账户",
+        "description": "一次性微信手机号 code；不接受客户端手机号，不建号、不换号、不切换或合并账户。",
+        "operationId": "phone_bind_api_v1_users_me_phone_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsumerPhoneBindIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ConsumerUserRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ConsumerBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/users/me/sessions": {
       "get": {
         "tags": [
@@ -20308,6 +20355,23 @@
         ],
         "title": "ConsumerMemberRead"
       },
+      "ConsumerPhoneBindIn": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Code",
+            "description": "用户主动授权得到的一次性手机号 code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "ConsumerPhoneBindIn"
+      },
       "ConsumerPointsAccountRead": {
         "properties": {
           "available_points": {
@@ -21073,13 +21137,32 @@
             ],
             "title": "Avatar",
             "description": "管理员头像 URL 或站内资源路径"
+          },
+          "phone_bound": {
+            "type": "boolean",
+            "title": "Phone Bound",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "phone_masked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone Masked",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
           }
         },
         "type": "object",
         "required": [
           "id",
           "display_name",
-          "avatar"
+          "avatar",
+          "phone_bound",
+          "phone_masked"
         ],
         "title": "ConsumerUserRead"
       },

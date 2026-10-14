@@ -46,6 +46,16 @@
 
 本人小程序会话列表与撤销只匹配 miniapp_bearer、pinjie-miniapp、csrf_digest=NULL。撤销接受已确认的 1 至 100 个唯一目标，锁用户后复核当前会话、凭据版本、状态与过期，固定顺序锁目标；拒绝当前、他人、Browser 和缺失会话，审计及撤销同事务。未知结果只读查询原集合，后来登录的会话不加入；父 Session 撤销同时阻断后续 Access/Refresh，已执行请求仍需查询事实。注销前置仅本人交易权益只读聚合，不授予删除或权益放弃能力，实际注销关闭，见[账户安全手册](../operations/miniapp-account-security.md)。
 
+### 4.1 小程序手机号与功能分层
+
+微信建号保留独立 `wx_` 用户名和空密码，手机号不参与静默登录匹配。users 的 phone_e164、phone_verified_at、phone_verification_source 三项全部为空或全部有效，手机号全局唯一。外部身份新增 union_scope_id 记录可信开放平台范围，不按 UnionID 自动归并；见 [ADR 0020](../adr/0020-微信静默建号与独立手机号绑定决策.md)。
+
+POST /users/me/phone 使用基础 ConsumerBearer 和一次性手机号 code，绑定当前账户；服务端从现有绑定取得 OpenID，传给微信验证 code 归属，并核验 AppID 水印、时间和号码结构。外部调用前结束读取事务，完成验证后按手机号摘要锁、用户锁、会话锁顺序重新校验账户与会话，唯一约束兜底并同事务写成功安全事件。冲突不切换用户、不覆盖已有手机号；认证相关路由不记录请求正文。
+
+基础 UserPrincipal 保留资料、绑定、退出和安全操作。PhoneUserPrincipal/get_phone_user 为购物车、地址、订单履约售后评价、会员、推荐、积分和资金入口增加 PHONE_BINDING_REQUIRED 校验，手机号本期只允许首次绑定、不提供解绑或换绑。业务原有资源归属和事务内账户状态检查继续生效。ConsumerUserRead 仅新增 phone_bound 和 phone_masked，不向客户端输出完整手机号、用户名或 OpenID。
+
+微信应用 access_token 由 stable_token 普通模式取得，按 AppID 缓存并在到期前失效，刷新锁 15 秒。手机号 code 摘要原子消费标记保留 600 秒，用户维度 300 秒最多 10 次；换码不自动重试。结果未知使用 PHONE_BINDING_UNKNOWN，客户端读取本人资料后才允许新授权。Token 被微信拒绝时仅清除同值缓存，旧 code 不重放。Redis 故障明确拒绝，缓存不承载最终手机号事实。
+
 ## 5. JWT、密码与 Session
 
 - Access JWT 使用 PyJWT 与固定 `HS256` allowlist。消费者与 Admin 分别使用独立 Secret 与 `pinjie-miniapp`、`pinjie-admin` audience。

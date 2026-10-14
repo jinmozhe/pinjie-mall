@@ -229,6 +229,17 @@ async def get_current_user(
 UserPrincipal = Annotated[CurrentUser, Depends(get_current_user)]
 
 
+def get_phone_user(current: UserPrincipal) -> CurrentUser:
+    if not current.user.phone_bound:
+        raise AppException(
+            status_code=403, code=ErrorCode.PHONE_BINDING_REQUIRED, message="请先授权绑定手机号，再使用此功能"
+        )
+    return current
+
+
+PhoneUserPrincipal = Annotated[CurrentUser, Depends(get_phone_user)]
+
+
 def get_consumer_auth_service(request: Request, session: DatabaseSession) -> ConsumerAuthService:
     resources = get_resources(request)
     return ConsumerAuthService(

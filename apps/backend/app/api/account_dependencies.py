@@ -2,12 +2,20 @@ from typing import Annotated
 
 from fastapi import Depends, Request
 
-from app.api.dependencies import DatabaseSession, UserPrincipal, get_request_settings, get_resources
+from app.api.dependencies import ConsumerAuth, DatabaseSession, UserPrincipal, get_request_settings, get_resources
 from app.core.request_metadata import request_metadata
 from app.domains.assets.schemas import UploaderType
 from app.services.account_security import ConsumerAccountService
 from app.services.accounts import UserProfileService
 from app.services.assets import AssetUploader
+from app.services.consumer_phone import ConsumerPhoneService
+
+
+def consumer_phone(auth: ConsumerAuth) -> ConsumerPhoneService:
+    return ConsumerPhoneService(auth)
+
+
+ConsumerPhone = Annotated[ConsumerPhoneService, Depends(consumer_phone)]
 
 
 def consumer_profile(request: Request, session: DatabaseSession) -> UserProfileService:

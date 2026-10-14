@@ -26,7 +26,20 @@ class WechatIdentityRepository:
             )
         ).one_or_none()
 
-    def add(self, user_id: UUID, app_id: str, subject_id: str, union_id: str | None) -> None:
+    async def for_user(self, user_id: UUID, app_id: str) -> UserExternalIdentity | None:
+        return (
+            await self.session.scalars(
+                select(UserExternalIdentity).where(
+                    UserExternalIdentity.provider == "wechat",
+                    UserExternalIdentity.app_id == app_id,
+                    UserExternalIdentity.user_id == user_id,
+                )
+            )
+        ).one_or_none()
+
+    def add(
+        self, user_id: UUID, app_id: str, subject_id: str, union_id: str | None, union_scope_id: str | None = None
+    ) -> None:
         self.session.add(
             UserExternalIdentity(
                 user_id=user_id,
@@ -34,5 +47,6 @@ class WechatIdentityRepository:
                 app_id=app_id,
                 subject_id=subject_id,
                 union_id=union_id,
+                union_scope_id=union_scope_id,
             )
         )

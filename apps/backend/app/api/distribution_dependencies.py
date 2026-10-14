@@ -7,7 +7,7 @@ from app.api.dependencies import (
     CurrentUser,
     DatabaseSession,
     get_current_admin,
-    get_current_user,
+    get_phone_user,
     get_resources,
 )
 from app.core.request_metadata import request_metadata
@@ -48,7 +48,7 @@ def get_admin_distribution_service(
 def get_user_distribution_service(
     request: Request,
     session: DatabaseSession,
-    current: Annotated[CurrentUser, Depends(get_current_user)],
+    current: Annotated[CurrentUser, Depends(get_phone_user)],
 ) -> UserDistributionApplicationService:
     return UserDistributionApplicationService(
         distribution=DistributionService(session),

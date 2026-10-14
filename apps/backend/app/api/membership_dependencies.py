@@ -7,7 +7,7 @@ from app.api.dependencies import (
     CurrentUser,
     DatabaseSession,
     get_current_admin,
-    get_current_user,
+    get_phone_user,
     get_resources,
 )
 from app.core.request_metadata import request_metadata
@@ -45,7 +45,7 @@ def get_admin_membership_service(
 
 Membership = Annotated[MembershipService, Depends(get_membership_service)]
 AdminMembership = Annotated[MembershipService, Depends(get_admin_membership_service)]
-UserMembership = Annotated[CurrentUser, Depends(get_current_user)]
+UserMembership = Annotated[CurrentUser, Depends(get_phone_user)]
 
 
 def get_admin_points_service(

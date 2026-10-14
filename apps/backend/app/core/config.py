@@ -71,6 +71,9 @@ class Settings(BaseSettings):
         default=None, validation_alias="SUPPORT_EMAIL", max_length=254, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$"
     )
     wechat_app_id: str | None = Field(default=None, validation_alias="WECHAT_APP_ID")
+    wechat_union_scope_id: str | None = Field(
+        default=None, min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$", validation_alias="WECHAT_UNION_SCOPE_ID"
+    )
     wechat_app_secret: str | None = Field(default=None, validation_alias="WECHAT_APP_SECRET", repr=False)
     miniapp_jwt_secret: str | None = Field(default=None, validation_alias="MINIAPP_JWT_SECRET", repr=False)
     miniapp_token_hmac_key: str | None = Field(default=None, validation_alias="MINIAPP_TOKEN_HMAC_KEY", repr=False)

@@ -7,7 +7,7 @@ from app.api.dependencies import (
     CurrentUser,
     DatabaseSession,
     get_current_admin,
-    get_current_user,
+    get_phone_user,
     get_resources,
 )
 from app.core.request_metadata import request_metadata
@@ -56,7 +56,7 @@ def get_admin_commerce(
 
 def get_addresses(
     session: DatabaseSession,
-    current: Annotated[CurrentUser, Depends(get_current_user)],
+    current: Annotated[CurrentUser, Depends(get_phone_user)],
 ) -> AddressApplicationService:
     return AddressApplicationService(
         session, AddressService(AddressRepository(session)), CommerceAccessRepository(session), current.user.id

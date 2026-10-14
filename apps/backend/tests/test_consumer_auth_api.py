@@ -35,7 +35,14 @@ async def consumer_client(monkeypatch):
     app.state.resources = SimpleNamespace(redis=object())
     now = datetime.now(UTC)
     user = SimpleNamespace(
-        id=new_uuid7(), display_name="消费者", avatar=None, credential_version=1, is_active=True, deleted_at=None
+        id=new_uuid7(),
+        display_name="消费者",
+        avatar=None,
+        credential_version=1,
+        is_active=True,
+        deleted_at=None,
+        phone_bound=False,
+        phone_masked=None,
     )
     session = SimpleNamespace(
         id=new_uuid7(),
@@ -68,7 +75,13 @@ async def consumer_client(monkeypatch):
         )[0]
 
     artifacts = {
-        "user": {"id": user.id, "display_name": user.display_name, "avatar": None},
+        "user": {
+            "id": user.id,
+            "display_name": user.display_name,
+            "avatar": None,
+            "phone_bound": False,
+            "phone_masked": None,
+        },
         "session_id": session.id,
         "access_token": token(),
         "refresh_token": "r" * 64,
@@ -201,7 +214,7 @@ async def test_bearer_can_write_profile_without_csrf_and_cannot_access_admin(con
     assert response.status_code == 200
     args = ctx.profile.update_profile.await_args.args
     assert args[0] == ctx.user.id and args[1].display_name == "新昵称"
-    assert set(response.json()["data"]) == {"id", "display_name", "avatar"}
+    assert set(response.json()["data"]) == {"id", "display_name", "avatar", "phone_bound", "phone_masked"}
     response = await ctx.client.get("/api/v1/admin/auth/me", headers=headers)
     assert response.status_code == 401
 
@@ -232,3 +245,15 @@ def test_retired_routes_and_duplicate_operations_are_absent():
     ]
     assert ("/api/v1/orders", "POST") in operations
     assert len(operations) == len(set(operations))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("path", ["/cart-items", "/addresses", "/orders", "/distribution/me/wallets"])
+async def test_unbound_identity_cannot_enter_phone_protected_business(consumer_client, path):
+    ctx = consumer_client
+    response = await ctx.client.get(f"/api/v1{path}", headers={"Authorization": f"Bearer {ctx.token()}"})
+    assert response.status_code == 403
+    assert response.json()["code"] == "PHONE_BINDING_REQUIRED"
+    profile = await ctx.client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {ctx.token()}"})
+    assert profile.status_code == 200
+    assert profile.json()["data"]["phone_bound"] is False

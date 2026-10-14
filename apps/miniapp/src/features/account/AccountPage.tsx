@@ -2,11 +2,12 @@ import Taro, { useDidShow } from '@tarojs/taro'
 import { View } from '@tarojs/components'
 import { useQuery } from '@tanstack/react-query'
 import type { ResponseModelConsumerUserRead } from '@pinjie/api-client'
-import { AuthGate } from '@/components/AuthGate'
 import { AccountAvatar } from '@/components/AccountAvatar'
 import { Button } from '@/components/Button'
 import { QueryState } from '@/components/QueryState'
 import { logout, privateRequest, sessionScope, useSession } from '@/lib/session'
+import { beginAuthentication } from '@/lib/auth-navigation'
+import { useState } from 'react'
 
 function Content() {
   const session = useSession()
@@ -22,4 +23,27 @@ function Content() {
     <Button block fill='outline' onClick={() => { void Taro.showModal({ title: '退出登录', content: '退出后清除本机内存会话，下次需主动登录。' }).then((answer) => { if (answer.confirm && session.epoch === sessionScope()) void logout() }) }}>退出登录</Button>
   </View>
 }
-export function AccountPage() { const session = useSession(); return <AuthGate><Content key={session.epoch} /></AuthGate> }
+export function AccountPage() {
+  const session = useSession()
+  const [error, setError] = useState('')
+  if (session.user?.phone_bound) return <Content key={session.epoch} />
+  async function open(target: string) {
+    try { await beginAuthentication(target) } catch { setError('页面打开失败，请重试') }
+  }
+  return <View className='page account-page'>
+    <View className='surface'><AccountAvatar url={null} /><View className='title'>欢迎来到拼捷商城</View>
+      <View className='muted'>{session.user ? '微信身份已识别，按需完善手机号后使用账户功能。' : '商品可直接浏览，使用账户功能时再登录。'}</View>
+      <Button block loading={session.busy} disabled={session.busy} onClick={() => { void open('/pages/account/index') }}>{session.user ? '授权手机号，完善账户' : '微信登录'}</Button>
+    </View>
+    <View className='surface menu-list'>{[
+      ['我的订单', '/subpackages/trade/orders/index'], ['收货地址', '/subpackages/account/addresses/index'],
+      ['继续未完成结算', '/subpackages/trade/checkout/index'], ['售后记录', '/subpackages/service/refunds/index'],
+      ['会员中心', '/subpackages/finance/membership/index'], ['推荐与分享', '/subpackages/finance/referral/index'],
+      ['我的积分', '/subpackages/finance/points/index'], ['双轨钱包与流水', '/subpackages/finance/wallets/index'],
+      ['佣金记录', '/subpackages/finance/commissions/index'], ['历史提现记录', '/subpackages/finance/withdrawals/index'],
+    ].map(([label, path]) => <View className='touch trade-row spread' key={path} onClick={() => { void open(path) }}>{label}<View>›</View></View>)}</View>
+    {(error || session.error) && <View className='note'>{error || session.error}</View>}
+    <Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/account/settings/index' }) }}>账户设置与隐私</Button>
+    <Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/service/help/index' }) }}>帮助与支持</Button>
+  </View>
+}

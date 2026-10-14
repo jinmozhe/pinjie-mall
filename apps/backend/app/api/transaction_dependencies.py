@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from app.api.dependencies import CurrentUser, DatabaseSession, get_current_user
+from app.api.dependencies import CurrentUser, DatabaseSession, get_phone_user
 from app.services.cart import CartService
 from app.services.orders import OrderService
 from app.services.trade_queries import ConsumerTradeQueryService
@@ -18,7 +18,7 @@ def get_order_service(session: DatabaseSession) -> OrderService:
 
 Cart = Annotated[CartService, Depends(get_cart_service)]
 Orders = Annotated[OrderService, Depends(get_order_service)]
-UserPrincipal = Annotated[CurrentUser, Depends(get_current_user)]
+UserPrincipal = Annotated[CurrentUser, Depends(get_phone_user)]
 
 
 def consumer_trade(session: DatabaseSession) -> ConsumerTradeQueryService:

@@ -3,6 +3,7 @@
   "description": "拼捷商城公开商品浏览",
   "miniprogramRoot": "dist/",
   "compileType": "miniprogram",
+  "libVersion": "3.17.4",
   "appid": "touristappid",
   "setting": { "urlCheck": true, "es6": false, "postcss": false, "minified": false },
   "condition": {},
