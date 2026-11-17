@@ -38,7 +38,7 @@
 
 微信一次性 code 通过固定 code2Session 接口换取可信 OpenID，以 provider/AppID/OpenID 事务锁及唯一约束防止重复建号。无密码用户独立创建，首次建号受 miniapp_registration 共享配置锁保护；已有绑定不受建号关闭影响。UnionID 仅记录，不自动合并旧账户。登录失败独立写安全事件，成功建号和会话事件与业务事务同提交；秘密、OpenID、session_key 和外部错误原文不进入事件或日志。
 
-客户端 Access/Refresh 仅私有内存，刷新单飞、单次轮换；重放会提交原会话与 Refresh 族撤销再返回 401。每次私有请求检查用户状态、凭据版本、会话撤销和过期。主动退出清理私有请求与 Query，并持久化非秘密退出标记；已有隐私确认的冷启动重新取得 code，退出后须主动登录。写请求不通用重放，下单未知恢复见[接入手册](../operations/miniapp-identity-and-content.md)。实际迁移、真实微信和动态验收未执行。
+客户端 Access/Refresh 仅私有内存，刷新单飞、单次轮换；重放会提交原会话与 Refresh 族撤销再返回 401。每次私有请求检查用户状态、凭据版本、会话撤销和过期。启动身份请求按会话代次合并，首次访问也通过微信 code 静默识别，不读取或伪造本地隐私同意；旧代次响应不得回填。主动退出清理私有请求与 Query，并持久化非秘密退出标记，退出中拒绝新登录，退出后须主动登录。手机号通过平台隐私与手机号组合按钮主动授权。写请求不通用重放，下单未知恢复见[接入手册](../operations/miniapp-identity-and-content.md)。实际迁移、真实微信和动态验收未执行。
 
 小程序资料与头像使用独立 ConsumerBearer：上传固定 avatar 场景与当前用户 uploader，绑定必须显式提供本人资产 ID 或 null。共享 UserProfileService 在事务内锁用户并重新拒绝停用账户，保留资产场景、归属及 URL 校验。会员与资金查询先校验本人账户有效，再按 user_id、beneficiary_user_id 或本人 wallet_id 过滤；安全投影排除他人身份、收款与渠道资料。客户端原生上传纳入会话取消与旧响应拒绝，具体接口见[资料会员资金手册](../operations/miniapp-profile-and-finance.md)。
 

@@ -33,7 +33,7 @@ export function AccountPage() {
   return <View className='page account-page'>
     <View className='surface'><AccountAvatar url={null} /><View className='title'>欢迎来到拼捷商城</View>
       <View className='muted'>{session.user ? '微信身份已识别，按需完善手机号后使用账户功能。' : '商品可直接浏览，使用账户功能时再登录。'}</View>
-      <Button block loading={session.busy} disabled={session.busy} onClick={() => { void open('/pages/account/index') }}>{session.user ? '授权手机号，完善账户' : '微信登录'}</Button>
+      <Button block loading={session.busy} disabled={session.busy} onClick={() => { void open('/pages/account/index') }}>微信登录</Button>
     </View>
     <View className='surface menu-list'>{[
       ['我的订单', '/subpackages/trade/orders/index'], ['收货地址', '/subpackages/account/addresses/index'],

@@ -1,67 +1,148 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Button as NativeButton, Checkbox, Text, View } from '@tarojs/components'
+import { Button, Image, Text, View } from '@tarojs/components'
 import type { ResponseModelConsumerUserRead } from '@pinjie/api-client'
-import { Button } from '@/components/Button'
 import { bindPhone, login, privateRequest, sessionScope, updateSessionUser, useSession } from '@/lib/session'
-import { authNeedsPhone, cancelAuthentication, clearAuthIntent, finishAuthentication, profileGuideKey } from '@/lib/auth-navigation'
+import { authNeedsPhone, cancelAuthentication, finishAuthentication } from '@/lib/auth-navigation'
+import { LegalSheet } from './LegalSheet'
+import type { LegalDocument } from './LegalSheet'
+import shop from './assets/shop.svg'
+import wechat from './assets/wechat.svg'
+import './authentication.scss'
 
 export function AuthenticationPage() {
   const session = useSession()
   const [consent, setConsent] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [unknown, setUnknown] = useState(false)
+  const [pendingPhoneUser, setPendingPhoneUser] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [document, setDocument] = useState<LegalDocument | null>(null)
   const guard = useRef(false)
   const navigating = useRef(false)
+  const mounted = useRef(true)
+  const phoneTapEpoch = useRef<number | null>(null)
+  const profileAfterBinding = useRef<string | null>(null)
   const ready = !!session.user && (!authNeedsPhone() || session.user.phone_bound)
+  const working = busy || session.busy
+  const needsPhone = authNeedsPhone() && !session.user?.phone_bound
+  useEffect(() => {
+    mounted.current = true
+    return () => { mounted.current = false; phoneTapEpoch.current = null }
+  }, [])
   const continueToTarget = useCallback(async () => {
-    if (navigating.current || !session.user) return
+    if (navigating.current || !mounted.current || !session.user) return
     navigating.current = true
     try {
-      if (authNeedsPhone() && (!session.user.display_name || !session.user.avatar)
-        && Taro.getStorageSync(profileGuideKey(session.user.id)) !== true) {
+      if (session.user.phone_bound && profileAfterBinding.current === session.user.id) {
         await Taro.redirectTo({ url: '/subpackages/account/profile/index?onboarding=1' })
       } else await finishAuthentication()
-    } catch (failure) { navigating.current = false; setError(failure instanceof Error ? failure.message : '页面返回失败，请重试') }
+    }
+    catch (failure) { navigating.current = false; setError(failure instanceof Error ? failure.message : '页面返回失败，请重试') }
   }, [session.user])
-  useEffect(() => { if (ready && !busy) void continueToTarget() }, [ready, busy, continueToTarget])
+  useEffect(() => {
+    if (ready && !working && !document) void continueToTarget()
+  }, [ready, working, document, continueToTarget])
+
   async function phone(code?: string) {
-    if (guard.current) return
-    if (!code) { setError('未取得手机号授权，可继续浏览'); return }
-    guard.current = true; setBusy(true); setError(''); setUnknown(true)
-    try { await bindPhone(code); setUnknown(false) }
+    const tappedEpoch = phoneTapEpoch.current
+    phoneTapEpoch.current = null
+    if (!mounted.current || guard.current || !consent || pendingPhoneUser) return
+    if (!code) { setError('未取得手机号授权，您仍可暂不登录并浏览商品。'); return }
+    if (tappedEpoch === null || tappedEpoch !== sessionScope()) { setError('会话已改变，请重新点击微信登录。'); return }
+    guard.current = true; setBusy(true); setError('')
+    try {
+      const identity = await login()
+      if (!mounted.current) return
+      if (identity.epoch !== sessionScope()) throw new Error('会话已改变，请重新点击微信登录。')
+      if (!identity.user.phone_bound) {
+        profileAfterBinding.current = identity.user.id
+        setPendingPhoneUser(identity.user.id)
+        await bindPhone(code)
+        setPendingPhoneUser(null)
+      }
+    }
     catch (failure) { setError(failure instanceof Error ? failure.message : '绑定未完成，请先查询账户状态') }
     finally { guard.current = false; setBusy(false) }
   }
+
   async function check() {
     if (guard.current) return
     guard.current = true; setBusy(true); setError('')
-    const epoch = sessionScope()
     try {
+      const identity = await login()
+      if (!mounted.current) return
+      if (identity.epoch !== sessionScope()) throw new Error('会话已改变，请重新查询。')
+      if (identity.user.id !== pendingPhoneUser) {
+        setPendingPhoneUser(null)
+        throw new Error('账户已改变，原绑定结果需由原账户查询。当前账户请重新发起登录。')
+      }
       const user = await privateRequest<ResponseModelConsumerUserRead>('/users/me')
-      updateSessionUser(user, epoch); setUnknown(false)
+      updateSessionUser(user, identity.epoch); setPendingPhoneUser(null)
       if (!user.phone_bound) setError('当前尚未绑定。上次请求仍可能完成；如需继续，请重新点击授权取得新凭证。')
-    } catch (failure) { setError(failure instanceof Error ? failure.message : '查询失败') }
+    } catch (failure) { setError(failure instanceof Error ? failure.message : '查询失败，请重试') }
     finally { guard.current = false; setBusy(false) }
   }
-  return <View className='page account-page'><View className='surface auth-panel'>
-    <View className='title'>{ready ? '账户已就绪' : session.user ? '绑定手机号' : '登录拼捷商城'}</View>
-    {!session.user && <>
-      <View className='muted'>微信用于识别商城账户，首次使用将自动创建账户。用户名、手机号和昵称分别保存。</View>
-      <View className='consent' onClick={() => setConsent(!consent)}><Checkbox value='privacy' checked={consent} color='#B42318' /><Text>我已阅读并同意</Text><Text className='link' onClick={(event) => { event.stopPropagation(); void Taro.navigateTo({ url: '/subpackages/account/privacy/index' }) }}>隐私说明</Text></View>
-      <Button block loading={session.busy} disabled={!consent || session.busy} onClick={() => { void login() }}>微信登录并继续</Button>
-    </>}
-    {session.user && !ready && <>
-      <View className='muted'>微信身份已确认。手机号用于完善商城账户及购物服务，成功绑定后日常使用无需重复授权。</View>
-      <NativeButton className='native-account-button' openType='getPhoneNumber' disabled={busy || unknown} loading={busy}
-        onGetPhoneNumber={(event) => { void phone(event.detail.code) }}>授权手机号并继续</NativeButton>
-      {unknown && <View className='note'>绑定结果尚未确认，请先查询，不要重复提交原凭证。</View>}
-      <Button block fill='outline' disabled={busy} onClick={() => { void check() }}>查询手机号绑定状态</Button>
-    </>}
-    {(error || session.error) && <View className='note'>{error || session.error}</View>}
-    {ready && <Button block disabled={busy} onClick={() => { void continueToTarget() }}>继续</Button>}
-    <Button block fill='outline' disabled={busy || session.busy} onClick={() => { void cancelAuthentication().catch(() => setError('返回失败，请使用首页入口')) }}>取消并返回</Button>
-    <Button block fill='outline' disabled={busy || session.busy} onClick={() => { clearAuthIntent(); void Taro.switchTab({ url: '/pages/home/index' }) }}>继续浏览首页</Button>
-  </View></View>
+
+  async function primaryAction() {
+    if (guard.current || working) return
+    if (ready) { await continueToTarget(); return }
+    if (!consent) return
+    if (pendingPhoneUser) { await check(); return }
+    if (needsPhone) { phoneTapEpoch.current = sessionScope(); return }
+    guard.current = true; setBusy(true); setError('')
+    try { await login() }
+    catch (failure) { setError(failure instanceof Error ? failure.message : '微信身份建立失败，请重试') }
+    finally { guard.current = false; setBusy(false) }
+  }
+
+  async function skip() {
+    if (guard.current || working || navigating.current) return
+    phoneTapEpoch.current = null
+    guard.current = true; setBusy(true); setError('')
+    try { await cancelAuthentication() }
+    catch (failure) { setError(failure instanceof Error ? failure.message : '返回失败，请重试') }
+    finally { guard.current = false; setBusy(false) }
+  }
+
+  const buttonLabel = ready ? '继续' : pendingPhoneUser ? '查询绑定结果' : '微信登录'
+  return <View className='auth-screen'>
+    <View className='auth-decoration auth-decoration-left' />
+    <View className='auth-decoration auth-decoration-right' />
+    <View className='auth-orbit auth-orbit-left' />
+    <View className='auth-orbit auth-orbit-right' />
+    <View className='auth-hero'>
+      <View className='auth-headline'><View>好物随心选</View><View className='auth-headline-accent'>分享好生活</View></View>
+      <View className='auth-subtitle'>从日常所需，到心头所好</View>
+      <Image className='auth-illustration' src={shop} mode='aspectFit' />
+      <View className='auth-benefits'>商品选购 · 会员服务 · 推荐分享</View>
+    </View>
+    <View className='auth-actions'>
+      <Button id='wechat-login' className='auth-login' disabled={working || (!ready && !consent)} loading={working}
+        openType={consent && needsPhone && !pendingPhoneUser && !working ? 'getPhoneNumber|agreePrivacyAuthorization' : undefined}
+        onClick={() => { void primaryAction() }}
+        onGetPhoneNumber={(event) => { void phone(event.detail.code) }}>
+        {!working && <Image className='auth-wechat-icon' src={wechat} mode='aspectFit' />}
+        <Text>{buttonLabel}</Text>
+      </Button>
+      <Button className='auth-skip' disabled={working} onClick={() => { void skip() }}>暂不登录</Button>
+      {(error || session.error) && <View className='auth-feedback' role='alert'>
+        {error || session.error}
+      </View>}
+    </View>
+    <View className='auth-consent-area'>
+      <View className='auth-consent-row'>
+        <Button className='auth-consent-toggle' ariaLabel={`${consent ? '已勾选' : '未勾选'}，我已阅读并同意用户协议与隐私条款`}
+          disabled={working} onClick={() => setConsent(!consent)}>
+          <View className={consent ? 'auth-checkbox auth-checkbox-checked' : 'auth-checkbox'}>{consent && <View className='auth-checkmark' />}</View>
+        </Button>
+        <View className='auth-consent-copy'>
+          <Text onClick={() => { if (!working) setConsent(!consent) }}>我已阅读并同意</Text>
+          <Text className='auth-legal-link' onClick={() => setDocument('agreement')}>《用户协议》</Text>
+          <Text>与</Text>
+          <Text className='auth-legal-link' onClick={() => setDocument('privacy')}>《隐私条款》</Text>
+        </View>
+      </View>
+    </View>
+    <LegalSheet document={document} onClose={() => setDocument(null)} />
+  </View>
 }

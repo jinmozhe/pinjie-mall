@@ -1,1 +1,6 @@
-export default definePageConfig({ navigationBarTitleText: '登录与账户完善' })
+export default definePageConfig({
+  navigationBarTitleText: '',
+  navigationBarBackgroundColor: '#FFFAF5',
+  navigationBarTextStyle: 'black',
+  backgroundColor: '#FFFAF5',
+})

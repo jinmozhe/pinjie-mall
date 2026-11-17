@@ -10,8 +10,11 @@ import { uploadAvatar } from './upload'
 import { clearAuthIntent } from './auth-navigation'
 
 type Snapshot = { user: ConsumerUserRead | null; epoch: number; busy: boolean; error: string }
+type LoginResult = { user: ConsumerUserRead; epoch: number }
 let snapshot: Snapshot = { user: null, epoch: 0, busy: false, error: '' }
 let credentials: ConsumerSessionRead | null = null
+let loggingIn: { epoch: number; promise: Promise<LoginResult> } | null = null
+let loggingOut = false
 let refreshing: Promise<void> | null = null
 const listeners = new Set<() => void>()
 const pending = new Set<ReturnType<typeof requestController>>()
@@ -37,35 +40,48 @@ export async function bindPhone(code: string) {
   await queryClient.invalidateQueries({ queryKey: ['private', 'me', epoch] })
 }
 
-export async function login() {
-  if (snapshot.busy) return
+export async function login(): Promise<LoginResult> {
+  if (loggingOut) throw new ApiError('正在退出，请稍后重新登录', 'protocol')
+  if (credentials) return { user: credentials.user, epoch: snapshot.epoch }
+  if (loggingIn?.epoch === snapshot.epoch) return loggingIn.promise
   clear()
   const epoch = snapshot.epoch
   emit({ busy: true })
-  try {
-    if (typeof Taro.requirePrivacyAuthorize !== 'function' || typeof Taro.getPrivacySetting !== 'function') throw new Error('当前微信版本不支持所需授权能力，请更新微信后重试；商品仍可浏览')
-    await new Promise<void>((resolve, reject) => Taro.requirePrivacyAuthorize({ success: () => resolve(), fail: () => reject(new Error('请先同意平台隐私授权，可取消并继续浏览')) }))
-    const capability = await request<ResponseModelConsumerCapabilitiesRead>('/auth/capabilities')
-    if (!capability.login_enabled) throw new Error('微信登录尚未开放，可继续浏览商品')
-    const wxResult = await Taro.login({ timeout: 8000 })
-    if (!wxResult.code) throw new Error('未取得微信登录凭证，请重新发起')
-    const result = await request<ResponseModelConsumerSessionRead>('/auth/login', { method: 'POST', data: { code: wxResult.code } })
-    if (epoch !== snapshot.epoch) return
-    Taro.setStorageSync('pinjie.signed-out', false)
-    Taro.setStorageSync('pinjie.privacy-consent', true)
-    credentials = result
-    emit({ user: result.user, busy: false })
-  } catch (error) {
-    if (epoch === snapshot.epoch) emit({ busy: false, error: error instanceof Error ? error.message : '登录失败，请重新发起' })
+  function assertCurrent() {
+    if (epoch !== snapshot.epoch || loggingOut) throw new ApiError('会话已改变，请重新登录', 'protocol')
   }
+  const flight = (async () => {
+    try {
+      const capability = await request<ResponseModelConsumerCapabilitiesRead>('/auth/capabilities')
+      assertCurrent()
+      if (!capability.login_enabled) throw new Error('微信登录尚未开放，可继续浏览商品')
+      const wxResult = await Taro.login({ timeout: 8000 })
+      assertCurrent()
+      if (!wxResult.code) throw new Error('未取得微信登录凭证，请重新发起')
+      const result = await request<ResponseModelConsumerSessionRead>('/auth/login', { method: 'POST', data: { code: wxResult.code } })
+      assertCurrent()
+      Taro.setStorageSync('pinjie.signed-out', false)
+      credentials = result
+      emit({ user: result.user, busy: false })
+      return { user: result.user, epoch }
+    } catch (error) {
+      if (epoch === snapshot.epoch) emit({ busy: false, error: error instanceof Error ? error.message : '微信身份建立失败，可继续浏览或主动登录重试' })
+      throw error
+    }
+  })()
+  loggingIn = { epoch, promise: flight }
+  try { return await flight }
+  finally { if (loggingIn?.promise === flight) loggingIn = null }
 }
 export async function restoreSession() {
   try {
-    if (Taro.getStorageSync('pinjie.privacy-consent') === true && Taro.getStorageSync('pinjie.signed-out') !== true) {
-      const privacy = await new Promise<Taro.getPrivacySetting.SuccessCallbackResult>((resolve, reject) => Taro.getPrivacySetting({ success: resolve, fail: reject }))
-      if (!privacy.needAuthorization) await login()
-    }
-  } catch { emit({ error: '无法确认登录偏好或平台隐私状态，请主动登录；公开浏览不受影响' }) }
+    if (Taro.getStorageSync('pinjie.signed-out') === true) return
+  } catch {
+    emit({ error: '无法确认退出偏好，请主动登录；公开浏览不受影响' })
+    return
+  }
+  try { await login() }
+  catch { /* login publishes current-session failures; background startup must not block public browsing. */ }
 }
 async function refresh() {
   if (refreshing) return refreshing
@@ -117,6 +133,9 @@ export function updateSessionUser(user: ConsumerUserRead, epoch: number) {
   emit({ user })
 }
 export async function logout() {
+  if (loggingOut) return
+  loggingOut = true
+  emit({ busy: true })
   clearAuthIntent()
   const epoch = snapshot.epoch
   let failure = ''
@@ -125,5 +144,8 @@ export async function logout() {
   try {
     if (credentials) await privateRequest<ResponseModelNoneType>('/auth/logout', { method: 'POST' })
   } catch (error) { failure += error instanceof Error ? `服务端退出未确认：${error.message}` : '服务端退出未确认' }
-  finally { if (epoch === snapshot.epoch) clear(failure) }
+  finally {
+    if (epoch === snapshot.epoch) clear(failure)
+    loggingOut = false
+  }
 }
