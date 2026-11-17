@@ -33,7 +33,7 @@ const lockfile = await readFile(resolve(root, "pnpm-lock.yaml"), "utf8");
 for (const forbidden of ["'@umijs/bundler-vite@4.7.5':", "vite@4.5.2:", "codesandbox@2.2.3:", "swiper@11.1.15:", "http-cache-semantics@3.8.1:", "webpack-dev-middleware@5.3.4:", "decompress@4.2.1:", "postcss@7.0.39:"]) {
   assert.equal(lockfile.includes(forbidden), false, `Forbidden dependency remains in pnpm-lock.yaml: ${forbidden}`);
 }
-assert.equal(lockfile.includes("vite@6.4.3:"), true, "The supported Vitest Vite version is missing");
+assert.equal(lockfile.includes("vite@6.4.4:"), true, "The supported Vitest Vite version is missing");
 
 const patch = await readFile(resolve(root, "patches", "@umijs__preset-umi@4.7.5.patch"), "utf8");
 assert.match(patch, /Umi Vite bundler is disabled because its supported Vite version has known High vulnerabilities/);
@@ -51,7 +51,7 @@ const expectedSecurePackages = [
   "adm-zip@0.6.1:",
   "postcss@8.5.27:",
   "webpack-dev-middleware@7.4.6:",
-  "decode-uri-component@0.5.0:",
+  "decode-uri-component@0.5.1:",
   "qs@6.16.0:",
   "hono@4.13.5:",
   "colord@2.9.4:",
@@ -61,7 +61,7 @@ const expectedSecurePackages = [
 for (const packageEntry of expectedSecurePackages) {
   assert.equal(lockfile.includes(packageEntry), true, `Secure package version is missing: ${packageEntry}`);
 }
-for (const vulnerablePackageEntry of ["decode-uri-component@0.2.2:", "qs@6.15.3:", "hono@4.13.1:", "colord@2.9.3:"]) {
+for (const vulnerablePackageEntry of ["decode-uri-component@0.2.2:", "decode-uri-component@0.5.0:", "vite@6.4.3:", "qs@6.15.3:", "hono@4.13.1:", "colord@2.9.3:"]) {
   assert.equal(lockfile.includes(vulnerablePackageEntry), false, `Vulnerable package remains in pnpm-lock.yaml: ${vulnerablePackageEntry}`);
 }
 
@@ -96,6 +96,8 @@ const queryString = historyRequire("query-string");
 const parsedQuery = queryString.parse("name=%E4%B8%AD%E6%96%87&bad=%E0%A4%A");
 assert.equal(parsedQuery.name, "中文");
 assert.equal(parsedQuery.bad, "%E0%A4%A");
+assert.equal(queryString.parse("value=%25C2%C2").value, "%C2\uFFFD");
+assert.equal(queryString.parse("value=%FE%FF").value, "\uFFFD\uFFFD");
 const malformedInput = "%E0%A4%A".repeat(5000);
 const decodingStartedAt = Date.now();
 queryString.parse(`value=${malformedInput}`);
