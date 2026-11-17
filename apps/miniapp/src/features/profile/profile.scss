@@ -1,0 +1,148 @@
+@use '../../styles/tokens' as t;
+
+.profile-screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100vh;
+  overflow: hidden;
+  background: t.$surface;
+  color: t.$text;
+
+  button { box-sizing: border-box; margin: 0; padding: 0; border: 0; font-family: inherit; }
+  button::after { border: 0; }
+  button[disabled] { opacity: 0.55; }
+}
+
+// 1440 x 4480 artwork, sized from the rendered viewport, not API windowHeight.
+.profile-background {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: max(100vw, 32.1428571429vh);
+  height: max(311.1111111111vw, 100vh);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.profile-header { position: relative; flex: none; background: transparent; color: t.$surface; }
+.profile-header-row { position: relative; display: flex; align-items: center; justify-content: center; }
+.profile-header-title { overflow: hidden; font-size: 32px; font-weight: 600; line-height: 1.5; white-space: nowrap; text-overflow: ellipsis; }
+.profile-screen .profile-back {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  border-radius: 0;
+  background: transparent;
+  color: t.$surface;
+  view { width: 18px; height: 18px; border-left: 3px solid currentColor; border-bottom: 3px solid currentColor; transform: rotate(45deg); }
+}
+.profile-scroll { position: relative; flex: 1; height: 0; min-height: 0; }
+.profile-body { padding: 64px 32px calc(64px + env(safe-area-inset-bottom)); }
+.profile-navigation-error { margin-bottom: 24px; padding: 24px; border-radius: t.$radius; background: t.$surface; color: t.$primary; }
+.profile-layout-error { position: relative; margin: calc(env(safe-area-inset-top) + 100px) 32px 32px; padding: 24px; border-radius: t.$radius; background: t.$surface; }
+.profile-card {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 44px 36px;
+  border-radius: 28px;
+  background: t.$surface;
+}
+.profile-avatar-area { margin-bottom: 52px; text-align: center; }
+.profile-avatar-control { position: relative; width: 166px; margin: 0 auto; }
+.profile-avatar {
+  width: 166px;
+  height: 166px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: t.$profile-avatar-background;
+  image { width: 100%; height: 100%; }
+}
+.profile-avatar-placeholder {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  view { position: absolute; background: t.$profile-avatar-ink; }
+  view:first-child { top: 42px; left: 60px; width: 46px; height: 46px; border-radius: 50%; }
+  view:last-child { top: 96px; left: 37px; width: 92px; height: 42px; border-radius: 60px 60px 4px 4px; }
+}
+.profile-screen .profile-avatar-picker {
+  position: absolute;
+  inset: 0;
+  width: 166px;
+  height: 166px;
+  overflow: visible;
+  border-radius: 50%;
+  background: transparent;
+  image {
+    position: absolute;
+    right: 0;
+    bottom: 2px;
+    box-sizing: border-box;
+    width: 50px;
+    height: 50px;
+    padding: 8px;
+    border: 5px solid t.$surface;
+    border-radius: 50%;
+    background: t.$profile-camera-background;
+  }
+}
+.profile-label { margin-bottom: 16px; font-size: 30px; font-weight: 700; line-height: 1.3; }
+.profile-input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 94px;
+  padding: 0 24px;
+  border: 1px solid t.$profile-border;
+  border-radius: 16px;
+  background: t.$profile-field;
+  font-size: 28px;
+  color: t.$text;
+}
+.profile-placeholder { color: t.$profile-placeholder; }
+.profile-screen .profile-save {
+  width: 100%;
+  min-height: 92px;
+  margin-top: 54px;
+  padding: 22px 16px;
+  border-radius: 60px;
+  background: t.$primary;
+  color: t.$surface;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.profile-navigation { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 34px; }
+.profile-screen .profile-secondary {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-width: 0;
+  min-height: 88px;
+  padding: 16px 12px;
+  border: 1px solid t.$profile-border;
+  border-radius: 60px;
+  background: t.$profile-field;
+  color: t.$profile-muted;
+  font-size: 28px;
+  line-height: 1.6;
+  image { flex-shrink: 0; width: 32px; height: 32px; }
+}
+.profile-screen .profile-skip {
+  flex: 1;
+  min-height: 88px;
+  background: transparent;
+  color: t.$profile-muted;
+  font-size: 28px;
+  line-height: 88px;
+}
+.profile-feedback { margin-top: 24px; font-size: 24px; line-height: 1.7; overflow-wrap: anywhere; }
+.profile-screen .profile-text-action { min-height: 72px; padding: 12px 0; background: transparent; color: t.$primary; font-size: 24px; line-height: 2; }

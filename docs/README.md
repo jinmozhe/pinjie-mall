@@ -103,6 +103,7 @@
 | 文件 | 说明 |
 | --- | --- |
 | [local-dev-environment.md](operations/local-dev-environment.md) | Windows 本地开发手册：纯 uv、pnpm、本机 PostgreSQL、Docker Desktop Redis、Codex 默认联网沙箱基线与生产环境边界 |
+| [miniapp-route-trace-guide.md](operations/miniapp-route-trace-guide.md) | Taro 入口路由记录原理、微信 Console 查看方法及上线前文件与配置清单 |
 | [miniapp-identity-and-content.md](operations/miniapp-identity-and-content.md) | 小程序登录配置、权限与迁移前置、未知订单恢复和受限说明迁移步骤 |
 | [miniapp-fulfillment-and-aftersales.md](operations/miniapp-fulfillment-and-aftersales.md) | 小程序履约、整单售后恢复、评价资格与公开支持配置 |
 | [miniapp-profile-and-finance.md](operations/miniapp-profile-and-finance.md) | 本人资料头像、会员开通、双钱包流水、佣金及历史提现查询和未知结果恢复 |
