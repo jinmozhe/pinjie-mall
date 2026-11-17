@@ -74,7 +74,9 @@ def _register_exception_handlers(app: FastAPI) -> None:
         response = _error_response(
             request_id=current_request_id(),
             code=exc.code,
-            message=exc.message,
+            message=exc.local_message
+            if request.app.state.settings.environment == "local" and exc.local_message is not None
+            else exc.message,
             details=exc.details,
             status_code=exc.status_code,
         )

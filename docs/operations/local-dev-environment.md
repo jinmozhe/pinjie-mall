@@ -233,7 +233,7 @@ pnpm --filter @pinjie/admin dev
 
 本人资料头像、会员开通、双钱包流水、佣金和历史提现查询也沿用同一 watch 命令，无需另开 HTTP 服务或逐次手工构建。头像上传域名、本人资产绑定、资金权利及未知结果查询见[资料会员资金手册](miniapp-profile-and-finance.md)；默认登录关闭，新提现申请未开放。
 
-推荐分享与本人积分查询同样沿用上述命令，页面入口位于个人中心。AppID 继续预留 touristappid；当前阶段先完成源码与轻量门禁，取得实际 AppID 后再按[推荐积分手册](miniapp-referral-and-points.md)进行本地微信平台验收。页面分享配置及封面复制配置变更后需重启 watch，无需新增服务。
+推荐分享与本人积分查询同样沿用上述命令，页面入口位于个人中心。公开项目配置已登记实际 AppID；平台权限与环境准备完成后按[推荐积分手册](miniapp-referral-and-points.md)进行本地微信平台验收，登记 AppID 不代表验收通过。页面分享配置及封面复制配置变更后需重启 watch，无需新增服务。
 
 1. 使用 Codex 或 VS Code 编辑同一工作区；Backend 与 Admin 按前两节独立运行。
 2. 初始化专项完成后，在仓库根目录的独立终端启动小程序 watch：
@@ -242,11 +242,13 @@ pnpm --filter @pinjie/admin dev
    pnpm --filter @pinjie/miniapp dev:weapp
    ```
 
-3. 等待首次编译成功，在微信开发者工具导入仓库的 `apps/miniapp` 目录；公开 project.config.json 已设置 miniprogramRoot 为 dist/，工具加载编译后的微信文件。当前 touristappid 用于游客开发模式；导入时若工具要求选择账号，选择游客模式，暂不尝试登录、真机或发布。以后取得公开 AppID 再更新项目配置，AppSecret 留在服务端。
+3. 等待首次编译成功，在微信开发者工具导入仓库的 `apps/miniapp` 目录；公开 project.config.json 已设置 miniprogramRoot 为 dist/，工具加载编译后的微信文件。使用已登记 AppID 对应的有权限微信账号；AppSecret 留在服务端。登录联调、真机、上传与发布仍需各自环境条件和授权。
 4. 保持 watch 终端运行。保存源码后 Taro 自动重新编译，微信工具读取更新产物并按其自动编译设置刷新；关闭自动编译时需要在工具中手动编译。每次保存仍有编译过程，无需反复手动执行 production build。
 5. 编译报错先修复，微信工具内旧页面不证明最新源码成功。新增依赖或修改编译配置后按具体变更重启 watch；退出开发时使用该终端的 Ctrl+C 停止。
 
 `dev:weapp` 对应 `taro build --type weapp --watch`，保存源码后自动增量编译，保持该终端运行即可，不需要每次手动执行生产构建。微信工具监听 dist 变化并重新编译页面。Taro 源码不能直接作为微信原生源码运行；首次启动、依赖或 config/环境变量变更后需重新启动 watch。
+
+微信工具生成的 `apps/miniapp/.cloudbase/container/debug.json` 属于本地调试状态，已通过精确路径忽略并保留在本机，不提交到 Git；其他云开发配置不因此自动排除。
 
 该流程不启动 H5 或 HTTP 服务，与 Backend 18168、Admin 3001 没有端口冲突。`pnpm --filter @pinjie/miniapp build:weapp` 已配置，用于生产产物，明确点名授权后运行；要求显式 HTTPS 环境源站。watch 编译不代表生产构建、微信工具或真机验收通过。
 
@@ -270,6 +272,21 @@ pnpm check:boundaries
 ```
 
 开发者工具模拟器的 API 地址使用明确的本地开发配置；手机 localhost 指向手机自身，真机应使用可达且符合微信域名/TLS 要求的开发 HTTPS 服务。当前消费者 Cookie 与小程序 Bearer、微信登录及真实资金渠道的适配缺口见[接口能力映射](../design/miniapp/api-coverage.md)，本地工具流程不消除这些接入前置条件。
+
+#### 查看小程序页面跳转顺序
+
+开发构建在 `src/app.tsx` 的 `useLaunch` 中启用 `platform/route-trace.ts`，早于会话恢复记录启动入口，并通过微信 `onAppRoute` 监听后续路由事件。编译配置将 `__ROUTE_TRACE_ENABLED__` 固定为 `mode === 'development'`，不提供客户端运行时开关。修改编译配置后先重启 watch，再在微信开发者工具重新编译。
+
+1. 使用 `pnpm --filter @pinjie/miniapp dev:weapp` 启动开发编译，等待成功。
+2. 打开微信开发者工具的“调试器 → Console”，筛选 `[路由轨迹]`；如有上下文选择，选择小程序逻辑层 AppService。
+3. 重新编译小程序，再操作登录、手机号授权、Tab 切换和返回。每条日志包含递增序号、本机时间、跳转方式、来源页面、目标页面及页面未找到标志。
+4. `启动入口` 来自启动参数，后续记录来自路由事件；来源页面按上一次未标记为页面不存在的路由目标推导。启动入口与首次路由事件可能指向同一页面，不能据此判断发生了重复跳转。
+
+日志仅输出到 Console，不输出 query、授权 code、Token 或用户资料，不上传后台、不写入本地存储，也不保存历史数组。重复初始化先移除旧监听，应用组件卸载时清理监听；切到后台不停止监听。环境缺少路由监听 API 时输出明确警告，仅保留启动入口。当前事件参数以基础库 3.5.5 及以上为依据，见 [微信路由事件文档](https://developers.weixin.qq.com/miniprogram/dev/api/base/app/app-route/wx.onAppRoute.html)。
+
+这些记录用于观察页面跳转顺序，不证明登录或手机号绑定成功，也不覆盖所有失败的导航调用。排查认证时结合 Network 中接口响应；路由动画完成时刻不属于本记录范围。
+
+上传前必须使用明确配置 HTTPS 源站的生产构建 `pnpm --filter @pinjie/miniapp build:weapp` 生成产物，生产模式关闭记录和监听。微信开发者工具的“上传”按钮不会自动把 watch 开发产物改成生产产物；上传生产产物前应停止 watch，避免再次覆盖同一 `dist`。生产构建、上传、发布和微信动态验收继续按任务分别授权，轻量门禁不能代替产物与平台验收。
 
 官方操作依据见 [Taro 开始使用](https://docs.taro.zone/docs/GETTING-STARTED)。
 
@@ -376,7 +393,23 @@ docker compose ps redis
 docker compose exec redis redis-cli ping
 ```
 
-如果容器未运行，执行 `docker compose up -d redis`。
+先启动 Docker Desktop；如果容器未运行，在仓库根目录执行 `docker compose up -d redis`。Redis 的宿主机映射端口必须与后端 `REDIS_URL` 一致；容器内 `redis-cli ping` 成功只证明容器内可用，后端是否可达还需检查 `/health/ready`。
+
+### 查询登录开放状态成功，但微信登录返回 503
+
+`GET /api/v1/auth/capabilities` 的 `login_enabled=true` 只表示服务端允许发起登录，不验证 Redis、PostgreSQL 或微信换码链路。实际 `POST /api/v1/auth/login` 先执行 Redis 登录限流，Redis 不可用时拒绝登录，不继续向微信换取身份。PostgreSQL 使用本机 Windows 服务，Redis 使用 Docker Desktop 中的容器，两者分别启动。
+
+认证限流和会话刷新锁遇到 Redis 故障时，保留 `503 / SERVICE_UNAVAILABLE`。Backend 的 `ENVIRONMENT=local` 会分别提示 Redis 未初始化、连接失败、认证失败、请求超时或命令失败；连接失败时提示检查 Docker Desktop、Redis 容器与 `REDIS_URL`。非 local 环境使用安全提示，不输出连接串、地址、密码或底层异常原文。小程序直接展示后端返回的消息，无需重新编译。
+
+后端结构化警告包含 `request_id`、`trace_id`、`dependency=redis`、`operation` 和 `reason`。`operation` 为 `rate_limit` 或 `refresh_lock`；`reason` 为 `not_initialized`、`connection_failed`、`authentication_failed`、`timeout` 或 `command_failed`。按失败响应的 `request_id` 定位日志。依赖恢复后重新发起登录，由小程序取得新 code，不重放旧登录请求。
+
+只读检查当前依赖状态：
+
+```powershell
+Invoke-RestMethod -Uri 'http://127.0.0.1:18168/health/ready'
+```
+
+健康响应的 `checks.database` 和 `checks.redis` 分别反映 PostgreSQL 和 Redis 的状态；全部关键依赖就绪时返回 `ready`。能力查询成功不能代替该检查，也不能证明微信登录已完成。
 
 ### 前端依赖或 workspace 链接异常
 

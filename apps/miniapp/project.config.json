@@ -1,11 +1,43 @@
 {
   "projectname": "pinjie-miniapp",
-  "description": "拼捷商城公开商品浏览",
+  "description": "品界商城公开商品浏览",
   "miniprogramRoot": "dist/",
   "compileType": "miniprogram",
   "libVersion": "3.17.4",
-  "appid": "touristappid",
-  "setting": { "urlCheck": true, "es6": false, "postcss": false, "minified": false },
+  "appid": "wx5e57afb47fd45568",
+  "setting": {
+    "urlCheck": true,
+    "es6": false,
+    "postcss": false,
+    "minified": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "enhance": false,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
   "condition": {},
-  "packOptions": { "ignore": [{ "type": "suffix", "value": ".map" }] }
+  "packOptions": {
+    "ignore": [
+      {
+        "value": ".map",
+        "type": "suffix"
+      }
+    ],
+    "include": []
+  },
+  "simulatorPluginLibVersion": {},
+  "editorSetting": {}
 }

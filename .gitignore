@@ -121,3 +121,5 @@ Thumbs.db
 Desktop.ini
 project.private.config.json
 .swc/
+# 微信开发者工具生成的本地云托管调试状态
+/apps/miniapp/.cloudbase/container/debug.json

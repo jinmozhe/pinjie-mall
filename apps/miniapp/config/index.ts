@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 import { createRequire } from 'node:module'
 import { defineConfig } from '@tarojs/cli'
+import { ProvidePlugin } from 'webpack'
 
 export default defineConfig<'webpack5'>((_, { mode }) => {
   const requireFromApp = createRequire(resolve(__dirname, '../package.json'))
@@ -22,13 +23,20 @@ export default defineConfig<'webpack5'>((_, { mode }) => {
     deviceRatio: { 750: 1, 375: 2 },
     alias: { '@': resolve(__dirname, '../src'), 'react$': requireFromApp.resolve('react'), 'react': reactRoot },
     sass: { resource: [resolve(__dirname, '../node_modules/@nutui/nutui-react-taro/dist/styles/variables.scss')] },
-    defineConstants: { __API_BASE_URL__: JSON.stringify(apiBase), __ASSET_BASE_URL__: JSON.stringify(assetBase) },
+    defineConstants: { __API_BASE_URL__: JSON.stringify(apiBase), __ASSET_BASE_URL__: JSON.stringify(assetBase), __ROUTE_TRACE_ENABLED__: JSON.stringify(development) },
     cache: { enable: false },
     copy: { patterns: [
       { from: resolve(__dirname, '../node_modules/mp-html/dist/mp-weixin'), to: 'dist/components/mp-html' },
       { from: resolve(__dirname, '../src/assets/share-mall.png'), to: 'dist/assets/share-mall.png' },
     ] },
     mini: {
+      webpackChain(chain) {
+        const cancellation = resolve(__dirname, '../src/platform/abort-controller.ts')
+        chain.plugin('miniapp-abort-controller').use(ProvidePlugin, [{
+          AbortController: [cancellation, 'RuntimeAbortController'],
+          AbortSignal: [cancellation, 'RuntimeAbortSignal'],
+        }])
+      },
       postcss: { pxtransform: { enable: true }, cssModules: { enable: false } },
       compile: { include: [resolve(__dirname, '../node_modules/@nutui')] },
     },
