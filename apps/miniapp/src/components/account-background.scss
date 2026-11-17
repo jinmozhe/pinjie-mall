@@ -1,0 +1,10 @@
+// Shared 1440 x 4480 artwork: cover the viewport without stretching or scrolling.
+.account-screen-background {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  width: max(100vw, 32.1428571429vh);
+  height: max(311.1111111111vw, 100vh);
+  transform: translateX(-50%);
+  pointer-events: none;
+}

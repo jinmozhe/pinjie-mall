@@ -16,7 +16,7 @@ PRD 定义用户需要什么、业务边界和验收结果；本文定义代码�
 
 应用名称统一为 miniapp。当前四项 TabBar、商品详情、账户地址/隐私/资料、结算订单、service 和 finance 分包已配置。service 分包承载退款申请/记录/详情、评价和公开帮助，Feature 为 aftersales、reviews、help；profile 承载资料编辑，finance 承载会员、双钱包、流水、佣金和历史提现，只经公开 index 入口消费。真实资金与发布仍需专项，不提前建立空目录。
 
-Backend 的 ConsumerFinanceService 是跨域本人只读查询，会员等级、钱包、流水、佣金和提现均采用安全白名单投影；主动开通复用 DistributionService，资料写入复用不依赖浏览器凭据的 UserProfileService。上传与绑定分开，lib/upload 使用原生任务取消与字符串信封解析，privateCall 统一刷新和会话代次校验。操作与状态边界见[资料会员资金手册](../operations/miniapp-profile-and-finance.md)。
+Backend 的 ConsumerFinanceService 是跨域本人只读查询，会员等级、钱包、流水、佣金和提现均采用安全白名单投影；基础账户由 Backend 的 CustomerAccountsService 在微信建号、历史用户登录和管理端建号事务内初始化，无手机号前置，小程序不再提供手动开通；资料写入复用不依赖浏览器凭据的 UserProfileService。上传与绑定分开，lib/upload 使用原生任务取消与字符串信封解析，privateCall 统一刷新和会话代次校验。操作与状态边界见[资料会员资金手册](../operations/miniapp-profile-and-finance.md)。
 
 账户分包 settings、sessions、closure 通过 features/account-security 公开入口组合页面。ConsumerAccountService 编排本人小程序会话安全投影、明确集合撤销与只读注销核对；撤销锁用户及当前会话并复核凭据，原目标按固定顺序锁定，审计失败关闭。恢复意图按本人保存原 ID 集合，先查再主动恢复，不包含后来登录的会话；注销只读聚合使用单条 SELECT，self_service_enabled 恒为 false。接口、锁顺序和权益边界以[账户安全手册](../operations/miniapp-account-security.md)为准。
 
@@ -328,7 +328,7 @@ lib/auth-target.ts 校验返回路由和参数，lib/auth-navigation.ts 在全�
 
 认证页仅在本次为未绑定账户发起手机号绑定并确认 phone_bound 后，通过 redirectTo 进入 /subpackages/account/profile/index?onboarding=1；未知结果查询确认成功也进入该引导，跳转失败保留重试。资料页头像选择后立即上传并绑定，更新会话与查询缓存并保留昵称输入；昵称通过主按钮独立保存。引导模式“保存并继续”成功自动返回，或“暂时跳过”调用 finishAuthentication 恢复原目标；普通模式“保存更新”后留页，不再写入未被消费的本地引导偏好。已有绑定的日常登录直接恢复原目标，用户仍可在个人中心编辑资料。普通页优先返回已有页面栈，TabBar 使用 switchTab，无目标回个人中心。商品回到规格确认，不自动执行加购或交易。后台静默恢复不跳页；退出清理本次认证返回意图。
 
-统一登录页与个人资料的 ProfileFrame 使用页面级自定义导航，透明标题与返回按钮覆盖各自的固定背景，背景直接贴齐视口顶部，系统状态栏和右侧胶囊继续由微信渲染。两页通过 lib/use-navigation-layout.ts 共用窗口与胶囊测量，在页面显示和尺寸变化时重读；正文放入顶部以下的独立 ScrollView，资料页的权限拦截、加载和失败状态也在滚动区内。登录页顶部返回调用 cancelAuthentication，与暂不登录共用安全来源路径及操作保护。资料引导模式顶部返回与跳过使用同一安全目标；普通模式返回页面栈，无栈时进入个人中心，跳转失败保留可见重试反馈。其他页面继续沿用原导航配置。
+统一登录页、个人资料的 ProfileFrame 和我的页面使用页面级自定义导航，透明标题覆盖固定背景，背景直接贴齐视口顶部，系统状态栏和右侧胶囊继续由微信渲染。三页通过 lib/use-navigation-layout.ts 共用窗口与胶囊测量，在页面显示和尺寸变化时重读；正文放入顶部以下的独立 ScrollView，资料页的权限拦截、加载和失败状态也在滚动区内。个人资料与我的统一使用 components/AccountFrame 承载背景、透明导航、可选返回按钮和正文滚动区，框架内部 AccountBackground 消费 src/assets/account-background.svg；业务返回逻辑由调用方传入，个人中心不导入资料 Feature 内部实现或分包页面。框架及背景 Sass 只通过 styles/app.scss 的 @use 加载一次，TSX 不再导入公共样式，消除与 NutUI 按钮的跨页面顺序冲突，不屏蔽编译告警。登录页顶部返回调用 cancelAuthentication，与暂不登录共用安全来源路径及操作保护。资料引导模式顶部返回与跳过使用同一安全目标；普通模式返回页面栈，无栈时进入个人中心，跳转失败保留可见重试反馈。我的保留原生 TabBar，不显示返回按钮；其他页面继续沿用原导航配置。
 
 ## 10. 官方核验入口
 

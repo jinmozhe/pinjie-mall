@@ -136,6 +136,7 @@ class DistributionService:
         return new_uuid7().hex[-16:].upper()
 
     async def _ensure_profile(self, user_id: UUID) -> MemberProfile:
+        await self.repository.lock_profile_creation(user_id)
         profile = await self.repository.profile(user_id, lock=True)
         if profile is not None:
             return profile
@@ -178,6 +179,18 @@ class DistributionService:
         """确保订单等上层用例已持有事务时可记录会员资格事实。"""
         return await self._ensure_profile(user_id)
 
+    async def initialize_accounts_in_open_transaction(self, user_id: UUID) -> None:
+        """建号或登录编排持有用户及事务；不改动已有等级、关系和资金。"""
+        await self.repository.lock_profile_creation(user_id)
+        profile = await self.repository.profile(user_id, lock=True)
+        wallets = await self.repository.wallets(user_id)
+        if profile is None and not wallets:
+            await self._ensure_profile(user_id)
+        elif profile is None or {wallet.wallet_type for wallet in wallets} != {"commission", "consumption"}:
+            raise AppException(
+                status_code=409, code=ErrorCode.STATE_CONFLICT, message="会员与钱包账户不完整，请联系运营核对"
+            )
+
     async def activate_profile(self, user_id: UUID) -> MemberProfileRead:
         async with transaction_scope(self.session):
             await self.access.require_active_user(user_id)
@@ -191,7 +204,9 @@ class DistributionService:
         profile = await self.repository.profile(user_id)
         if profile is None:
             raise AppException(
-                status_code=404, code=ErrorCode.DISTRIBUTION_PROFILE_NOT_FOUND, message="请先开通会员分销档案"
+                status_code=404,
+                code=ErrorCode.DISTRIBUTION_PROFILE_NOT_FOUND,
+                message="账户尚未初始化，请重新登录；若仍异常，请联系运营",
             )
         return self._profile_read(profile)
 
@@ -246,7 +261,9 @@ class DistributionService:
         wallets = await self.repository.wallets(user_id)
         if len(wallets) != 2:
             raise AppException(
-                status_code=404, code=ErrorCode.DISTRIBUTION_PROFILE_NOT_FOUND, message="请先开通会员分销档案"
+                status_code=404,
+                code=ErrorCode.DISTRIBUTION_PROFILE_NOT_FOUND,
+                message="账户尚未初始化，请重新登录；若仍异常，请联系运营",
             )
         return [self._wallet_read(wallet) for wallet in wallets]
 

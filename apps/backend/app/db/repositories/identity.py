@@ -50,6 +50,16 @@ class UserRepository:
             statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.execute(statement)).scalar_one_or_none()
 
+    async def lock_for_login(self, user_id: uuid.UUID) -> User | None:
+        # 登录不修改用户唯一键；允许积分/钱包外键 KEY SHARE，避免与建账锁互相等待。
+        statement = (
+            select(User)
+            .where(User.id == user_id)
+            .with_for_update(key_share=True)
+            .execution_options(populate_existing=True)
+        )
+        return (await self.session.execute(statement)).scalar_one_or_none()
+
     async def get_many(self, user_ids: list[uuid.UUID], *, for_update: bool = False) -> list[User]:
         if not user_ids:
             return []

@@ -1,1 +1,7 @@
-export default definePageConfig({ navigationBarTitleText: '我的' })
+export default definePageConfig({
+  navigationBarTitleText: '我的',
+  navigationStyle: 'custom',
+  navigationBarTextStyle: 'white',
+  backgroundColor: '#FFFFFF',
+  disableScroll: true,
+})

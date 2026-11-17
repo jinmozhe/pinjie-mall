@@ -44,7 +44,7 @@
 
 ## 文件职责与维护
 
-个人资料的固定几何背景位于 `apps/miniapp/src/features/profile/assets/background.svg`，由[背景生成器](../../../scripts/design/render-miniapp-profile-background.py)开发时生成，设计画布 1440 × 4480、固定种子 20261117，底部图案逐渐淡出至纯白；屏幕覆盖与再生成规则见[UI 规范](../../architecture/miniapp-ui-standard.md#个人资料页)。该素材已接入真实页面，Pillow 裁切预览只用于构图核对，不代表微信运行验收。
+个人资料与我的共用的固定几何背景位于 `apps/miniapp/src/assets/account-background.svg`，由[背景生成器](../../../scripts/design/render-miniapp-profile-background.py)开发时生成，设计画布 1440 × 4480、固定种子 20261117，底部图案逐渐淡出至纯白；屏幕覆盖与再生成规则见[UI 规范](../../architecture/miniapp-ui-standard.md#个人资料页)。该素材通过 AccountBackground 接入两个页面，Pillow 裁切预览只用于构图核对，不代表微信运行验收。
 
 - `screenshots/`：版本化设计图；已确认版本保留，修改使用 `v2` 等新名称。
 - [flows.md](flows.md)：页面衔接、边界和状态覆盖说明。

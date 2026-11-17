@@ -111,7 +111,9 @@ class ConsumerFinanceService:
         )
         if wallet is None:
             raise AppException(
-                status_code=404, code=ErrorCode.DISTRIBUTION_PROFILE_NOT_FOUND, message="请先开通会员分销档案"
+                status_code=404,
+                code=ErrorCode.DISTRIBUTION_PROFILE_NOT_FOUND,
+                message="账户尚未初始化，请重新登录；若仍异常，请联系运营",
             )
         stmt = select(WalletLedger).where(WalletLedger.wallet_id == wallet.id)
         total = int(await self.session.scalar(select(func.count()).select_from(stmt.subquery())) or 0)
