@@ -17,25 +17,29 @@ const numerals = ['一', '二', '三', '四', '五', '六', '七', '八', '九',
 export function LegalSheet({ document, onClose }: { document: LegalDocument | null; onClose: () => void }) {
   const sections = document === 'agreement' ? agreementSections : privacySections
   const title = document === 'agreement' ? '用户协议' : '隐私条款'
-  return <Popup className='auth-legal-sheet' visible={document !== null} position='bottom' round onClose={onClose} style={{ display: 'flex' }}
-    overlayClassName='auth-legal-overlay'>
-    <View className='auth-legal-header'>
-      <View className='auth-legal-handle' />
-      <View className='auth-legal-title'>{title}</View>
-      <View className='auth-legal-subtitle'>请仔细阅读以下内容</View>
-      <Button className='auth-legal-dismiss' ariaLabel={`关闭${title}`} onClick={onClose}><View className='auth-close-icon' /></Button>
-    </View>
-    <ScrollView key={document ?? 'closed'} scrollY className='auth-legal-scroll' showScrollbar enhanced>
-      <View className='auth-legal-body'>
-        {sections.map((section, index) => <View className='auth-legal-section' key={section.title}>
-          <View className='auth-legal-heading'>{numerals[index]}、{section.title}</View>
-          <View>{section.body}</View>
-        </View>)}
+  // Keep overlay insertion/removal inside its own child list. Taro batches
+  // updates by node path while Popup retains its content after closing.
+  return <View className='auth-legal-host'>
+    <Popup className='auth-legal-sheet' visible={document !== null} position='bottom' round onClose={onClose} style={{ display: 'flex' }}
+      overlayClassName='auth-legal-overlay'>
+      <View className='auth-legal-header'>
+        <View className='auth-legal-handle' />
+        <View className='auth-legal-title'>{title}</View>
+        <View className='auth-legal-subtitle'>请仔细阅读以下内容</View>
+        <Button className='auth-legal-dismiss' ariaLabel={`关闭${title}`} onClick={onClose}><View className='auth-close-icon' /></Button>
       </View>
-    </ScrollView>
-    <View className='auth-legal-footer'>
-      <View className='auth-legal-subtitle'>上下滑动查看全文</View>
-      <Button className='auth-legal-close' onClick={onClose}>关闭</Button>
-    </View>
-  </Popup>
+      <ScrollView key={document ?? 'closed'} scrollY className='auth-legal-scroll' showScrollbar enhanced>
+        <View className='auth-legal-body'>
+          {sections.map((section, index) => <View className='auth-legal-section' key={section.title}>
+            <View className='auth-legal-heading'>{numerals[index]}、{section.title}</View>
+            <View>{section.body}</View>
+          </View>)}
+        </View>
+      </ScrollView>
+      <View className='auth-legal-footer'>
+        <View className='auth-legal-subtitle'>上下滑动查看全文</View>
+        <Button className='auth-legal-close' onClick={onClose}>关闭</Button>
+      </View>
+    </Popup>
+  </View>
 }

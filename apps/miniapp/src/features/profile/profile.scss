@@ -17,7 +17,7 @@
 
 // 1440 x 4480 artwork, sized from the rendered viewport, not API windowHeight.
 .profile-background {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 50%;
   width: max(100vw, 32.1428571429vh);
