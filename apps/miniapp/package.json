@@ -21,6 +21,7 @@
     "@tarojs/shared": "4.3.0",
     "@tarojs/taro": "4.3.0",
     "@vant/area-data": "2.2.0",
+    "abort-controller": "3.0.0",
     "mp-html": "2.5.2",
     "react": "18.3.1"
   },

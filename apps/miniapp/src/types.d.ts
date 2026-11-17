@@ -1,5 +1,6 @@
 declare const __API_BASE_URL__: string
 declare const __ASSET_BASE_URL__: string
+declare const __ROUTE_TRACE_ENABLED__: boolean
 declare module '*.scss'
 declare namespace JSX {
   interface IntrinsicElements {

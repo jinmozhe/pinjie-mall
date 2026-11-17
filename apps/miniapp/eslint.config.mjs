@@ -7,7 +7,7 @@ export default [
   {
     files: ['src/**/*.ts', 'src/**/*.tsx'],
     plugins: { 'react-hooks': hooks },
-    languageOptions: { globals: { defineAppConfig: 'readonly', definePageConfig: 'readonly', AbortSignal: 'readonly', __API_BASE_URL__: 'readonly', __ASSET_BASE_URL__: 'readonly' } },
+    languageOptions: { globals: { defineAppConfig: 'readonly', definePageConfig: 'readonly', AbortSignal: 'readonly', __API_BASE_URL__: 'readonly', __ASSET_BASE_URL__: 'readonly', __ROUTE_TRACE_ENABLED__: 'readonly', console: 'readonly' } },
     rules: { ...hooks.configs.recommended.rules, '@typescript-eslint/no-explicit-any': 'error' },
   },
   { files: ['config/**/*.ts'], languageOptions: { globals: { process: 'readonly', __dirname: 'readonly' } } },

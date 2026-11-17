@@ -8,7 +8,11 @@ import pytest
 from fastapi import FastAPI, Request
 from httpx import ASGITransport, AsyncClient
 from jwt import InvalidTokenError
+from loguru import logger
+from redis.exceptions import AuthenticationError as RedisAuthenticationError
+from redis.exceptions import ConnectionError as RedisConnectionError
 from redis.exceptions import RedisError
+from redis.exceptions import TimeoutError as RedisTimeoutError
 
 from app.core.config import Settings
 from app.core.csrf import new_csrf_token, verify_csrf_token
@@ -243,6 +247,69 @@ async def test_rate_limit_failure_and_lock_states() -> None:
     await release_refresh_lock(None, key="key", owner="owner")
     release = SimpleNamespace(eval=AsyncMock(side_effect=RedisError("offline")))
     await release_refresh_lock(release, key="key", owner="owner")  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("environment", ["local", "test", "production"])
+@pytest.mark.parametrize("operation", ["rate_limit", "refresh_lock"])
+@pytest.mark.parametrize(
+    ("failure", "reason", "local_prefix"),
+    [
+        (None, "not_initialized", "认证依赖的 Redis 未初始化"),
+        (RedisConnectionError, "connection_failed", "无法连接 Redis"),
+        (RedisAuthenticationError, "authentication_failed", "Redis 认证失败"),
+        (RedisTimeoutError, "timeout", "Redis 请求超时"),
+        (RedisError, "command_failed", "Redis 安全校验失败"),
+    ],
+)
+async def test_auth_dependency_diagnostics_are_local_and_redacted(
+    environment, operation, failure, reason, local_prefix
+):
+    test_app = create_app(_settings(ENVIRONMENT=environment))
+    private_detail = "private-cache-connection-details"
+    error = failure(private_detail) if failure is not None else None
+    redis = (
+        SimpleNamespace(eval=AsyncMock(side_effect=error), set=AsyncMock(side_effect=error))
+        if error is not None
+        else None
+    )
+
+    @test_app.get("/dependency-failure")
+    async def dependency_failure() -> None:
+        if operation == "rate_limit":
+            await enforce_rate_limit(redis, key="key", limit=1, window_seconds=60)
+        else:
+            await acquire_refresh_lock(redis, key="key", owner="owner")
+
+    records = []
+    sink_id = logger.add(lambda message: records.append(message.record))
+    try:
+        async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://testserver") as client:
+            response = await client.get(
+                "/dependency-failure",
+                headers={"X-Request-ID": "redis-diagnostic-request", "X-Trace-ID": "redis-diagnostic-trace"},
+            )
+    finally:
+        logger.remove(sink_id)
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["code"] == "SERVICE_UNAVAILABLE"
+    assert body["request_id"] == "redis-diagnostic-request"
+    assert body["details"] is None
+    if environment == "local":
+        assert body["message"].startswith(local_prefix)
+    else:
+        assert body["message"] == "登录安全校验服务暂时不可用，请稍后重试"
+    diagnostic = next(record for record in records if record["extra"].get("dependency") == "redis")
+    assert diagnostic["extra"] == {
+        "request_id": "redis-diagnostic-request",
+        "trace_id": "redis-diagnostic-trace",
+        "dependency": "redis",
+        "operation": operation,
+        "reason": reason,
+    }
+    assert private_detail not in response.text + str(records)
 
 
 @pytest.mark.asyncio

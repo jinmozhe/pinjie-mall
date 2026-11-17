@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react'
 import type { PropsWithChildren } from 'react'
-import Taro, { useDidHide, useDidShow } from '@tarojs/taro'
+import Taro, { useDidHide, useDidShow, useLaunch } from '@tarojs/taro'
 import { View } from '@tarojs/components'
 import { focusManager, onlineManager, QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/query'
 import { restoreSession } from './lib/session'
+import { startRouteTrace, stopRouteTrace } from './platform/route-trace'
 import { CartBadge } from './features/cart'
 import './styles/app.scss'
 import '@nutui/icons-react-taro/dist/style_icon.css'
 
 export default function App({ children }: PropsWithChildren) {
   const [networkNote, setNetworkNote] = useState('')
+  useLaunch((options) => {
+    if (__ROUTE_TRACE_ENABLED__) startRouteTrace(options.path)
+  })
   useDidShow(() => { focusManager.setFocused(true) })
   useDidHide(() => { focusManager.setFocused(false) })
   useEffect(() => {
@@ -35,7 +39,11 @@ export default function App({ children }: PropsWithChildren) {
         setNetworkNote('无法获取网络状态，请检查微信网络权限并重新打开小程序')
       }
     })
-    return () => { live = false; Taro.offNetworkStatusChange(listener) }
+    return () => {
+      live = false
+      Taro.offNetworkStatusChange(listener)
+      if (__ROUTE_TRACE_ENABLED__) stopRouteTrace()
+    }
   }, [])
   return <QueryClientProvider client={queryClient}><CartBadge />{networkNote && <View className='network-note'>{networkNote}</View>}{children}</QueryClientProvider>
 }

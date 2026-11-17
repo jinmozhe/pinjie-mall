@@ -68,7 +68,7 @@ Taro 传递 normalize-url 2.0.1 的 query-string 使用限定为 parse/stringify
 
 公开 project.config.json 只放可公开配置与 AppID。project.private.config.json、真实环境文件、上传私钥、输出目录和日志应加入忽略规则。AppID 可公开，AppSecret、session_key、支付密钥与上传私钥不得进入客户端、仓库或产物。
 
-当前 AppID 为工具游客模式标识 touristappid，不能用于微信登录、真机能力或发布。公开项目配置指向 dist/ 并排除打包 .map 文件。开发 API 与资源源站默认明确为 `http://127.0.0.1:18168`；可用公开 TARO_APP_API_BASE_URL 与 TARO_APP_ASSET_BASE_URL 覆盖，生产必须显式配置 HTTPS 源站。图片仅允许配置资源源站的绝对 URL 或站内路径，不自动信任其他 CDN。
+公开 `project.config.json` 已登记实际微信 AppID，以该配置为准；登记不证明主体资格、平台权限、隐私指引、合法域名或发布验收完成。项目配置指向 dist/ 并排除打包 .map 文件。开发 API 与资源源站默认明确为 `http://127.0.0.1:18168`；可用公开 TARO_APP_API_BASE_URL 与 TARO_APP_ASSET_BASE_URL 覆盖，生产必须显式配置 HTTPS 源站。图片仅允许配置资源源站的绝对 URL 或站内路径，不自动信任其他 CDN。
 
 根 dev 保持 Admin 入口，Backend 本机使用已有 18168，Admin 使用 3001。小程序真机连接可达且符合微信配置的 HTTPS 服务；手机 localhost 不指向电脑。禁止启动 Web、H5 或监听 3000。
 
@@ -78,6 +78,7 @@ Taro 传递 normalize-url 2.0.1 的 query-string 使用限定为 parse/stringify
 - 同一 Feature 的 UI、Hook、Query、api/service、domain 就近组织；跨 Feature 不穿透内部文件，不使用 export * 暴露全部实现。
 - domain 保持纯 TypeScript，不导入 React、Taro、NutUI、Query 或 I/O。最终价格、库存、资格、佣金与退款由 Backend 决定。
 - lib/api.ts、lib/session.ts、lib/cancellation.ts 与 platform 分别负责传输、私有会话、原生请求取消和微信能力；基础设施不反向依赖具体 Feature。不依赖微信必然存在 DOM AbortController，适配 Query 的取消信号并调用 RequestTask.abort。
+- Query 内部创建的 AbortController 由 `config/index.ts` 的 Webpack ProvidePlugin 注入 `platform/abort-controller.ts`。平台模块优先保留原生对象，缺失时使用固定 `abort-controller` 3.0.0 的实现入口，传递依赖 `event-target-shim` 5.0.1 由根锁文件固定；禁止改用仅导出原生全局对象的包 browser 入口。此适配覆盖当前 Query 使用的取消状态、事件及监听清理，不改写微信全局对象，不引入 fetch，也不承诺未使用的 AbortSignal.any/timeout 等新 API。修改编译配置后重启 watch；Console 中的全局 typeof 仍可为 undefined，应按页面请求及取消结果验收。
 - Admin、小程序不相互导入源码或 DOM 组件；共享只经 packages 公共入口。生成 API 类型使用 import type，禁止复制 DTO、运行 Admin 请求管道或手改生成文件。
 - 导入路径、别名、React 类型解析与 ESLint 配置在初始化时明确校验。不得用 any、强制断言或忽略规则掩盖契约不匹配。
 
