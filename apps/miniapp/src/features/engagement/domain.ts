@@ -6,7 +6,7 @@ export function invitationCode(value: unknown): string | null {
 }
 export function referralPath(code: unknown): string {
   const valid = invitationCode(code)
-  if (!valid) throw new Error('本人邀请码无效，请刷新档案')
+  if (!valid) throw new Error('本人邀请码无效，请刷新会员信息')
   return `/subpackages/finance/referral/index?invite=${encodeURIComponent(valid)}`
 }
 export function parseReferralIntent(value: unknown, userId: string): string | null {

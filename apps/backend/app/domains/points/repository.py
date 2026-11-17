@@ -22,6 +22,12 @@ class PointsRepository:
             statement = statement.with_for_update()
         return (await self.session.scalars(statement)).one_or_none()
 
+    async def lock_account_creation(self, user_id: UUID) -> None:
+        await self.session.execute(
+            text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+            {"key": f"pinjie:points:account:{user_id}"},
+        )
+
     async def account_by_id(self, account_id: UUID, *, lock: bool = False) -> PointsAccount | None:
         statement = (
             select(PointsAccount).where(PointsAccount.id == account_id).execution_options(populate_existing=True)

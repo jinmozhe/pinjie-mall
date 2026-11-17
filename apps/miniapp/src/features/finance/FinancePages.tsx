@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import Taro, { useDidShow, useRouter } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import type { ConsumerMemberRead, ConsumerWalletRead, ResponseModelConsumerMemberRead, ResponseModelListConsumerWalletRead, ResponseModelPageResultConsumerWalletLedgerRead, ResponseModelPageResultConsumerCommissionRead, ResponseModelPageResultConsumerWithdrawalRead } from '@pinjie/api-client'
 import { AuthGate } from '@/components/AuthGate'
 import { Button } from '@/components/Button'
 import { QueryState } from '@/components/QueryState'
-import { privateRequest, sessionScope, useSession } from '@/lib/session'
-import { queryClient } from '@/lib/query'
+import { privateRequest, useSession } from '@/lib/session'
 
 const date = (value: string | null) => value ? new Date(value).toLocaleString() : '尚无记录'
-const memberLabels: Record<ConsumerMemberRead['state'], string> = { not_opened: '尚未开通档案', no_level: '已开通，尚无会员等级', active: '会员等级有效', inactive: '所持会员等级已停用' }
+const memberLabels: Record<ConsumerMemberRead['state'], string> = { not_opened: '会员信息异常', no_level: '暂无会员等级', active: '会员等级有效', inactive: '所持会员等级已停用' }
 const walletLabels: Record<ConsumerWalletRead['wallet_type'], string> = { commission: '佣金钱包', consumption: '消费钱包' }
 const entryLabels: Record<string, string> = { commission_settlement: '佣金结算', commission_recovery: '佣金追回', withdrawal_freeze: '提现冻结', withdrawal_release: '提现释放', withdrawal_paid: '提现资金确认' }
 const commissionLabels: Record<string, string> = { frozen: '冻结中', settled: '已结算', recovered: '已追回' }
@@ -23,38 +22,14 @@ function Pager({ page, pages, busy, change }: { page: number; pages: number; bus
 function Support() { return <Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/service/help/index' }) }}>帮助与支持</Button> }
 function Membership() {
   const session = useSession()
-  const [unknown, setUnknown] = useState(false)
-  const [accepted, setAccepted] = useState(false)
   const query = useQuery({ queryKey: ['private', 'membership', session.epoch], gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelConsumerMemberRead>('/distribution/me/profile', { signal }) })
   useDidShow(() => { void query.refetch() })
-  const activate = useMutation({ mutationFn: async () => {
-    if (query.data?.state !== 'not_opened' || unknown) throw new Error('请先查询当前档案状态')
-    const answer = await Taro.showModal({ title: '开通会员分销档案', content: '创建本人档案及双轨钱包。开通不保证获得会员等级或收益，不会绑定推荐人。' })
-    if (!answer.confirm || session.epoch !== sessionScope()) return
-    setUnknown(true)
-    const result = await privateRequest<ResponseModelConsumerMemberRead>('/distribution/me/profile', { method: 'POST' })
-    if (result.state === 'not_opened') throw new Error('服务端尚未确认档案开通')
-    await queryClient.cancelQueries({ queryKey: ['private', 'membership', session.epoch] })
-    if (session.epoch !== sessionScope()) throw new Error('会话已改变，请重新读取会员状态')
-    setAccepted(true)
-    setUnknown(false)
-    queryClient.setQueryData(['private', 'membership', session.epoch], result)
-    await queryClient.invalidateQueries({ queryKey: ['private', 'wallets'] })
-  } })
-  async function readFacts() {
-    const result = await query.refetch()
-    if (!result.isError && result.data && session.epoch === sessionScope()) {
-      setUnknown(false)
-      if (result.data.state !== 'not_opened') setAccepted(true)
-    }
-  }
-  if (query.isPending) return <QueryState title='正在读取会员档案' />
-  if (query.isError) return <QueryState title={accepted ? '档案已开通，最新信息读取失败' : '会员档案读取失败'} error={query.error} retry={() => { void readFacts() }} />
+  if (query.isPending) return <QueryState title='正在读取会员信息' />
+  if (query.isError) return <QueryState title='会员信息读取失败' error={query.error} retry={() => { void query.refetch() }} />
   const member = query.data
-  return <View className='page account-page'><View className='title'>会员中心</View><View className='surface'><View className='section-title'>{memberLabels[member.state]}</View>{member.level_name && <View className='title wrap'>{member.level_name}</View>}{member.state === 'inactive' && <View className='note'>等级记录保留，停用等级不应用价格权益。</View>}{member.state === 'no_level' && <View className='note'>档案已开通，会员等级由服务端资格政策决定。</View>}{member.created_at && <View className='muted'>开通时间：{date(member.created_at)}</View>}{member.level_changed_at && <View className='muted'>等级变更：{date(member.level_changed_at)}</View>}</View><View className='surface'><View className='section-title'>推荐关系</View><View>{member.referral_bound ? '已有首次推荐关系' : '尚未绑定推荐关系'}</View>{member.bound_at && <View className='muted'>绑定时间：{date(member.bound_at)}</View>}<View className='muted'>分享邀请码仅为绑定意图，需要当前账户主动确认，本页不会自动绑定。</View><Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/finance/referral/index' }) }}>推荐与分享</Button></View><View className='note'>会员价格由服务端统一报价确定，请在结算页确认实际价格。开通档案不等于取得等级，也不承诺佣金收益。</View>
-    {unknown && <View className='note'>开通结果尚未确认，请查询当前档案，勿重复点击。</View>}{activate.error && <QueryState title={accepted ? '档案已开通，后续刷新未完成' : '开通结果未确认'} error={activate.error} />}
-    {member.state === 'not_opened' ? <Button block loading={activate.isPending} disabled={activate.isPending || unknown} onClick={() => activate.mutate()}>主动开通档案</Button> : <Button block onClick={() => { void Taro.navigateTo({ url: '/subpackages/finance/wallets/index' }) }}>查看双轨钱包</Button>}
-    <Button block fill='outline' disabled={activate.isPending} onClick={() => { void readFacts() }}>查询当前会员状态</Button><Support />
+  return <View className='page account-page'><View className='title'>会员中心</View><View className='surface'><View className='section-title'>{memberLabels[member.state]}</View>{member.level_name && <View className='title wrap'>{member.level_name}</View>}{member.state === 'not_opened' && <View className='note'>会员信息暂不可用，请重新登录；若仍异常，请联系帮助与支持。</View>}{member.state === 'inactive' && <View className='note'>等级记录保留，停用等级不应用价格权益。</View>}{member.state === 'no_level' && <View className='note'>暂未获得会员等级，达到平台资格条件后可享受对应权益。</View>}{member.created_at && <View className='muted'>加入时间：{date(member.created_at)}</View>}{member.level_changed_at && <View className='muted'>等级变更：{date(member.level_changed_at)}</View>}</View><View className='surface'><View className='section-title'>推荐关系</View><View>{member.referral_bound ? '已有首次推荐关系' : '尚未绑定推荐关系'}</View>{member.bound_at && <View className='muted'>绑定时间：{date(member.bound_at)}</View>}<View className='muted'>推荐关系需要本人主动确认，创建账户不会自动绑定推荐人。</View><Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/finance/referral/index' }) }}>推荐与分享</Button></View><View className='note'>会员价格由服务端统一报价确定，请在结算页确认实际价格。佣金收益以实际结算记录为准。</View>
+    {member.state !== 'not_opened' && <Button block onClick={() => { void Taro.navigateTo({ url: '/subpackages/finance/wallets/index' }) }}>查看我的钱包</Button>}
+    <Button block fill='outline' disabled={query.isFetching} onClick={() => { void query.refetch() }}>刷新会员信息</Button><Support />
     <Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/finance/points/index' }) }}>查看本人积分</Button>
   </View>
 }
@@ -62,7 +37,7 @@ function Wallets() {
   const session = useSession()
   const query = useQuery({ queryKey: ['private', 'wallets', session.epoch], gcTime: 0, queryFn: ({ signal }) => privateRequest<ResponseModelListConsumerWalletRead>('/distribution/me/wallets', { signal }) })
   useDidShow(() => { void query.refetch() })
-  return <View className='page account-page'><View className='title'>我的钱包</View>{query.isPending && <QueryState title='正在读取钱包余额' />}{query.isError && <QueryState title='钱包读取失败' error={query.error} retry={() => { void query.refetch() }} />}{query.data && !query.isError && query.data.map((wallet) => <View className='surface' key={wallet.wallet_type}><View className='section-title'>{walletLabels[wallet.wallet_type]}</View><View className='muted'>可用余额</View><View className='price finance-amount'>¥{wallet.available_amount}</View><View className='finance-balances'><View>冻结余额<View className='finance-amount'>¥{wallet.frozen_amount}</View></View><View>追回欠款<View className='finance-amount'>¥{wallet.debt_amount}</View></View></View><View className='note'>{wallet.wallet_type === 'commission' ? '仅接收已结算佣金，可按资格提现，不能用于购物。新提现申请尚未开放。' : '消费钱包用于后续购物抵扣，不能提现。当前抵扣尚未开放。'}新入账或提现释放可能优先清偿欠款。</View><View className='muted'>更新于 {date(wallet.updated_at)}</View><Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: `/subpackages/finance/ledgers/index?type=${wallet.wallet_type}` }) }}>查看本钱包流水</Button></View>)}<View className='note'>两类钱包禁止互转，充值未开放。余额只展示服务端事实；冻结佣金记录与钱包提现冻结分别查询。</View><Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/finance/membership/index' }) }}>查看或开通会员档案</Button><Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/finance/commissions/index' }) }}>佣金记录</Button><Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/finance/withdrawals/index' }) }}>历史提现记录</Button><Support /></View>
+  return <View className='page account-page'><View className='title'>我的钱包</View>{query.isPending && <QueryState title='正在读取钱包余额' />}{query.isError && <QueryState title='钱包读取失败' error={query.error} retry={() => { void query.refetch() }} />}{query.data && !query.isError && query.data.map((wallet) => <View className='surface' key={wallet.wallet_type}><View className='section-title'>{walletLabels[wallet.wallet_type]}</View><View className='muted'>可用余额</View><View className='price finance-amount'>¥{wallet.available_amount}</View><View className='finance-balances'><View>冻结余额<View className='finance-amount'>¥{wallet.frozen_amount}</View></View><View>追回欠款<View className='finance-amount'>¥{wallet.debt_amount}</View></View></View><View className='note'>{wallet.wallet_type === 'commission' ? '仅接收已结算佣金，可按资格提现，不能用于购物。新提现申请尚未开放。' : '消费钱包用于后续购物抵扣，不能提现。当前抵扣尚未开放。'}新入账或提现释放可能优先清偿欠款。</View><View className='muted'>更新于 {date(wallet.updated_at)}</View><Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: `/subpackages/finance/ledgers/index?type=${wallet.wallet_type}` }) }}>查看本钱包流水</Button></View>)}<View className='note'>两类钱包禁止互转，充值未开放。余额只展示服务端事实；冻结佣金记录与钱包提现冻结分别查询。</View><Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/finance/membership/index' }) }}>查看会员中心</Button><Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/finance/commissions/index' }) }}>佣金记录</Button><Button block fill='outline' onClick={() => { void Taro.navigateTo({ url: '/subpackages/finance/withdrawals/index' }) }}>历史提现记录</Button><Support /></View>
 }
 function Ledgers() {
   const session = useSession()

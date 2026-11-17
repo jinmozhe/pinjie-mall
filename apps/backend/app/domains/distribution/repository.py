@@ -21,6 +21,12 @@ class DistributionRepository:
     async def lock_referral_graph(self) -> None:
         await self.session.execute(text("SELECT pg_advisory_xact_lock(722341902)"))
 
+    async def lock_profile_creation(self, user_id: UUID) -> None:
+        await self.session.execute(
+            text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+            {"key": f"pinjie:distribution:profile:{user_id}"},
+        )
+
     async def lock_wallets(self, user_ids: list[UUID]) -> None:
         if user_ids:
             await self.session.scalars(

@@ -25,6 +25,7 @@ def _service() -> AdminManagementService:
     service.users.get_by_username = AsyncMock(return_value=None)
     service.users.get_by_email = AsyncMock(return_value=None)
     service.users.add = MagicMock()
+    service.customer_accounts = SimpleNamespace(initialize_in_open_transaction=AsyncMock())
 
     async def execute(**kwargs):
         user = await kwargs["operation"]()
@@ -67,6 +68,8 @@ async def test_admin_create_user_hashes_password_without_creating_session() -> N
     service.password_manager.hash.assert_awaited_once_with("initial-password")
     service.users.add.assert_called_once()
     created_user = service.users.add.call_args.args[0]
+    service.customer_accounts.initialize_in_open_transaction.assert_awaited_once_with(created_user.id)
+    assert created_user.phone_e164 is None
     assert created_user.password_hash == "hashed-initial-password"
     assert created_user.is_active is False
     service.audit.execute.assert_awaited_once()
@@ -94,6 +97,14 @@ async def test_admin_create_user_rejects_soft_deleted_identifier_conflict() -> N
     assert error.value.status_code == 409
     assert error.value.code == ErrorCode.STATE_CONFLICT
     service.users.add.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_admin_create_user_propagates_account_initialization_failure() -> None:
+    service = _service()
+    service.customer_accounts.initialize_in_open_transaction.side_effect = RuntimeError("initialization failed")
+    with pytest.raises(RuntimeError, match="initialization failed"):
+        await service.create_user(AdminUserCreateIn(username="managed-user", initial_password="initial-password"))
 
 
 @pytest.mark.asyncio

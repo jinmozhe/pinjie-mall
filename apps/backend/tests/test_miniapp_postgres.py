@@ -15,6 +15,7 @@ from app.core.request_metadata import RequestMetadata
 from app.core.resources import create_resources
 from app.core.security import token_digest
 from app.db.models import SecurityLoginEvent, SystemSetting, User, UserExternalIdentity, UserRefreshToken, UserSession
+from app.db.models.distribution import MemberProfile, PointsAccount, PointsLedger, WalletAccount, WalletLedger
 from app.db.transaction import transaction_scope
 from app.services.consumer_auth import ConsumerAuthService
 from tests.conftest import TEST_SECRETS
@@ -89,6 +90,29 @@ async def test_concurrent_identity_registration_rotation_and_replay_revocation()
             )
             user = await session.get(User, user_id)
             assert user is not None and user.password_hash is None
+            assert not user.phone_bound
+            profile = (await session.scalars(select(MemberProfile).where(MemberProfile.user_id == user_id))).one()
+            assert profile.level_id is None and profile.inviter_id is None and profile.invitation_code
+            wallets = (await session.scalars(select(WalletAccount).where(WalletAccount.user_id == user_id))).all()
+            assert {wallet.wallet_type for wallet in wallets} == {"commission", "consumption"}
+            assert all(wallet.available_amount == wallet.frozen_amount == wallet.debt_amount == 0 for wallet in wallets)
+            points = (await session.scalars(select(PointsAccount).where(PointsAccount.user_id == user_id))).one()
+            assert points.available_points == points.frozen_points == points.debt_points == 0
+            assert (
+                await session.scalar(
+                    select(func.count()).select_from(PointsLedger).where(PointsLedger.account_id == points.id)
+                )
+                == 0
+            )
+            assert (
+                await session.scalar(
+                    select(func.count())
+                    .select_from(WalletLedger)
+                    .where(WalletLedger.wallet_id.in_([wallet.id for wallet in wallets]))
+                )
+                == 0
+            )
+            account_ids = profile.id, points.id, {wallet.id for wallet in wallets}
             row = (
                 await session.scalars(
                     select(SystemSetting).where(SystemSetting.setting_group == "miniapp_registration").with_for_update()
@@ -99,6 +123,10 @@ async def test_concurrent_identity_registration_rotation_and_replay_revocation()
         third = await login()
         assert third.user.id == user_id
         async with resources.session_factory() as session:
+            profile = (await session.scalars(select(MemberProfile).where(MemberProfile.user_id == user_id))).one()
+            points = (await session.scalars(select(PointsAccount).where(PointsAccount.user_id == user_id))).one()
+            wallets = (await session.scalars(select(WalletAccount).where(WalletAccount.user_id == user_id))).all()
+            assert (profile.id, points.id, {wallet.id for wallet in wallets}) == account_ids
             service = ConsumerAuthService(
                 session=session,
                 session_factory=resources.session_factory,
@@ -118,6 +146,22 @@ async def test_concurrent_identity_registration_rotation_and_replay_revocation()
             record = await session.get(UserSession, first.session_id)
             assert record is not None and record.revoked_at is not None
             assert record.credential_profile == "miniapp_bearer" and record.csrf_digest is None
+        # 模拟只有身份的历史用户；注册关闭也允许已有身份登录并补齐账户。
+        async with resources.session_factory() as session, transaction_scope(session):
+            await session.execute(delete(PointsAccount).where(PointsAccount.user_id == user_id))
+            await session.execute(delete(WalletAccount).where(WalletAccount.user_id == user_id))
+            await session.execute(delete(MemberProfile).where(MemberProfile.user_id == user_id))
+        restored = await login()
+        assert restored.user.id == user_id and not restored.user.phone_bound
+        async with resources.session_factory() as session:
+            assert (
+                await session.scalars(select(MemberProfile).where(MemberProfile.user_id == user_id))
+            ).one().level_id is None
+            assert (
+                await session.scalars(select(PointsAccount).where(PointsAccount.user_id == user_id))
+            ).one().available_points == 0
+            wallets = (await session.scalars(select(WalletAccount).where(WalletAccount.user_id == user_id))).all()
+            assert len(wallets) == 2 and all(wallet.available_amount == 0 for wallet in wallets)
     finally:
         try:
             async with resources.session_factory() as session, transaction_scope(session):
@@ -133,6 +177,9 @@ async def test_concurrent_identity_registration_rotation_and_replay_revocation()
                     await session.execute(delete(UserRefreshToken).where(UserRefreshToken.session_id.in_(ids)))
                     await session.execute(delete(UserSession).where(UserSession.user_id == user_id))
                     await session.execute(delete(UserExternalIdentity).where(UserExternalIdentity.user_id == user_id))
+                    await session.execute(delete(PointsAccount).where(PointsAccount.user_id == user_id))
+                    await session.execute(delete(WalletAccount).where(WalletAccount.user_id == user_id))
+                    await session.execute(delete(MemberProfile).where(MemberProfile.user_id == user_id))
                     await session.execute(delete(User).where(User.id == user_id))
                 await session.execute(
                     delete(SecurityLoginEvent).where(SecurityLoginEvent.request_id == metadata.request_id)

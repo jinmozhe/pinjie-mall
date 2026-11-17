@@ -31,3 +31,25 @@ $profile-placeholder: #948C87;
 $profile-avatar-background: #F5F3F1;
 $profile-avatar-ink: #ADA59F;
 $profile-camera-background: #F5E8E2;
+
+// Personal center illustration, asset summary and service tiles.
+$account-muted: #667085;
+$account-line: #F0EDEA;
+$account-avatar-background: #FCE5DF;
+$account-avatar-ink: #CD4D40;
+$account-hint: #8E554C;
+$account-brand: #99776D;
+$account-brand-line: #DCC6BD;
+$account-service-backgrounds: (
+  'gold': #FFF2DA,
+  'coral': #FFE9E4,
+  'blue': #E6F2FF,
+  'orange': #FFF0E2,
+  'teal': #E1F5F1,
+  'indigo': #EEEDFF,
+  'rose': #FDEDF0,
+  'cyan': #E7F5FA,
+  'green': #E6F3EB,
+  'slate': #EDF2F8,
+  'purple': #F0EAFB,
+);

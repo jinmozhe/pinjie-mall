@@ -1,0 +1,40 @@
+@use '../styles/tokens' as t;
+@use './account-background';
+
+.account-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100vh;
+  overflow: hidden;
+  background: t.$surface;
+  color: t.$text;
+}
+.account-frame-header { position: relative; flex: none; background: transparent; color: t.$surface; }
+.account-frame-header-row { position: relative; display: flex; align-items: center; justify-content: center; }
+.account-frame-title { overflow: hidden; font-size: 32px; font-weight: 600; line-height: 1.5; white-space: nowrap; text-overflow: ellipsis; }
+.account-frame .account-frame-back {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: t.$surface;
+  view { width: 18px; height: 18px; border-left: 3px solid currentColor; border-bottom: 3px solid currentColor; transform: rotate(45deg); }
+}
+.account-frame-back::after, .account-frame-retry-back::after { border: 0; }
+.account-frame-back[disabled], .account-frame-retry-back[disabled] { opacity: 0.55; }
+.account-frame-scroll { position: relative; flex: 1; height: 0; min-height: 0; }
+.account-frame-body { padding: 64px 32px calc(64px + env(safe-area-inset-bottom)); }
+.account-frame-error { margin-bottom: 24px; padding: 24px; border-radius: t.$radius; background: t.$surface; color: t.$primary; }
+.account-frame-layout-error { position: relative; margin: calc(env(safe-area-inset-top) + 100px) 32px 32px; padding: 24px; border-radius: t.$radius; background: t.$surface; }
+.account-frame .account-frame-retry-back { min-height: 88px; margin: 0; padding: 12px 0; border: 0; background: transparent; color: t.$primary; font-size: 24px; line-height: 2; }

@@ -21,6 +21,7 @@ from app.db.repositories.external_identity import WechatIdentityRepository
 from app.db.transaction import transaction_scope
 from app.domains.auth.schemas import ConsumerSessionRead, ConsumerUserRead
 from app.domains.settings.schemas import MiniappRegistrationValue
+from app.services.customer_accounts import CustomerAccountsService
 from app.services.security_events import SecurityEventWriter, login_event
 
 _EXCHANGE_FAILURES = (httpx.HTTPError, TimeoutError, ValueError)
@@ -203,12 +204,13 @@ class ConsumerAuthService:
                     user.id, app_id, identity.openid, identity.unionid, self.settings.wechat_union_scope_id
                 )
             else:
-                found = await self.users.get(binding.user_id, for_update=True)
+                found = await self.users.lock_for_login(binding.user_id)
                 if found is None:
                     raise bearer_error()
                 user = found
             if not user.is_active or user.deleted_at is not None:
                 raise AppException(status_code=403, code=ErrorCode.AUTH_ACCOUNT_DISABLED, message="账户已停用")
+            await CustomerAccountsService(self.session).initialize_in_open_transaction(user.id)
             now = datetime.now(UTC)
             absolute = now + timedelta(days=self.settings.session_absolute_ttl_days)
             idle = min(now + timedelta(days=self.settings.refresh_idle_ttl_days), absolute)

@@ -43,6 +43,17 @@ class PointsService:
             items=[PointsAccountRead.model_validate(row) for row in rows], total=total, page=page, page_size=page_size
         )
 
+    async def initialize_account_in_open_transaction(self, user_id: UUID) -> None:
+        """调用方负责事务及用户校验；仅建零账户，不生成积分或资格流水。"""
+        await self._repository.lock_account_creation(user_id)
+        if await self._repository.account(user_id) is None:
+            self._session.add(
+                PointsAccount(
+                    id=new_uuid7(), user_id=user_id, available_points=0, frozen_points=0, debt_points=0, revision=1
+                )
+            )
+            await self._repository.flush()
+
     async def ledgers(self, account_id: UUID, page: int, page_size: int) -> PageResult[PointsLedgerRead]:
         rows, total = await self._repository.ledger_page(account_id, page, page_size)
         return PageResult[PointsLedgerRead].create(

@@ -75,6 +75,7 @@ from app.domains.admin.schemas import (
 from app.domains.users.schemas import UserUpdateIn
 from app.services.admin_audit import AdminAuditCoordinator
 from app.services.assets import resolve_admin_avatar
+from app.services.customer_accounts import CustomerAccountsService
 from app.services.security_events import AuditCoordinator
 
 _FASTAPI_VERSION = version("fastapi")
@@ -106,6 +107,7 @@ class AdminManagementService:
         self.started_at = started_at
         self.cache_keys: CacheKeys = cache_keys(settings)
         self.users = UserRepository(session)
+        self.customer_accounts = CustomerAccountsService(session)
         self.admins = AdminRepository(session)
         self.sessions = SessionRepository(session)
         self.security = SecurityRepository(session)
@@ -187,27 +189,29 @@ class AdminManagementService:
                 deleted_at=None,
             )
             self.users.add(user)
+            try:
+                await self.session.flush()
+            except IntegrityError as exc:
+                raise AppException(
+                    status_code=409,
+                    code=ErrorCode.STATE_CONFLICT,
+                    message="用户名或邮箱已被使用",
+                ) from exc
+            await self.customer_accounts.initialize_in_open_transaction(user.id)
             return user
 
-        try:
-            user = await self.audit.execute(
-                action="users:create",
-                target_type="user",
-                target_id=user_id,
-                changed_fields={
-                    "created": True,
-                    "is_active": payload.is_active,
-                    "has_display_name": bool(payload.display_name),
-                    "has_email": payload.email is not None,
-                },
-                operation=operation,
-            )
-        except IntegrityError as exc:
-            raise AppException(
-                status_code=409,
-                code=ErrorCode.STATE_CONFLICT,
-                message="用户名或邮箱已被使用",
-            ) from exc
+        user = await self.audit.execute(
+            action="users:create",
+            target_type="user",
+            target_id=user_id,
+            changed_fields={
+                "created": True,
+                "is_active": payload.is_active,
+                "has_display_name": bool(payload.display_name),
+                "has_email": payload.email is not None,
+            },
+            operation=operation,
+        )
         return self._user_read(user)
 
     async def update_user(self, user_id: uuid.UUID, payload: UserUpdateIn) -> User:
