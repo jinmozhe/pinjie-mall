@@ -9890,6 +9890,214 @@
         }
       }
     },
+    "/api/v1/orders/{order_id}/wechat-receipt": {
+      "get": {
+        "tags": [
+          "支付与售后"
+        ],
+        "summary": "核对本人微信平台收货状态",
+        "operationId": "wechat_receipt_api_v1_orders__order_id__wechat_receipt_get",
+        "security": [
+          {
+            "ConsumerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_WechatReceiptRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/intent": {
+      "get": {
+        "tags": [
+          "支付与售后"
+        ],
+        "summary": "生成本人支付请求号",
+        "operationId": "payment_intent_api_v1_payments_intent_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_OperationIntentRead_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ConsumerBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/orders/{order_id}/payment-status": {
+      "get": {
+        "tags": [
+          "支付与售后"
+        ],
+        "summary": "查询本人支付与渠道能力",
+        "operationId": "payment_status_api_v1_orders__order_id__payment_status_get",
+        "security": [
+          {
+            "ConsumerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PaymentStatusRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{order_id}/payment-attempts/by-request/{request_id}": {
+      "get": {
+        "tags": [
+          "支付与售后"
+        ],
+        "summary": "按本人请求号恢复支付意图",
+        "operationId": "payment_by_request_api_v1_orders__order_id__payment_attempts_by_request__request_id__get",
+        "security": [
+          {
+            "ConsumerBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_PaymentStatusRead_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payments/wechat/notify": {
+      "post": {
+        "tags": [
+          "支付与售后"
+        ],
+        "summary": "接收微信支付可信通知",
+        "operationId": "payment_notify_api_v1_payments_wechat_notify_post",
+        "responses": {
+          "204": {
+            "description": "请求成功"
+          }
+        }
+      }
+    },
+    "/api/v1/refunds/wechat/notify": {
+      "post": {
+        "tags": [
+          "支付与售后"
+        ],
+        "summary": "接收微信退款可信通知",
+        "operationId": "refund_notify_api_v1_refunds_wechat_notify_post",
+        "responses": {
+          "204": {
+            "description": "请求成功"
+          }
+        }
+      }
+    },
     "/api/v1/admin/member-levels": {
       "get": {
         "tags": [
@@ -25880,6 +26088,45 @@
         ],
         "title": "PasswordResetIn"
       },
+      "PayParameters": {
+        "properties": {
+          "timeStamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "nonceStr": {
+            "type": "string",
+            "title": "Noncestr",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "package": {
+            "type": "string",
+            "title": "Package",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "signType": {
+            "type": "string",
+            "const": "RSA",
+            "title": "Signtype",
+            "default": "RSA",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "paySign": {
+            "type": "string",
+            "title": "Paysign",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timeStamp",
+          "nonceStr",
+          "package",
+          "paySign"
+        ],
+        "title": "PayParameters"
+      },
       "PaymentAttemptCreate": {
         "properties": {
           "request_id": {
@@ -25967,6 +26214,17 @@
             "format": "date-time",
             "title": "Created At",
             "description": "创建时间"
+          },
+          "payment_parameters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PayParameters"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
           }
         },
         "type": "object",
@@ -25982,6 +26240,49 @@
           "created_at"
         ],
         "title": "PaymentAttemptRead"
+      },
+      "PaymentStatusRead": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "attempt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaymentAttemptRead"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "wechat_transaction_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wechat Transaction Id",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "wechat_receipt_enabled": {
+            "type": "boolean",
+            "title": "Wechat Receipt Enabled",
+            "default": false,
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "PaymentStatusRead"
       },
       "PermissionRead": {
         "properties": {
@@ -31210,6 +31511,38 @@
         ],
         "title": "ResponseModel[PaymentAttemptRead]"
       },
+      "ResponseModel_PaymentStatusRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PaymentStatusRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[PaymentStatusRead]"
+      },
       "ResponseModel_PointsAccountRead_": {
         "properties": {
           "code": {
@@ -31721,6 +32054,38 @@
           "request_id"
         ],
         "title": "ResponseModel[UserPrincipalOut]"
+      },
+      "ResponseModel_WechatReceiptRead_": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "$ref": "#/components/schemas/WechatReceiptRead",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[WechatReceiptRead]"
       },
       "ResponseModel_WithdrawalRead_": {
         "properties": {
@@ -34483,6 +34848,26 @@
           "code"
         ],
         "title": "WechatLoginIn"
+      },
+      "WechatReceiptRead": {
+        "properties": {
+          "confirmed": {
+            "type": "boolean",
+            "title": "Confirmed",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          },
+          "platform_state": {
+            "type": "integer",
+            "title": "Platform State",
+            "description": "当前业务字段，具体语义由所属请求或响应模型定义"
+          }
+        },
+        "type": "object",
+        "required": [
+          "confirmed",
+          "platform_state"
+        ],
+        "title": "WechatReceiptRead"
       },
       "WholesalePrice-Input": {
         "properties": {

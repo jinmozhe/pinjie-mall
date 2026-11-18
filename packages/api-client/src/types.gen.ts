@@ -7274,6 +7274,42 @@ export type PasswordResetIn = {
 };
 
 /**
+ * PayParameters
+ */
+export type PayParameters = {
+    /**
+     * Timestamp
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    timeStamp: string;
+    /**
+     * Noncestr
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    nonceStr: string;
+    /**
+     * Package
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    package: string;
+    /**
+     * Signtype
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    signType?: 'RSA';
+    /**
+     * Paysign
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    paySign: string;
+};
+
+/**
  * PaymentAttemptCreate
  */
 export type PaymentAttemptCreate = {
@@ -7349,6 +7385,38 @@ export type PaymentAttemptRead = {
      * 创建时间
      */
     created_at: string;
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    payment_parameters?: PayParameters | null;
+};
+
+/**
+ * PaymentStatusRead
+ */
+export type PaymentStatusRead = {
+    /**
+     * Enabled
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    enabled: boolean;
+    /**
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    attempt?: PaymentAttemptRead | null;
+    /**
+     * Wechat Transaction Id
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    wechat_transaction_id?: string | null;
+    /**
+     * Wechat Receipt Enabled
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    wechat_receipt_enabled?: boolean;
 };
 
 /**
@@ -11558,6 +11626,34 @@ export type ResponseModelPaymentAttemptRead = {
 };
 
 /**
+ * ResponseModel[PaymentStatusRead]
+ */
+export type ResponseModelPaymentStatusRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: PaymentStatusRead;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[PointsAccountRead]
  */
 export type ResponseModelPointsAccountRead = {
@@ -11997,6 +12093,34 @@ export type ResponseModelUserPrincipalOut = {
      * 响应业务数据
      */
     data: UserPrincipalOut;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
+ * ResponseModel[WechatReceiptRead]
+ */
+export type ResponseModelWechatReceiptRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * 响应业务数据
+     */
+    data: WechatReceiptRead;
     /**
      * Request Id
      *
@@ -13915,6 +14039,24 @@ export type WechatLoginIn = {
      * 微信一次性登录 code，不接受客户端 OpenID
      */
     code: string;
+};
+
+/**
+ * WechatReceiptRead
+ */
+export type WechatReceiptRead = {
+    /**
+     * Confirmed
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    confirmed: boolean;
+    /**
+     * Platform State
+     *
+     * 当前业务字段，具体语义由所属请求或响应模型定义
+     */
+    platform_state: number;
 };
 
 /**
@@ -18473,6 +18615,148 @@ export type RefundDetailApiV1RefundsRefundIdGetResponses = {
 };
 
 export type RefundDetailApiV1RefundsRefundIdGetResponse = RefundDetailApiV1RefundsRefundIdGetResponses[keyof RefundDetailApiV1RefundsRefundIdGetResponses];
+
+export type WechatReceiptApiV1OrdersOrderIdWechatReceiptGetData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/{order_id}/wechat-receipt';
+};
+
+export type WechatReceiptApiV1OrdersOrderIdWechatReceiptGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type WechatReceiptApiV1OrdersOrderIdWechatReceiptGetError = WechatReceiptApiV1OrdersOrderIdWechatReceiptGetErrors[keyof WechatReceiptApiV1OrdersOrderIdWechatReceiptGetErrors];
+
+export type WechatReceiptApiV1OrdersOrderIdWechatReceiptGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelWechatReceiptRead;
+};
+
+export type WechatReceiptApiV1OrdersOrderIdWechatReceiptGetResponse = WechatReceiptApiV1OrdersOrderIdWechatReceiptGetResponses[keyof WechatReceiptApiV1OrdersOrderIdWechatReceiptGetResponses];
+
+export type PaymentIntentApiV1PaymentsIntentGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/payments/intent';
+};
+
+export type PaymentIntentApiV1PaymentsIntentGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelOperationIntentRead;
+};
+
+export type PaymentIntentApiV1PaymentsIntentGetResponse = PaymentIntentApiV1PaymentsIntentGetResponses[keyof PaymentIntentApiV1PaymentsIntentGetResponses];
+
+export type PaymentStatusApiV1OrdersOrderIdPaymentStatusGetData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/{order_id}/payment-status';
+};
+
+export type PaymentStatusApiV1OrdersOrderIdPaymentStatusGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PaymentStatusApiV1OrdersOrderIdPaymentStatusGetError = PaymentStatusApiV1OrdersOrderIdPaymentStatusGetErrors[keyof PaymentStatusApiV1OrdersOrderIdPaymentStatusGetErrors];
+
+export type PaymentStatusApiV1OrdersOrderIdPaymentStatusGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPaymentStatusRead;
+};
+
+export type PaymentStatusApiV1OrdersOrderIdPaymentStatusGetResponse = PaymentStatusApiV1OrdersOrderIdPaymentStatusGetResponses[keyof PaymentStatusApiV1OrdersOrderIdPaymentStatusGetResponses];
+
+export type PaymentByRequestApiV1OrdersOrderIdPaymentAttemptsByRequestRequestIdGetData = {
+    body?: never;
+    path: {
+        /**
+         * Order Id
+         */
+        order_id: string;
+        /**
+         * Request Id
+         */
+        request_id: string;
+    };
+    query?: never;
+    url: '/api/v1/orders/{order_id}/payment-attempts/by-request/{request_id}';
+};
+
+export type PaymentByRequestApiV1OrdersOrderIdPaymentAttemptsByRequestRequestIdGetErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type PaymentByRequestApiV1OrdersOrderIdPaymentAttemptsByRequestRequestIdGetError = PaymentByRequestApiV1OrdersOrderIdPaymentAttemptsByRequestRequestIdGetErrors[keyof PaymentByRequestApiV1OrdersOrderIdPaymentAttemptsByRequestRequestIdGetErrors];
+
+export type PaymentByRequestApiV1OrdersOrderIdPaymentAttemptsByRequestRequestIdGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelPaymentStatusRead;
+};
+
+export type PaymentByRequestApiV1OrdersOrderIdPaymentAttemptsByRequestRequestIdGetResponse = PaymentByRequestApiV1OrdersOrderIdPaymentAttemptsByRequestRequestIdGetResponses[keyof PaymentByRequestApiV1OrdersOrderIdPaymentAttemptsByRequestRequestIdGetResponses];
+
+export type PaymentNotifyApiV1PaymentsWechatNotifyPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/payments/wechat/notify';
+};
+
+export type PaymentNotifyApiV1PaymentsWechatNotifyPostResponses = {
+    /**
+     * 请求成功
+     */
+    204: void;
+};
+
+export type PaymentNotifyApiV1PaymentsWechatNotifyPostResponse = PaymentNotifyApiV1PaymentsWechatNotifyPostResponses[keyof PaymentNotifyApiV1PaymentsWechatNotifyPostResponses];
+
+export type RefundNotifyApiV1RefundsWechatNotifyPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/refunds/wechat/notify';
+};
+
+export type RefundNotifyApiV1RefundsWechatNotifyPostResponses = {
+    /**
+     * 请求成功
+     */
+    204: void;
+};
+
+export type RefundNotifyApiV1RefundsWechatNotifyPostResponse = RefundNotifyApiV1RefundsWechatNotifyPostResponses[keyof RefundNotifyApiV1RefundsWechatNotifyPostResponses];
 
 export type MemberLevelsApiV1AdminMemberLevelsGetData = {
     body?: never;

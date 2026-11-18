@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="life-service-bg" x1="20%" y1="8%" x2="82%" y2="94%">
+      <stop offset="0%" stop-color="#5FE3BA" />
+      <stop offset="100%" stop-color="#0F9D7C" />
+    </linearGradient>
+    <radialGradient id="life-service-glow" cx="35%" cy="28%" r="60%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.34" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="ls-box" x1="15%" y1="0%" x2="85%" y2="100%">
+        <stop offset="0%" stop-color="#FFE46B" />
+        <stop offset="100%" stop-color="#F2940C" />
+      </linearGradient>
+      <linearGradient id="ls-wrench" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFFFFF" />
+        <stop offset="100%" stop-color="#94A3B8" />
+      </linearGradient>
+  </defs>
+  <ellipse cx="80" cy="146" rx="46" ry="7" fill="#085945" opacity="0.20" />
+  <circle cx="80" cy="86" r="57" fill="url(#life-service-bg)" />
+  <circle cx="80" cy="86" r="57" fill="url(#life-service-glow)" />
+  <circle cx="80" cy="86" r="55" fill="none" stroke="#FFFFFF" stroke-opacity="0.38" stroke-width="2" />
+  <ellipse cx="80" cy="123" rx="35" ry="7.5" fill="#085945" opacity="0.22" />
+  <g transform="translate(0 -6)">
+  <path d="M60 66 L60 56 C60 51 64 48 69 48 L83 48 C88 48 92 51 92 56 L92 66" fill="none" stroke="#EA7A0C" stroke-width="7" stroke-linecap="round" />
+    <rect x="38" y="64" width="76" height="52" rx="12" fill="url(#ls-box)" />
+    <path d="M38 82 L114 82" stroke="#D97706" stroke-opacity="0.4" stroke-width="3" />
+    <rect x="68" y="76" width="16" height="12" rx="4" fill="#FFFFFF" />
+    <g transform="translate(88 80) rotate(-38)">
+      <path d="M-7 -12 L-7 34 A7 7 0 0 0 7 34 L7 -12 C14 -15 19 -22 19 -31 C19 -39 14 -45 8 -48 L8 -30 C8 -27 4 -25 0 -25 C-4 -25 -8 -27 -8 -30 L-8 -48 C-14 -45 -19 -39 -19 -31 C-19 -22 -14 -15 -7 -12 Z" fill="url(#ls-wrench)" stroke="#CBD5E1" stroke-width="1.6" stroke-linejoin="round" />
+      <rect x="-2.5" y="-4" width="5" height="32" rx="2.5" fill="#94A3B8" opacity="0.55" />
+    </g>
+  </g>
+</svg>

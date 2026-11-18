@@ -15,6 +15,7 @@ from app.db.models.commerce_lifecycle import (
     RefundEvent,
     RefundItem,
     RefundRequest,
+    WechatPayNotification,
 )
 
 
@@ -40,6 +41,43 @@ class LifecycleRepository:
         if lock:
             statement = statement.with_for_update().execution_options(populate_existing=True)
         return (await self.session.scalars(statement)).one_or_none()
+
+    async def payment_by_reference(self, reference: str) -> PaymentAttempt | None:
+        return (
+            await self.session.scalars(
+                select(PaymentAttempt).where(
+                    PaymentAttempt.channel == "wechat", PaymentAttempt.merchant_reference == reference
+                )
+            )
+        ).one_or_none()
+
+    async def refund_by_reference(self, reference: str) -> RefundAttempt | None:
+        return (
+            await self.session.scalars(
+                select(RefundAttempt).where(
+                    RefundAttempt.channel == "wechat", RefundAttempt.merchant_refund_reference == reference
+                )
+            )
+        ).one_or_none()
+
+    async def notification_by_reference(self, merchant: str, reference: str) -> WechatPayNotification | None:
+        return (
+            await self.session.scalars(
+                select(WechatPayNotification).where(
+                    WechatPayNotification.merchant_id == merchant, WechatPayNotification.notification_id == reference
+                )
+            )
+        ).one_or_none()
+
+    async def notification(self, notification_id: UUID) -> WechatPayNotification | None:
+        return (
+            await self.session.scalars(
+                select(WechatPayNotification)
+                .where(WechatPayNotification.id == notification_id)
+                .with_for_update()
+                .execution_options(populate_existing=True)
+            )
+        ).one_or_none()
 
     async def payment_by_transaction(
         self, channel: str, channel_transaction_id: str, *, lock: bool = False
@@ -217,7 +255,8 @@ class LifecycleRepository:
         | RefundEvent
         | RefundItem
         | ProductReview
-        | ReconciliationRecord,
+        | ReconciliationRecord
+        | WechatPayNotification,
     ) -> None:
         self.session.add(value)
         await self.session.flush()

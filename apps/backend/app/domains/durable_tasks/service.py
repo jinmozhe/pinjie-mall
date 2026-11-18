@@ -14,6 +14,13 @@ from app.db.models import DurableTask
 from .repository import DurableTaskRepository
 
 
+class TaskDeferred(Exception):
+    """A valid channel result is still pending; polling is not a failed attempt."""
+
+    def __init__(self, seconds: int = 15) -> None:
+        self.seconds = seconds
+
+
 @dataclass(frozen=True, slots=True)
 class LeasedTask:
     id: UUID
@@ -129,6 +136,14 @@ class DurableTaskService:
     async def due_count(self) -> int:
         return await self._repository.count_lease_candidates(await self._repository.database_now())
 
+    async def defer_in_open_transaction(self, task_id: UUID, lease_token: UUID, seconds: int) -> None:
+        if not 1 <= seconds <= 900:
+            raise ValueError("invalid task deferral")
+        if not await self._repository.defer_lease(task_id, lease_token, seconds):
+            raise AppException(
+                status_code=409, code=ErrorCode.DURABLE_TASK_LEASE_CONFLICT, message="持久任务租约已失效"
+            )
+
     @staticmethod
     def _validate_input(task_type: str, business_key: str, payload: dict[str, object], max_failures: int) -> None:
         if not task_type or len(task_type) > 64 or not business_key or len(business_key) > 160:
@@ -150,6 +165,8 @@ class DurableTaskService:
             "commission_settlement": "order_id",
             "withdrawal_submit": "withdrawal_request_id",
             "withdrawal_query": "withdrawal_request_id",
+            "wechat_notification": "notification_id",
+            "wechat_shipping": "fulfillment_id",
         }.get(task_type)
         if required_key is None or set(payload) != {"schema_version", required_key}:
             raise AppException(status_code=422, code=ErrorCode.VALIDATION_ERROR, message="持久任务类型或载荷无效")

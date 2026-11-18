@@ -89,6 +89,9 @@ test-results/
 !.env.example
 !.env.*.example
 
+# 微信支付密钥（绝不入库）
+/secrets/wechat/
+
 # ============================================================
 # 依赖锁文件说明（保留，不排除）
 # pnpm-lock.yaml  → 必须提交

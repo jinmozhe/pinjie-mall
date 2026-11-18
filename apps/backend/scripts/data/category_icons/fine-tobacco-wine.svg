@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="fine-tobacco-wine-bg" x1="20%" y1="8%" x2="82%" y2="94%">
+      <stop offset="0%" stop-color="#FF7969" />
+      <stop offset="100%" stop-color="#D12622" />
+    </linearGradient>
+    <radialGradient id="fine-tobacco-wine-glow" cx="35%" cy="28%" r="60%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.34" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="ftw-box" x1="10%" y1="0%" x2="90%" y2="100%">
+        <stop offset="0%" stop-color="#D92638" />
+        <stop offset="100%" stop-color="#870D19" />
+      </linearGradient>
+      <linearGradient id="ftw-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFF08A" />
+        <stop offset="100%" stop-color="#E59300" />
+      </linearGradient>
+      <linearGradient id="ftw-wine" x1="20%" y1="0%" x2="80%" y2="100%">
+        <stop offset="0%" stop-color="#E11D48" />
+        <stop offset="100%" stop-color="#700926" />
+      </linearGradient>
+  </defs>
+  <ellipse cx="80" cy="146" rx="46" ry="7" fill="#7D100D" opacity="0.20" />
+  <circle cx="80" cy="86" r="57" fill="url(#fine-tobacco-wine-bg)" />
+  <circle cx="80" cy="86" r="57" fill="url(#fine-tobacco-wine-glow)" />
+  <circle cx="80" cy="86" r="55" fill="none" stroke="#FFFFFF" stroke-opacity="0.38" stroke-width="2" />
+  <ellipse cx="80" cy="123" rx="35" ry="7.5" fill="#7D100D" opacity="0.22" />
+  <g transform="translate(0 -6)">
+  <path d="M62 45 C52 33 44 41 54 48 L64 48 Z" fill="url(#ftw-gold)" />
+    <path d="M70 45 C80 33 88 41 78 48 L68 48 Z" fill="url(#ftw-gold)" />
+    <rect x="40" y="56" width="52" height="58" rx="9" fill="url(#ftw-box)" />
+    <rect x="36" y="47" width="60" height="16" rx="6" fill="#E0283B" stroke="#FFD65A" stroke-opacity="0.5" stroke-width="1.2" />
+    <rect x="61" y="47" width="10" height="67" fill="url(#ftw-gold)" />
+    <rect x="40" y="80" width="52" height="9" fill="url(#ftw-gold)" />
+    <g transform="translate(104 82)">
+      <path d="M-16 -34 L16 -34 L15 -14 C14 2 -14 2 -15 -14 Z" fill="#FFFFFF" fill-opacity="0.92" stroke="#F8D8DC" stroke-width="1.5" />
+      <path d="M-13 -19 Q0 -16 13 -19 L13 -14 C12 -1 -12 -1 -13 -14 Z" fill="url(#ftw-wine)" />
+      <ellipse cx="0" cy="-19" rx="13" ry="3.2" fill="#FB7185" opacity="0.6" />
+      <rect x="-2.2" y="-1" width="4.4" height="29" fill="#FFFFFF" opacity="0.92" />
+      <ellipse cx="0" cy="29" rx="13" ry="4" fill="#FFFFFF" opacity="0.95" />
+      <path d="M-9 -29 L-9 -14" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.7" />
+    </g>
+  </g>
+</svg>

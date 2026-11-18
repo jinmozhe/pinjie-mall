@@ -8,6 +8,26 @@ from pydantic import BaseModel, ConfigDict, Field
 PaymentChannel = Literal["wechat", "alipay"]
 
 
+class PayParameters(BaseModel):
+    time_stamp: str = Field(alias="timeStamp")
+    nonce_str: str = Field(alias="nonceStr")
+    package: str
+    sign_type: Literal["RSA"] = Field(default="RSA", alias="signType")
+    pay_sign: str = Field(alias="paySign")
+
+
+class PaymentStatusRead(BaseModel):
+    enabled: bool
+    attempt: "PaymentAttemptRead | None" = None
+    wechat_transaction_id: str | None = None
+    wechat_receipt_enabled: bool = False
+
+
+class WechatReceiptRead(BaseModel):
+    confirmed: bool
+    platform_state: int
+
+
 class PaymentAttemptCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -27,6 +47,7 @@ class PaymentAttemptRead(BaseModel):
     currency: str
     unavailable_reason: str | None
     created_at: datetime
+    payment_parameters: PayParameters | None = None
 
 
 class VerifiedPaymentConfirmation(BaseModel):

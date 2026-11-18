@@ -8,6 +8,7 @@ from app.api.distribution_router import router as distribution_router
 from app.api.lifecycle_router import router as lifecycle_router
 from app.api.membership_router import router as membership_router
 from app.api.transaction_router import router as transaction_router
+from app.api.wechat_pay_router import router as wechat_pay_router
 from app.domains.admin.auth_router import router as admin_auth_router
 from app.domains.admin.management_router import router as admin_management_router
 from app.domains.assets.router import router as assets_router
@@ -25,6 +26,7 @@ api_router.include_router(commissioning_router)
 api_router.include_router(distribution_router)
 api_router.include_router(transaction_router)
 api_router.include_router(lifecycle_router)
+api_router.include_router(wechat_pay_router)
 api_router.include_router(membership_router)
 api_router.include_router(auth_router)
 api_router.include_router(assets_router)

@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -29,6 +30,7 @@ from app.services.assets import recover_asset_deletions
 from app.services.settings_media import SettingsMediaStore
 from app.services.storage import create_storage_provider
 from app.services.system_settings import recover_settings_media
+from app.services.wechat_pay_client import WechatPayClient
 
 _HTTP_ERROR_MESSAGES = {
     400: "请求内容有误",
@@ -131,6 +133,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.settings = app_settings
         app.state.resources = resources
         try:
+            app.state.wechat_pay = (
+                await asyncio.to_thread(WechatPayClient, app_settings, resources.wechat_http)
+                if app_settings.wechat_pay_active and resources.wechat_http is not None
+                else None
+            )
             await recover_asset_deletions(session_factory=resources.session_factory, settings=app_settings)
             await recover_settings_media(session_factory=resources.session_factory, settings=app_settings)
             resources.settings_media_ready = True

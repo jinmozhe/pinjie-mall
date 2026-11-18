@@ -1191,12 +1191,20 @@ erDiagram
 | `channel_paid_at` | TIMESTAMPTZ | 是 | 可信渠道事实 | 渠道实际收款时间，区别本地 confirmed_at |
 | `channel_context` | JSONB | 否 | 创建意图固化 | 非秘密商户/应用标识与适配器配置版本，禁止凭据 |
 | `unavailable_reason` | VARCHAR(200) | 是 | NULL | 渠道不可用原因 |
+| `prepay_id` | VARCHAR(128) | 是 | 微信下单返回 | 预支付会话，只向本人生成调起参数，不进入通用后台投影 |
+| `channel_expires_at` | TIMESTAMPTZ | 是 | 原订单截止时间 | 渠道支付窗口 |
+| `submission_started_at` | TIMESTAMPTZ | 是 | 请求领取时间 | 崩溃后先查询原单，禁止立即重复提交 |
+| `close_requested` | BOOLEAN | 否 | false | 已请求关闭渠道支付 |
 | `confirmed_at` | TIMESTAMPTZ | 是 | NULL | 本地系统验签通过且确认成功入库的时间 |
 | `revision` | INTEGER | 否 | 1 | 状态版本号 |
 | `created_at` | TIMESTAMPTZ | 否 | 应用当前 UTC 时间 | 创建时间 |
 | `updated_at` | TIMESTAMPTZ | 否 | 系统写入 | 最近更新时间 |
 
 #### 4.12.2 支付状态事件表 `payment_events`
+
+微信接入另有 `wechat_pay_notifications` 持久接收表，由迁移 `20261118_01` 新增。字段为 UUID 主键、created_at/updated_at、merchant_id VARCHAR(32)、notification_id VARCHAR(128)、event_type/config_version/payload_hash VARCHAR(64)、verified_payload JSONB 和 status VARCHAR(16)。商户号与通知 ID 联合唯一，状态仅 pending/processed。载荷只保存已验签必要资金字段，支付者为 SHA256 摘要，不保存 OpenID、原始密文或密钥；通知与处理任务同事务入库。
+
+同迁移新增支付意图部分唯一索引 `uq_payment_wechat_active_order`，约束微信 created/pending/unknown 意图按 order_id 唯一，保留多笔真实 succeeded 事实。迁移尚未执行，已有渠道支付或通知证据时降级拒绝。
 
 实现标记：现有表，字段/约束按本版目标核对，具体差异见第 13 章。
 
@@ -2399,11 +2407,11 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 
 ### 13.1 当前源码及迁移盘点
 
-盘点基于 `app/db/models` 的显式列、继承字段及两张关联表，并核对 Alembic 建表与后继变更；当前源码共 68 张。Alembic 自身版本表 `alembic_version` 属于迁移工具元数据，不计入业务实体数。
+盘点基于 `app/db/models` 的显式列、继承字段及两张关联表，并核对 Alembic 建表与后继变更；当前源码共 69 张。Alembic 自身版本表 `alembic_version` 属于迁移工具元数据，不计入业务实体数。
 
 | 证据范围 | 已确认事实 | 不能据此推断 |
 | --- | --- | --- |
-| 当前源码与迁移图 | 68 张业务表均有模型，源码 head 为 20261013_01。2026-10-13 本机开发库从 20260929_01 升至 head；69 张表（含版本表）行数不变，用户、外部身份、会话、商品原字段摘要不变，新增手机号字段/约束及 UnionID 索引已核实 | 测试库或其他环境已升级，所有字段、并发及业务验收通过 |
+| 当前源码与迁移图 | 69 张业务表均有模型，源码 head 为 20261118_01，新增微信通知接收及预支付字段/索引；本次未执行迁移。2026-10-13 本机开发库升级到 20261013_01，当时 69 张表（含版本表）行数及既有数据摘要不变 | 当前运行库已升至新 head，或新增资金/并发及业务验收通过 |
 | 2026-09-22 历史动态验证 | [迁移与动态验证记录](../../plans/2026-09-22_后端目标模型开发库迁移与动态验证计划.md)确认本机开发库和隔离 `_test` 库升至 `20260922_07`，空库、重复升级、恢复演练、`alembic check` 和 398 项 Backend pytest 通过，覆盖率为 90.00% | 后续修改已通过相同测试，或生产、真实渠道已验证 |
 | 2026-10-13 全库漂移检查 | 首次检查发现分类图标索引模型漂移；模型对齐既有 ix_product_categories_icon 非空部分索引后，`alembic check` 复验通过，名称/列/条件/有效状态另行只读核实；数据库仍为 20261013_01，详见[手机号专项计划](../../plans/2026-10-13_小程序手机号统一登录与第三方身份接入计划.md) | 其他环境结构一致，或手机号业务已完成动态验证 |
 | 2026-09-23 符合性修复 | [阶段 A 至 F 修复记录](../../plans/2026-09-23_后端数据规划符合性分阶段修复计划.md)确认当时本地实现及适用轻量门禁完成，新增两项迁移；当时未运行重型验证，后续执行结果由下列专项记录 | 仅凭当时轻量门禁推断迁移和动态测试通过 |
@@ -2416,7 +2424,7 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 | [asset.py](../../apps/backend/app/db/models/asset.py) | 1 | `assets` |
 | [cart.py](../../apps/backend/app/db/models/cart.py) | 1 | `cart_items` |
 | [catalog.py](../../apps/backend/app/db/models/catalog.py) | 8 | `brands`、`category_spec_attributes`、`product_attribute_values`、`product_sku_spec_values`、`product_spec_attributes`、`product_spec_values`、`spec_attribute_values`、`spec_attributes` |
-| [commerce_lifecycle.py](../../apps/backend/app/db/models/commerce_lifecycle.py) | 10 | `fulfillment_events`、`fulfillments`、`payment_attempts`、`payment_events`、`product_reviews`、`reconciliation_records`、`refund_attempts`、`refund_events`、`refund_items`、`refund_requests` |
+| [commerce_lifecycle.py](../../apps/backend/app/db/models/commerce_lifecycle.py) | 11 | `fulfillment_events`、`fulfillments`、`payment_attempts`、`payment_events`、`product_reviews`、`reconciliation_records`、`refund_attempts`、`refund_events`、`refund_items`、`refund_requests`、`wechat_pay_notifications` |
 | [distribution.py](../../apps/backend/app/db/models/distribution.py) | 17 | `commission_amount_rules`、`commission_distribution_rules`、`commission_policies`、`commission_records`、`commission_recoveries`、`durable_tasks`、`member_level_conditions`、`member_level_events`、`member_levels`、`member_price_rules`、`member_profiles`、`membership_qualification_events`、`points_accounts`、`points_ledgers`、`wallet_accounts`、`wallet_ledgers`、`withdrawal_requests` |
 | [identity.py](../../apps/backend/app/db/models/identity.py) | 14 | `admin_refresh_tokens`、`admin_roles`、`admin_sessions`、`admins`、`audit_events`、`permissions`、`request_logs`、`role_permissions`、`roles`、`security_login_events`、`user_external_identities`、`user_refresh_tokens`、`user_sessions`、`users` |
 | [inventory.py](../../apps/backend/app/db/models/inventory.py) | 2 | `inventory_accounts`、`inventory_movements` |
@@ -2427,7 +2435,7 @@ PostgreSQL 语义核验来源：[约束与 NULL 规则](https://www.postgresql.o
 | [shipping.py](../../apps/backend/app/db/models/shipping.py) | 1 | `shipping_templates` |
 | [system_setting.py](../../apps/backend/app/db/models/system_setting.py) | 1 | `system_settings` |
 
-目标新增运行表现为 23 张，均已有源码和迁移：此前 18 张，以及 `member_level_conditions`、`membership_qualification_events`、`member_level_events`、`points_accounts`、`points_ledgers`。2026-09-26 新增详情图片关系后共 68 张；`shipping_templates` 单独列为存量，故目标运行范围为 67 张，总登记为 68 张。历史完整动态验证仍只覆盖当时 67 张；2026-10-13 的迁移和只读核实覆盖当前 68 张业务表及版本表，不代表新增业务动态验收完成。
+原目标新增运行表为 23 张，均已有源码和迁移；2026-09-26 新增详情图片关系后共 68 张，2026-11-18 微信持久通知再新增一张，当前总登记 69 张。`shipping_templates` 单独列为存量，目标运行范围为 68 张。历史完整动态验证仍只覆盖当时 67 张；2026-10-13 的迁移和只读核实覆盖当时 68 张业务表及版本表。微信迁移及新增业务动态验收未执行。
 
 ### 13.2 现行字段的保留、迁移与退役映射
 

@@ -35,6 +35,12 @@ class PaymentAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("amount > 0", name="ck_payment_attempt_amount"),
         CheckConstraint("currency = 'CNY'", name="ck_payment_attempt_currency"),
         Index("ix_payment_attempt_order_created", "order_id", "created_at", "id"),
+        Index(
+            "uq_payment_wechat_active_order",
+            "order_id",
+            unique=True,
+            postgresql_where=text("channel = 'wechat' AND status IN ('created', 'pending', 'unknown')"),
+        ),
         {"comment": "支付意图与渠道确认事实"},
     )
 
@@ -57,6 +63,33 @@ class PaymentAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         DateTime(timezone=True), nullable=True, comment="可信确认时间"
     )
     revision: Mapped[int] = mapped_column(Integer, default=1, comment="状态版本")
+    prepay_id: Mapped[str | None] = mapped_column(String(128), nullable=True, comment="微信预支付会话，仅本人调起使用")
+    channel_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, comment="渠道支付截止"
+    )
+    submission_started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, comment="最近提交领取时间"
+    )
+    close_requested: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false"), comment="已要求关闭渠道订单"
+    )
+
+
+class WechatPayNotification(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "wechat_pay_notifications"
+    __table_args__ = (
+        UniqueConstraint("merchant_id", "notification_id", name="uq_wechat_pay_notification"),
+        CheckConstraint("status IN ('pending', 'processed')", name="ck_wechat_pay_notification_status"),
+        {"comment": "微信支付已验签通知的最小持久接收记录"},
+    )
+
+    merchant_id: Mapped[str] = mapped_column(String(32))
+    notification_id: Mapped[str] = mapped_column(String(128))
+    event_type: Mapped[str] = mapped_column(String(64))
+    payload_hash: Mapped[str] = mapped_column(String(64))
+    config_version: Mapped[str] = mapped_column(String(64))
+    verified_payload: Mapped[dict[str, object]] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String(16), default="pending")
 
 
 class PaymentEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):

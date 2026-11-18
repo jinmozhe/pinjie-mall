@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="car-owner-service-bg" x1="20%" y1="8%" x2="82%" y2="94%">
+      <stop offset="0%" stop-color="#6EB8FF" />
+      <stop offset="100%" stop-color="#2560E8" />
+    </linearGradient>
+    <radialGradient id="car-owner-service-glow" cx="35%" cy="28%" r="60%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.34" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="cos-car" x1="15%" y1="0%" x2="85%" y2="100%">
+        <stop offset="0%" stop-color="#FF7152" />
+        <stop offset="100%" stop-color="#D9251D" />
+      </linearGradient>
+      <linearGradient id="cos-glass" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#F0F9FF" />
+        <stop offset="100%" stop-color="#7DD3FC" />
+      </linearGradient>
+      <linearGradient id="cos-fuel" x1="20%" y1="0%" x2="80%" y2="100%">
+        <stop offset="0%" stop-color="#FFE059" />
+        <stop offset="100%" stop-color="#F97316" />
+      </linearGradient>
+  </defs>
+  <ellipse cx="80" cy="146" rx="46" ry="7" fill="#12338C" opacity="0.20" />
+  <circle cx="80" cy="86" r="57" fill="url(#car-owner-service-bg)" />
+  <circle cx="80" cy="86" r="57" fill="url(#car-owner-service-glow)" />
+  <circle cx="80" cy="86" r="55" fill="none" stroke="#FFFFFF" stroke-opacity="0.38" stroke-width="2" />
+  <ellipse cx="80" cy="123" rx="35" ry="7.5" fill="#12338C" opacity="0.22" />
+  <g transform="translate(0 -6)">
+  <rect x="38" y="96" width="15" height="20" rx="5" fill="#1E293B" />
+    <rect x="93" y="96" width="15" height="20" rx="5" fill="#1E293B" />
+    <path d="M44 74 L51 54 C54 47 60 44 73 44 C86 44 92 47 95 54 L102 74 Z" fill="url(#cos-car)" />
+    <path d="M51 70 L56 56 C58 52 62 50 73 50 C84 50 88 52 90 56 L95 70 Z" fill="url(#cos-glass)" />
+    <path d="M60 54 L56 66 M68 54 L62 66" fill="none" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="3" stroke-linecap="round" />
+    <rect x="35" y="70" width="76" height="34" rx="13" fill="url(#cos-car)" />
+    <circle cx="48" cy="85" r="6.5" fill="#FEF08A" />
+    <circle cx="98" cy="85" r="6.5" fill="#FEF08A" />
+    <rect x="61" y="81" width="24" height="10" rx="5" fill="#1E293B" opacity="0.75" />
+    <rect x="44" y="96" width="58" height="6" rx="3" fill="#FCA5A5" opacity="0.55" />
+    <g transform="translate(115 56)">
+      <path d="M0 -20 C-10 -6 -16 3 -16 11 A16 16 0 0 0 16 11 C16 3 10 -6 0 -20 Z" fill="url(#cos-fuel)" stroke="#FFFFFF" stroke-width="2.5" />
+      <path d="M-4 9 L1 2 L0 9 L5 9 L-1 18 L0 11 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+</svg>

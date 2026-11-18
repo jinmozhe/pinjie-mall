@@ -83,6 +83,9 @@ class WechatPhoneClient:
             ) from None
         return body
 
+    async def application_token(self) -> str:
+        return await self._token()
+
     async def _token(self) -> str:
         if self.redis is None or self.settings.wechat_app_id is None:
             raise AppException(status_code=503, code=ErrorCode.SERVICE_UNAVAILABLE, message="手机号服务尚未就绪")
@@ -126,7 +129,7 @@ class WechatPhoneClient:
             ) from None
 
     async def exchange(self, code: str, openid: str) -> str:
-        token = await self._token()
+        token = await self.application_token()
         if self.redis is None or self.settings.wechat_app_id is None:
             raise AppException(status_code=503, code=ErrorCode.SERVICE_UNAVAILABLE, message="手机号服务尚未就绪")
         _, hmac_key = self.settings.miniapp_secrets()
