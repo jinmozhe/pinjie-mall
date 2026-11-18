@@ -20,19 +20,19 @@
   image { width: 100%; height: 100%; }
 }
 .account-portrait-placeholder {
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
-  view { position: absolute; background: t.$account-avatar-ink; }
-  view:first-child { top: 24px; left: 38px; width: 34px; height: 34px; border-radius: 50%; }
-  view:last-child { top: 65px; left: 20px; width: 70px; height: 40px; border-radius: 50px 50px 0 0; }
+  color: t.$account-avatar-ink;
 }
 .account-portrait-error, .account-screen .account-portrait-retry { font-size: 20px; color: t.$primary; overflow-wrap: anywhere; }
 .account-screen .account-portrait-retry { min-height: 88px; }
 .account-screen .account-identity-button { position: relative; flex: 1; min-width: 0; min-height: 116px; padding: 12px 32px 18px 22px; text-align: left; }
 .account-name { overflow: hidden; font-size: 36px; font-weight: 700; line-height: 1.5; white-space: nowrap; text-overflow: ellipsis; }
 .account-welcome { font-size: 24px; color: t.$account-muted; }
-.account-chevron { position: absolute; top: 42px; right: 22px; width: 12px; height: 12px; border-top: 2px solid t.$disabled; border-right: 2px solid t.$disabled; transform: rotate(45deg); }
+.account-chevron { position: absolute; top: 36px; right: 16px; color: t.$disabled; }
 .account-assets { display: flex; align-items: stretch; margin: 8px -20px 22px; }
 .account-screen .account-asset { position: relative; flex: 1; min-width: 0; min-height: 88px; padding: 0 14px; }
 .account-asset + .account-asset::before { position: absolute; top: 2px; left: 0; bottom: 12px; width: 1px; background: t.$account-line; content: ''; }
@@ -45,14 +45,17 @@
 .account-orders { display: flex; margin-top: 22px; padding: 32px 0; border-radius: 26px; background: t.$surface; }
 .account-screen .account-order { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 22px; min-width: 0; min-height: 126px; padding: 16px 0 0; font-size: 24px; }
 .account-order:last-child { border-left: 1px solid t.$account-line; }
-.account-order-icon { width: 42px; height: 42px; }
+.account-order-icon { color: t.$account-order-ink; }
 .account-services { margin-top: 22px; padding: 24px 24px 32px; border-radius: 26px; background: t.$surface; }
 .account-section-title { padding-bottom: 16px; border-bottom: 1px solid t.$account-line; font-size: 32px; font-weight: 700; }
 .account-service-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 36px; margin: 28px -16px 0; }
 .account-screen .account-service { display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0; min-height: 120px; font-size: 26px; }
-.account-service-icon { display: flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 26px; image { width: 40px; height: 40px; } }
+.account-service-icon { display: flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 26px; }
 @each $name, $background in t.$account-service-backgrounds {
   .account-service-icon--#{$name} { background: $background; }
+}
+@each $name, $color in t.$account-service-colors {
+  .account-service-icon--#{$name} { color: $color; }
 }
 .account-brand { display: flex; align-items: center; justify-content: center; gap: 40px; padding: 38px 0; color: t.$account-brand; font-size: 24px; }
 .account-brand > view:first-child, .account-brand > view:last-child { width: 50px; height: 1px; background: t.$account-brand-line; }

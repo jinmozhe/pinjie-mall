@@ -29,7 +29,6 @@
   border-radius: 0;
   background: transparent;
   color: t.$surface;
-  view { width: 18px; height: 18px; border-left: 3px solid currentColor; border-bottom: 3px solid currentColor; transform: rotate(45deg); }
 }
 .account-frame-back::after, .account-frame-retry-back::after { border: 0; }
 .account-frame-back[disabled], .account-frame-retry-back[disabled] { opacity: 0.55; }

@@ -6,6 +6,7 @@ import { areaList } from '@vant/area-data'
 import type { AddressInput, AddressRead, ResponseModelAddressRead, ResponseModelListAddressRead, ResponseModelNoneType } from '@pinjie/api-client'
 import { AuthGate } from '@/components/AuthGate'
 import { Button } from '@/components/Button'
+import { Icon } from '@/components/Icon'
 import { QueryState } from '@/components/QueryState'
 import { privateRequest, sessionScope, useSession } from '@/lib/session'
 import { queryClient } from '@/lib/query'
@@ -37,7 +38,7 @@ function Editor({ original, close }: { original: AddressRead | null; close: () =
       const province = provinces[pi], city = cities(pi)[ci], district = districts(pi, ci)[di]
       if (!province || !city || !district) { setRegion(null); return }
       setIndices([pi, ci, di]); setRegion({ province_code: province[0], province: province[1], city_code: city[0], city: city[1], district_code: district[0], district: district[1] })
-    }}><View className='touch link'>{region ? `${region.province} ${region.city} ${region.district}` : '请选择省、市、区县'} ›</View></Picker>
+    }}><View className='touch link icon-label'><Text>{region ? `${region.province} ${region.city} ${region.district}` : '请选择省、市、区县'}</Text><Icon name='ArrowRight' size={24} /></View></Picker>
     <View className='field-label'>详细地址</View><Textarea value={street} maxlength={300} autoHeight placeholder='街道、门牌号等' ariaLabel='详细收货地址' onInput={(event) => setStreet(event.detail.value)} />
     <View className='trade-row spread touch'><Text>设为默认地址</Text><Switch checked={isDefault} color='#B42318' onChange={(event) => setDefault(event.detail.value)} /></View></View>
     {save.isError && <QueryState title='地址保存未完成' error={save.error} detail='版本冲突时返回重新读取。网络失败时请先返回核对已有地址，再决定是否重试。' />}

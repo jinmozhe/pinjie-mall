@@ -2,6 +2,7 @@ import { Button, ScrollView, View } from '@tarojs/components'
 import { Popup } from '@nutui/nutui-react-taro/dist/es/packages/popup/popup'
 import '@nutui/nutui-react-taro/dist/es/packages/popup/style'
 import { privacySections } from '@/features/privacy'
+import { Icon } from '@/components/Icon'
 
 export type LegalDocument = 'agreement' | 'privacy'
 
@@ -26,7 +27,7 @@ export function LegalSheet({ document, onClose }: { document: LegalDocument | nu
         <View className='auth-legal-handle' />
         <View className='auth-legal-title'>{title}</View>
         <View className='auth-legal-subtitle'>请仔细阅读以下内容</View>
-        <Button className='auth-legal-dismiss' ariaLabel={`关闭${title}`} onClick={onClose}><View className='auth-close-icon' /></Button>
+        <Button className='auth-legal-dismiss' ariaLabel={`关闭${title}`} onClick={onClose}><View className='auth-close-icon'><Icon name='Close' size={22} /></View></Button>
       </View>
       <ScrollView key={document ?? 'closed'} scrollY className='auth-legal-scroll' showScrollbar enhanced>
         <View className='auth-legal-body'>

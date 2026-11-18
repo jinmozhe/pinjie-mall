@@ -3,6 +3,7 @@ import { Button, ScrollView, View } from '@tarojs/components'
 import { useNavigationLayout } from '@/lib/use-navigation-layout'
 import { AccountBackground } from './AccountBackground'
 import { QueryState } from './QueryState'
+import { Icon } from './Icon'
 
 type Props = PropsWithChildren<{
   title: string
@@ -20,7 +21,7 @@ export function AccountFrame({ title, className = '', bodyClassName = '', onBack
     {layout ? <>
       <View className='account-frame-header' style={{ paddingTop: `${layout.top}px` }}>
         <View className='account-frame-header-row' style={{ height: `${layout.height}px`, paddingLeft: `${layout.side}px`, paddingRight: `${layout.side}px` }}>
-          {onBack && <Button className='account-frame-back' ariaLabel='返回上一页' disabled={backDisabled} onClick={onBack}><View /></Button>}
+          {onBack && <Button className='account-frame-back' ariaLabel='返回上一页' disabled={backDisabled} onClick={onBack}><Icon name='ArrowLeft' size={32} /></Button>}
           <View className='account-frame-title' role='heading'>{title}</View>
         </View>
       </View>

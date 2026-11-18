@@ -117,6 +117,19 @@ UI tokens 与业务组件必须遵循[小程序 UI 规范](miniapp-ui-standard.m
 
 当前编译注入 NutUI variables.scss，按组件导入 Button/Popup 与样式，不导入完整主题字体。应用 CSS 变量映射 tokens；统一 Button 默认为 solid 和 square，避免 NutUI 默认 outline/round 偏离设计。已核对产物默认 NutUI 32px 转为 64rpx，应用按钮变量为 88rpx。主包四项 TabBar，详情路由位于 subpackages/catalog；分页每页 20 件，页面查询离开后 gcTime=0，不累积长列表；公开评价每页 10 条。实际发布包体和设备表现需专项验证。
 
+图标库 3.0.2 默认容器为 HTML `i`，微信端缺少对应 WXML 模板。`app.tsx` 在页面渲染前调用 `configure({ tag: 'view' })`，统一使用原生节点。配置函数从 `dist/es/icons/configure` 以具名方式导入，避免现有图标按需插件将它转换成不存在的默认导出；该子路径类型在 `src/types.d.ts` 中转用包公开的 `configure` 声明，不复制接口或引入全量图标。图标组件继续按需导入。
+
+业务页面使用 `components/Icon.tsx` 的固定图标集合和 `IconName` 类型，不导入整包命名空间或新增自绘功能 SVG。公共组件使用原生 View 包裹 NutUI 图标，以明确 rpx 控制尺寸；子图标填满容器，颜色继承 tokens。公共图标样式仅在 `styles/app.scss` 加载一次；原生按钮和平台控件的内置图形继续由微信处理。
+
+`src/tab-bar.json` 同时驱动原生 TabBar 配置和图片生成。`scripts/design/render-miniapp-tab-icons.mjs` 从已安装且与应用声明一致的 NutUI 包提取四个 SVG，输出 81 × 81 透明 PNG；普通态和选中态只改变清单定义的颜色。生成先全量校验、在系统临时目录备份原图片，再逐文件核对和替换；出错停止，备份路径打印到终端。生成器依赖开发工具 sharp，本次使用 0.35.5，不引入小程序运行依赖，不写入本机绝对运行路径。
+
+```powershell
+node scripts/design/render-miniapp-tab-icons.mjs --sharp-root "<提供 sharp 的 node_modules 绝对路径>"
+node scripts/design/render-miniapp-tab-icons.mjs --sharp-root "<提供 sharp 的 node_modules 绝对路径>" --check
+```
+
+`--check` 只读比对八张生成图片，要求同一 renderer 版本；它是资源辅助核验，不能替代微信编译或真机验收。保留 `src/assets/tab-icons.NOTICE.txt` 的上游来源和许可声明；修改库版本或图标清单后重新生成并检查全部状态。
+
 主题用共享语义变量映射 NutUI 变量，不在业务页面直接写一组全局覆盖。CSS Modules 先验证 Taro 编译与第三方主题边界，无法适用时使用应用/Feature 命名作用域；不默认用浏览器选择器、hover 或 window/document。
 
 主包保留四个 TabBar 页面。详情页位置和业务分包由真实入口与包体测量确定；禁止把分包全部导入全局 index 或 app.tsx。业务列表采用服务端分页、有界缓存和图片尺寸选择，不添加未授权的营销装修、搜索、优惠券或游客购物车。

@@ -5,6 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import type { CheckoutQuote, ResponseModelCheckoutQuote, ResponseModelOrderRead, ResponseModelListAddressRead } from '@pinjie/api-client'
 import { AuthGate } from '@/components/AuthGate'
 import { Button } from '@/components/Button'
+import { Icon } from '@/components/Icon'
 import { QueryState } from '@/components/QueryState'
 import { ApiError } from '@/lib/api'
 import { privateRequest, sessionScope, useSession } from '@/lib/session'
@@ -90,7 +91,7 @@ function Content() {
         {addresses.isPending && <Text className='muted'>正在读取地址</Text>}
         {addresses.isError && <QueryState title='地址读取失败' error={addresses.error} retry={() => { void addresses.refetch() }} />}
         {address ? <View><View>{address.receiver_name} · {address.mobile}</View><View className='muted'>{address.province}{address.city}{address.district}{address.street_address}</View></View> : <View className='muted'>请选择本人的收货地址</View>}
-        {!!addresses.data?.length && <Picker disabled={busy} mode='selector' range={addresses.data.map((item) => `${item.receiver_name} ${item.province}${item.city}${item.district}${item.street_address}`)} onChange={(event) => { const selected = addresses.data?.[Number(event.detail.value)]; if (selected) changeAddress(selected.id) }}><View className='link touch'>选择收货地址 ›</View></Picker>}
+        {!!addresses.data?.length && <Picker disabled={busy} mode='selector' range={addresses.data.map((item) => `${item.receiver_name} ${item.province}${item.city}${item.district}${item.street_address}`)} onChange={(event) => { const selected = addresses.data?.[Number(event.detail.value)]; if (selected) changeAddress(selected.id) }}><View className='link touch icon-label'><Text>选择收货地址</Text><Icon name='ArrowRight' size={24} /></View></Picker>}
         <Button fill='outline' disabled={busy} onClick={() => { void Taro.navigateTo({ url: '/subpackages/account/addresses/index' }) }}>管理地址</Button>
       </View>}
       <View className='surface'><View className='section-title'>结算商品</View>{quote ? quote.items.map((line) => <View className='order-line' key={line.sku_id}><View>{line.product_name}</View><View className='muted'>{Object.values(line.specifications).join(' / ') || '默认规格'} · {line.quantity} 件</View><View>¥{line.unit_price} / 件 · 小计 ¥{line.line_amount}</View></View>) : <View className='muted'>已选 {draft.request.items.length} 种商品，共 {draft.request.items.reduce((total, line) => total + line.quantity, 0)} 件。获取报价后显示名称与成交价格。</View>}</View>

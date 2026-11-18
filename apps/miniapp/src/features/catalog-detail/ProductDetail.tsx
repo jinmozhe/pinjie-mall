@@ -3,6 +3,7 @@ import Taro, { useDidHide, useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { Input, ScrollView, Swiper, SwiperItem, Text, View } from '@tarojs/components'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/Button'
+import { Icon } from '@/components/Icon'
 import { Popup } from '@nutui/nutui-react-taro/dist/es/packages/popup/popup'
 import '@nutui/nutui-react-taro/dist/es/packages/popup/style'
 import type { PublicProductDetailRead, ResponseModelPublicProductDetailRead, ResponseModelPageResultProductReviewRead } from '@pinjie/api-client'
@@ -118,7 +119,7 @@ function DetailContent({ product, visible }: { product: PublicProductDetailRead;
       <View className='surface'>
         <View className='spec-entry' onClick={() => { if (canSell) { setIntent('select'); action.reset(); openSheet() } }}>
           <View><Text className='muted'>规格 </Text>{displaySku ? Object.values(displaySku.specifications).join(' / ') || '默认规格' : '请选择规格'}{displaySku ? ` · ${confirmed.quantity} 件` : ''}</View>
-          <Text>{canSell ? '选择 ›' : '不可售'}</Text>
+          <View className='icon-label'><Text>{canSell ? '选择' : '不可售'}</Text>{canSell && <Icon name='ArrowRight' size={24} />}</View>
         </View>
       </View>
       {product.attributes.some((item) => !item.is_variant) && <View className='surface'>
@@ -159,9 +160,9 @@ function DetailContent({ product, visible }: { product: PublicProductDetailRead;
           {!!groups.length && <View className='muted'>点击已选规格可取消，再选择其他组合。</View>}
           <View className='section-title'>数量</View>
           <View className='quantity-control'>
-            <Button fill='outline' disabled={!validQuantity || Number(quantity) <= 1} onClick={() => setQuantity(String(Number(quantity) - 1))}>−</Button>
+            <Button fill='outline' ariaLabel='减少数量' disabled={!validQuantity || Number(quantity) <= 1} onClick={() => setQuantity(String(Number(quantity) - 1))}><Icon name='Minus' size={28} /></Button>
             <Input type='number' value={quantity} maxlength={3} onInput={(event) => setQuantity(event.detail.value)} ariaLabel='规格预览数量' />
-            <Button fill='outline' disabled={!validQuantity || Number(quantity) >= 99} onClick={() => setQuantity(String(Number(quantity) + 1))}>＋</Button>
+            <Button fill='outline' ariaLabel='增加数量' disabled={!validQuantity || Number(quantity) >= 99} onClick={() => setQuantity(String(Number(quantity) + 1))}><Icon name='Plus' size={28} /></Button>
           </View>
           {!validQuantity && <View className='note'>请输入 1 至 99 的整数预览数量</View>}
           <View className='muted'>可购买数量和库存由服务端确认。</View>
