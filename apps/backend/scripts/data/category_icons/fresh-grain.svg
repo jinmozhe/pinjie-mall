@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="fresh-grain-bg" x1="20%" y1="8%" x2="82%" y2="94%">
+      <stop offset="0%" stop-color="#9CEB5A" />
+      <stop offset="100%" stop-color="#39B524" />
+    </linearGradient>
+    <radialGradient id="fresh-grain-glow" cx="35%" cy="28%" r="60%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.34" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="fg-grain" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFE76E" />
+        <stop offset="100%" stop-color="#F59E0B" />
+      </linearGradient>
+      <linearGradient id="fg-carrot" x1="20%" y1="0%" x2="80%" y2="100%">
+        <stop offset="0%" stop-color="#FFA53B" />
+        <stop offset="100%" stop-color="#EE4B14" />
+      </linearGradient>
+      <linearGradient id="fg-leaf" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#7BF154" />
+        <stop offset="100%" stop-color="#17872B" />
+      </linearGradient>
+      <linearGradient id="fg-tomato" x1="20%" y1="10%" x2="85%" y2="95%">
+        <stop offset="0%" stop-color="#FF7868" />
+        <stop offset="100%" stop-color="#D92121" />
+      </linearGradient>
+  </defs>
+  <ellipse cx="80" cy="146" rx="46" ry="7" fill="#19660E" opacity="0.20" />
+  <circle cx="80" cy="86" r="57" fill="url(#fresh-grain-bg)" />
+  <circle cx="80" cy="86" r="57" fill="url(#fresh-grain-glow)" />
+  <circle cx="80" cy="86" r="55" fill="none" stroke="#FFFFFF" stroke-opacity="0.38" stroke-width="2" />
+  <ellipse cx="80" cy="123" rx="35" ry="7.5" fill="#19660E" opacity="0.22" />
+  <g transform="translate(0 -6)">
+  <g transform="translate(52 72) rotate(-18)">
+      <path d="M0 44 C-2 22 0 4 4 -16" fill="none" stroke="#FDE047" stroke-width="3.5" stroke-linecap="round" />
+      <ellipse cx="-8" cy="24" rx="5.5" ry="9" transform="rotate(-32 -8 24)" fill="url(#fg-grain)" />
+      <ellipse cx="9" cy="22" rx="5.5" ry="9" transform="rotate(32 9 22)" fill="url(#fg-grain)" />
+      <ellipse cx="-7" cy="9" rx="5.5" ry="9" transform="rotate(-28 -7 9)" fill="url(#fg-grain)" />
+      <ellipse cx="9" cy="7" rx="5.5" ry="9" transform="rotate(28 9 7)" fill="url(#fg-grain)" />
+      <ellipse cx="-5" cy="-6" rx="5" ry="8.5" transform="rotate(-24 -5 -6)" fill="url(#fg-grain)" />
+      <ellipse cx="9" cy="-8" rx="5" ry="8.5" transform="rotate(24 9 -8)" fill="url(#fg-grain)" />
+      <ellipse cx="3" cy="-20" rx="5" ry="9" fill="#FFF08A" />
+    </g>
+    <g transform="translate(95 79) rotate(22)">
+      <path d="M-2 -34 C-14 -50 -2 -58 2 -40 C6 -58 18 -50 6 -34 Z" fill="url(#fg-leaf)" />
+      <path d="M-14 -26 C-28 -36 -22 -48 -6 -32 Z" fill="url(#fg-leaf)" />
+      <path d="M16 -26 C30 -36 24 -48 8 -32 Z" fill="url(#fg-leaf)" />
+      <path d="M-20 -18 C-21 -30 -10 -36 2 -36 C14 -36 24 -30 23 -18 C21 4 10 38 1 42 C-8 38 -19 4 -20 -18 Z" fill="url(#fg-carrot)" />
+      <path d="M-12 -18 C-12 -25 -6 -29 0 -29" fill="none" stroke="#FFFFFF" stroke-opacity="0.65" stroke-width="4" stroke-linecap="round" />
+      <path d="M-13 -4 L-3 -4 M5 8 L15 8 M-10 18 L-2 18" fill="none" stroke="#C2380C" stroke-opacity="0.45" stroke-width="3" stroke-linecap="round" />
+    </g>
+    <circle cx="56" cy="107" r="17.5" fill="url(#fg-tomato)" />
+    <ellipse cx="50" cy="100" rx="5.5" ry="3.5" transform="rotate(-28 50 100)" fill="#FFFFFF" opacity="0.55" />
+    <path d="M56 89 C52 84 48 87 52 91 C56 93 60 93 62 89 C60 85 57 86 56 89 Z" fill="#22A138" />
+  </g>
+</svg>

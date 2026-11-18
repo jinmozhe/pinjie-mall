@@ -415,13 +415,34 @@ class OrderService:
             if order.status != "pending_payment":
                 raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="当前订单不能取消")
             if await self._payment_blocks_release_in_open_transaction(order):
-                raise AppException(
-                    status_code=409,
-                    code=ErrorCode.ORDER_STATE_CONFLICT,
-                    message="存在已成功或待确认的支付，暂不能释放订单资源",
-                )
-            await self._cancel(order, reason, "user", user_id)
-            return await self._read(order)
+                for attempt in await LifecycleRepository(self.session).payment_attempts_for_order(order.id, lock=True):
+                    if attempt.channel == "wechat" and attempt.status in {"created", "pending", "unknown"}:
+                        attempt.close_requested = True
+                        await LifecycleRepository(self.session).save(attempt)
+                        await DurableTaskService(self.session).enqueue_in_open_transaction(
+                            task_type="payment_close",
+                            business_key=f"payment-close:{attempt.id}",
+                            payload={"schema_version": 1, "payment_attempt_id": str(attempt.id)},
+                        )
+            else:
+                await self._cancel(order, reason, "user", user_id)
+                return await self._read(order)
+        raise AppException(
+            status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="支付结果核对及关单处理中，请稍后刷新订单"
+        )
+
+    async def complete_channel_close(self, order_id: UUID) -> None:
+        async with transaction_scope(self.session):
+            order = await self.repository.order_by_id(order_id, lock=True)
+            if order is None or order.status != "pending_payment":
+                return
+            attempts = await LifecycleRepository(self.session).payment_attempts_for_order(order_id, lock=True)
+            if any(row.status in {"created", "pending", "unknown", "succeeded"} for row in attempts):
+                return
+            if any(row.close_requested for row in attempts):
+                await self._cancel(order, "用户请求关单已确认", "system", None)
+            elif order.expires_at <= datetime.now(UTC):
+                await self._cancel(order, "待付款超时", "system", None)
 
     async def _cancel(self, order: Order, reason: str, actor_type: str, actor_id: UUID | None) -> None:
         items = await self.repository.items(order.id)

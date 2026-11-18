@@ -57,6 +57,6 @@ def create_resources(settings: Settings) -> AppResources:
             trust_env=False,
             follow_redirects=False,
         )
-        if settings.miniapp_login_enabled
+        if settings.miniapp_login_enabled or settings.wechat_pay_active
         else None,
     )

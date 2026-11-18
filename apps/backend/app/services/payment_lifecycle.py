@@ -133,7 +133,7 @@ class LifecycleService:
                 request_id=data.request_id,
                 request_hash=request_hash,
                 channel=data.channel,
-                merchant_reference=f"M3-{new_uuid7()}",
+                merchant_reference=new_uuid7().hex,
                 status="unavailable",
                 amount=order.total_amount,
                 currency=order.currency,
@@ -389,6 +389,7 @@ class LifecycleService:
             payload={"schema_version": 1, "fulfillment_id": str(fulfillment.id)},
             available_at=fulfillment.auto_confirm_at,
         )
+        await self._schedule_wechat_shipping(order.id, order.accepted_payment_attempt_id, fulfillment.id)
         return self._fulfillment_read(fulfillment)
 
     async def deliver_virtual_in_open_transaction(
@@ -428,7 +429,19 @@ class LifecycleService:
             )
         )
         await self.distribution.schedule_settlement_for_delivery_in_open_transaction(order.id, now)
+        await self._schedule_wechat_shipping(order.id, order.accepted_payment_attempt_id, fulfillment.id)
         return self._fulfillment_read(fulfillment)
+
+    async def _schedule_wechat_shipping(self, order_id: UUID, payment_id: UUID | None, fulfillment_id: UUID) -> None:
+        if payment_id is None:
+            return
+        payment = await self.repository.payment(payment_id)
+        if payment is not None and payment.order_id == order_id and payment.channel == "wechat":
+            await DurableTaskService(self.session).enqueue_in_open_transaction(
+                task_type="wechat_shipping",
+                business_key=f"wechat-shipping:{fulfillment_id}",
+                payload={"schema_version": 1, "fulfillment_id": str(fulfillment_id)},
+            )
 
     async def confirm_receipt(self, user_id: UUID, order_id: UUID, revision: int) -> FulfillmentRead:
         async with transaction_scope(self.session):
@@ -788,7 +801,10 @@ class LifecycleService:
             raise AppException(
                 status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款渠道或原支付流水不匹配"
             )
-        if confirmed_at < attempt.created_at:
+        earliest_confirmation = (
+            attempt.created_at.replace(microsecond=0) if data.channel == "wechat" else attempt.created_at
+        )
+        if confirmed_at < earliest_confirmation:
             raise AppException(status_code=409, code=ErrorCode.ORDER_STATE_CONFLICT, message="退款确认时间早于退款执行")
         if attempt.status == "succeeded":
             if attempt.channel_refund_id != data.channel_refund_id or attempt.confirmed_at != confirmed_at:

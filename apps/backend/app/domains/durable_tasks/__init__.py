@@ -1,3 +1,3 @@
-from .service import DurableTaskService, LeasedTask
+from .service import DurableTaskService, LeasedTask, TaskDeferred
 
-__all__ = ["DurableTaskService", "LeasedTask"]
+__all__ = ["DurableTaskService", "LeasedTask", "TaskDeferred"]

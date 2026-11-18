@@ -25,6 +25,7 @@ from .commerce_lifecycle import (
     RefundEvent,
     RefundItem,
     RefundRequest,
+    WechatPayNotification,
 )
 from .distribution import (
     CommissionAmountRule,
@@ -107,6 +108,7 @@ __all__ = [
     "RefundEvent",
     "RefundItem",
     "RefundRequest",
+    "WechatPayNotification",
     "InventoryAccount",
     "InventoryMovement",
     "InventoryReservation",

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="pet-life-bg" x1="20%" y1="8%" x2="82%" y2="94%">
+      <stop offset="0%" stop-color="#FFD266" />
+      <stop offset="100%" stop-color="#F58220" />
+    </linearGradient>
+    <radialGradient id="pet-life-glow" cx="35%" cy="28%" r="60%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.34" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="pl-fur" x1="20%" y1="0%" x2="80%" y2="100%">
+        <stop offset="0%" stop-color="#F7AC54" />
+        <stop offset="100%" stop-color="#D46F1E" />
+      </linearGradient>
+      <linearGradient id="pl-ear" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#B85614" />
+        <stop offset="100%" stop-color="#873A08" />
+      </linearGradient>
+      <linearGradient id="pl-paw" x1="20%" y1="0%" x2="80%" y2="100%">
+        <stop offset="0%" stop-color="#FF9BB0" />
+        <stop offset="100%" stop-color="#EE4B71" />
+      </linearGradient>
+  </defs>
+  <ellipse cx="80" cy="146" rx="46" ry="7" fill="#9E4505" opacity="0.20" />
+  <circle cx="80" cy="86" r="57" fill="url(#pet-life-bg)" />
+  <circle cx="80" cy="86" r="57" fill="url(#pet-life-glow)" />
+  <circle cx="80" cy="86" r="55" fill="none" stroke="#FFFFFF" stroke-opacity="0.38" stroke-width="2" />
+  <ellipse cx="80" cy="123" rx="35" ry="7.5" fill="#9E4505" opacity="0.22" />
+  <g transform="translate(0 -6)">
+  <ellipse cx="44" cy="76" rx="12" ry="20" transform="rotate(24 44 76)" fill="url(#pl-ear)" />
+    <ellipse cx="106" cy="76" rx="12" ry="20" transform="rotate(-24 106 76)" fill="url(#pl-ear)" />
+    <rect x="44" y="42" width="62" height="60" rx="29" fill="url(#pl-fur)" />
+    <ellipse cx="75" cy="84" rx="22" ry="17" fill="#FFF7EB" />
+    <circle cx="62" cy="68" r="5" fill="#2A1B12" />
+    <circle cx="88" cy="68" r="5" fill="#2A1B12" />
+    <circle cx="60.5" cy="66" r="1.8" fill="#FFFFFF" />
+    <circle cx="86.5" cy="66" r="1.8" fill="#FFFFFF" />
+    <ellipse cx="75" cy="79" rx="6.5" ry="4.5" fill="#3B2314" />
+    <path d="M68 87 Q71.5 92 75 86 Q78.5 92 82 87" fill="none" stroke="#593520" stroke-width="2.5" stroke-linecap="round" />
+    <path d="M71 89 L79 89 L79 94 A4 4 0 0 1 71 94 Z" fill="#FF6B8B" />
+    <g transform="translate(110 105) rotate(-12)">
+      <circle cx="0" cy="4" r="14" fill="#FFFFFF" />
+      <ellipse cx="0" cy="7" rx="8.5" ry="7" fill="url(#pl-paw)" />
+      <circle cx="-8.5" cy="-2.5" r="3.4" fill="url(#pl-paw)" />
+      <circle cx="0" cy="-6" r="3.6" fill="url(#pl-paw)" />
+      <circle cx="8.5" cy="-2.5" r="3.4" fill="url(#pl-paw)" />
+    </g>
+  </g>
+</svg>

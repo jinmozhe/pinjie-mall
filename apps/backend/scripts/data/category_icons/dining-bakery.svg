@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="dining-bakery-bg" x1="20%" y1="8%" x2="82%" y2="94%">
+      <stop offset="0%" stop-color="#FFE66B" />
+      <stop offset="100%" stop-color="#F49D12" />
+    </linearGradient>
+    <radialGradient id="dining-bakery-glow" cx="35%" cy="28%" r="60%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.34" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="db-sponge" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FCD282" />
+        <stop offset="100%" stop-color="#E57B20" />
+      </linearGradient>
+      <linearGradient id="db-cream" x1="20%" y1="0%" x2="80%" y2="100%">
+        <stop offset="0%" stop-color="#FFFFFF" />
+        <stop offset="100%" stop-color="#FFE6EE" />
+      </linearGradient>
+      <linearGradient id="db-berry" x1="20%" y1="0%" x2="80%" y2="100%">
+        <stop offset="0%" stop-color="#FF597C" />
+        <stop offset="100%" stop-color="#D41B40" />
+      </linearGradient>
+      <linearGradient id="db-fork" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#E2E8F0" />
+        <stop offset="100%" stop-color="#94A3B8" />
+      </linearGradient>
+  </defs>
+  <ellipse cx="80" cy="146" rx="46" ry="7" fill="#A15C04" opacity="0.20" />
+  <circle cx="80" cy="86" r="57" fill="url(#dining-bakery-bg)" />
+  <circle cx="80" cy="86" r="57" fill="url(#dining-bakery-glow)" />
+  <circle cx="80" cy="86" r="55" fill="none" stroke="#FFFFFF" stroke-opacity="0.38" stroke-width="2" />
+  <ellipse cx="80" cy="123" rx="35" ry="7.5" fill="#A15C04" opacity="0.22" />
+  <g transform="translate(0 -6)">
+  <g transform="translate(49 87) rotate(-18)">
+      <rect x="-5" y="-6" width="10" height="42" rx="5" fill="#FF6647" />
+      <rect x="-2.5" y="-22" width="5" height="20" rx="2.5" fill="url(#db-fork)" />
+      <path d="M-10 -38 L-10 -24 C-10 -18 -5 -16 0 -16 C5 -16 10 -18 10 -24 L10 -38" fill="none" stroke="url(#db-fork)" stroke-width="4" stroke-linecap="round" />
+      <path d="M-3.5 -38 L-3.5 -22 M3.5 -38 L3.5 -22" fill="none" stroke="url(#db-fork)" stroke-width="3.4" stroke-linecap="round" />
+    </g>
+    <ellipse cx="90" cy="122" rx="37" ry="9" fill="#FFFDF7" />
+    <ellipse cx="90" cy="120" rx="34" ry="7" fill="#FFE6B8" />
+    <rect x="60" y="74" width="60" height="44" rx="12" fill="url(#db-sponge)" />
+    <path d="M60 95 Q70 101 80 95 T100 95 T120 95 L120 101 Q110 107 100 101 T80 101 T60 101 Z" fill="#FF6B8B" />
+    <path d="M58 76 C58 63 68 58 90 58 C112 58 122 63 122 76 C122 83 118 89 113 89 C108 89 107 82 102 82 C96 82 95 92 89 92 C83 92 82 81 76 81 C71 81 70 88 65 88 C60 88 58 83 58 76 Z" fill="url(#db-cream)" />
+    <path d="M76 50 C76 40 83 32 90 32 C97 32 104 40 104 50 C104 60 96 66 90 66 C84 66 76 60 76 50 Z" fill="url(#db-berry)" />
+    <path d="M81 33 C85 27 95 27 99 33 C94 35 86 35 81 33 Z" fill="#27AE49" />
+    <ellipse cx="84" cy="44" rx="3.2" ry="5" transform="rotate(-20 84 44)" fill="#FFFFFF" opacity="0.55" />
+    <circle cx="94" cy="47" r="1.4" fill="#FFE484" />
+    <circle cx="88" cy="55" r="1.4" fill="#FFE484" />
+    <circle cx="96" cy="56" r="1.4" fill="#FFE484" />
+  </g>
+</svg>

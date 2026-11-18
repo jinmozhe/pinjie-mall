@@ -30,6 +30,7 @@ _COMMERCE_PRIVATE_PREFIXES = (
     "/api/v1/checkout",
     "/api/v1/commerce/quotes",
     "/api/v1/refunds",
+    "/api/v1/payments",
     "/api/v1/addresses",
     "/api/v1/orders",
     "/api/v1/order-items",
@@ -54,6 +55,8 @@ def _normalize_path(path: str) -> str:
 
 def is_sensitive_route(route_template: str) -> bool:
     path = _normalize_path(route_template)
+    if path.endswith(("/payments/wechat/notify", "/refunds/wechat/notify")):
+        return True
     return path in _SENSITIVE_ROUTES or any(
         path == prefix or path.startswith(f"{prefix}/") for prefix in _COMMERCE_PRIVATE_PREFIXES
     )

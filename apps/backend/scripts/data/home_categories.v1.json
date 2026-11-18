@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "dataset_version": "2026-11-18.v1",
+  "icon_size": 160,
+  "categories": [
+    {
+      "slug": "fresh-grain",
+      "name": "生鲜粮油",
+      "sort_order": 1,
+      "description": "<p>粮油、果蔬、农产品</p>",
+      "icon_filename": "fresh-grain.png"
+    },
+    {
+      "slug": "dining-bakery",
+      "name": "餐饮烘焙",
+      "sort_order": 2,
+      "description": "<p>美食、蛋糕、快餐</p>",
+      "icon_filename": "dining-bakery.png"
+    },
+    {
+      "slug": "home-daily",
+      "name": "家居日化",
+      "sort_order": 3,
+      "description": "<p>日用品、清洁、百货</p>",
+      "icon_filename": "home-daily.png"
+    },
+    {
+      "slug": "mother-baby",
+      "name": "母婴亲子",
+      "sort_order": 4,
+      "description": "<p>婴儿、母婴、亲子</p>",
+      "icon_filename": "mother-baby.png"
+    },
+    {
+      "slug": "pet-life",
+      "name": "宠物生活",
+      "sort_order": 5,
+      "description": "<p>小狗、宠物、猫粮狗粮</p>",
+      "icon_filename": "pet-life.png"
+    },
+    {
+      "slug": "fine-tobacco-wine",
+      "name": "名烟名酒",
+      "sort_order": 6,
+      "description": "<p>礼盒、酒水</p>",
+      "icon_filename": "fine-tobacco-wine.png"
+    },
+    {
+      "slug": "car-owner-service",
+      "name": "车主服务",
+      "sort_order": 7,
+      "description": "<p>汽车、加油、维修</p>",
+      "icon_filename": "car-owner-service.png"
+    },
+    {
+      "slug": "life-service",
+      "name": "生活服务",
+      "sort_order": 8,
+      "description": "<p>服务、家政、扳手</p>",
+      "icon_filename": "life-service.png"
+    }
+  ]
+}

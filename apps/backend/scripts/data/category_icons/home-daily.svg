@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <defs>
+    <linearGradient id="home-daily-bg" x1="20%" y1="8%" x2="82%" y2="94%">
+      <stop offset="0%" stop-color="#6BCEFF" />
+      <stop offset="100%" stop-color="#188CE0" />
+    </linearGradient>
+    <radialGradient id="home-daily-glow" cx="35%" cy="28%" r="60%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.34" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="hd-bottle" x1="15%" y1="0%" x2="90%" y2="100%">
+        <stop offset="0%" stop-color="#FFFFFF" />
+        <stop offset="100%" stop-color="#D6ECFF" />
+      </linearGradient>
+      <linearGradient id="hd-pump" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFE059" />
+        <stop offset="100%" stop-color="#F5940A" />
+      </linearGradient>
+      <linearGradient id="hd-jar" x1="15%" y1="0%" x2="85%" y2="100%">
+        <stop offset="0%" stop-color="#76ECC7" />
+        <stop offset="100%" stop-color="#14A885" />
+      </linearGradient>
+  </defs>
+  <ellipse cx="80" cy="146" rx="46" ry="7" fill="#0D5091" opacity="0.20" />
+  <circle cx="80" cy="86" r="57" fill="url(#home-daily-bg)" />
+  <circle cx="80" cy="86" r="57" fill="url(#home-daily-glow)" />
+  <circle cx="80" cy="86" r="55" fill="none" stroke="#FFFFFF" stroke-opacity="0.38" stroke-width="2" />
+  <ellipse cx="80" cy="123" rx="35" ry="7.5" fill="#0D5091" opacity="0.22" />
+  <g transform="translate(0 -6)">
+  <rect x="61" y="42" width="16" height="14" rx="4" fill="url(#hd-pump)" />
+    <path d="M54 34 L86 34 C90 34 93 36 93 40 L93 42 L62 42 L62 40 L54 40 Z" fill="url(#hd-pump)" />
+    <rect x="46" y="54" width="46" height="66" rx="16" fill="url(#hd-bottle)" />
+    <rect x="46" y="76" width="46" height="24" fill="#FF8C42" />
+    <path d="M69 81 C65 86 63 89 63 92 A6 6 0 0 0 75 92 C75 89 73 86 69 81 Z" fill="#FFFFFF" opacity="0.92" />
+    <rect x="52" y="61" width="6" height="44" rx="3" fill="#FFFFFF" opacity="0.7" />
+    <rect x="86" y="82" width="38" height="38" rx="11" fill="url(#hd-jar)" />
+    <rect x="84" y="75" width="42" height="11" rx="5.5" fill="#FFFFFF" stroke="#CBE5FA" stroke-width="1.4" />
+    <ellipse cx="98" cy="100" rx="5" ry="8" fill="#FFFFFF" opacity="0.28" />
+    <circle cx="114" cy="54" r="9" fill="#FFFFFF" fill-opacity="0.35" stroke="#FFFFFF" stroke-width="1.8" />
+    <circle cx="111" cy="51" r="2.2" fill="#FFFFFF" opacity="0.8" />
+    <circle cx="122" cy="68" r="5" fill="#FFFFFF" fill-opacity="0.35" stroke="#FFFFFF" stroke-width="1.5" />
+    <path d="M40 44 L43 51 L50 54 L43 57 L40 64 L37 57 L30 54 L37 51 Z" fill="#FFF59D" />
+  </g>
+</svg>

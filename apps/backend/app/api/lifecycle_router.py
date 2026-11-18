@@ -7,6 +7,7 @@ from app.api.dependencies import PhoneUserPrincipal as UserPrincipal
 from app.api.dependencies import require_admin_csrf, require_permission
 from app.api.lifecycle_dependencies import AdminLifecycle, Lifecycle
 from app.api.transaction_dependencies import ConsumerTrade
+from app.api.wechat_pay_router import WechatPayment
 from app.core.context import current_request_id
 from app.core.identifiers import new_uuid7
 from app.core.pagination import PageResult
@@ -57,10 +58,10 @@ async def admin_fulfillment_read(order_id: UUID, service: Lifecycle) -> Response
     summary="创建支付意图",
 )
 async def initiate_payment(
-    order_id: UUID, payload: PaymentAttemptCreate, service: Lifecycle, current: UserPrincipal
+    order_id: UUID, payload: PaymentAttemptCreate, service: WechatPayment, current: UserPrincipal
 ) -> ResponseModel[PaymentAttemptRead]:
     return success_response(
-        data=await service.initiate_payment(current.user.id, order_id, payload),
+        data=await service.initiate(current.user.id, order_id, payload),
         request_id=current_request_id(),
     )
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import case, func, or_, select, update
@@ -127,6 +127,27 @@ class DurableTaskRepository:
 
     async def flush(self) -> None:
         await self.session.flush()
+
+    async def defer_lease(self, task_id: UUID, lease_token: UUID, seconds: int) -> bool:
+        result = await self.session.execute(
+            update(DurableTask)
+            .where(
+                DurableTask.id == task_id,
+                DurableTask.status == "running",
+                DurableTask.lease_token == lease_token,
+                DurableTask.lease_until > func.clock_timestamp(),
+            )
+            .values(
+                status="pending",
+                lease_token=None,
+                lease_until=None,
+                available_at=func.clock_timestamp() + timedelta(seconds=seconds),
+                revision=DurableTask.revision + 1,
+                updated_at=func.clock_timestamp(),
+            )
+            .returning(DurableTask.id)
+        )
+        return isinstance(result.scalar_one_or_none(), UUID)
 
 
 __all__ = ["DurableTaskRepository"]

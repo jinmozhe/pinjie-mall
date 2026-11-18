@@ -75,6 +75,19 @@ class Settings(BaseSettings):
         default=None, min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$", validation_alias="WECHAT_UNION_SCOPE_ID"
     )
     wechat_app_secret: str | None = Field(default=None, validation_alias="WECHAT_APP_SECRET", repr=False)
+    wechat_pay_enabled: bool = Field(default=False, validation_alias="WECHAT_PAY_ENABLED")
+    wechat_shipping_enabled: bool = Field(default=False, validation_alias="WECHAT_SHIPPING_ENABLED")
+    wechat_shipping_carriers: dict[str, str] = Field(default_factory=dict, validation_alias="WECHAT_SHIPPING_CARRIERS")
+    wechat_pay_recovery_enabled: bool = Field(default=False, validation_alias="WECHAT_PAY_RECOVERY_ENABLED")
+    wechat_pay_mch_id: str = Field(default="", validation_alias="WECHAT_PAY_MCH_ID")
+    wechat_pay_merchant_serial_no: str = Field(default="", validation_alias="WECHAT_PAY_MERCHANT_SERIAL_NO")
+    wechat_pay_private_key_path: str = Field(default="", validation_alias="WECHAT_PAY_PRIVATE_KEY_PATH", repr=False)
+    wechat_pay_api_v3_key: str = Field(default="", validation_alias="WECHAT_PAY_API_V3_KEY", repr=False)
+    wechat_pay_public_key_id: str = Field(default="", validation_alias="WECHAT_PAY_PUBLIC_KEY_ID")
+    wechat_pay_public_key_path: str = Field(default="", validation_alias="WECHAT_PAY_PUBLIC_KEY_PATH")
+    wechat_pay_notify_url: str = Field(default="", validation_alias="WECHAT_PAY_NOTIFY_URL")
+    wechat_pay_refund_notify_url: str = Field(default="", validation_alias="WECHAT_PAY_REFUND_NOTIFY_URL")
+    wechat_pay_config_version: str = Field(default="", validation_alias="WECHAT_PAY_CONFIG_VERSION", max_length=64)
     miniapp_jwt_secret: str | None = Field(default=None, validation_alias="MINIAPP_JWT_SECRET", repr=False)
     miniapp_token_hmac_key: str | None = Field(default=None, validation_alias="MINIAPP_TOKEN_HMAC_KEY", repr=False)
     auth_cookie_secure: bool = Field(default=False, validation_alias="AUTH_COOKIE_SECURE")
@@ -201,6 +214,7 @@ class Settings(BaseSettings):
 
     def validate_runtime(self) -> None:
         self.validate_database_runtime()
+        self.validate_wechat_pay()
         upload_root = self.upload_local_root.resolve()
         settings_root = self.settings_media_root.resolve()
         if (
@@ -255,6 +269,64 @@ class Settings(BaseSettings):
                 raise ValueError("AUTH_COOKIE_SECURE must be true in production")
             if not self.trusted_proxy_cidrs:
                 raise ValueError("TRUSTED_PROXY_CIDRS must be explicit in production")
+
+    @property
+    def wechat_pay_active(self) -> bool:
+        return self.wechat_pay_enabled or self.wechat_pay_recovery_enabled
+
+    def validate_wechat_pay(self) -> None:
+        if self.wechat_shipping_enabled and (not self.wechat_app_secret or not self.wechat_pay_active):
+            raise ValueError("WeChat shipping requires app credentials and payment recovery")
+        if self.wechat_shipping_enabled:
+            if len(self.wechat_app_secret or "") < 32 or any(
+                marker in (self.wechat_app_secret or "").lower()
+                for marker in {"replace_with", "change_me", "example", "placeholder"}
+            ):
+                raise ValueError("WeChat shipping requires a real application secret")
+            if any(not name.strip() or not code.strip() for name, code in self.wechat_shipping_carriers.items()):
+                raise ValueError("WeChat shipping carrier mappings must not be empty")
+        if not self.wechat_pay_active:
+            return
+        import re
+
+        if not self.wechat_app_id or re.fullmatch(r"wx[0-9a-zA-Z]{16}", self.wechat_app_id) is None:
+            raise ValueError("WeChat Pay requires WECHAT_APP_ID")
+        if re.fullmatch(r"[0-9]{6,20}", self.wechat_pay_mch_id) is None:
+            raise ValueError("WeChat Pay requires an explicit merchant id")
+        if re.fullmatch(r"[0-9a-fA-F]{1,64}", self.wechat_pay_merchant_serial_no) is None:
+            raise ValueError("WeChat Pay requires a merchant certificate serial number")
+        if not self.wechat_pay_config_version or len(self.wechat_pay_api_v3_key.encode()) != 32:
+            raise ValueError("WeChat Pay requires a config version and a 32-byte APIv3 key")
+        if not self.wechat_pay_api_v3_key.isascii() or any(
+            marker in self.wechat_pay_api_v3_key.lower()
+            for marker in {"replace_with", "change_me", "example", "placeholder"}
+        ):
+            raise ValueError("WeChat Pay APIv3 key must be ASCII and must not use a template value")
+        if not self.wechat_pay_public_key_id.startswith("PUB_KEY_ID_"):
+            raise ValueError("WeChat Pay only supports explicitly configured public key mode")
+        if not self.wechat_pay_private_key_path or not self.wechat_pay_public_key_path:
+            raise ValueError("WeChat Pay requires private and public key file paths")
+        for filename in (self.wechat_pay_private_key_path, self.wechat_pay_public_key_path):
+            key_path = Path(filename).resolve()
+            if any(
+                key_path.is_relative_to(root.resolve()) for root in (self.upload_local_root, self.settings_media_root)
+            ):
+                raise ValueError("WeChat Pay keys must be stored outside public media directories")
+        for url, suffix in (
+            (self.wechat_pay_notify_url, "/payments/wechat/notify"),
+            (self.wechat_pay_refund_notify_url, "/refunds/wechat/notify"),
+        ):
+            parsed = urlsplit(url)
+            if (
+                parsed.scheme != "https"
+                or not parsed.hostname
+                or parsed.username
+                or parsed.password
+                or parsed.query
+                or parsed.fragment
+                or parsed.path != self.api_v1_str + suffix
+            ):
+                raise ValueError("WeChat Pay requires explicit HTTPS callback URLs with the configured API paths")
 
     def validate_database_runtime(self) -> None:
         if self.database_url is None:

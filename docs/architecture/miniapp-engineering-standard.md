@@ -130,6 +130,8 @@ node scripts/design/render-miniapp-tab-icons.mjs --sharp-root "<提供 sharp 的
 
 `--check` 只读比对八张生成图片，要求同一 renderer 版本；它是资源辅助核验，不能替代微信编译或真机验收。保留 `src/assets/tab-icons.NOTICE.txt` 的上游来源和许可声明；修改库版本或图标清单后重新生成并检查全部状态。
 
+首页八个一级业务分类（生鲜粮油、餐饮烘焙、家居日化、母婴亲子、宠物生活、名烟名酒、车主服务、生活服务）的彩色图标保留后台分类图片资产来源，不归入 NutUI 功能图标库。矢量源文件与同源导出的 `160×160` 透明 PNG 存放于 `apps/backend/scripts/data/category_icons/`，清单为 `apps/backend/scripts/data/home_categories.v1.json`，由 `scripts/design/render-miniapp-category-icons.mjs` 校验生成；本机开发库通过 `apps/backend/scripts/seed_home_categories.py`（`--check` / `--apply --confirm-database pinjie_mall_dev`）幂等绑定为后台受控资产。
+
 主题用共享语义变量映射 NutUI 变量，不在业务页面直接写一组全局覆盖。CSS Modules 先验证 Taro 编译与第三方主题边界，无法适用时使用应用/Feature 命名作用域；不默认用浏览器选择器、hover 或 window/document。
 
 主包保留四个 TabBar 页面。详情页位置和业务分包由真实入口与包体测量确定；禁止把分包全部导入全局 index 或 app.tsx。业务列表采用服务端分页、有界缓存和图片尺寸选择，不添加未授权的营销装修、搜索、优惠券或游客购物车。
