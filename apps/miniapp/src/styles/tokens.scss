@@ -10,6 +10,10 @@ $border: #E4E7EC;
 $space: 24px;
 $radius: 20px;
 
+// Cart empty state illustration.
+$cart-empty-background: #F9EAE1;
+$cart-empty-ink: #B98B74;
+
 // Unified authentication page, scoped to the approved warm illustration design.
 $auth-background: #FFFAF5;
 $auth-text: #302B28;
@@ -31,6 +35,7 @@ $profile-placeholder: #948C87;
 $profile-avatar-background: #F5F3F1;
 $profile-avatar-ink: #ADA59F;
 $profile-camera-background: #F5E8E2;
+$profile-camera-ink: #A85F48;
 
 // Personal center illustration, asset summary and service tiles.
 $account-muted: #667085;
@@ -40,7 +45,9 @@ $account-avatar-ink: #CD4D40;
 $account-hint: #8E554C;
 $account-brand: #99776D;
 $account-brand-line: #DCC6BD;
+$account-order-ink: #383F49;
 $account-service-backgrounds: (
+  'member': #FFF2DA,
   'gold': #FFF2DA,
   'coral': #FFE9E4,
   'blue': #E6F2FF,
@@ -52,4 +59,18 @@ $account-service-backgrounds: (
   'green': #E6F3EB,
   'slate': #EDF2F8,
   'purple': #F0EAFB,
+);
+$account-service-colors: (
+  'member': #BE7008,
+  'gold': #C57A09,
+  'coral': #E45342,
+  'blue': #287FC1,
+  'orange': #D97618,
+  'teal': #149D8E,
+  'indigo': #7367D6,
+  'rose': #EC6471,
+  'cyan': #2D94B4,
+  'green': #39966A,
+  'slate': #6C8099,
+  'purple': #8C70C5,
 );

@@ -1,0 +1,15 @@
+.app-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  vertical-align: middle;
+  color: inherit;
+
+  .nut-icon { display: block; flex: none; line-height: 1; }
+}
+
+.icon-label { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.icon-label > text { min-width: 0; overflow-wrap: anywhere; }

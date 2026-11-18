@@ -6,10 +6,10 @@ import { bindPhone, login, privateRequest, sessionScope, updateSessionUser, useS
 import { authNeedsPhone, cancelAuthentication, finishAuthentication } from '@/lib/auth-navigation'
 import { useNavigationLayout } from '@/lib/use-navigation-layout'
 import { QueryState } from '@/components/QueryState'
+import { Icon } from '@/components/Icon'
 import { LegalSheet } from './LegalSheet'
 import type { LegalDocument } from './LegalSheet'
 import shop from './assets/shop.svg'
-import wechat from './assets/wechat.svg'
 import './authentication.scss'
 
 export function AuthenticationPage() {
@@ -118,7 +118,7 @@ export function AuthenticationPage() {
     {layout ? <>
       <View className='auth-header' style={{ paddingTop: `${layout.top}px` }}>
         <View className='auth-header-row' style={{ height: `${layout.height}px`, paddingLeft: `${layout.side}px`, paddingRight: `${layout.side}px` }}>
-          <Button className='auth-back' ariaLabel='返回上一页' disabled={working} onClick={() => { void skip() }}><View /></Button>
+          <Button className='auth-back' ariaLabel='返回上一页' disabled={working} onClick={() => { void skip() }}><Icon name='ArrowLeft' size={32} /></Button>
           <View className='auth-header-title' role='heading'>登录</View>
         </View>
       </View>
@@ -135,7 +135,7 @@ export function AuthenticationPage() {
               openType={consent && needsPhone && !pendingPhoneUser && !working ? 'getPhoneNumber|agreePrivacyAuthorization' : undefined}
               onClick={() => { void primaryAction() }}
               onGetPhoneNumber={(event) => { void phone(event.detail.code) }}>
-              {!working && <Image className='auth-wechat-icon' src={wechat} mode='aspectFit' />}
+              {!working && <Icon name='Weixin' size={44} />}
               <Text>{buttonLabel}</Text>
             </Button>
             <Button className='auth-skip' disabled={working} onClick={() => { void skip() }}>暂不登录</Button>
@@ -149,7 +149,7 @@ export function AuthenticationPage() {
         <View className='auth-consent-row'>
           <Button className='auth-consent-toggle' ariaLabel={`${consent ? '已勾选' : '未勾选'}，我已阅读并同意用户协议与隐私条款`}
             disabled={working} onClick={() => setConsent(!consent)}>
-            <View className={consent ? 'auth-checkbox auth-checkbox-checked' : 'auth-checkbox'}>{consent && <View className='auth-checkmark' />}</View>
+            <View className={consent ? 'auth-checkbox auth-checkbox-checked' : 'auth-checkbox'}>{consent && <Icon name='Check' size={18} />}</View>
           </Button>
           <View className='auth-consent-copy'>
             <Text onClick={() => { if (!working) setConsent(!consent) }}>我已阅读并同意</Text>

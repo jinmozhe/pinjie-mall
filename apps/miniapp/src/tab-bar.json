@@ -1,0 +1,10 @@
+{
+  "color": "#475467",
+  "selectedColor": "#B42318",
+  "items": [
+    { "pagePath": "pages/home/index", "text": "首页", "asset": "home", "icon": "Home" },
+    { "pagePath": "pages/category/index", "text": "分类", "asset": "category", "icon": "Category" },
+    { "pagePath": "pages/cart/index", "text": "购物车", "asset": "cart", "icon": "Cart" },
+    { "pagePath": "pages/account/index", "text": "我的", "asset": "account", "icon": "User" }
+  ]
+}

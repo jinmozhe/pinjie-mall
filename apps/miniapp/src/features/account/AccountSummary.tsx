@@ -5,6 +5,7 @@ import { Button, Image, View } from '@tarojs/components'
 import { useQuery } from '@tanstack/react-query'
 import type { ConsumerUserRead, ResponseModelConsumerMemberRead, ResponseModelConsumerPointsRead, ResponseModelConsumerUserRead, ResponseModelListConsumerWalletRead } from '@pinjie/api-client'
 import { QueryState } from '@/components/QueryState'
+import { Icon } from '@/components/Icon'
 import { privateRequest, useSession } from '@/lib/session'
 import { assetUrl } from '@/platform/media'
 
@@ -23,7 +24,7 @@ function Avatar({ url, open }: { url?: string | null; open: () => void }) {
   if (url) { try { source = assetUrl(url) } catch { invalid = true } }
   return <View className='account-portrait'>
     <Button className='account-portrait-button' ariaLabel='头像' onClick={open}>
-      {source && !failed ? <Image src={source} mode='aspectFill' onError={() => setFailed(true)} /> : <View className='account-portrait-placeholder'><View /><View /></View>}
+      {source && !failed ? <Image src={source} mode='aspectFill' onError={() => setFailed(true)} /> : <View className='account-portrait-placeholder'><Icon name='User' size={72} /></View>}
     </Button>
     {invalid && <View className='account-portrait-error'>头像来源未获准入</View>}
     {failed && <Button className='account-portrait-retry' onClick={() => setFailed(false)}>头像加载失败，重试</Button>}
@@ -44,7 +45,7 @@ export function AccountSummary({ open, user, assets, children }: { open: Open; u
       <Button className='account-identity-button' onClick={() => open(target)}>
         <View className='account-name'>{loggedIn ? user.display_name || '微信商城用户' : '未登录'}</View>
         <View className='account-welcome'>欢迎来到拼捷商城</View>
-        <View className='account-chevron' />
+        <Icon className='account-chevron' name='ArrowRight' size={24} />
       </Button>
     </View>
     <View className='account-assets'>

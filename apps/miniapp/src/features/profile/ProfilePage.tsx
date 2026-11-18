@@ -5,14 +5,12 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import type { ResponseModelConsumerUserRead } from '@pinjie/api-client'
 import { AuthGate } from '@/components/AuthGate'
 import { QueryState } from '@/components/QueryState'
+import { Icon } from '@/components/Icon'
 import { privateAvatarUpload, privateRequest, sessionScope, updateSessionUser, useSession } from '@/lib/session'
 import { queryClient } from '@/lib/query'
 import { finishAuthentication } from '@/lib/auth-navigation'
 import { assetUrl } from '@/platform/media'
 import { ProfileFrame } from './ProfileFrame'
-import camera from './assets/camera.svg'
-import home from './assets/home.svg'
-import person from './assets/person.svg'
 import './profile.scss'
 
 function Avatar({ url }: { url?: string | null }) {
@@ -23,7 +21,7 @@ function Avatar({ url }: { url?: string | null }) {
   if (url) { try { source = assetUrl(url) } catch { invalid = true } }
   return <>
     <View className='profile-avatar'>
-      {source && !failed ? <Image src={source} mode='aspectFill' onError={() => setFailed(true)} /> : <View className='profile-avatar-placeholder'><View /><View /></View>}
+      {source && !failed ? <Image src={source} mode='aspectFill' onError={() => setFailed(true)} /> : <View className='profile-avatar-placeholder'><Icon name='User' size={96} /></View>}
     </View>
     {invalid && <View className='profile-feedback'>头像来源未获准入</View>}
     {failed && <NativeButton className='profile-text-action' onClick={() => setFailed(false)}>头像加载失败，点击重试</NativeButton>}
@@ -139,7 +137,7 @@ function Content() {
             <NativeButton className='profile-avatar-picker' ariaLabel='选择头像' openType='chooseAvatar' disabled={busy || !!unknown}
               loading={choose.isPending} onChooseAvatar={(event) => {
                 if (!guard.current && !busy && !unknown && event.detail.avatarUrl) { guard.current = true; save.reset(); remove.reset(); choose.mutate(event.detail.avatarUrl) }
-              }}><Image src={camera} mode='aspectFit' /></NativeButton>
+              }}><View className='profile-camera'><Icon name='Photograph' size={24} /></View></NativeButton>
           </View>
           {query.data.avatar && <NativeButton className='profile-text-action' disabled={busy || !!unknown} onClick={() => {
             if (!guard.current && !busy && !unknown) { guard.current = true; save.reset(); choose.reset(); remove.mutate() }
@@ -177,8 +175,8 @@ function Content() {
         {onboarding ? <>
           <NativeButton className='profile-skip' disabled={busy} loading={leaving} onClick={() => { void leave() }}>暂时跳过</NativeButton>
         </> : <>
-          <NativeButton className='profile-secondary' disabled={busy} onClick={() => { void leave('/pages/home/index') }}><Image src={home} mode='aspectFit' /><Text>返回首页</Text></NativeButton>
-          <NativeButton className='profile-secondary' disabled={busy} onClick={() => { void leave('/pages/account/index') }}><Image src={person} mode='aspectFit' /><Text>进入我的</Text></NativeButton>
+          <NativeButton className='profile-secondary' disabled={busy} onClick={() => { void leave('/pages/home/index') }}><Icon name='Home' size={32} /><Text>返回首页</Text></NativeButton>
+          <NativeButton className='profile-secondary' disabled={busy} onClick={() => { void leave('/pages/account/index') }}><Icon name='User' size={32} /><Text>进入我的</Text></NativeButton>
         </>}
       </View>
   </View>

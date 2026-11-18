@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import Taro from '@tarojs/taro'
-import { Button, Image, View } from '@tarojs/components'
+import { Button, View } from '@tarojs/components'
+import { Icon } from '@/components/Icon'
 import { AccountFrame } from '@/components/AccountFrame'
 import { beginAuthentication } from '@/lib/auth-navigation'
 import { useSession } from '@/lib/session'
@@ -33,7 +34,7 @@ export function AccountPage() {
     {(error || session.error) && <View className='account-feedback' role='alert'>{error || session.error}</View>}
     <View className='account-orders'>
       {orderEntries.map((entry) => <Button className='account-order' key={entry.label} onClick={() => { void open(entry.path) }}>
-        <Image className='account-order-icon' src={entry.icon} mode='aspectFit' />
+        <Icon className='account-order-icon' name={entry.icon} size={42} />
         <View>{entry.label}</View>
       </Button>)}
     </View>
@@ -41,7 +42,7 @@ export function AccountPage() {
       <View className='account-section-title' role='heading'>我的服务</View>
       <View className='account-service-grid'>
         {serviceEntries.map((entry) => <Button className='account-service' key={entry.label} onClick={() => { void open(entry.path, entry.access) }}>
-          <View className={`account-service-icon account-service-icon--${entry.tone}`}><Image src={entry.icon} mode='aspectFit' /></View>
+          <View className={`account-service-icon account-service-icon--${entry.tone}`}><Icon name={entry.icon} /></View>
           <View>{entry.label}</View>
         </Button>)}
       </View>

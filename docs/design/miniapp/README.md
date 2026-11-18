@@ -55,7 +55,7 @@
 
 当前截图采用程序化绘制，未使用 AI 图片服务，也未从可运行页面截取。绘图无需 Backend、Admin、Node 服务或网络；不修改根依赖和锁文件。使用有 Pillow 的 Python；Windows 默认使用系统微软雅黑，其他环境通过 `--font` 和 `--bold-font` 指定中文字体。V1 使用 `python docs/design/miniapp/render_mockups.py`，完整图集使用 `python docs/design/miniapp/render_suite.py --version v3` 创建后续版本。脚本拒绝覆盖已有版本，修订时明确新版本文件名。
 
-独立 HTML/CSS 原型按需存放在本目录，当前公开浏览交互直接落地 Taro 源码，不重复制作业务 HTML。离线设计资料不启动 Web 服务，不进入冻结的 apps/web。正式 TabBar 图标已落地 apps/miniapp/src/assets，可由 scripts/design/render-miniapp-tab-icons.py 重现，小程序代码不引用设计目录。
+独立 HTML/CSS 原型按需存放在本目录，当前公开浏览交互直接落地 Taro 源码，不重复制作业务 HTML。离线设计资料不启动 Web 服务，不进入冻结的 apps/web。正式 TabBar 图标位于 apps/miniapp/src/assets，由 scripts/design/render-miniapp-tab-icons.mjs 从锁定的 NutUI 图标导出，生成和核验命令见[工程标准](../../architecture/miniapp-engineering-standard.md#7-样式单位与包体)，小程序代码不引用设计目录。
 
 ## 确认与验收
 

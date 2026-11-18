@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { PropsWithChildren } from 'react'
 import Taro, { useDidHide, useDidShow, useLaunch } from '@tarojs/taro'
 import { View } from '@tarojs/components'
+import { configure } from '@nutui/icons-react-taro/dist/es/icons/configure'
 import { focusManager, onlineManager, QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './lib/query'
 import { restoreSession } from './lib/session'
@@ -9,6 +10,9 @@ import { startRouteTrace, stopRouteTrace } from './platform/route-trace'
 import { CartBadge } from './features/cart'
 import './styles/app.scss'
 import '@nutui/icons-react-taro/dist/style_icon.css'
+
+// The icon package defaults to the unsupported HTML tag "i" on weapp.
+configure({ tag: 'view' })
 
 export default function App({ children }: PropsWithChildren) {
   const [networkNote, setNetworkNote] = useState('')

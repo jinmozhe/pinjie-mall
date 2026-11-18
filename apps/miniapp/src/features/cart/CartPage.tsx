@@ -1,15 +1,40 @@
 import { useEffect } from 'react'
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { Text, View } from '@tarojs/components'
+import { Icon } from '@/components/Icon'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import type { ConsumerCartItemRead, CartItemUpdate, ResponseModelListConsumerCartItemRead, ResponseModelCartItemRead, ResponseModelNoneType } from '@pinjie/api-client'
 import { Button } from '@/components/Button'
-import { AuthGate } from '@/components/AuthGate'
 import { ProductImage } from '@/components/ProductImage'
 import { QueryState } from '@/components/QueryState'
 import { queryClient } from '@/lib/query'
 import { privateRequest, useSession } from '@/lib/session'
+import { beginAuthentication } from '@/lib/auth-navigation'
 import { startCheckout } from '@/features/checkout'
+
+function CartEmptyState({ needsLogin = false }: { needsLogin?: boolean }) {
+  const session = useSession()
+  const navigation = useMutation({
+    mutationFn: async () => {
+      if (needsLogin) await beginAuthentication('/pages/cart/index')
+      else await Taro.switchTab({ url: '/pages/home/index' })
+    },
+    onError: async () => {
+      await Taro.showModal({
+        title: '页面打开失败',
+        content: needsLogin ? '登录页面暂时无法打开，请重试。' : '首页暂时无法打开，请重试。',
+        showCancel: false,
+      })
+    },
+  })
+  const busy = navigation.isPending || needsLogin && session.busy
+  return <View className='cart-empty'>
+    <View className='cart-empty__illustration'><Icon name='Cart' size={240} /></View>
+    <Button className='cart-empty__button' type='primary' shape='round' loading={busy} disabled={busy} onClick={() => navigation.mutate()}>
+      {needsLogin ? '登录' : '再逛逛'}
+    </Button>
+  </View>
+}
 
 function useCart() {
   const session = useSession()
@@ -46,21 +71,24 @@ function Content() {
   usePullDownRefresh(() => { void query.refetch().finally(() => Taro.stopPullDownRefresh()) })
   if (query.isPending) return <QueryState title='正在读取购物车' />
   if (query.isError) return <QueryState title='购物车读取失败' error={query.error} retry={() => { void query.refetch() }} />
+  if (!query.data.length) return <CartEmptyState />
   const selected = query.data.filter((item) => item.selected && !item.invalid_reason)
   return <View className='page trade-page'>
     <View className='title'>购物车</View><View className='muted'>共 {query.data.length} 种商品 · 成交金额以结算报价为准</View>
     {(mutation.error || checkout.error) && <QueryState title='操作未完成，请重新读取后确认' error={mutation.error ?? checkout.error} />}
-    {!query.data.length && <QueryState title='购物车空空的' detail='去挑选喜欢的商品吧' />}
     {query.data.map((item) => <View className='surface' key={item.id}>
       <View className='trade-row'><Button fill='outline' disabled={mutation.isPending || !!item.invalid_reason && !item.selected} onClick={() => mutation.mutate({ item, patch: { revision: item.revision, selected: !item.selected } })}>{item.selected ? '已选' : '选择'}</Button>
         <View className='trade-thumb' onClick={() => { if (item.product_id) void Taro.navigateTo({ url: `/subpackages/catalog/detail/index?id=${item.product_id}` }) }}><ProductImage url={item.image_url ?? undefined} /></View>
         <View className='trade-info'><View>{item.product_name}</View><View className='muted'>{Object.values(item.specifications).join(' / ') || '默认规格'}</View><View className='price-small'>{item.unit_price == null ? '当前不可售' : `¥${item.unit_price}`}</View></View>
       </View>
       {item.invalid_reason && <View className='note'>{item.invalid_reason}</View>}
-      <View className='trade-row spread'><View className='trade-row'><Button fill='outline' disabled={mutation.isPending || item.quantity <= 1 || item.available_quantity < 1} onClick={() => mutation.mutate({ item, patch: { revision: item.revision, quantity: Math.min(item.quantity - 1, item.available_quantity, 999) } })}>−</Button><Text>{item.quantity}</Text><Button fill='outline' disabled={mutation.isPending || !!item.invalid_reason || item.quantity >= Math.min(999, item.available_quantity)} onClick={() => mutation.mutate({ item, patch: { revision: item.revision, quantity: item.quantity + 1 } })}>＋</Button></View>
+      <View className='trade-row spread'><View className='trade-row'><Button fill='outline' ariaLabel='减少数量' disabled={mutation.isPending || item.quantity <= 1 || item.available_quantity < 1} onClick={() => mutation.mutate({ item, patch: { revision: item.revision, quantity: Math.min(item.quantity - 1, item.available_quantity, 999) } })}><Icon name='Minus' size={28} /></Button><Text>{item.quantity}</Text><Button fill='outline' ariaLabel='增加数量' disabled={mutation.isPending || !!item.invalid_reason || item.quantity >= Math.min(999, item.available_quantity)} onClick={() => mutation.mutate({ item, patch: { revision: item.revision, quantity: item.quantity + 1 } })}><Icon name='Plus' size={28} /></Button></View>
         <Button fill='outline' disabled={mutation.isPending} onClick={() => { void Taro.showModal({ title: '移除商品', content: `确认从购物车移除 ${item.product_name}？` }).then((result) => { if (result.confirm) mutation.mutate({ item }) }) }}>移除</Button></View>
     </View>)}
     <View className='trade-footer'><View className='muted'>已选 {selected.reduce((total, item) => total + item.quantity, 0)} 件可售商品</View><Button type='primary' block disabled={!selected.length || selected.length > 50 || mutation.isPending || checkout.isPending} loading={checkout.isPending} onClick={() => checkout.mutate()}>去结算</Button>{selected.length > 50 && <Text className='muted'>单次最多结算 50 种商品</Text>}</View>
   </View>
 }
-export function CartPage() { return <AuthGate><Content /></AuthGate> }
+export function CartPage() {
+  const session = useSession()
+  return session.user?.phone_bound ? <Content /> : <CartEmptyState needsLogin />
+}
