@@ -6456,6 +6456,25 @@
               "title": "Category Id"
             },
             "description": "公开分类 ID，包含启用的下级分类商品"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "商品名称关键词，忽略首尾空白",
+              "title": "Search"
+            },
+            "description": "商品名称关键词，忽略首尾空白"
           }
         ],
         "responses": {

@@ -16847,6 +16847,12 @@ export type PublicProductsApiV1ProductsGetData = {
          * 公开分类 ID，包含启用的下级分类商品
          */
         category_id?: string | null;
+        /**
+         * Search
+         *
+         * 商品名称关键词，忽略首尾空白
+         */
+        search?: string | null;
     };
     url: '/api/v1/products';
 };

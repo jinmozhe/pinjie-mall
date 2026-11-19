@@ -115,7 +115,7 @@ mp-html 不开启脚本、链接导航、编辑、Markdown 或额外媒体插件
 
 UI tokens 与业务组件必须遵循[小程序 UI 规范](miniapp-ui-standard.md)。业务 Sass 使用 750 设计宽度；NutUI 源样式按其 375 宽度独立换算，配置 designWidth 函数与 `deviceRatio[375] = 2`，防止控件尺寸减半或应用尺寸翻倍。原生 rpx 不二次换算，JS 动态尺寸使用对应设计宽度的 Taro.pxTransform 或明确 rpx。
 
-当前编译注入 NutUI variables.scss，按组件导入 Button/Popup 与样式，不导入完整主题字体。应用 CSS 变量映射 tokens；统一 Button 默认为 solid 和 square，避免 NutUI 默认 outline/round 偏离设计。已核对产物默认 NutUI 32px 转为 64rpx，应用按钮变量为 88rpx。主包四项 TabBar，详情路由位于 subpackages/catalog；分页每页 20 件，页面查询离开后 gcTime=0，不累积长列表；公开评价每页 10 条。实际发布包体和设备表现需专项验证。
+当前编译注入 NutUI variables.scss，按组件导入 Button/Popup 与样式，不导入完整主题字体。应用 CSS 变量映射 tokens；统一 Button 默认为 solid 和 square，避免 NutUI 默认 outline/round 偏离设计。已核对产物默认 NutUI 32px 转为 64rpx，应用按钮变量为 88rpx。主包四项 TabBar，详情路由位于 subpackages/catalog；商品每页 20 件，公开评价每页 10 条。分类连续列表由 useInfiniteQuery 管理，maxPages=5，最多常驻 100 条原始商品，前后分页共用窗口；淘汰前页后向上可重取，窗口变更测量可见商品锚点并恢复偏移。query key 包含分类、已提交词与刷新代次，切换条件卸载旧订阅并以 gcTime=0 回收；原生 Tab 隐藏暂停并取消请求，详情返回保留当前会话窗口，不自动重拉改变位置。刷新创建新代次从第 1 页开始；首批不足可滚动高度时受控补载，不对失败页反复自动加载。实际发布包体和设备表现需专项验证。
 
 图标库 3.0.2 默认容器为 HTML `i`，微信端缺少对应 WXML 模板。`app.tsx` 在页面渲染前调用 `configure({ tag: 'view' })`，统一使用原生节点。配置函数从 `dist/es/icons/configure` 以具名方式导入，避免现有图标按需插件将它转换成不存在的默认导出；该子路径类型在 `src/types.d.ts` 中转用包公开的 `configure` 声明，不复制接口或引入全量图标。图标组件继续按需导入。
 
@@ -134,7 +134,7 @@ node scripts/design/render-miniapp-tab-icons.mjs --sharp-root "<提供 sharp 的
 
 主题用共享语义变量映射 NutUI 变量，不在业务页面直接写一组全局覆盖。CSS Modules 先验证 Taro 编译与第三方主题边界，无法适用时使用应用/Feature 命名作用域；不默认用浏览器选择器、hover 或 window/document。
 
-主包保留四个 TabBar 页面。详情页位置和业务分包由真实入口与包体测量确定；禁止把分包全部导入全局 index 或 app.tsx。业务列表采用服务端分页、有界缓存和图片尺寸选择，不添加未授权的营销装修、搜索、优惠券或游客购物车。
+主包保留四个 TabBar 页面。详情页位置和业务分包由真实入口与包体测量确定；禁止把分包全部导入全局 index 或 app.tsx。业务列表采用服务端分页、有界缓存和图片尺寸选择；分类名称搜索沿用公开 products 接口，不调用 Admin 搜索，不添加未授权的营销装修、推荐搜索、优惠券或游客购物车。
 
 ## 8. 验证与交付
 
