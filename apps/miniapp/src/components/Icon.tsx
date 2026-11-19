@@ -1,14 +1,14 @@
 import { View } from '@tarojs/components'
 import {
   ArrowLeft, ArrowRight, Cart, Category, Check, Clock, Close, Edit, Home,
-  Location, Minus, Order, Photograph, Plus, Prices, Refund, Service,
+  Location, Minus, Order, Photograph, Plus, Prices, Refund, Search, Service,
   Share, ShieldCheck, Star, ToPay, ToReceive, Transit, User, Wallet, Weixin,
 } from '@nutui/icons-react-taro'
 
 // Keep explicit imports so Babel loads only this application's icon subset.
 const icons = {
   ArrowLeft, ArrowRight, Cart, Category, Check, Clock, Close, Edit, Home,
-  Location, Minus, Order, Photograph, Plus, Prices, Refund, Service,
+  Location, Minus, Order, Photograph, Plus, Prices, Refund, Search, Service,
   Share, ShieldCheck, Star, ToPay, ToReceive, Transit, User, Wallet, Weixin,
 }
 export type IconName = keyof typeof icons

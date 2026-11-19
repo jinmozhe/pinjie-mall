@@ -21,7 +21,7 @@
 
 | 页面组 | 现有消费端方法与路径 | 设计采用的信息与操作 | 尚需补齐或限制 |
 | --- | --- | --- | --- |
-| 首页/分类 | `GET /api/v1/product-categories`、`GET /api/v1/products` | 分类名称、父子关系、图标、分页公开商品、基础 SKU 价格 | 已接入公开浏览；category_id 包含启用下级，分页和总数由服务端过滤；不借用 Admin 搜索/排序 |
+| 首页/分类 | `GET /api/v1/product-categories`、`GET /api/v1/products` | 分类名称、父子关系、图标、分页公开商品、基础 SKU 价格 | 公开 search 只匹配名称、最大 200 字符并清理首尾空白；与 category_id 含启用下级组合，分页和总数由服务端过滤。分类页已接入三级筛选及连续加载；不借用 Admin 搜索/排序，微信动态验收未执行 |
 | 商品详情/规格 | `GET /api/v1/products/{product_id}` | 主图、description、attributes、SKUs、detail_images；有效规格组合、图片原生预览 | 当前公开 SKU 无可用库存字段，不能给出库存承诺；受限 HTML v1 已有源码，历史说明审计及迁移未执行 |
 | 商品评价 | `GET /api/v1/products/{product_id}/reviews` | rating、content、published_at 与分页 | 不虚构头像、评价图片、回复或全量好评率 |
 | 购物车 | `GET/POST /api/v1/cart-items`、`PATCH/DELETE /api/v1/cart-items/{item_id}` | sku_id、quantity、selected、revision；修改数量、选择和单条删除 | 已返回名称、缩略图、可售性与库存状态；不伪造批量删除 |

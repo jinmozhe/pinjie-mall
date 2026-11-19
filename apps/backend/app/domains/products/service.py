@@ -323,9 +323,10 @@ class ProductService(SpecificationService):
         )
 
     async def public_page(
-        self, page: int, page_size: int, *, category_id: UUID | None = None
+        self, page: int, page_size: int, *, category_id: UUID | None = None, search: str | None = None
     ) -> PageResult[PublicProductRead]:
-        rows, total = await self.repository.page(page, page_size, public=True, category_id=category_id)
+        keyword = search.strip() if search is not None else None
+        rows, total = await self.repository.page(page, page_size, public=True, category_id=category_id, search=keyword)
         product_ids = [row.id for row in rows]
         visible_categories = await self._public_category_ids() if rows else set()
         snapshot = await self.repository.catalog_snapshot(product_ids)

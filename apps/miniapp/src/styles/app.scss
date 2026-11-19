@@ -2,6 +2,7 @@
 @use '../components/icon';
 @use '../components/account-frame';
 @use '../features/cart/cart';
+@use '../features/catalog/category';
 
 page { background: $background; color: $text; font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 28px; line-height: 1.5; }
 view, text, button, image { box-sizing: border-box; }

@@ -153,14 +153,18 @@ class ProductRepository(CatalogRepository):
     ) -> tuple[list[Product], int]:
         query = select(Product)
         if search:
-            query = query.where(
-                or_(
-                    Product.name.icontains(search, autoescape=True),
-                    Product.id.in_(
-                        select(ProductSku.product_id).where(ProductSku.code.icontains(search, autoescape=True))
-                    ),
+            name_matches = Product.name.icontains(search, autoescape=True)
+            if public:
+                query = query.where(name_matches)
+            else:
+                query = query.where(
+                    or_(
+                        name_matches,
+                        Product.id.in_(
+                            select(ProductSku.product_id).where(ProductSku.code.icontains(search, autoescape=True))
+                        ),
+                    )
                 )
-            )
         if category_id is not None and not public:
             query = query.where(Product.category_id == category_id)
         if status is not None:

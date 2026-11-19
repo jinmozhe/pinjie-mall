@@ -495,6 +495,11 @@ async def test_public_category_subtree_pagination_and_visibility(shop):
     page_two = await shop.commerce.public_product_page(2, 1, category_id=root.id)
     assert page_one.total == page_two.total == 2
     assert {item.id for item in [*page_one.items, *page_two.items]} == {first.id, second.id}
+    search_one = await shop.commerce.public_product_page(1, 1, category_id=root.id, search="运营测试")
+    search_two = await shop.commerce.public_product_page(2, 1, category_id=root.id, search="运营测试")
+    assert search_one.total == search_two.total == 2
+    assert [item.id for item in search_one.items] == [item.id for item in page_one.items]
+    assert [item.id for item in search_two.items] == [item.id for item in page_two.items]
     leaf = await shop.commerce.public_product_page(1, 20, category_id=first_category.id)
     assert leaf.total == 1 and [item.id for item in leaf.items] == [first.id]
     assert (await shop.commerce.public_product_page(1, 20, category_id=middle.id)).total == 2
@@ -505,6 +510,38 @@ async def test_public_category_subtree_pagination_and_visibility(shop):
     )
     hidden = await shop.commerce.public_product_page(1, 20, category_id=root.id)
     assert hidden.total == 0 and hidden.items == []
+
+
+@pytest.mark.integration
+async def test_public_name_search_combines_subtree_and_preserves_admin_sku_search(shop):
+    first, first_category, _, _ = await prepare_product(shop)
+    second, second_category, _, _ = await prepare_product(shop)
+    root = await shop.commerce.create_category(CategoryInput(name="名称搜索根分类"))
+    middle = await shop.commerce.create_category(CategoryInput(name="名称搜索中间分类", parent_id=root.id))
+    await shop.commerce.update_category(
+        first_category.id,
+        CategoryUpdate(name=first_category.name, parent_id=middle.id, revision=first_category.revision),
+    )
+    matches = await shop.commerce.public_product_page(1, 20, category_id=root.id, search="  运营测试  ")
+    assert matches.total == 1 and [item.id for item in matches.items] == [first.id]
+    global_matches = await shop.commerce.public_product_page(1, 20, search="运营测试")
+    assert {first.id, second.id} <= {item.id for item in global_matches.items}
+    blank = await shop.commerce.public_product_page(1, 20, category_id=root.id, search=" \t ")
+    assert blank.total == 1 and blank.items[0].id == first.id
+    assert (await shop.commerce.public_product_page(1, 20, category_id=root.id, search="不存在的商品")).total == 0
+    assert (await shop.commerce.public_product_page(1, 20, category_id=root.id, search="%")).total == 0
+    assert (await shop.commerce.public_product_page(1, 20, category_id=root.id, search="_")).total == 0
+    assert (await shop.commerce.public_product_page(1, 20, search=first.skus[0].code)).total == 0
+    admin_matches = await shop.commerce.product_page(1, 20, search=first.skus[0].code)
+    assert admin_matches.total == 1 and admin_matches.items[0].id == first.id
+    await shop.commerce.set_product_status(second.id, ProductStatusUpdate(revision=second.revision, status="off_sale"))
+    assert (
+        await shop.commerce.public_product_page(1, 20, category_id=second_category.id, search="运营测试")
+    ).total == 0
+    await shop.commerce.categories_status_batch(
+        ActiveStatusBatch(targets=[VersionedTarget(id=middle.id, revision=middle.revision)], is_active=False)
+    )
+    assert (await shop.commerce.public_product_page(1, 20, category_id=root.id, search="运营测试")).total == 0
 
 
 @pytest.mark.integration
