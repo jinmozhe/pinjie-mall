@@ -18,6 +18,8 @@ from app.services.orders import OrderService
 from app.services.wechat_pay_client import PayProtocolError
 from app.services.wechat_phone import WechatPhoneClient
 
+_SHIPPING_CALL_FAILURES = (httpx.HTTPError, TimeoutError, ValueError)
+
 
 class WechatShippingService:
     def __init__(
@@ -41,7 +43,7 @@ class WechatShippingService:
             if not isinstance(result, dict) or result.get("errcode") != 0:
                 raise ValueError("platform operation failed")
             return result
-        except httpx.HTTPError, TimeoutError, ValueError:
+        except _SHIPPING_CALL_FAILURES:
             raise PayProtocolError("微信发货管理结果未确认，请核对原订单") from None
 
     async def upload(self, fulfillment_id: UUID) -> None:

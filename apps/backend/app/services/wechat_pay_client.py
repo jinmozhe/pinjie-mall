@@ -24,6 +24,8 @@ from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.domains.lifecycle import PayParameters
 
+_BILL_DOWNLOAD_FAILURES = (httpx.HTTPError, TimeoutError)
+
 
 class PayProtocolError(AppException):
     def __init__(
@@ -144,10 +146,13 @@ class WechatPayClient:
                     content.extend(chunk)
                     if len(content) > 20 * 1024 * 1024:
                         raise PayProtocolError("账单超过单次处理上限")
-        except httpx.HTTPError, TimeoutError:
+        except _BILL_DOWNLOAD_FAILURES:
             raise PayProtocolError("账单下载未完成") from None
-        # WeChat bill downloads have no response signature. The hash comes from signed metadata.
-        if not secrets.compare_digest(hashlib.sha1(content).hexdigest(), digest.lower()):
+        # 微信支付 V3 账单下载响应无独立签名头，协议仅在已验签的元数据中提供 SHA1 校验和；
+        # 下载固定走官方 HTTPS 域名，此处仅用于传输完整性校验，不作加密签名用途。
+        # nosemgrep: python.lang.security.insecure-hash-algorithms.insecure-hash-algorithm-sha1
+        bill_hash = hashlib.sha1(content, usedforsecurity=False).hexdigest()
+        if not secrets.compare_digest(bill_hash, digest.lower()):
             raise PayProtocolError("账单内容完整性校验失败")
         return bytes(content)
 
