@@ -178,7 +178,7 @@ class ProductSpecAttribute(UUIDPrimaryKeyMixin, Base):
     is_variant: Mapped[bool] = mapped_column(Boolean, comment="销售规格标记")
     is_current: Mapped[bool] = mapped_column(Boolean, default=True, comment="是否当前采用")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), comment="采用时间"
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), comment="采用时间", sort_order=2000
     )
 
 
@@ -229,7 +229,7 @@ class ProductSpecValue(UUIDPrimaryKeyMixin, Base):
     normalized_value: Mapped[str] = mapped_column(String(100), comment="NFC 去首尾空白的去重文本")
     is_current: Mapped[bool] = mapped_column(Boolean, default=True, comment="是否当前候选")
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), comment="创建时间"
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), comment="创建时间", sort_order=2000
     )
 
 
@@ -261,7 +261,7 @@ class ProductSkuSpecValue(Base):
     spec_value_id: Mapped[UUID] = mapped_column(index=True, comment="商品候选值")
 
 
-class ProductAttributeValue(Base, TimestampMixin):
+class ProductAttributeValue(TimestampMixin, Base):
     __tablename__ = "product_attribute_values"
     __table_args__ = (
         ForeignKeyConstraint(

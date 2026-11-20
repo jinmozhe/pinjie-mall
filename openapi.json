@@ -5154,6 +5154,24 @@
             "description": "商品类型"
           },
           {
+            "name": "is_home_recommended",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "是否已配置首页推荐，不代表当前公开可见",
+              "title": "Is Home Recommended"
+            },
+            "description": "是否已配置首页推荐，不代表当前公开可见"
+          },
+          {
             "name": "pinjie_admin_access",
             "in": "cookie",
             "required": false,
@@ -5352,6 +5370,134 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseModel_BatchCompleted_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/products/recommendations/batch": {
+      "patch": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "原子批量设置首页推荐状态",
+        "operationId": "products_recommendations_batch_api_v1_admin_products_recommendations_batch_patch",
+        "parameters": [
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductRecommendationBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_BatchCompleted_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "请求参数校验失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/products/{product_id}/recommendation": {
+      "put": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "设置商品首页推荐与排序",
+        "operationId": "product_recommendation_api_v1_admin_products__product_id__recommendation_put",
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Product Id"
+            }
+          },
+          {
+            "name": "pinjie_admin_access",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinjie Admin Access"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductRecommendationUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_ProductRead_"
                 }
               }
             }
@@ -6494,6 +6640,28 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/products/recommended": {
+      "get": {
+        "tags": [
+          "商城基础"
+        ],
+        "summary": "查看全部有效首页推荐商品",
+        "description": "无需登录；仅返回人工推荐、已上架且分类链启用的商品。按人工排序、ID 倒序返回完整数组，不分页或截断。",
+        "operationId": "public_recommended_products_api_v1_products_recommended_get",
+        "responses": {
+          "200": {
+            "description": "请求成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseModel_list_PublicProductRead__"
                 }
               }
             }
@@ -26798,6 +26966,23 @@
             "title": "Revision",
             "description": "商品版本"
           },
+          "is_home_recommended": {
+            "type": "boolean",
+            "title": "Is Home Recommended",
+            "description": "是否指定为首页推荐，与实际上架可见性独立"
+          },
+          "home_recommend_sort": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home Recommend Sort",
+            "description": "首页推荐排序，空值排最后"
+          },
           "skus": {
             "items": {
               "$ref": "#/components/schemas/SkuRead"
@@ -26850,6 +27035,8 @@
           "id",
           "status",
           "revision",
+          "is_home_recommended",
+          "home_recommend_sort",
           "skus",
           "attributes",
           "image_assets",
@@ -27023,6 +27210,23 @@
             "title": "Revision",
             "description": "商品版本"
           },
+          "is_home_recommended": {
+            "type": "boolean",
+            "title": "Is Home Recommended",
+            "description": "是否指定为首页推荐，与实际上架可见性独立"
+          },
+          "home_recommend_sort": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home Recommend Sort",
+            "description": "首页推荐排序，空值排最后"
+          },
           "skus": {
             "items": {
               "$ref": "#/components/schemas/SkuRead"
@@ -27050,10 +27254,75 @@
           "id",
           "status",
           "revision",
+          "is_home_recommended",
+          "home_recommend_sort",
           "skus",
           "attributes"
         ],
         "title": "ProductRead"
+      },
+      "ProductRecommendationBatch": {
+        "properties": {
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/VersionedTarget"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Targets",
+            "description": "一至一百个不重复的目标及版本"
+          },
+          "is_home_recommended": {
+            "type": "boolean",
+            "title": "Is Home Recommended",
+            "description": "批量设置首页推荐状态，保留各商品排序"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "targets",
+          "is_home_recommended"
+        ],
+        "title": "ProductRecommendationBatch"
+      },
+      "ProductRecommendationUpdate": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Revision",
+            "description": "读取商品时获得的版本"
+          },
+          "is_home_recommended": {
+            "type": "boolean",
+            "title": "Is Home Recommended",
+            "description": "是否指定为首页推荐"
+          },
+          "home_recommend_sort": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2147483647.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home Recommend Sort",
+            "description": "首页推荐排序，值越小越靠前，空值排最后"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "revision",
+          "is_home_recommended",
+          "home_recommend_sort"
+        ],
+        "title": "ProductRecommendationUpdate"
       },
       "ProductReviewCreate": {
         "properties": {
@@ -32458,6 +32727,42 @@
           "request_id"
         ],
         "title": "ResponseModel[list[PermissionRead]]"
+      },
+      "ResponseModel_list_PublicProductRead__": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "稳定程序代码"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "面向调用方的中文结果消息"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PublicProductRead"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "响应业务数据"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id",
+            "description": "用于定位本次请求的唯一标识"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data",
+          "request_id"
+        ],
+        "title": "ResponseModel[list[PublicProductRead]]"
       },
       "ResponseModel_list_StandardValueRead__": {
         "properties": {

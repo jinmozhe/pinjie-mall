@@ -215,6 +215,18 @@ Service、Domain 和 Repository 禁止依赖 FastAPI `Request`、`Response`、`D
     - 字段 comment 使用"排序权重，值越小越靠前，NULL 表示未人工设置自动排最后"。
     - 新增时必须同步新增 Alembic 迁移，明确去掉 `NOT NULL` 约束和 DEFAULT 值，并提供 downgrade 回滚路径（将 NULL 回填为 0）。
 
+### 9.1 公共字段列顺序
+
+所有模块的 ORM 表定义与迁移目标列序统一为：`id`、模型业务字段、软删除字段（如有）、`created_at`、`updated_at`。仅有一个时间字段时将该字段放在末尾，不为排序补充不存在的字段。
+
+- `UUIDPrimaryKeyMixin.id` 使用 `mapped_column(sort_order=-1000)`。
+- 普通业务字段使用默认排序权重 `0`。
+- `SoftDeleteMixin` 依次为 `deleted_at`、`deleted_by_id`、`deleted_by_type`、`deletion_reason`，排序权重依次为 `1000` 至 `1003`。
+- `TimestampMixin` 的创建、更新时间权重分别为 `2000`、`2001`；模型单独定义同名时间字段时也遵循该权重。
+- 使用软删除的继承列表按 `UUIDPrimaryKeyMixin, SoftDeleteMixin, TimestampMixin, Base` 排列。字段实际排序由列权重控制，不能仅靠继承顺序。
+- 关联表保留现有联合主键或业务主键，没有 `id` 时不为排序新增 UUID；`alembic_version` 由 Alembic 管理。
+- ORM 排序权重不会改变已有数据库的物理列序。新建表的 migration 必须显式保持顺序；新增业务列或重排现有表时必须评估独立迁移、锁表、数据和约束保留，并遵守备份与实际迁移授权规则。禁止修改 PostgreSQL 系统目录来重排列。
+
 ## 10. Alembic 与数据库演进
 
 数据库迁移授权、备份和恢复步骤以[数据库备份与恢复手册](../operations/database-backup-restore.md)为准。

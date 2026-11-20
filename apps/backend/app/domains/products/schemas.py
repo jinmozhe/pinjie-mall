@@ -151,6 +151,20 @@ class ProductStatusBatch(VersionedBatch):
     status: Literal["on_sale", "off_sale"] = Field(description="统一设置的商品上下架状态")
 
 
+class ProductRecommendationUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    revision: int = Field(gt=0, description="读取商品时获得的版本")
+    is_home_recommended: bool = Field(strict=True, description="是否指定为首页推荐")
+    home_recommend_sort: int | None = Field(
+        ge=0, le=2147483647, strict=True, description="首页推荐排序，值越小越靠前，空值排最后"
+    )
+
+
+class ProductRecommendationBatch(VersionedBatch):
+    is_home_recommended: bool = Field(strict=True, description="批量设置首页推荐状态，保留各商品排序")
+
+
 class SkuStatusBatch(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -171,6 +185,8 @@ class ProductRead(ProductInput):
     id: UUID = Field(description="商品 ID")
     status: Literal["draft", "on_sale", "off_sale"] = Field(description="商品状态")
     revision: int = Field(description="商品版本")
+    is_home_recommended: bool = Field(description="是否指定为首页推荐，与实际上架可见性独立")
+    home_recommend_sort: int | None = Field(description="首页推荐排序，空值排最后")
     skus: list[SkuRead] = Field(description="商品全部 SKU")
     attributes: list[AdoptionRead] = Field(description="当前及历史属性采用")
 

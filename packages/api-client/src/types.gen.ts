@@ -7790,6 +7790,18 @@ export type ProductDetailRead = {
      */
     revision: number;
     /**
+     * Is Home Recommended
+     *
+     * 是否指定为首页推荐，与实际上架可见性独立
+     */
+    is_home_recommended: boolean;
+    /**
+     * Home Recommend Sort
+     *
+     * 首页推荐排序，空值排最后
+     */
+    home_recommend_sort: number | null;
+    /**
      * Skus
      *
      * 商品全部 SKU
@@ -7940,6 +7952,18 @@ export type ProductRead = {
      */
     revision: number;
     /**
+     * Is Home Recommended
+     *
+     * 是否指定为首页推荐，与实际上架可见性独立
+     */
+    is_home_recommended: boolean;
+    /**
+     * Home Recommend Sort
+     *
+     * 首页推荐排序，空值排最后
+     */
+    home_recommend_sort: number | null;
+    /**
      * Skus
      *
      * 商品全部 SKU
@@ -7951,6 +7975,48 @@ export type ProductRead = {
      * 当前及历史属性采用
      */
     attributes: Array<AdoptionRead>;
+};
+
+/**
+ * ProductRecommendationBatch
+ */
+export type ProductRecommendationBatch = {
+    /**
+     * Targets
+     *
+     * 一至一百个不重复的目标及版本
+     */
+    targets: Array<VersionedTarget>;
+    /**
+     * Is Home Recommended
+     *
+     * 批量设置首页推荐状态，保留各商品排序
+     */
+    is_home_recommended: boolean;
+};
+
+/**
+ * ProductRecommendationUpdate
+ */
+export type ProductRecommendationUpdate = {
+    /**
+     * Revision
+     *
+     * 读取商品时获得的版本
+     */
+    revision: number;
+    /**
+     * Is Home Recommended
+     *
+     * 是否指定为首页推荐
+     */
+    is_home_recommended: boolean;
+    /**
+     * Home Recommend Sort
+     *
+     * 首页推荐排序，值越小越靠前，空值排最后
+     */
+    home_recommend_sort: number | null;
 };
 
 /**
@@ -12428,6 +12494,36 @@ export type ResponseModelListPermissionRead = {
 };
 
 /**
+ * ResponseModel[list[PublicProductRead]]
+ */
+export type ResponseModelListPublicProductRead = {
+    /**
+     * Code
+     *
+     * 稳定程序代码
+     */
+    code: string;
+    /**
+     * Message
+     *
+     * 面向调用方的中文结果消息
+     */
+    message: string;
+    /**
+     * Data
+     *
+     * 响应业务数据
+     */
+    data: Array<PublicProductRead>;
+    /**
+     * Request Id
+     *
+     * 用于定位本次请求的唯一标识
+     */
+    request_id: string;
+};
+
+/**
  * ResponseModel[list[StandardValueRead]]
  */
 export type ResponseModelListStandardValueRead = {
@@ -16247,6 +16343,12 @@ export type AdminProductsApiV1AdminProductsGetData = {
          * 商品类型
          */
         product_type?: 'physical' | 'virtual' | null;
+        /**
+         * Is Home Recommended
+         *
+         * 是否已配置首页推荐，不代表当前公开可见
+         */
+        is_home_recommended?: boolean | null;
     };
     url: '/api/v1/admin/products';
 };
@@ -16343,6 +16445,61 @@ export type ProductsStatusBatchApiV1AdminProductsStatusBatchPatchResponses = {
 };
 
 export type ProductsStatusBatchApiV1AdminProductsStatusBatchPatchResponse = ProductsStatusBatchApiV1AdminProductsStatusBatchPatchResponses[keyof ProductsStatusBatchApiV1AdminProductsStatusBatchPatchResponses];
+
+export type ProductsRecommendationsBatchApiV1AdminProductsRecommendationsBatchPatchData = {
+    body: ProductRecommendationBatch;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/products/recommendations/batch';
+};
+
+export type ProductsRecommendationsBatchApiV1AdminProductsRecommendationsBatchPatchErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ProductsRecommendationsBatchApiV1AdminProductsRecommendationsBatchPatchError = ProductsRecommendationsBatchApiV1AdminProductsRecommendationsBatchPatchErrors[keyof ProductsRecommendationsBatchApiV1AdminProductsRecommendationsBatchPatchErrors];
+
+export type ProductsRecommendationsBatchApiV1AdminProductsRecommendationsBatchPatchResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelBatchCompleted;
+};
+
+export type ProductsRecommendationsBatchApiV1AdminProductsRecommendationsBatchPatchResponse = ProductsRecommendationsBatchApiV1AdminProductsRecommendationsBatchPatchResponses[keyof ProductsRecommendationsBatchApiV1AdminProductsRecommendationsBatchPatchResponses];
+
+export type ProductRecommendationApiV1AdminProductsProductIdRecommendationPutData = {
+    body: ProductRecommendationUpdate;
+    path: {
+        /**
+         * Product Id
+         */
+        product_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/products/{product_id}/recommendation';
+};
+
+export type ProductRecommendationApiV1AdminProductsProductIdRecommendationPutErrors = {
+    /**
+     * 请求参数校验失败
+     */
+    422: HttpValidationError;
+};
+
+export type ProductRecommendationApiV1AdminProductsProductIdRecommendationPutError = ProductRecommendationApiV1AdminProductsProductIdRecommendationPutErrors[keyof ProductRecommendationApiV1AdminProductsProductIdRecommendationPutErrors];
+
+export type ProductRecommendationApiV1AdminProductsProductIdRecommendationPutResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelProductRead;
+};
+
+export type ProductRecommendationApiV1AdminProductsProductIdRecommendationPutResponse = ProductRecommendationApiV1AdminProductsProductIdRecommendationPutResponses[keyof ProductRecommendationApiV1AdminProductsProductIdRecommendationPutResponses];
 
 export type ShippingStatusBatchApiV1AdminShippingTemplatesStatusBatchPatchData = {
     body: ActiveStatusBatch;
@@ -16874,6 +17031,22 @@ export type PublicProductsApiV1ProductsGetResponses = {
 };
 
 export type PublicProductsApiV1ProductsGetResponse = PublicProductsApiV1ProductsGetResponses[keyof PublicProductsApiV1ProductsGetResponses];
+
+export type PublicRecommendedProductsApiV1ProductsRecommendedGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/products/recommended';
+};
+
+export type PublicRecommendedProductsApiV1ProductsRecommendedGetResponses = {
+    /**
+     * 请求成功
+     */
+    200: ResponseModelListPublicProductRead;
+};
+
+export type PublicRecommendedProductsApiV1ProductsRecommendedGetResponse = PublicRecommendedProductsApiV1ProductsRecommendedGetResponses[keyof PublicRecommendedProductsApiV1ProductsRecommendedGetResponses];
 
 export type PublicProductApiV1ProductsProductIdGetData = {
     body?: never;

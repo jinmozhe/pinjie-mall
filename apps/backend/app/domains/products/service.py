@@ -24,6 +24,8 @@ from .schemas import (
     ProductDetailRead,
     ProductImageRead,
     ProductRead,
+    ProductRecommendationBatch,
+    ProductRecommendationUpdate,
     ProductStatusUpdate,
     ProductUpdate,
     PublicDetailImageRead,
@@ -200,6 +202,8 @@ class ProductService(SpecificationService):
             status=cast(Literal["draft", "on_sale", "off_sale"], row.status),
             revision=row.revision,
             image_asset_ids=await self.repository.image_ids(row.id),
+            is_home_recommended=row.is_home_recommended,
+            home_recommend_sort=row.home_recommend_sort,
             skus=await self._sku_reads(row.id),
             attributes=await self.adoption_reads(row.id),
         )
@@ -306,6 +310,7 @@ class ProductService(SpecificationService):
         category_id: UUID | None = None,
         status: str | None = None,
         product_type: str | None = None,
+        is_home_recommended: bool | None = None,
     ) -> PageResult[ProductRead]:
         rows, total = await self.repository.page(
             page,
@@ -314,6 +319,7 @@ class ProductService(SpecificationService):
             category_id=category_id,
             status=status,
             product_type=product_type,
+            is_home_recommended=is_home_recommended,
         )
         return PageResult[ProductRead].create(
             items=[await self.read(row.id) for row in rows],
@@ -327,18 +333,44 @@ class ProductService(SpecificationService):
     ) -> PageResult[PublicProductRead]:
         keyword = search.strip() if search is not None else None
         rows, total = await self.repository.page(page, page_size, public=True, category_id=category_id, search=keyword)
+        return PageResult[PublicProductRead].create(
+            items=await self._public_reads(rows), page=page, page_size=page_size, total=total
+        )
+
+    async def public_recommendations(self) -> list[PublicProductRead]:
+        return await self._public_reads(await self.repository.public_recommendations())
+
+    async def _public_reads(self, rows: list[Product]) -> list[PublicProductRead]:
         product_ids = [row.id for row in rows]
         visible_categories = await self._public_category_ids() if rows else set()
         snapshot = await self.repository.catalog_snapshot(product_ids)
         skus, _, images = await self.repository.details(product_ids)
-        return PageResult[PublicProductRead].create(
-            items=[
-                await self._public_read(row, visible_categories, snapshot, skus[row.id], images[row.id]) for row in rows
-            ],
-            page=page,
-            page_size=page_size,
-            total=total,
-        )
+        return [
+            await self._public_read(row, visible_categories, snapshot, skus[row.id], images[row.id]) for row in rows
+        ]
+
+    async def set_recommendation(self, product_id: UUID, data: ProductRecommendationUpdate) -> ProductRead:
+        await self.repository.lock_catalog()
+        row = await self._get(product_id, lock=True)
+        self._check_revision(row, data.revision)
+        row.is_home_recommended = data.is_home_recommended
+        row.home_recommend_sort = data.home_recommend_sort
+        row.revision += 1
+        await self.repository.save(row)
+        return await self.read(product_id)
+
+    async def set_recommendations(self, data: ProductRecommendationBatch) -> BatchCompleted:
+        await self.repository.lock_catalog()
+        rows: list[Product] = []
+        for target in sorted(data.targets, key=lambda item: item.id):
+            row = await self._get(target.id, lock=True)
+            self._check_revision(row, target.revision)
+            rows.append(row)
+        for row in rows:
+            row.is_home_recommended = data.is_home_recommended
+            row.revision += 1
+            await self.repository.save(row)
+        return BatchCompleted(completed_count=len(rows))
 
     async def create(self, data: ProductCreate) -> ProductRead:
         await self.repository.lock_catalog()

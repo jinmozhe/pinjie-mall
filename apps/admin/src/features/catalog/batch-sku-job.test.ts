@@ -13,6 +13,7 @@ const product: ProductDetailRead = {
   id: "product", name: "商品", product_type: "physical", category_id: "category",
   description_format: "restricted_html_v1", status: "draft", revision: 1, skus: [], attributes: [],
   image_assets: [], detail_image_asset_ids: [], detail_images: [],
+  is_home_recommended: false, home_recommend_sort: null,
 };
 const created: ProductDetailRead = { ...product, revision: 2, skus: [sku] };
 const makeJob = (): SkuJob => ({ version: 1, rows: [{

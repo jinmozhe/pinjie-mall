@@ -40,7 +40,7 @@ role_permissions = Table(
 )
 
 
-class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
+class User(UUIDPrimaryKeyMixin, SoftDeleteMixin, TimestampMixin, Base):
     __tablename__ = "users"
     __table_args__ = (
         CheckConstraint(

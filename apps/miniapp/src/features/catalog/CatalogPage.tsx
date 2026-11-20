@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import Taro, { useDidHide, useDidShow, usePullDownRefresh } from '@tarojs/taro'
 import { Image, Text, View } from '@tarojs/components'
 import { useQuery } from '@tanstack/react-query'
-import type { ResponseModelListCategoryRead, ResponseModelPageResultPublicProductRead } from '@pinjie/api-client'
+import type { ResponseModelListCategoryRead, ResponseModelListPublicProductRead } from '@pinjie/api-client'
 import { getPublic } from '@/lib/api'
 import { queryClient } from '@/lib/query'
 import { priceLabel } from '@/lib/money'
 import { QueryState } from '@/components/QueryState'
+import { Button } from '@/components/Button'
 import { ProductImage } from '@/components/ProductImage'
 import { assetUrl } from '@/platform/media'
 import { CategoryPage } from './CategoryPage'
@@ -37,8 +38,8 @@ function CategoryIcon({
 
 function ProductPage({ visible }: { visible: boolean }) {
   const query = useQuery({
-    queryKey: ['catalog', 'home-products'],
-    queryFn: ({ signal }) => getPublic<ResponseModelPageResultPublicProductRead>('/products?page=1&page_size=20', signal),
+    queryKey: ['catalog', 'home-recommendations'],
+    queryFn: ({ signal }) => getPublic<ResponseModelListPublicProductRead>('/products/recommended', signal),
     enabled: visible,
     gcTime: 0,
   })
@@ -47,8 +48,15 @@ function ProductPage({ visible }: { visible: boolean }) {
     {query.isPending && <QueryState title={query.fetchStatus === 'paused' ? '等待网络连接' : '正在加载商品'} />}
     {query.isError && <QueryState title='商品加载失败' error={query.error} retry={() => { void query.refetch() }} />}
     {data && !query.isError && <>
-      {!data.items.length ? <QueryState title='暂无商品' detail='商品上架后会在这里展示' /> : <View className='catalog-grid'>
-        {data.items.map((product) => <View key={product.id} className='product-card' onClick={() => { void Taro.navigateTo({ url: `/subpackages/catalog/detail/index?id=${encodeURIComponent(product.id)}` }) }}>
+      {!data.length ? <View className='state'>
+        <View className='state-title'>暂无推荐商品</View>
+        <Button fill='outline' type='primary' onClick={() => {
+          void Taro.switchTab({ url: '/pages/category/index' }).catch(() => {
+            void Taro.showToast({ title: '切换分类失败，请重试', icon: 'none' })
+          })
+        }}>去分类逛逛</Button>
+      </View> : <View className='catalog-grid'>
+        {data.map((product) => <View key={product.id} className='product-card' onClick={() => { void Taro.navigateTo({ url: `/subpackages/catalog/detail/index?id=${encodeURIComponent(product.id)}` }) }}>
           <ProductImage url={product.images[0]} />
           <View className='product-card-body'>
             <View className='product-name'>{product.name}</View>
@@ -68,11 +76,11 @@ export function CatalogPage({ categoryMode = false, initialCategory }: { categor
 function HomeCatalogPage() {
   const [visible, setVisible] = useState(true)
   useDidShow(() => { setVisible(true) })
-  useDidHide(() => { setVisible(false); void queryClient.cancelQueries({ queryKey: ['catalog', 'home-products'] }) })
+  useDidHide(() => { setVisible(false); void queryClient.cancelQueries({ queryKey: ['catalog', 'home-recommendations'] }) })
   const categories = useQuery({ queryKey: ['catalog', 'categories'], queryFn: ({ signal }) => getPublic<ResponseModelListCategoryRead>('/product-categories', signal), enabled: visible })
   usePullDownRefresh(() => {
     void Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['catalog', 'home-products'] }),
+      queryClient.invalidateQueries({ queryKey: ['catalog', 'home-recommendations'] }),
       queryClient.invalidateQueries({ queryKey: ['catalog', 'categories'] }),
     ]).finally(() => Taro.stopPullDownRefresh())
   })
@@ -95,7 +103,7 @@ function HomeCatalogPage() {
         </View>
       </View>}
     </>}
-    <View className='section-title'>全部商品</View>
+    <View className='section-title'>推荐商品</View>
     <ProductPage visible={visible} />
   </View>
 }

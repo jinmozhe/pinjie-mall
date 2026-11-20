@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import delete, func, or_, select, text
+from sqlalchemy import Select, delete, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
@@ -150,6 +150,7 @@ class ProductRepository(CatalogRepository):
         category_id: UUID | None = None,
         status: str | None = None,
         product_type: str | None = None,
+        is_home_recommended: bool | None = None,
     ) -> tuple[list[Product], int]:
         query = select(Product)
         if search:
@@ -171,30 +172,44 @@ class ProductRepository(CatalogRepository):
             query = query.where(Product.status == status)
         if product_type is not None:
             query = query.where(Product.product_type == product_type)
+        if is_home_recommended is not None:
+            query = query.where(Product.is_home_recommended.is_(is_home_recommended))
         if public:
-            parent = aliased(Category)
-            grandparent = aliased(Category)
-            query = (
-                query.join(Category, Category.id == Product.category_id)
-                .outerjoin(parent, parent.id == Category.parent_id)
-                .outerjoin(grandparent, grandparent.id == parent.parent_id)
-                .where(
-                    Product.status == "on_sale",
-                    Category.is_active.is_(True),
-                    (Category.parent_id.is_(None) | parent.is_active.is_(True)),
-                    (parent.parent_id.is_(None) | grandparent.is_active.is_(True)),
-                )
-            )
-            if category_id is not None:
-                # 分类树最多三级；复用可见性 JOIN，列表与 count 使用同一条件。
-                query = query.where(
-                    or_(Category.id == category_id, parent.id == category_id, grandparent.id == category_id)
-                )
+            query = self._public_query(query, category_id)
         total = int(await self.session.scalar(select(func.count()).select_from(query.subquery())) or 0)
         rows = await self.session.scalars(
             query.order_by(Product.id.desc()).offset((page - 1) * page_size).limit(page_size)
         )
         return list(rows), total
+
+    @staticmethod
+    def _public_query(query: Select[tuple[Product]], category_id: UUID | None = None) -> Select[tuple[Product]]:
+        parent = aliased(Category)
+        grandparent = aliased(Category)
+        query = (
+            query.join(Category, Category.id == Product.category_id)
+            .outerjoin(parent, parent.id == Category.parent_id)
+            .outerjoin(grandparent, grandparent.id == parent.parent_id)
+            .where(
+                Product.status == "on_sale",
+                Category.is_active.is_(True),
+                (Category.parent_id.is_(None) | parent.is_active.is_(True)),
+                (parent.parent_id.is_(None) | grandparent.is_active.is_(True)),
+            )
+        )
+        if category_id is not None:
+            query = query.where(
+                or_(Category.id == category_id, parent.id == category_id, grandparent.id == category_id)
+            )
+        return query
+
+    async def public_recommendations(self) -> list[Product]:
+        query = self._public_query(select(Product).where(Product.is_home_recommended.is_(True)))
+        return list(
+            await self.session.scalars(
+                query.order_by(Product.home_recommend_sort.asc().nulls_last(), Product.id.desc())
+            )
+        )
 
     async def save(self, value: Category | Product | ProductSku) -> None:
         self.session.add(value)
