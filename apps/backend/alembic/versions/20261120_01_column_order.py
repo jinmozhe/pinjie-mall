@@ -225,7 +225,7 @@ def _table(connection: Connection, name: str) -> str:
 
 
 def _rows(connection: Connection, sql: str) -> list[tuple[object, ...]]:
-    return [tuple(row) for row in connection.execute(sa.text(sql))]
+    return [tuple(row) for row in connection.exec_driver_sql(sql)]
 
 
 def schema_snapshot(connection: Connection) -> dict[str, list[tuple[object, ...]]]:
@@ -299,14 +299,14 @@ def data_snapshot(connection: Connection) -> dict[str, tuple[int, str]]:
         )
         # Explicit CLOSE releases PostgreSQL's relation references before DDL.
         # asyncpg streaming portals can otherwise outlive CursorResult.close().
-        connection.execute(sa.text(f"DECLARE column_order_hash NO SCROLL CURSOR FOR {query}"))
+        connection.exec_driver_sql(f"DECLARE column_order_hash NO SCROLL CURSOR FOR {query}")
         try:
-            while rows := connection.execute(sa.text("FETCH FORWARD 1000 FROM column_order_hash")).all():
+            while rows := connection.exec_driver_sql("FETCH FORWARD 1000 FROM column_order_hash").all():
                 for row in rows:
                     digest.update(row[0].encode("ascii"))
                     count += 1
         finally:
-            connection.execute(sa.text("CLOSE column_order_hash"))
+            connection.exec_driver_sql("CLOSE column_order_hash")
         result[name] = (count, digest.hexdigest())
     return result
 
@@ -382,7 +382,7 @@ def _preflight(connection: Connection) -> dict[str, tuple[str, ...]]:
         """,
     }
     for label, query in checks.items():
-        if connection.scalar(sa.text(query)):
+        if connection.exec_driver_sql(query).scalar():
             raise RuntimeError(f"Column reordering refuses {label}; review migration scope")
     return columns
 
@@ -401,14 +401,12 @@ def _restore_constraint_metadata(connection: Connection, original: list[tuple[ob
             if actual is None:
                 raise RuntimeError(f"Missing NOT NULL constraint on {table}")
             if actual != name:
-                connection.execute(
-                    sa.text(
-                        f"ALTER TABLE {table_sql} RENAME CONSTRAINT {_quote(connection, str(actual))} TO {name_sql}"
-                    )
+                connection.exec_driver_sql(
+                    f"ALTER TABLE {table_sql} RENAME CONSTRAINT {_quote(connection, str(actual))} TO {name_sql}"
                 )
         if comment is not None:
             value = sa.literal(comment).compile(dialect=connection.dialect, compile_kwargs={"literal_binds": True})
-            connection.execute(sa.text(f"COMMENT ON CONSTRAINT {name_sql} ON {table_sql} IS {value}"))
+            connection.exec_driver_sql(f"COMMENT ON CONSTRAINT {name_sql} ON {table_sql} IS {value}")
 
 
 def canonical_constraints(
@@ -425,24 +423,19 @@ def canonical_constraints(
         checks = [row for row in constraints if row[0] == table and row[2] == "c"]
         if not checks:
             continue
-        connection.execute(
-            sa.text(f'CREATE TEMPORARY TABLE "_column_order_check" (LIKE {_table(connection, table)}) ON COMMIT DROP')
+        connection.exec_driver_sql(
+            f'CREATE TEMPORARY TABLE "_column_order_check" (LIKE {_table(connection, table)}) ON COMMIT DROP'
         )
         for _, name, _, definition, *_ in checks:
-            connection.execute(
-                sa.text(
-                    'ALTER TABLE pg_temp."_column_order_check" '
-                    f"ADD CONSTRAINT {_quote(connection, str(name))} {definition}"
-                )
+            connection.exec_driver_sql(
+                f'ALTER TABLE pg_temp."_column_order_check" ADD CONSTRAINT {_quote(connection, str(name))} {definition}'
             )
-        for name, definition in connection.execute(
-            sa.text(
-                "SELECT conname, pg_get_constraintdef(oid) FROM pg_constraint "
-                "WHERE conrelid = 'pg_temp._column_order_check'::regclass AND contype = 'c'"
-            )
+        for name, definition in connection.exec_driver_sql(
+            "SELECT conname, pg_get_constraintdef(oid) FROM pg_constraint "
+            "WHERE conrelid = 'pg_temp._column_order_check'::regclass AND contype = 'c'"
         ):
             canonical[table, name] = definition
-        connection.execute(sa.text('DROP TABLE pg_temp."_column_order_check"'))
+        connection.exec_driver_sql('DROP TABLE pg_temp."_column_order_check"')
     return [(*row[:3], canonical.get((row[0], row[1]), row[3]), *row[4:]) for row in constraints]
 
 
@@ -455,8 +448,8 @@ def canonical_indexes(
         originals = [row for row in indexes if row[0] == table]
         if not originals:
             continue
-        connection.execute(
-            sa.text(f'CREATE TEMPORARY TABLE "_column_order_index" (LIKE {_table(connection, table)}) ON COMMIT DROP')
+        connection.exec_driver_sql(
+            f'CREATE TEMPORARY TABLE "_column_order_index" (LIKE {_table(connection, table)}) ON COMMIT DROP'
         )
         for _, name, definition, *_ in originals:
             prefix, separator, expression = str(definition).partition(" USING ")
@@ -466,18 +459,16 @@ def canonical_indexes(
             # Retain the original index name/uniqueness and change only the
             # relation for parsing; never modify the expression or predicate.
             temporary = prefix.removesuffix(source) + ' ON pg_temp."_column_order_index"'
-            connection.execute(sa.text(f"{temporary} USING {expression}"))
-            parsed = connection.scalar(
-                sa.text(
-                    "SELECT pg_get_indexdef(oid) FROM pg_class "
-                    "WHERE relnamespace = pg_my_temp_schema() AND relname = :name AND relkind = 'i'"
-                ),
-                {"name": name},
-            )
+            connection.exec_driver_sql(f"{temporary} USING {expression}")
+            name_value = sa.literal(name).compile(dialect=connection.dialect, compile_kwargs={"literal_binds": True})
+            parsed = connection.exec_driver_sql(
+                "SELECT pg_get_indexdef(oid) FROM pg_class "
+                f"WHERE relnamespace = pg_my_temp_schema() AND relname = {name_value} AND relkind = 'i'"
+            ).scalar()
             if not isinstance(parsed, str) or " USING " not in parsed:
                 raise RuntimeError(f"Could not canonicalize index {table}.{name}")
             canonical[table, name] = prefix + " USING " + parsed.partition(" USING ")[2]
-        connection.execute(sa.text('DROP TABLE pg_temp."_column_order_index"'))
+        connection.exec_driver_sql('DROP TABLE pg_temp."_column_order_index"')
     return [(*row[:2], canonical.get((row[0], row[1]), row[2]), *row[3:]) for row in indexes]
 
 
@@ -485,9 +476,9 @@ def _reorder(*, restore_previous: bool) -> None:
     if context.is_offline_mode():
         raise RuntimeError("Column reorder requires online catalog checks and data verification")
     connection = op.get_bind()
-    connection.execute(sa.text("SET LOCAL lock_timeout = '10s'"))
-    connection.execute(sa.text("SET LOCAL statement_timeout = '120s'"))
-    connection.execute(sa.text("SET LOCAL search_path = public, pg_catalog"))
+    connection.exec_driver_sql("SET LOCAL lock_timeout = '10s'")
+    connection.exec_driver_sql("SET LOCAL statement_timeout = '120s'")
+    connection.exec_driver_sql("SET LOCAL search_path = public, pg_catalog")
     actual = _preflight(connection)
     targets = {
         name: previous if restore_previous else ordered_columns(previous) for name, previous in PREVIOUS_COLUMNS.items()
@@ -498,7 +489,7 @@ def _reorder(*, restore_previous: bool) -> None:
     # Lock every application table in a fixed order before hashing and removing
     # FKs. Concurrent writes cannot race the before/after integrity checks.
     names_sql = ", ".join(_table(connection, name) for name in sorted(PREVIOUS_COLUMNS))
-    connection.execute(sa.text(f"LOCK TABLE {names_sql} IN ACCESS EXCLUSIVE MODE"))
+    connection.exec_driver_sql(f"LOCK TABLE {names_sql} IN ACCESS EXCLUSIVE MODE")
     actual = _preflight(connection)
     changed = {name for name in targets if targets[name] != actual[name]}
     before_schema = schema_snapshot(connection)
@@ -507,8 +498,8 @@ def _reorder(*, restore_previous: bool) -> None:
     before_data = data_snapshot(connection)
     foreign_keys = [row for row in before_schema["constraints"] if row[2] == "f"]
     for table, name, *_ in foreign_keys:
-        connection.execute(
-            sa.text(f"ALTER TABLE {_table(connection, str(table))} DROP CONSTRAINT {_quote(connection, str(name))}")
+        connection.exec_driver_sql(
+            f"ALTER TABLE {_table(connection, str(table))} DROP CONSTRAINT {_quote(connection, str(name))}"
         )
     for name in sorted(changed):
         reflected = sa.Table(name, sa.MetaData(), schema="public", autoload_with=connection)
@@ -524,15 +515,15 @@ def _reorder(*, restore_previous: bool) -> None:
     for table, name, _kind, definition, *_flags, comment in foreign_keys:
         table_sql = _table(connection, str(table))
         name_sql = _quote(connection, str(name))
-        connection.execute(sa.text(f"ALTER TABLE {table_sql} ADD CONSTRAINT {name_sql} {definition}"))
+        connection.exec_driver_sql(f"ALTER TABLE {table_sql} ADD CONSTRAINT {name_sql} {definition}")
         if comment is not None:
             value = sa.literal(comment).compile(dialect=connection.dialect, compile_kwargs={"literal_binds": True})
-            connection.execute(sa.text(f"COMMENT ON CONSTRAINT {name_sql} ON {table_sql} IS {value}"))
+            connection.exec_driver_sql(f"COMMENT ON CONSTRAINT {name_sql} ON {table_sql} IS {value}")
     _restore_constraint_metadata(connection, before_schema["constraints"], changed)
     for table, index, _definition, *_flags, comment in before_schema["indexes"]:
         if table in changed and comment is not None:
             value = sa.literal(comment).compile(dialect=connection.dialect, compile_kwargs={"literal_binds": True})
-            connection.execute(sa.text(f"COMMENT ON INDEX {_table(connection, str(index))} IS {value}"))
+            connection.exec_driver_sql(f"COMMENT ON INDEX {_table(connection, str(index))} IS {value}")
     after_schema = schema_snapshot(connection)
     for section in before_schema:
         if before_schema[section] != after_schema[section]:
