@@ -7,6 +7,7 @@ import type {
   FreightQuote, FreightQuoteInput, InventoryAdjustment, InventoryMovementRead, InventoryRead,
   PageResultInventoryMovementRead, PageResultProductRead, PageResultShippingTemplateRead,
   ProductCreate, ProductDetailRead, ProductRead, ProductStatusBatch, ProductStatusUpdate, ProductUpdate,
+  ProductRecommendationUpdate, ProductRecommendationBatch,
   ShippingTemplateInput, ShippingTemplateRead, ShippingTemplateUpdate, SkuUpdate, SkuStatusBatch,
   OrderRead, OrderAcceptance, FulfillmentRead, RefundRequestRead, RefundReview, ShipmentCreate, VirtualDeliveryCreate,
   PageResultAdminOrderSummary, PageResultRefundRequestRead, PageResultWithdrawalRead, WithdrawalRead, WithdrawalReview,
@@ -33,6 +34,7 @@ import { apiRequest, jsonBody } from "./http";
 export type ProductFilters = {
   page: number; search?: string; category_id?: string;
   status?: ProductRead["status"]; product_type?: ProductRead["product_type"];
+  is_home_recommended?: boolean;
 };
 
 export type CommerceFilters = NonNullable<OrdersPageApiV1AdminOrdersGetData["query"]>;
@@ -67,6 +69,10 @@ export const commerceApi = {
   updateProduct: (id: string, input: ProductUpdate) => apiRequest<ProductRead>(`/api/v1/admin/products/${id}`, { method: "PUT", body: jsonBody(input) }),
   productStatus: (id: string, input: ProductStatusUpdate) => apiRequest<ProductRead>(`/api/v1/admin/products/${id}/status`, { method: "PUT", body: jsonBody(input) }),
   productsStatus: (input: ProductStatusBatch) => apiRequest<BatchCompleted>("/api/v1/admin/products/status/batch", { method: "PATCH", body: jsonBody(input) }),
+  productRecommendation: (id: string, input: ProductRecommendationUpdate) =>
+    apiRequest<ProductRead>(`/api/v1/admin/products/${id}/recommendation`, { method: "PUT", body: jsonBody(input) }),
+  productsRecommendations: (input: ProductRecommendationBatch) =>
+    apiRequest<BatchCompleted>("/api/v1/admin/products/recommendations/batch", { method: "PATCH", body: jsonBody(input) }),
   writeSku: (productId: string, input: SkuUpdate, skuId?: string) => apiRequest<ProductRead>(`/api/v1/admin/products/${productId}/skus${skuId ? `/${skuId}` : ""}`, { method: skuId ? "PUT" : "POST", body: jsonBody(input) }),
   skusStatus: (productId: string, input: SkuStatusBatch) => apiRequest<ProductRead>(`/api/v1/admin/products/${productId}/skus/status/batch`, { method: "PATCH", body: jsonBody(input) }),
   inventory: (skuId: string) => apiRequest<InventoryRead>(`/api/v1/admin/inventory/${skuId}`),

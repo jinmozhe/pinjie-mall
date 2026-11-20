@@ -5,6 +5,8 @@ import {
   MinusCircleOutlined,
   PlusOutlined,
   SearchOutlined,
+  StarOutlined,
+  StarFilled,
   TagsOutlined,
   UnorderedListOutlined,
 } from "@ant-design/icons";
@@ -22,7 +24,7 @@ import {
   Tag,
   App,
 } from "antd";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { ColumnsType } from "antd/es/table";
 
 import { PageFrame } from "@/components/PageFrame";
@@ -34,6 +36,7 @@ import { useLockedMutation } from "@/lib/useLockedMutation";
 import { history } from "@umijs/max";
 import { InventoryPanel } from "./InventoryPanel";
 import { ProductSpecificationsPanel } from "./ProductSpecificationsPanel";
+import { ProductRecommendationCell } from "./ProductRecommendationCell";
 
 export function ProductsPage() {
   const { message } = App.useApp();
@@ -43,6 +46,14 @@ export function ProductsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProductRead["status"]>();
   const [typeFilter, setTypeFilter] = useState<ProductRead["product_type"]>();
+  const [recommendedFilter, setRecommendedFilter] = useState<boolean>();
+  const [recommendationLocks, setRecommendationLocks] = useState<Set<string>>(new Set());
+  const recommendationLocksRef = useRef(new Set<string>());
+  const lockRecommendation = useCallback((id: string, locked: boolean) => {
+    if (locked) recommendationLocksRef.current.add(id);
+    else recommendationLocksRef.current.delete(id);
+    setRecommendationLocks(new Set(recommendationLocksRef.current));
+  }, []);
   const [selected, setSelected] = useState<ProductRead[]>([]);
   const [inspectProduct, setInspectProduct] = useState<ProductRead | null>(null);
   const [inventorySku, setInventorySku] = useState<SkuRead | null>(null);
@@ -53,13 +64,14 @@ export function ProductsPage() {
   const canUpdate = canAccess(admin, "products:update");
 
   const query = useQuery({
-    queryKey: ["commerce-products", page, search, statusFilter, typeFilter],
+    queryKey: ["commerce-products", page, search, statusFilter, typeFilter, recommendedFilter],
     queryFn: () =>
       commerceApi.products({
         page,
         search: search || undefined,
         status: statusFilter,
         product_type: typeFilter,
+        is_home_recommended: recommendedFilter,
       }),
     enabled: allowed,
   });
@@ -101,10 +113,30 @@ export function ProductsPage() {
     onError: (error) => message.error(errorMessage(error)),
   });
 
+  const batchRecommendations = useLockedMutation({
+    mutationFn: (is_home_recommended: boolean) =>
+      commerceApi.productsRecommendations({
+        targets: selected.map(({ id, revision }) => ({ id, revision })),
+        is_home_recommended,
+      }),
+    onSuccess: async () => {
+      message.success("批量推荐状态已更新");
+      setSelected([]);
+      await refresh();
+    },
+    onError: (error) => message.error(errorMessage(error)),
+  });
+  const writing = batchStatusMutation.isPending || singleStatus.isPending || batchRecommendations.isPending;
+  const selectionLocked = writing || recommendationLocks.size > 0 || Boolean(specificationProductId);
+  const recommendationSaved = async () => {
+    setSelected([]);
+    await refresh();
+  };
+
   return (
     <PageFrame
       title="商品管理"
-      description="管理商品资料、分类归属、稳定 SKU 变体与销售上下架状态。"
+      description="管理商品资料、上下架与首页推荐。推荐商品仅在上架且分类链启用时展示；下架保留推荐配置，恢复后继续展示。"
     >
       {!allowed ? (
         <Alert type="warning" title="无权查看商品管理" />
@@ -113,15 +145,17 @@ export function ProductsPage() {
           <Card size="small">
             <Form
               layout="inline"
-              disabled={batchStatusMutation.isPending || singleStatus.isPending}
+              disabled={selectionLocked}
               onFinish={(values: {
                 search?: string;
                 status?: ProductRead["status"];
                 product_type?: ProductRead["product_type"];
+                recommended?: "" | "yes" | "no";
               }) => {
                 setSearch(values.search?.trim() || "");
                 setStatusFilter(values.status || undefined);
                 setTypeFilter(values.product_type || undefined);
+                setRecommendedFilter(values.recommended === "yes" ? true : values.recommended === "no" ? false : undefined);
                 setPage(1);
                 setSelected([]);
               }}
@@ -155,6 +189,17 @@ export function ProductsPage() {
                   ]}
                 />
               </Form.Item>
+              <Form.Item name="recommended" initialValue="">
+                <Select
+                  aria-label="首页推荐筛选"
+                  style={{ width: 160 }}
+                  options={[
+                    { label: "全部推荐状态", value: "" },
+                    { label: "已推荐", value: "yes" },
+                    { label: "未推荐", value: "no" },
+                  ]}
+                />
+              </Form.Item>
               <Form.Item>
                 <Button type="primary" htmlType="submit">
                   查询
@@ -170,36 +215,44 @@ export function ProductsPage() {
             loading={query.isLoading}
             fetching={query.isFetching}
             error={query.error}
-            retry={query.refetch}
+            retry={() => { if (!selectionLocked) void query.refetch(); }}
             page={page}
             total={query.data?.total}
-            onPage={(next) => { if (!batchStatusMutation.isPending && !singleStatus.isPending) { setSelected([]); setPage(next); } }}
+            onPage={(next) => { if (!selectionLocked) { setSelected([]); setPage(next); } }}
             selection={
               canUpdate
                 ? {
                     keys: selected.map((row) => row.id),
                     onChange: (_, rows) => setSelected(rows),
-                    disabled: batchStatusMutation.isPending,
+                    disabled: selectionLocked,
                   }
                 : undefined
             }
             toolbar={[
               canUpdate && (
-                <Space key="batch">
+                <Space key="batch" wrap>
                   <Button
                     icon={<CheckCircleOutlined />}
-                    disabled={!selected.length || batchStatusMutation.isPending}
-                    onClick={() => batchStatusMutation.mutate("on_sale")}
+                    disabled={!selected.length || selectionLocked}
+                    onClick={() => { if (!recommendationLocksRef.current.size) batchStatusMutation.mutate("on_sale"); }}
                   >
                     批量上架
                   </Button>
                   <Button
                     icon={<MinusCircleOutlined />}
-                    disabled={!selected.length || batchStatusMutation.isPending}
-                    onClick={() => batchStatusMutation.mutate("off_sale")}
+                    disabled={!selected.length || selectionLocked}
+                    onClick={() => { if (!recommendationLocksRef.current.size) batchStatusMutation.mutate("off_sale"); }}
                   >
                     批量下架
                   </Button>
+                  <Button icon={<StarFilled />} disabled={!selected.length || selectionLocked}
+                    loading={batchRecommendations.isPending && batchRecommendations.variables === true}
+                    onClick={() => { if (!recommendationLocksRef.current.size) batchRecommendations.mutate(true); }}
+                  >批量推荐</Button>
+                  <Button icon={<StarOutlined />} disabled={!selected.length || selectionLocked}
+                    loading={batchRecommendations.isPending && batchRecommendations.variables === false}
+                    onClick={() => { if (!recommendationLocksRef.current.size) batchRecommendations.mutate(false); }}
+                  >批量取消推荐</Button>
                 </Space>
               ),
               canCreate && (
@@ -244,6 +297,16 @@ export function ProductsPage() {
                 },
               },
               {
+                title: "首页推荐 / 排序",
+                render: (_, row) => <ProductRecommendationCell
+                  product={row}
+                  canUpdate={canUpdate}
+                  disabled={writing || specificationProductId === row.id}
+                  lock={lockRecommendation}
+                  done={recommendationSaved}
+                />,
+              },
+              {
                 title: "SKU 货品",
                 render: (_, row) => (
                   <Button
@@ -268,6 +331,7 @@ export function ProductsPage() {
                     {canUpdate && (
                       <Button
                         icon={<EditOutlined />}
+                        disabled={writing || recommendationLocks.has(row.id)}
                         onClick={() =>
                           history.push(`/catalog/products/${row.id}/edit`)
                         }
@@ -278,6 +342,7 @@ export function ProductsPage() {
                     {canUpdate && (
                       <Button
                         icon={<TagsOutlined />}
+                        disabled={writing || recommendationLocks.has(row.id)}
                         onClick={() => setSpecificationProductId(row.id)}
                       >
                         规格维护
@@ -287,7 +352,7 @@ export function ProductsPage() {
                       <Button
                         type="link"
                         size="small"
-                        disabled={singleStatus.isPending || batchStatusMutation.isPending}
+                        disabled={writing || recommendationLocks.has(row.id) || specificationProductId === row.id}
                         onClick={() => singleStatus.mutate({ product: row, status: "on_sale" })}
                       >
                         上架
@@ -298,7 +363,7 @@ export function ProductsPage() {
                         type="link"
                         size="small"
                         danger
-                        disabled={singleStatus.isPending || batchStatusMutation.isPending}
+                        disabled={writing || recommendationLocks.has(row.id) || specificationProductId === row.id}
                         onClick={() => singleStatus.mutate({ product: row, status: "off_sale" })}
                       >
                         下架

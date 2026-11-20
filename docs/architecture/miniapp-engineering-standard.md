@@ -113,6 +113,8 @@ mp-html 不开启脚本、链接导航、编辑、Markdown 或额外媒体插件
 
 ## 7. 样式、单位与包体
 
+首页商品使用 `GET /api/v1/products/recommended` 与 `ResponseModelListPublicProductRead`，Query key 为 `catalog/home-recommendations`，一次渲染返回的完整推荐数组，不附带分页参数或触底追加。下述商品分页及窗口限制仅适用于分类列表。首页隐藏时取消请求，恢复时沿用 Query 过期刷新，下拉刷新主动失效；无推荐不回退普通商品。后台推荐读写与排序、公开可见性规则见产品基线和数据库字典。
+
 UI tokens 与业务组件必须遵循[小程序 UI 规范](miniapp-ui-standard.md)。业务 Sass 使用 750 设计宽度；NutUI 源样式按其 375 宽度独立换算，配置 designWidth 函数与 `deviceRatio[375] = 2`，防止控件尺寸减半或应用尺寸翻倍。原生 rpx 不二次换算，JS 动态尺寸使用对应设计宽度的 Taro.pxTransform 或明确 rpx。
 
 当前编译注入 NutUI variables.scss，按组件导入 Button/Popup 与样式，不导入完整主题字体。应用 CSS 变量映射 tokens；统一 Button 默认为 solid 和 square，避免 NutUI 默认 outline/round 偏离设计。已核对产物默认 NutUI 32px 转为 64rpx，应用按钮变量为 88rpx。主包四项 TabBar，详情路由位于 subpackages/catalog；商品每页 20 件，公开评价每页 10 条。分类连续列表由 useInfiniteQuery 管理，maxPages=5，最多常驻 100 条原始商品，前后分页共用窗口；淘汰前页后向上可重取，窗口变更测量可见商品锚点并恢复偏移。query key 包含分类、已提交词与刷新代次，切换条件卸载旧订阅并以 gcTime=0 回收；原生 Tab 隐藏暂停并取消请求，详情返回保留当前会话窗口，不自动重拉改变位置。刷新创建新代次从第 1 页开始；首批不足可滚动高度时受控补载，不对失败页反复自动加载。实际发布包体和设备表现需专项验证。

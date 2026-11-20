@@ -54,7 +54,14 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         CheckConstraint("revision > 0", name="ck_products_revision"),
         CheckConstraint("description_version IN (0, 1)", name="ck_products_description_version"),
         CheckConstraint("purchase_limit_quantity >= 0", name="ck_products_purchase_limit"),
+        CheckConstraint("home_recommend_sort >= 0", name="ck_products_home_recommend_sort"),
         Index("ix_products_category_status", "category_id", "status", "id"),
+        Index(
+            "ix_products_home_recommend",
+            text("home_recommend_sort ASC NULLS LAST"),
+            text("id DESC"),
+            postgresql_where=text("is_home_recommended IS TRUE"),
+        ),
         {"comment": "商品 SPU 资料，不保存库存"},
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False, comment="商品名称")
@@ -78,6 +85,12 @@ class Product(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Integer, nullable=False, default=0, comment="每用户跨 SKU 累计限购，零为不限"
     )
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="draft", comment="草稿、上架或下架")
+    is_home_recommended: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, comment="是否由管理员指定为首页推荐"
+    )
+    home_recommend_sort: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, default=None, comment="首页推荐排序权重，值越小越靠前，NULL 表示未人工设置自动排最后"
+    )
     revision: Mapped[int] = mapped_column(Integer, nullable=False, default=1, comment="商品及变体的编辑版本")
 
 

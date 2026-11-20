@@ -48,6 +48,8 @@ from app.domains.products.image_policy import validate_detail_images
 from app.domains.products.schemas import (
     ProductDetailRead,
     ProductImageRead,
+    ProductRecommendationBatch,
+    ProductRecommendationUpdate,
     ProductStatusBatch,
     PublicProductDetailRead,
     PublicProductRead,
@@ -79,7 +81,12 @@ class CommerceService:
         self.actor_session_id = actor_session_id
 
     async def _write(
-        self, permission: PermissionCode, target_id: UUID | None, operation: Callable[[], Awaitable[T]]
+        self,
+        permission: PermissionCode,
+        target_id: UUID | None,
+        operation: Callable[[], Awaitable[T]],
+        *,
+        changed_fields: dict[str, object] | None = None,
     ) -> T:
         if self.audit is None or self.actor_id is None:
             raise AppException(status_code=403, code=ErrorCode.PERMISSION_DENIED, message="需要管理员权限")
@@ -113,7 +120,7 @@ class CommerceService:
             action=permission.value,
             target_type=permission.value.split(":")[0],
             target_id=target_id,
-            changed_fields={"operation": permission.value},
+            changed_fields=changed_fields if changed_fields is not None else {"operation": permission.value},
             operation=authorized,
         )
 
@@ -146,6 +153,7 @@ class CommerceService:
         category_id: UUID | None = None,
         status: str | None = None,
         product_type: str | None = None,
+        is_home_recommended: bool | None = None,
     ) -> PageResult[ProductRead]:
         return await self.products.page(
             page,
@@ -154,6 +162,7 @@ class CommerceService:
             category_id=category_id,
             status=status,
             product_type=product_type,
+            is_home_recommended=is_home_recommended,
         )
 
     async def categories_status_batch(self, data: ActiveStatusBatch) -> BatchCompleted:
@@ -202,6 +211,25 @@ class CommerceService:
 
     async def public_product_read(self, product_id: UUID) -> PublicProductDetailRead:
         return await self.products.public_detail_read(product_id)
+
+    async def public_product_recommendations(self) -> list[PublicProductRead]:
+        return await self.products.public_recommendations()
+
+    async def set_product_recommendation(self, product_id: UUID, data: ProductRecommendationUpdate) -> ProductRead:
+        return await self._write(
+            PermissionCode.PRODUCTS_UPDATE,
+            product_id,
+            lambda: self.products.set_recommendation(product_id, data),
+            changed_fields={"operation": "home_recommendation", **data.model_dump(mode="json")},
+        )
+
+    async def products_recommendations_batch(self, data: ProductRecommendationBatch) -> BatchCompleted:
+        return await self._write(
+            PermissionCode.PRODUCTS_UPDATE,
+            None,
+            lambda: self.products.set_recommendations(data),
+            changed_fields={"operation": "home_recommendation_batch", **data.model_dump(mode="json")},
+        )
 
     async def _product_dependencies(self, image_ids: list[UUID], detail_ids: list[UUID] | None = None) -> None:
         await self.products.lock_changes()

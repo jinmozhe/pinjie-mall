@@ -77,7 +77,12 @@ from app.domains.products import (
 )
 from app.domains.products.catalog_schemas import NewSkuInput
 from app.domains.products.repository import ProductRepository
-from app.domains.products.schemas import ProductStatusBatch, SkuStatusBatch
+from app.domains.products.schemas import (
+    ProductRecommendationBatch,
+    ProductRecommendationUpdate,
+    ProductStatusBatch,
+    SkuStatusBatch,
+)
 from app.domains.shipping import ShippingService, ShippingTemplateInput
 from app.domains.shipping.repository import ShippingRepository
 from app.domains.shipping.schemas import FreightQuoteInput
@@ -246,6 +251,153 @@ async def prepare_product(shop, physical=False):
     )
     product = await shop.commerce.set_product_status(product.id, ProductStatusUpdate(revision=1, status="on_sale"))
     return product, category, shipping, data
+
+
+@pytest.mark.integration
+async def test_home_recommendations_return_all_sorted_visible_products_and_preserve_configuration(shop):
+    from app.db.models.product import Product
+
+    ordinary, category, _, data = await prepare_product(shop)
+    assert ordinary.is_home_recommended is False and ordinary.home_recommend_sort is None
+    assert await shop.commerce.public_product_recommendations() == []
+    products = []
+    for index in range(25):
+        product = await shop.commerce.create_product(
+            data.model_copy(
+                update={
+                    "name": f"首页精选 {index}",
+                    "skus": [NewSkuInput(code=f"RECOMMEND-{new_uuid7().hex}", price="10.00", cost_price="3.00")],
+                }
+            )
+        )
+        product = await shop.commerce.set_product_status(
+            product.id, ProductStatusUpdate(revision=product.revision, status="on_sale")
+        )
+        product = await shop.commerce.set_product_recommendation(
+            product.id,
+            ProductRecommendationUpdate(
+                revision=product.revision,
+                is_home_recommended=True,
+                home_recommend_sort=1 if index < 2 else None,
+            ),
+        )
+        products.append(product)
+    expected = [products[1].id, products[0].id, *[item.id for item in reversed(products[2:])]]
+    public = await shop.commerce.public_product_recommendations()
+    assert [item.id for item in public] == expected
+    assert all("cost_price" not in sku.model_dump() for item in public for sku in item.skus)
+    assert all("is_home_recommended" not in item.model_dump() for item in public)
+    filtered = await shop.commerce.product_page(1, 20, is_home_recommended=True, search="首页精选")
+    assert filtered.total == 25 and len(filtered.items) == 20
+    unselected = await shop.commerce.product_page(1, 20, is_home_recommended=False, category_id=category.id)
+    assert [item.id for item in unselected.items] == [ordinary.id]
+    # A stale member rejects the whole batch; the first valid target stays unchanged.
+    await shop.session.commit()
+    with pytest.raises(AppException) as conflict:
+        await shop.commerce.products_recommendations_batch(
+            ProductRecommendationBatch(
+                targets=[
+                    VersionedTarget(id=products[0].id, revision=products[0].revision),
+                    VersionedTarget(id=products[1].id, revision=1),
+                ],
+                is_home_recommended=False,
+            )
+        )
+    assert conflict.value.code == "PRODUCT_REVISION_CONFLICT"
+    assert [item.id for item in await shop.commerce.public_product_recommendations()] == expected
+    await shop.session.commit()
+    target = products[0]
+    hidden = await shop.commerce.set_product_status(
+        target.id, ProductStatusUpdate(revision=target.revision, status="off_sale")
+    )
+    assert hidden.is_home_recommended and hidden.home_recommend_sort == 1
+    assert target.id not in {item.id for item in await shop.commerce.public_product_recommendations()}
+    await shop.session.commit()
+    restored = await shop.commerce.set_product_status(
+        target.id, ProductStatusUpdate(revision=hidden.revision, status="on_sale")
+    )
+    assert [item.id for item in await shop.commerce.public_product_recommendations()] == expected
+    await shop.session.commit()
+    parent = await shop.commerce.create_category(CategoryInput(name="推荐父分类"))
+    category = await shop.commerce.update_category(
+        category.id, CategoryUpdate(name=category.name, revision=category.revision, parent_id=parent.id)
+    )
+    await shop.commerce.categories_status_batch(
+        ActiveStatusBatch(targets=[VersionedTarget(id=parent.id, revision=parent.revision)], is_active=False)
+    )
+    assert await shop.commerce.public_product_recommendations() == []
+    await shop.session.commit()
+    await shop.commerce.categories_status_batch(
+        ActiveStatusBatch(targets=[VersionedTarget(id=parent.id, revision=parent.revision + 1)], is_active=True)
+    )
+    assert len(await shop.commerce.public_product_recommendations()) == 25
+    await shop.session.commit()
+    await shop.commerce.products_recommendations_batch(
+        ProductRecommendationBatch(
+            targets=[VersionedTarget(id=restored.id, revision=restored.revision)], is_home_recommended=False
+        )
+    )
+    cancelled = await shop.products.read(restored.id)
+    assert not cancelled.is_home_recommended and cancelled.home_recommend_sort == 1
+    assert (await shop.products.public_read(restored.id)).id == restored.id
+    await shop.session.commit()
+    # Stored draft recommendations must never leak into the public list.
+    async with transaction_scope(shop.session):
+        await shop.session.execute(update(Product).where(Product.id == products[1].id).values(status="draft"))
+    assert products[1].id not in {item.id for item in await shop.commerce.public_product_recommendations()}
+
+
+@pytest.mark.integration
+async def test_recommendation_routes_validate_permissions_versions_csrf_and_atomic_batch(shop):
+    from httpx import ASGITransport, AsyncClient
+
+    from app.api.commerce_dependencies import get_admin_commerce, get_public_commerce
+    from app.api.dependencies import get_current_admin, require_admin_csrf
+    from app.domains.admin.permissions import PERMISSION_CODES
+    from app.main import create_app
+
+    product, _, _, _ = await prepare_product(shop)
+    app = create_app(Settings.model_construct(log_file_enabled=False, admin_origins=["http://testserver"]))
+    app.dependency_overrides[get_admin_commerce] = lambda: shop.commerce
+    app.dependency_overrides[get_public_commerce] = lambda: shop.commerce
+    route = f"/api/v1/admin/products/{product.id}/recommendation"
+    batch_route = "/api/v1/admin/products/recommendations/batch"
+    payload = {"revision": product.revision, "is_home_recommended": True, "home_recommend_sort": 0}
+    batch = {"targets": [{"id": str(product.id), "revision": product.revision}], "is_home_recommended": False}
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as client:
+        response = await client.get("/api/v1/products/recommended")
+        assert response.status_code == 200 and response.json()["data"] == []
+        await shop.session.commit()
+        assert (await client.get("/api/v1/admin/products")).status_code == 401
+        app.dependency_overrides[require_admin_csrf] = lambda: None
+        assert (await client.put(route, json=payload)).status_code == 401
+        assert (await client.patch(batch_route, json=batch)).status_code == 401
+        app.dependency_overrides[get_current_admin] = lambda: SimpleNamespace(permissions=frozenset({"products:read"}))
+        assert (await client.put(route, json=payload)).status_code == 403
+        assert (await client.patch(batch_route, json=batch)).status_code == 403
+        app.dependency_overrides[get_current_admin] = lambda: SimpleNamespace(permissions=PERMISSION_CODES)
+        for bad in [-1, 2147483648, 1.5, True]:
+            assert (await client.put(route, json={**payload, "home_recommend_sort": bad})).status_code == 422
+        response = await client.put(route, json=payload)
+        assert response.status_code == 200
+        updated = response.json()["data"]
+        assert updated["is_home_recommended"] and updated["home_recommend_sort"] == 0
+        assert (await client.put(route, json=payload)).status_code == 409
+        listing = await client.get("/api/v1/products/recommended")
+        assert listing.status_code == 200 and [item["id"] for item in listing.json()["data"]] == [str(product.id)]
+        await shop.session.commit()
+        filtered = await client.get("/api/v1/admin/products", params={"is_home_recommended": "true"})
+        assert str(product.id) in {item["id"] for item in filtered.json()["data"]["items"]}
+        await shop.session.commit()
+        batch["targets"][0]["revision"] = updated["revision"]
+        assert (await client.patch(batch_route, json={**batch, "targets": batch["targets"] * 2})).status_code == 422
+        assert (await client.patch(batch_route, json=batch)).status_code == 200
+        assert (await client.get("/api/v1/products/recommended")).json()["data"] == []
+        await shop.session.commit()
+        app.dependency_overrides.pop(require_admin_csrf)
+        for method, url, body in [("PUT", route, payload), ("PATCH", batch_route, batch)]:
+            rejected = await client.request(method, url, json=body)
+            assert rejected.status_code == 403 and rejected.json()["code"] == "CSRF_REJECTED"
 
 
 async def prepare_paid_order(shop, physical=False):

@@ -24,6 +24,8 @@ from app.domains.products import (
 )
 from app.domains.products.schemas import (
     ProductDetailRead,
+    ProductRecommendationBatch,
+    ProductRecommendationUpdate,
     ProductStatusBatch,
     PublicProductDetailRead,
     PublicProductRead,
@@ -84,6 +86,7 @@ async def admin_products(
     category_id: Annotated[UUID | None, Query(description="商品所属分类标识")] = None,
     status: Annotated[Literal["draft", "on_sale", "off_sale"] | None, Query(description="商品状态")] = None,
     product_type: Annotated[Literal["physical", "virtual"] | None, Query(description="商品类型")] = None,
+    is_home_recommended: Annotated[bool | None, Query(description="是否已配置首页推荐，不代表当前公开可见")] = None,
 ) -> ResponseModel[PageResult[ProductRead]]:
     return success_response(
         data=await service.product_page(
@@ -93,6 +96,7 @@ async def admin_products(
             category_id=category_id,
             status=status,
             product_type=product_type,
+            is_home_recommended=is_home_recommended,
         ),
         request_id=current_request_id(),
     )
@@ -116,6 +120,32 @@ async def categories_status_batch(payload: ActiveStatusBatch, service: AdminComm
 )
 async def products_status_batch(payload: ProductStatusBatch, service: AdminCommerce) -> ResponseModel[BatchCompleted]:
     return success_response(data=await service.products_status_batch(payload), request_id=current_request_id())
+
+
+@router.patch(
+    "/admin/products/recommendations/batch",
+    response_model=ResponseModel[BatchCompleted],
+    summary="原子批量设置首页推荐状态",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.PRODUCTS_UPDATE))],
+)
+async def products_recommendations_batch(
+    payload: ProductRecommendationBatch, service: AdminCommerce
+) -> ResponseModel[BatchCompleted]:
+    return success_response(data=await service.products_recommendations_batch(payload), request_id=current_request_id())
+
+
+@router.put(
+    "/admin/products/{product_id}/recommendation",
+    response_model=ResponseModel[ProductRead],
+    summary="设置商品首页推荐与排序",
+    dependencies=[Depends(require_admin_csrf), Depends(require_permission(PermissionCode.PRODUCTS_UPDATE))],
+)
+async def product_recommendation(
+    product_id: UUID, payload: ProductRecommendationUpdate, service: AdminCommerce
+) -> ResponseModel[ProductRead]:
+    return success_response(
+        data=await service.set_product_recommendation(product_id, payload), request_id=current_request_id()
+    )
 
 
 @router.patch(
@@ -320,6 +350,16 @@ async def public_products(
         data=await service.public_product_page(page, page_size, category_id=category_id, search=search),
         request_id=current_request_id(),
     )
+
+
+@router.get(
+    "/products/recommended",
+    response_model=ResponseModel[list[PublicProductRead]],
+    summary="查看全部有效首页推荐商品",
+    description="无需登录；仅返回人工推荐、已上架且分类链启用的商品。按人工排序、ID 倒序返回完整数组，不分页或截断。",
+)
+async def public_recommended_products(service: PublicCommerce) -> ResponseModel[list[PublicProductRead]]:
+    return success_response(data=await service.public_product_recommendations(), request_id=current_request_id())
 
 
 @router.get("/products/{product_id}", response_model=ResponseModel[PublicProductDetailRead], summary="查看上架商品详情")
